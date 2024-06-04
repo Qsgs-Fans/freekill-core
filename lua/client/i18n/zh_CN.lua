@@ -103,6 +103,8 @@ Fk:loadTranslationTable{
   ["Every suit & number:"] = "<b>所有的花色和点数:</b>",
   ["Male Audio"] = "男性音效",
   ["Female Audio"] = "女性音效",
+  ["Equip Effect Audio"] = "效果音效",
+  ["Equip Use Audio"] = "使用音效",
   ["Scenarios Overview"] = "玩法一览",
   ["Replay"] = "录像",
   ["Replay Manager"] = "来欣赏潇洒的录像吧！",
