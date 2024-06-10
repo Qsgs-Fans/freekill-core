@@ -354,6 +354,7 @@ zhenji:addSkill(qingguo)
 
 local rende = fk.CreateActiveSkill{
   name = "rende",
+  prompt = "#rende-active",
   anim_type = "support",
   card_filter = function(self, to_select, selected)
     return Fk:currentRoom():getCardArea(to_select) == Card.PlayerHand
@@ -630,6 +631,7 @@ huangyueying:addSkill(qicai)
 
 local zhiheng = fk.CreateActiveSkill{
   name = "zhiheng",
+  prompt = "#zhiheng-active",
   anim_type = "drawcard",
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
@@ -734,10 +736,9 @@ lvmeng:addSkill(keji)
 
 local kurou = fk.CreateActiveSkill{
   name = "kurou",
+  prompt = "#kurou-active",
   anim_type = "drawcard",
-  card_filter = function(self, to_select, selected, selected_targets)
-    return false
-  end,
+  card_filter = Util.FalseFunc,
   on_use = function(self, room, effect)
     local from = room:getPlayerById(effect.from)
     room:loseHp(from, 1, self.name)
@@ -759,6 +760,7 @@ local yingzi = fk.CreateTriggerSkill{
 }
 local fanjian = fk.CreateActiveSkill{
   name = "fanjian",
+  prompt = "#fanjian-active",
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
@@ -934,6 +936,7 @@ local xiaoji = fk.CreateTriggerSkill{
 }
 local jieyin = fk.CreateActiveSkill{
   name = "jieyin",
+  prompt = "#jieyin-active",
   anim_type = "support",
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
@@ -975,6 +978,7 @@ sunshangxiang:addSkill(jieyin)
 
 local qingnang = fk.CreateActiveSkill{
   name = "qingnang",
+  prompt = "#qingnang-active",
   anim_type = "support",
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
@@ -1060,6 +1064,7 @@ lvbu:addSkill(wushuang)
 
 local lijian = fk.CreateActiveSkill{
   name = "lijian",
+  prompt = "#lijian-active",
   anim_type = "offensive",
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0

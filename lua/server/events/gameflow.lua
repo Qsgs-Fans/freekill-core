@@ -83,6 +83,7 @@ function DrawInitial:main()
   room:setTag("LuckCardData", luck_data)
   room:notifyMoveFocus(room.alive_players, "AskForLuckCard")
   room:doBroadcastNotify("AskForLuckCard", room.settings.luckTime or 4)
+  room.room:setRequestTimer(room.timeout * 1000 + 1000)
 
   local remainTime = room.timeout + 1
   local currentTime = os.time()
@@ -124,6 +125,8 @@ function DrawInitial:main()
 
     coroutine.yield("__handleRequest", (remainTime - elapsed) * 1000)
   end
+
+  room.room:destroyRequestTimer()
 
   for _, player in ipairs(room.alive_players) do
     local draw_data = luck_data[player.id]

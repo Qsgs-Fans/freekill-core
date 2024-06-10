@@ -723,7 +723,17 @@ local lightningSkill = fk.CreateActiveSkill{
     local nextp = to
     repeat
       nextp = nextp:getNextAlive(true)
-      if nextp == to then break end
+      if nextp == to then
+        if nextp:isProhibited(nextp, effect.card) then
+          room:moveCards{
+            ids = room:getSubcardsByRule(effect.card, { Card.Processing }),
+            toArea = Card.DiscardPile,
+            moveReason = fk.ReasonPut
+          }
+          return
+        end
+        break
+      end
     until not nextp:hasDelayedTrick("lightning") and not nextp:isProhibited(nextp, effect.card)
 
 

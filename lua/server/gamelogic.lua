@@ -595,7 +595,7 @@ function GameLogic:getCurrentSkillName()
 end
 
 -- 在指定历史范围中找至多n个符合条件的事件
----@param eventType integer @ 要查找的事件类型
+---@param eventType GameEvent @ 要查找的事件类型
 ---@param n integer @ 最多找多少个
 ---@param func fun(e: GameEvent): boolean @ 过滤用的函数
 ---@param scope integer @ 查询历史范围，只能是当前阶段/回合/轮次

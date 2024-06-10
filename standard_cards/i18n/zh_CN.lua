@@ -52,6 +52,8 @@ Fk:loadTranslationTable{
   ["method_draw"] = "摸",
   ["method_discard"] = "弃置",
 
+  ["prohibit"] = "禁",
+
   ["slash"] = "杀",
   [":slash"] = "基本牌<br /><b>时机</b>：出牌阶段<br /><b>目标</b>：攻击范围内的一名角色<br /><b>效果</b>：对目标角色造成1点伤害。",
   ["#slash-jink"] = "%src 对你使用了【杀】，请使用一张【闪】",
