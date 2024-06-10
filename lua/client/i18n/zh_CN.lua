@@ -31,7 +31,7 @@ Fk:loadTranslationTable{
   ["Search"] = "搜索",
   ["Back"] = "返回",
 
-  ["Refresh Room List"] = "刷新房间列表",
+  ["Refresh Room List"] = "刷新房间列表 (%1个房间)",
 
   ["Disable Extension"] = "禁用Lua拓展 (重启后生效)",
   ["Create Room"] = "创建房间",
