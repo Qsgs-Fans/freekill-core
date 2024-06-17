@@ -404,6 +404,11 @@ fk.client_callback["PropertyUpdate"] = function(data)
   ClientInstance:notifyUI("PropertyUpdate", data)
 end
 
+fk.client_callback["PlayCard"] = function(data)
+  local h = Fk.request_handlers["PlayCard"]:new(Self)
+  ClientInstance:notifyUI("PlayCard", data)
+end
+
 fk.client_callback["AskForCardChosen"] = function(data)
   -- jsonData: [ int target_id, string flag, int reason ]
   local id, flag, reason, prompt = data[1], data[2], data[3], data[4]

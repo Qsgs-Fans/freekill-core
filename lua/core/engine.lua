@@ -33,6 +33,7 @@
 ---@field public poxi_methods table<string, PoxiSpec> @ “魄袭”框操作方法表
 ---@field public qml_marks table<string, QmlMarkSpec> @ 自定义Qml标记的表
 ---@field public mini_games table<string, MiniGameSpec> @ 自定义多人交互表
+---@field public request_handlers table<string, RequestHandler> @ 请求处理程序
 local Engine = class("Engine")
 
 --- Engine的构造函数。
@@ -73,9 +74,11 @@ function Engine:initialize()
   self.poxi_methods = {}
   self.qml_marks = {}
   self.mini_games = {}
+  self.request_handlers = {}
 
   self:loadPackages()
   self:loadDisabled()
+  self:loadRequestHandlers()
   self:addSkills(AuxSkills)
 end
 
@@ -266,6 +269,10 @@ function Engine:loadDisabled()
     end
     self.game_mode_disabled[game_mode.name] = disabled_packages
   end
+end
+
+function Engine:loadRequestHandlers()
+  self.request_handlers["PlayCard"] = require 'core.request_type.play_card'
 end
 
 --- 向翻译表中加载新的翻译表。
