@@ -244,7 +244,7 @@ local function where(info, context_lines)
 		source = {}
 		local filename = info.source:match("@(.*)")
 		if filename then
-      if UsingNewCore and filename:startsWith("./lua/") then
+      if UsingNewCore and (filename:startsWith("./lua/") or filename:startsWith("lua/")) then
         filename = "./packages/freekill-core/" .. filename
       end
 			pcall(function() for line in io.lines(filename) do table.insert(source, line) end end)

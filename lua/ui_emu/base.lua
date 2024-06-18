@@ -5,12 +5,31 @@
 ---@class Item: Object
 ---@field public parent Scene
 ---@field public enabled boolean
+---@field public id string | integer
 local Item = class("Item")
 
 ---@parant scene Scene
-function Item:initialize(scene)
+function Item:initialize(scene, id)
   self.parent = scene
   self.enabled = false
+  self.id = id
+end
+
+function Item:toData()
+  return {
+    enabled = self.enabled,
+    id = self.id,
+  }
+end
+
+---@return boolean 是否发生改变
+function Item:setData(newData)
+  local changed
+  for k, v in pairs(newData) do
+    changed = self[k] ~= v
+    self[k] = v
+  end
+  return changed
 end
 
 ---@class SelectableItem: Item
@@ -18,9 +37,15 @@ end
 local SelectableItem = Item:subclass("SelectableItem")
 
 ---@parant scene Scene
-function SelectableItem:initialize(scene)
-  Item.initialize(self, scene)
+function SelectableItem:initialize(scene, id)
+  Item.initialize(self, scene, id)
   self.selected = false
+end
+
+function SelectableItem:toData()
+  local ret = Item.toData(self)
+  ret.selected = self.selected
+  return ret
 end
 
 -- 最基本的“交互”，对应到UI中就是一次点击。
@@ -30,7 +55,7 @@ function Item:interact() end
 -- 模拟UI场景。用途是容纳所有模拟UI组件，并与实际的UI进行信息交换。
 ---@class Scene: Object
 ---@field public parent RequestHandler
----@field public items table<Item, Item[]>
+---@field public items { [string]: { [string|integer]: Item } }
 local Scene = class("Scene")
 
 function Scene:initialize(parent)
@@ -42,11 +67,28 @@ end
 function Scene:addItem(item)
   local key = item.class.name
   self.items[key] = self.items[key] or {}
-  table.insert(self.items[key], item)
+  self.items[key][item.id] = item
 end
 
-function Scene:update() end
-function Scene:notifyUI(data) end
+-- 模拟一次UI交互，修改相关item的属性即可
+-- 同时修改自己parent的changeData
+function Scene:update(elemType, id, newData)
+  local item = self.items[elemType][id]
+  local changed = item:setData(newData)
+  local changeData = self.parent.change
+  if changed and changeData then
+    changeData[elemType] = changeData[elemType] or {}
+    table.insert(changeData[elemType], item:toData())
+  end
+end
+
+-- 一般由RequestHandler或者其他上层部分调用
+-- 调用者需要维护changeData，确保传给UI的数据最少
+function Scene:notifyUI()
+  if not ClientInstance then return nil end
+  self.parent.change["_type"] = self.class.name
+  ClientInstance:notifyUI("UpdateRequestUI", self.parent.change)
+end
 
 return {
   Item = Item,

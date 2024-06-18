@@ -2,25 +2,24 @@ local base = require 'ui_emu.base'
 local SelectableItem = base.SelectableItem
 
 ---@class CardItem: SelectableItem
----@field public id integer
 local CardItem = SelectableItem:subclass("CardItem")
 
-function CardItem:initialize(scene, cardId)
-  SelectableItem.initialize(self, scene)
-  self.id = cardId
-end
-
 ---@class Photo: SelectableItem
----@field public id integer
+---@field public state string
 local Photo = SelectableItem:subclass("Photo")
 
-function Photo:initialize(scene, playerId)
-  SelectableItem.initialize(self, scene)
-  self.id = playerId
+function Photo:initialize(scene, id)
+  SelectableItem.initialize(self, scene, id)
+  self.state = "normal"
+end
+
+function Photo:toData()
+  local ret = SelectableItem.toData(self)
+  ret.state = self.state
+  return ret
 end
 
 ---@class SkillButton: SelectableItem
----@field public name string
 local SkillButton = SelectableItem:subclass("SkillButton")
 
 return {

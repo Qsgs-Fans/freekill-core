@@ -810,4 +810,8 @@ function ReloadPackage(path)
   Fk:reloadPackage(path)
 end
 
+function UpdateRequestUI(elemType, id, action, data)
+  ClientInstance.current_request_handler:update(elemType, id, action, data)
+end
+
 dofile "lua/client/i18n/init.lua"

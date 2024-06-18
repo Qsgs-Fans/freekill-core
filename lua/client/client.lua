@@ -406,6 +406,7 @@ end
 
 fk.client_callback["PlayCard"] = function(data)
   local h = Fk.request_handlers["PlayCard"]:new(Self)
+  h:setup()
   ClientInstance:notifyUI("PlayCard", data)
 end
 

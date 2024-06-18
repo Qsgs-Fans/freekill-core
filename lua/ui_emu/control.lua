@@ -4,13 +4,7 @@ local base = require 'ui_emu.base'
 local Item = base.Item
 
 ---@class Button: SelectableItem
----@field public id any
 local Button = Item:subclass("Button")
-
-function Button:initialize(scene, id)
-  Item.initialize(self, scene)
-  self.id = id
-end
 
 return {
   Button = Button,

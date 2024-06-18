@@ -15,8 +15,8 @@ function Dashboard:initialize(parent)
   Scene.initialize(self, parent)
   local player = parent.player
 
-  for _, pid in ipairs(parent.room.alive_players) do
-    self:addItem(Photo:new(self, pid))
+  for _, p in ipairs(parent.room.alive_players) do
+    self:addItem(Photo:new(self, p.id))
   end
   for _, cid in ipairs(player:getCardIds("he")) do
     self:addItem(CardItem:new(self, cid))

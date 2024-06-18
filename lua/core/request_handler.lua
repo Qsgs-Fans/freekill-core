@@ -6,6 +6,7 @@
 ---@field public room AbstractRoom
 ---@field public scene Scene
 ---@field public player Player 需要应答的玩家
+---@field public change { [string]: Item[] } 将会传递给UI的更新数据
 local RequestHandler = class("RequestHandler")
 
 function RequestHandler:initialize(player)
@@ -14,8 +15,15 @@ function RequestHandler:initialize(player)
   self.room.current_request_handler = self
 end
 
+-- 进入Request之后需要做的第一步操作，对应之前UI代码中state变换
+function RequestHandler:setup() end
+
+-- 产生UI事件后由UI触发
 -- 需要实现各种合法性检验，决定需要变更状态的UI，并最终将变更反馈给真实的界面
-function RequestHandler:update(ui_class_name, id, change)
-end
+---@param elemType string
+---@param id string | integer
+---@param action string
+---@param data any
+function RequestHandler:update(elemType, id, action, data) end
 
 return RequestHandler
