@@ -32,11 +32,12 @@ function ServerPlayer:initialize(_self)
   self.room = nil
 
   -- Below are for doBroadcastRequest
+  -- 但是几乎全部被船新request杀了
   self.request_data = ""
-  self.client_reply = ""
+  --self.client_reply = ""
   self.default_reply = ""
-  self.reply_ready = false
-  self.reply_cancel = false
+  --self.reply_ready = false
+  --self.reply_cancel = false
   self.phases = {}
   self.skipped_phases = {}
   self.phase_state = {}
@@ -74,92 +75,14 @@ function ServerPlayer:doNotify(command, jsonData)
   end
 end
 
---- Send a request to client, and allow client to reply within *timeout* seconds.
----
---- *timeout* must not be negative. If nil, room.timeout is used.
----@param command string
----@param jsonData string
----@param timeout? integer
-function ServerPlayer:doRequest(command, jsonData, timeout)
-  self.client_reply = ""
-  self.reply_ready = false
-  self.reply_cancel = false
-
-  if self.serverplayer:busy() then
-    self.room.request_queue[self.serverplayer] = self.room.request_queue[self.serverplayer] or {}
-    table.insert(self.room.request_queue[self.serverplayer], { self.id, command, jsonData, timeout })
-    return
-  end
-
-  self.room.request_self[self.serverplayer:getId()] = self.id
-
-  if not table.contains(self._observers, self.serverplayer) then
-    self.serverplayer:doNotify("StartChangeSelf", tostring(self.id))
-  end
-
-  timeout = timeout or self.room.timeout
-  self.serverplayer:setBusy(true)
-  self.ai_data = {
-    command = command,
-    jsonData = jsonData,
-  }
-  self.serverplayer:doRequest(command, jsonData, timeout)
-end
-
-local function _waitForReply(player, timeout)
-  local result
-  local start = os.getms()
-  local state = player.serverplayer:getState()
-  player.request_timeout = timeout
-  player.request_start = start
-  if state ~= fk.Player_Online then
-    if player.room.hasSurrendered then
-      return "__cancel"
-    end
-
-    if state ~= fk.Player_Robot then
-      player.room:checkNoHuman()
-      player.room:delay(500)
-      return "__cancel"
-    end
-    -- Let AI make reply. First handle request
-    -- coroutine.yield("__handleRequest", 0)
-
-    player.room:checkNoHuman()
-    player.ai:readRequestData()
-    local reply = player.ai:makeReply()
-    if reply == "" then reply = "__cancel" end
-    return reply
-  end
-  while true do
-    player.serverplayer:setThinking(true)
-    result = player.serverplayer:waitForReply(0)
-    if result ~= "__notready" then
-      player._timewaste_count = 0
-      player.serverplayer:setThinking(false)
-      return result
-    end
-    local rest = timeout * 1000 - (os.getms() - start) / 1000
-    if timeout and rest <= 0 then
-      if timeout >= 15 then
-        player._timewaste_count = player._timewaste_count + 1
-      end
-      player.serverplayer:setThinking(false)
-
-      if player._timewaste_count >= 3 then
-        player._timewaste_count = 0
-        player.serverplayer:emitKick()
-      end
-
-      return ""
-    end
-
-    if player.room.hasSurrendered then
-      player.serverplayer:setThinking(false)
-      return ""
-    end
-
-    coroutine.yield("__handleRequest", rest)
+-- FIXME: 基本都改成新写法后删了这个兼容玩意
+function ServerPlayer:__index(k)
+  local request = self.room.last_request
+  if not request then return nil end
+  if k == "client_reply" then
+    return request.result[self.id]
+  elseif k == "reply_ready" then
+    return request.result[self.id] and request.result[self.id] ~= ""
   end
 end
 
@@ -171,43 +94,6 @@ function ServerPlayer:chat(msg)
     sender = self.id,
     msg = msg,
   })
-end
-
---- Wait for at most *timeout* seconds for reply from client.
----
---- If *timeout* is negative or **nil**, the function will wait forever until get reply.
----@param timeout integer @ seconds to wait
----@return string @ JSON data
-function ServerPlayer:waitForReply(timeout)
-  local result = _waitForReply(self, timeout)
-  local sid = self.serverplayer:getId()
-  local id = self.id
-  if self.room.request_self[sid] ~= id then
-    result = ""
-  end
-
-  self.request_data = ""
-  self.client_reply = result
-  if result == "__cancel" then
-    result = ""
-    self.reply_cancel = true
-    self.serverplayer:setBusy(false)
-    self.serverplayer:setThinking(false)
-  end
-  if result ~= "" then
-    self.reply_ready = true
-    self.serverplayer:setBusy(false)
-    self.serverplayer:setThinking(false)
-  end
-
-  -- FIXME: 一控多求无懈
-  local queue = self.room.request_queue[self.serverplayer]
-  if queue and #queue > 0 and not self.serverplayer:busy() then
-    local i, c, j, t = table.unpack(table.remove(queue, 1))
-    self.room:getPlayerById(i):doRequest(c, j, t)
-  end
-
-  return result
 end
 
 local function assign(t1, t2, k)
