@@ -209,15 +209,14 @@ end
 --- 标包和标准卡牌包比较特殊，它们永远会在第一个加载。
 ---@return nil
 function Engine:loadPackages()
-  local new_core = false
   if FileIO.pwd():endsWith("packages/freekill-core") then
-    new_core = true
+    UsingNewCore = true
     FileIO.cd("../..")
   end
   local directories = FileIO.ls("packages")
 
   -- load standard & standard_cards first
-  if new_core then
+  if UsingNewCore then
     self:loadPackage(require("packages.freekill-core.standard"))
     self:loadPackage(require("packages.freekill-core.standard_cards"))
     self:loadPackage(require("packages.freekill-core.maneuvering"))
@@ -256,7 +255,7 @@ function Engine:loadPackages()
     end
   end
 
-  if new_core then
+  if UsingNewCore then
     FileIO.cd("packages/freekill-core")
   end
 end

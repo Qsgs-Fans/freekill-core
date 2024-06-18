@@ -26,11 +26,13 @@
 ---@field public logic GameLogic @ 这个房间使用的游戏逻辑，可能根据游戏模式而变动
 ---@field public request_queue table<userdata, table>
 ---@field public request_self table<integer, integer>
+---@field public last_request Request @ 上一次完成的request
 ---@field public skill_costs table<string, any> @ 存放skill.cost_data用
 ---@field public card_marks table<integer, any> @ 存放card.mark之用
 local Room = AbstractRoom:subclass("Room")
 
 -- load classes used by the game
+Request = require "server.network"
 GameEvent = require "server.gameevent"
 dofile "lua/server/events/init.lua"
 GameLogic = require "server.gamelogic"
@@ -784,33 +786,6 @@ function Room:doBroadcastNotify(command, jsonData, players)
   end
 end
 
----@param room Room
-local function surrenderCheck(room)
-  if not room.hasSurrendered then return end
-  local player = table.find(room.players, function(p)
-    return p.surrendered
-  end)
-  if not player then
-    room.hasSurrendered = false
-    return
-  end
-  room:broadcastProperty(player, "surrendered")
-  local mode = Fk.game_modes[room.settings.gameMode]
-  local winner = Pcall(mode.getWinner, mode, player)
-  if winner ~= "" then
-    room:gameOver(winner)
-  end
-
-  -- 以防万一
-  player.surrendered = false
-  room:broadcastProperty(player, "surrendered")
-  room.hasSurrendered = false
-end
-
-local function setRequestTimer(room)
-  room.room:setRequestTimer(room.timeout * 1000 + 500)
-end
-
 --- 向某个玩家发起一次Request。
 ---@param player ServerPlayer @ 发出这个请求的目标玩家
 ---@param command string @ 请求的类型
@@ -818,20 +793,15 @@ end
 ---@param wait? boolean @ 是否要等待答复，默认为true
 ---@return string @ 收到的答复，如果wait为false的话就返回nil
 function Room:doRequest(player, command, jsonData, wait)
-  if wait == nil then wait = true end
-  self.request_queue = {}
-  self.race_request_list = nil
-  player:doRequest(command, jsonData, self.timeout)
-
-  if wait then
-    setRequestTimer(self)
-    local ret = player:waitForReply(self.timeout)
-    player.serverplayer:setBusy(false)
-    player.serverplayer:setThinking(false)
-    self.room:destroyRequestTimer()
-    surrenderCheck(self)
-    return ret
-  end
+  -- fk.qCritical("Room:doRequest is deprecated!")
+  if wait == true then error("wait can't be true") end
+  local request = Request:new(command, {player})
+  request.send_json = false -- 因为参数已经json.encode过了，该死的兼容性
+  request.receive_json = false
+  request.accept_cancel = true
+  request:setData(player, jsonData)
+  request:ask()
+  return request.result[player.id]
 end
 
 --- 向多名玩家发出请求。
@@ -839,29 +809,16 @@ end
 ---@param players? ServerPlayer[] @ 发出请求的玩家列表
 ---@param jsonData? string @ 请求数据
 function Room:doBroadcastRequest(command, players, jsonData)
+  -- fk.qCritical("Room:doBroadcastRequest is deprecated!")
   players = players or self.players
-  self.request_queue = {}
-  self.race_request_list = nil
-  setRequestTimer(self)
+  local request = Request:new(command, players)
+  request.send_json = false -- 因为参数已经json.encode过了
+  request.receive_json = false
+  request.accept_cancel = true
   for _, p in ipairs(players) do
-    p:doRequest(command, jsonData or p.request_data)
+    request:setData(p, jsonData or p.request_data)
   end
-
-  local remainTime = self.timeout
-  local currentTime = os.time()
-  local elapsed = 0
-  for _, p in ipairs(players) do
-    elapsed = os.time() - currentTime
-    p:waitForReply(remainTime - elapsed)
-  end
-
-  for _, p in ipairs(players) do
-    p.serverplayer:setBusy(false)
-    p.serverplayer:setThinking(false)
-  end
-
-  self.room:destroyRequestTimer()
-  surrenderCheck(self)
+  request:ask()
 end
 
 --- 向多名玩家发出竞争请求。
@@ -874,68 +831,17 @@ end
 ---@param jsonData string @ 请求数据
 ---@return ServerPlayer? @ 在这次竞争请求中获胜的角色，可能是nil
 function Room:doRaceRequest(command, players, jsonData)
+  -- fk.qCritical("Room:doRaceRequest is deprecated!")
   players = players or self.players
-  players = table.simpleClone(players)
-  local player_len = #players
-  setRequestTimer(self)
-  -- self:notifyMoveFocus(players, command)
-  self.request_queue = {}
-  self.race_request_list = players
+  local request = Request:new(command, players, 1)
+  request.send_json = false -- 因为参数已经json.encode过了
+  request.receive_json = false
   for _, p in ipairs(players) do
-    p:doRequest(command, jsonData or p.request_data)
+    request:setData(p, jsonData or p.request_data)
   end
-
-  local remainTime = self.timeout
-  local currentTime = os.time()
-  local elapsed = 0
-  local winner
-  local canceled_players = {}
-  local ret
-  while true do
-    elapsed = os.time() - currentTime
-    if remainTime - elapsed <= 0 then
-      break
-    end
-    for i = #players, 1, -1 do
-      local p = players[i]
-      p:waitForReply(0)
-      if p.reply_ready == true then
-        winner = p
-        break
-      end
-
-      if p.reply_cancel then
-        table.remove(players, i)
-        table.insertIfNeed(canceled_players, p)
-      elseif p.id > 0 then
-        -- 骗过调度器让他以为自己尚未就绪
-        p.request_timeout = remainTime - elapsed
-        p.serverplayer:setThinking(true)
-      end
-    end
-    if winner then
-      self:doBroadcastNotify("CancelRequest", "")
-      ret = winner
-      break
-    end
-
-    if player_len == #canceled_players then
-      break
-    end
-
-    coroutine.yield("__handleRequest", (remainTime - elapsed) * 1000)
-  end
-
-  for _, p in ipairs(self.players) do
-    p.serverplayer:setBusy(false)
-    p.serverplayer:setThinking(false)
-  end
-
-  self.room:destroyRequestTimer()
-  surrenderCheck(self)
-  return ret
+  request:ask()
+  return request:getWinners()[1]
 end
-
 
 --- 延迟一段时间。
 ---@param ms integer @ 要延迟的毫秒数
@@ -944,7 +850,7 @@ function Room:delay(ms)
   self.delay_start = start
   self.delay_duration = ms
   self.in_delay = true
-  self.room:delay(ms)
+  self.room:delay(math.ceil(ms))
   coroutine.yield("__handleRequest", ms)
 end
 
@@ -2303,7 +2209,7 @@ function Room:handleUseCardReply(player, data)
     local use = {}    ---@type CardUseStruct
     use.from = player.id
     use.tos = {}
-    for _, target in ipairs(targets) do
+    for _, target in ipairs(targets or Util.DummyTable) do
       table.insert(use.tos, { target })
     end
     if #use.tos == 0 then
