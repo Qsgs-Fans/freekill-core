@@ -49,6 +49,8 @@ function ReqPlayCard:setup()
   -- RoomScene.enableSkills();
 
   -- 出牌阶段还要多模拟一个结束按钮
+  scene:addItem(Button:new(self.scene, "Ok"))
+  scene:addItem(Button:new(self.scene, "Cancel"))
   scene:addItem(Button:new(self.scene, "End"))
   scene:update("Button", "End", { enabled = true })
   scene:notifyUI()
@@ -91,6 +93,21 @@ function ReqPlayCard:selectCard(cid, data)
   end
 end
 
+function ReqPlayCard:checkButton(data)
+  local player = self.player
+  local scene = self.scene
+  local card = self.selected_card
+  if card then
+    local skill = card.skill ---@type ActiveSkill
+    local ret = skill:feasible(self.selected_targets, { card.id }, player, card)
+    if ret then
+      scene:update("Button", "Ok", { enabled = true })
+      return
+    end
+  end
+  scene:update("Button", "Ok", { enabled = false })
+end
+
 function ReqPlayCard:updateTargets(data)
   local player = self.player
   local room = self.room
@@ -115,11 +132,13 @@ function ReqPlayCard:updateTargets(data)
       dat.state = "candidate"
       dat.enabled = not not(not player:isProhibited(p, card) and skill and
       skill:targetFilter(pid, self.selected_targets,
-        {card.id}, card, data.extra_data))
+      { card.id }, card, data.extra_data))
       -- print(string.format("<%d %s>", pid, tostring(dat.enabled)))
       scene:update("Photo", pid, dat)
     end
   end
+  -- 确认按钮
+  self:checkButton(data)
 end
 
 function ReqPlayCard:selectTarget(playerid, data)
@@ -144,7 +163,7 @@ function ReqPlayCard:selectTarget(playerid, data)
         local ret
         ret = not player:isProhibited(p, card) and skill and
         skill:targetFilter(pid, self.selected_targets,
-          {card.id}, card, data.extra_data)
+        { card.id }, card, data.extra_data)
         -- 从头开始写目标
         if ret then
           table.insert(self.selected_targets, pid)
@@ -173,6 +192,8 @@ function ReqPlayCard:selectTarget(playerid, data)
       scene:update("Photo", pid, dat)
     end
   end
+  -- 确认按钮
+  self:checkButton(data)
 end
 
 function ReqPlayCard:update(elemType, id, action, data)
