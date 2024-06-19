@@ -1,4 +1,4 @@
-local Dashboard = require 'ui_emu.dashboard'
+local RoomScene = require 'ui_emu.RoomScene'
 
 -- 这里就要定义各种状态性质的属性了 参考一下目前的
 
@@ -18,7 +18,7 @@ local ReqActiveSkill = RequestHandler:subclass("ReqActiveSkill")
 
 function ReqActiveSkill:initialize(player)
   RequestHandler.initialize(self, player)
-  self.scene = Dashboard:new(self)
+  self.scene = RoomScene:new(self)
 
   self.pendings = {}
   self.selected_targets = {}
@@ -26,9 +26,9 @@ end
 
 function ReqActiveSkill:setup()
   -- skillInteraction.sourceComponent = undefined;
-  -- dashboard.updateHandcards();
-  -- dashboard.enableCards(responding_card);
-  -- dashboard.enableSkills(responding_card, respond_play);
+  -- RoomScene.updateHandcards();
+  -- RoomScene.enableCards(responding_card);
+  -- RoomScene.enableSkills(responding_card, respond_play);
   -- autoPending = false;
   -- progress.visible = true;
   -- okCancel.visible = true;
