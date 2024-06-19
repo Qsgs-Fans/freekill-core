@@ -1,4 +1,4 @@
-local RoomScene = require 'ui_emu.RoomScene'
+local RoomScene = require 'ui_emu.roomscene'
 
 -- 这里就要定义各种状态性质的属性了 参考一下目前的
 
