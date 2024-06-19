@@ -119,8 +119,8 @@ function ReqPlayCard:updateTargets(data)
     local dat = {}
     local pid = p.id
     dat.state = "normal"
-    dat.enabled = false
-    dat.selected = false
+    -- dat.enabled = false
+    -- dat.selected = false
     scene:update("Photo", pid, dat)
   end
   -- 选择实体卡牌时
