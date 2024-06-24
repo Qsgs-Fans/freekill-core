@@ -56,20 +56,20 @@ function ReqPlayCard:setup()
   scene:notifyUI()
 end
 
-function ReqPlayCard:doOkButton()
-  -- const reply = JSON.stringify({
-  --   card: RoomScene.getSelectedCard(),
-  --   targets: selected_targets,
-  --   special_skill: roomScene.getCurrentCardUseMethod(),
-  --   interaction_data: roomScene.skillInteraction.item ?
-  --                     roomScene.skillInteraction.item.answer : undefined,
-  -- });
-  ClientInstance:notifyUI("ReplyToServer", "")
-end
+-- function ReqPlayCard:doOkButton()
+--   -- const reply = JSON.stringify({
+--   --   card: RoomScene.getSelectedCard(),
+--   --   targets: selected_targets,
+--   --   special_skill: roomScene.getCurrentCardUseMethod(),
+--   --   interaction_data: roomScene.skillInteraction.item ?
+--   --                     roomScene.skillInteraction.item.answer : undefined,
+--   -- });
+--   ClientInstance:notifyUI("ReplyToServer", "")
+-- end
 
-function ReqPlayCard:doCancelButton()
-  ClientInstance:notifyUI("ReplyToServer", "__cancel")
-end
+-- function ReqPlayCard:doCancelButton()
+--   ClientInstance:notifyUI("ReplyToServer", "__cancel")
+-- end
 
 function ReqPlayCard:doEndButton()
   ClientInstance:notifyUI("ReplyToServer", "")
@@ -108,7 +108,7 @@ function ReqPlayCard:checkButton(data)
   scene:update("Button", "Ok", { enabled = false })
 end
 
-function ReqPlayCard:updateTargets(data)
+function ReqPlayCard:updateTarget(data)
   local player = self.player
   local room = self.room
   local scene = self.scene
@@ -119,8 +119,8 @@ function ReqPlayCard:updateTargets(data)
     local dat = {}
     local pid = p.id
     dat.state = "normal"
-    -- dat.enabled = false
-    -- dat.selected = false
+    dat.enabled = false
+    dat.selected = false
     scene:update("Photo", pid, dat)
   end
   -- 选择实体卡牌时
@@ -205,7 +205,7 @@ function ReqPlayCard:update(elemType, id, action, data)
     return
   elseif elemType == "CardItem" then
     self:selectCard(id, data)
-    self:updateTargets(data)
+    self:updateTarget(data)
   elseif elemType == "Photo" then
     self:selectTarget(id, data)
   elseif elemType == "SkillButton" then

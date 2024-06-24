@@ -273,6 +273,7 @@ end
 
 function Engine:loadRequestHandlers()
   self.request_handlers["PlayCard"] = require 'core.request_type.play_card'
+  self.request_handlers["AskForUseActiveSkill"] = require 'core.request_type.active_skill'
 end
 
 --- 向翻译表中加载新的翻译表。
