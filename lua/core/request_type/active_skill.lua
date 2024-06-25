@@ -35,6 +35,7 @@ function ReqActiveSkill:setup()
   self:updateCard()
   scene:addItem(Button:new(self.scene, "Ok"))
   scene:addItem(Button:new(self.scene, "Cancel"))
+  scene:notifyUI()
 end
 
 function ReqActiveSkill:checkButton(data)
@@ -52,23 +53,25 @@ function ReqActiveSkill:checkButton(data)
 end
 
 function ReqActiveSkill:doOkButton()
+  self:disabledAll()
   ClientInstance:notifyUI("ReplyToServer", "")
 end
 
 function ReqActiveSkill:doCancelButton()
+  self:disabledAll()
   ClientInstance:notifyUI("ReplyToServer", "__cancel")
 end
 
-function ReqActiveSkill:updateCard(data)
+function ReqActiveSkill:updateCard()
   local scene = self.scene
   local skill = Fk.skills[self.pending_skill] ---@type ActiveSkill
-  -- TODO: expand_pile
+  -- TODO: 统一调用一个公有ID表（代表屏幕亮出的这些牌）
   for _, cid in ipairs(self.player:getCardIds("h")) do
-    if not skill:cardFilter(cid, self.pendings, self.selected_targets) then
-    --   scene:update("CardItem", cid, { enabled = true })
-    -- else
-      scene:update("CardItem", cid, { enabled = false })
-    end
+    local dat = {}
+    dat.selected = false
+    dat.enabled = not not(skill:cardFilter(cid, self.pendings,
+    self.selected_targets))
+    scene:update("CardItem", cid, dat)
   end
 end
 
@@ -97,6 +100,16 @@ function ReqActiveSkill:selectCard(cardid, data)
       scene:update("CardItem", cid, { selected = not not ret })
     end
   end
+  -- 剩余合法性检测
+  -- TODO: 统一调用一个公有ID表（代表屏幕亮出的这些牌）
+  for _, cid in ipairs(self.player:getCardIds("h")) do
+    local dat = {}
+    if not table.contains(self.pendings, cid) then
+      dat.enabled = not not(skill:cardFilter(cid, self.pendings,
+      self.selected_targets))
+      scene:update("CardItem", cid, dat)
+    end
+  end
 end
 
 function ReqActiveSkill:updateTarget(data)
@@ -110,11 +123,11 @@ function ReqActiveSkill:updateTarget(data)
     local dat = {}
     local pid = p.id
     dat.state = "normal"
-    -- dat.enabled = false
-    -- dat.selected = false
+    dat.enabled = false
+    dat.selected = false
     scene:update("Photo", pid, dat)
   end
-  -- 选择实体卡牌时
+  -- 选择技能目标时
   if skill then
     for _, p in ipairs(room.alive_players) do
       local dat = {}

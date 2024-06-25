@@ -72,6 +72,7 @@ end
 -- end
 
 function ReqPlayCard:doEndButton()
+  self:disabledAll()
   ClientInstance:notifyUI("ReplyToServer", "")
 end
 

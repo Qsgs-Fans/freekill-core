@@ -18,6 +18,27 @@ end
 -- 进入Request之后需要做的第一步操作，对应之前UI代码中state变换
 function RequestHandler:setup() end
 
+function RequestHandler:disabledAll()
+  local scene = self.scene
+  local room = self.room
+  -- TODO: 统一调用一个公有ID表（代表屏幕亮出的这些牌）
+  for _, cid in ipairs(self.player:getCardIds("h")) do
+    local dat = {}
+    dat.selected = false
+    dat.enabled = false
+    scene:update("CardItem", cid, dat)
+  end
+  for _, p in ipairs(room.alive_players) do
+    local dat = {}
+    local pid = p.id
+    dat.state = "normal"
+    -- dat.enabled = false
+    -- dat.selected = false
+    scene:update("Photo", pid, dat)
+  end
+  scene:notifyUI()
+end
+
 -- 产生UI事件后由UI触发
 -- 需要实现各种合法性检验，决定需要变更状态的UI，并最终将变更反馈给真实的界面
 ---@param elemType string
