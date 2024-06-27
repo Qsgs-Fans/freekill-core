@@ -7,11 +7,11 @@ local Photo = common.Photo
 local SkillButton = common.SkillButton
 local Button = control.Button
 
----@class Dashboard: Scene
-local Dashboard = Scene:subclass("Dashboard")
+---@class RoomScene: Scene
+local RoomScene = Scene:subclass("RoomScene")
 
 ---@param parent RequestHandler
-function Dashboard:initialize(parent)
+function RoomScene:initialize(parent)
   Scene.initialize(self, parent)
   local player = parent.player
 
@@ -31,4 +31,4 @@ function Dashboard:initialize(parent)
   self:addItem(Button:new(self, "Cancel"))
 end
 
-return Dashboard
+return RoomScene

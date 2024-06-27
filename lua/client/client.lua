@@ -873,6 +873,11 @@ fk.client_callback["AskForUseActiveSkill"] = function(data)
   skill._extra_data = extra_data
 
   Fk.currentResponseReason = extra_data.skillName
+  local h = Fk.request_handlers["AskForUseActiveSkill"]:new(Self)
+  h.pending_skill = data[1]
+  h.cancelable = data[3]
+  h.extra_data = data[4]
+  h:setup()
   ClientInstance:notifyUI("AskForUseActiveSkill", data)
 end
 
