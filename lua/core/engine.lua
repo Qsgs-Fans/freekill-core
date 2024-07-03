@@ -271,9 +271,11 @@ function Engine:loadDisabled()
   end
 end
 
+--- 载入响应事件
 function Engine:loadRequestHandlers()
   self.request_handlers["PlayCard"] = require 'core.request_type.play_card'
   self.request_handlers["AskForUseActiveSkill"] = require 'core.request_type.active_skill'
+  self.request_handlers["AskForSkillInvoke"] = require 'core.request_type.invoke'
 end
 
 --- 向翻译表中加载新的翻译表。

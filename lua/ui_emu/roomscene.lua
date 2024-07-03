@@ -1,18 +1,15 @@
-local base = require 'ui_emu.base'
 local common = require 'ui_emu.common'
-local control = require 'ui_emu.control'
-local Scene = base.Scene
+local OKScene = require 'ui_emu.okscene'
 local CardItem = common.CardItem
 local Photo = common.Photo
 local SkillButton = common.SkillButton
-local Button = control.Button
 
----@class RoomScene: Scene
-local RoomScene = Scene:subclass("RoomScene")
+---@class RoomScene: OKScene
+local RoomScene = OKScene:subclass("RoomScene")
 
 ---@param parent RequestHandler
 function RoomScene:initialize(parent)
-  Scene.initialize(self, parent)
+  OKScene.initialize(self, parent)
   local player = parent.player
 
   for _, p in ipairs(parent.room.alive_players) do
@@ -26,9 +23,6 @@ function RoomScene:initialize(parent)
       self:addItem(SkillButton:new(self, skill.name))
     end
   end
-
-  self:addItem(Button:new(self, "OK"))
-  self:addItem(Button:new(self, "Cancel"))
 end
 
 return RoomScene
