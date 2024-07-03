@@ -26,7 +26,7 @@ end
 function Item:setData(newData)
   local changed
   for k, v in pairs(newData) do
-    changed = self[k] ~= v
+    changed = changed or (self[k] ~= v)
     self[k] = v
   end
   return changed
