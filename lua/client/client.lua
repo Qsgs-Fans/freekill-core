@@ -866,6 +866,15 @@ fk.client_callback["AddSkill"] = function(data)
   updateLimitSkill(id, skill, target:usedSkillTimes(skill_name, Player.HistoryGame))
 end
 
+fk.client_callback["AskForSkillInvoke"] = function(data)
+  -- jsonData: [ string name, string prompt ]
+
+  local h = Fk.request_handlers["AskForSkillInvoke"]:new(Self)
+  h.prompt = data[2]
+  h:setup()
+  ClientInstance:notifyUI("AskForSkillInvoke", data)
+end
+
 fk.client_callback["AskForUseActiveSkill"] = function(data)
   -- jsonData: [ string skill_name, string prompt, bool cancelable. json extra_data ]
   local skill = Fk.skills[data[1]]
@@ -874,7 +883,8 @@ fk.client_callback["AskForUseActiveSkill"] = function(data)
 
   Fk.currentResponseReason = extra_data.skillName
   local h = Fk.request_handlers["AskForUseActiveSkill"]:new(Self)
-  h.pending_skill = data[1]
+  h.skill_name = data[1]
+  h.prompt     = data[2]
   h.cancelable = data[3]
   h.extra_data = data[4]
   h:setup()
@@ -882,11 +892,13 @@ fk.client_callback["AskForUseActiveSkill"] = function(data)
 end
 
 fk.client_callback["AskForUseCard"] = function(data)
+  -- jsonData: card, pattern, prompt, cancelable, {}
   Fk.currentResponsePattern = data[2]
   ClientInstance:notifyUI("AskForUseCard", data)
 end
 
 fk.client_callback["AskForResponseCard"] = function(data)
+  -- jsonData: card, pattern, prompt, cancelable, {}
   Fk.currentResponsePattern = data[2]
   ClientInstance:notifyUI("AskForResponseCard", data)
 end
