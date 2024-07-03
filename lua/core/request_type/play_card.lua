@@ -38,27 +38,77 @@ end
 function ReqPlayCard:setup()
   self.change = ClientInstance and {} or nil
   local scene = self.scene
+  local player = self.player
+  p("setup playcard!")
 
-  -- TODO: &牌堆
-  for _, cid in ipairs(self.player:getCardIds("h")) do
-    if self:canUseCard(self.player, Fk:getCardById(cid)) then
-      scene:update("CardItem", cid, { enabled = true })
-    end
-  end
+  -- 准备牌堆
+  self:updateCard()
 
   -- RoomScene.enableSkills();
+  local skills = player:getAllSkills()
+  local actives = table.filter(skills, function(s)
+    return s:isInstanceOf(ActiveSkill)
+  end)
+  local vss = table.filter(skills, function(s)
+    return s:isInstanceOf(ViewAsSkill)
+  end)
+  ---@param skill ActiveSkill
+  for _, skill in ipairs(actives) do
+    scene:update("SkillButton", skill.name, {
+      enabled = not not(skill:canUse(player, nil))
+    })
+  end
+  ---@param skill ViewAsSkill
+  for _, skill in ipairs(vss) do
+    local ret = skill:enabledAtPlay(player)
+    if ret then
+      local exp = Exppattern:Parse(skill.pattern)
+      local cnames = {}
+      for _, m in ipairs(exp.matchers) do
+        if m.name then
+          table.insertTable(cnames, m.name)
+        end
+        if m.trueName then
+          table.insertTable(cnames, m.trueName)
+        end
+      end
+      for _, n in ipairs(cnames) do
+        local c = Fk:cloneCard(n)
+        c.skillName = skill.name
+        ret = c.skill:canUse(Self, c)
+        if ret then break end
+      end
+    end
+    scene:update("SkillButton", skill.name, {
+      enabled = ret
+    })
+  end
 
   -- 出牌阶段还要多模拟一个结束按钮
-  scene:addItem(Button:new(self.scene, "Ok"))
-  scene:addItem(Button:new(self.scene, "Cancel"))
   scene:addItem(Button:new(self.scene, "End"))
   scene:update("Button", "End", { enabled = true })
   scene:notifyUI()
 end
 
--- function ReqPlayCard:doOkButton()
+function ReqPlayCard:updateCard()
+  local scene = self.scene
+  local player = self.player
+  self.selected_card = nil
+  self.pendings = {}
+  -- TODO: 统一调用一个公有ID表（代表屏幕亮出的这些牌）
+  for _, cid in ipairs(player:getCardIds("h")) do
+    local dat = {
+      selected = false,
+      enabled = not not(self:canUseCard(player, Fk:getCardById(cid))),
+    }
+    -- print(string.format("<%d %s>", cid, inspect(dat)))
+    scene:update("CardItem", cid, dat)
+  end
+end
+
+-- function ReqPlayCard:doOKButton()
 --   -- const reply = JSON.stringify({
---   --   card: RoomScene.getSelectedCard(),
+--   --   card: dashboard.getSelectedCard(),
 --   --   targets: selected_targets,
 --   --   special_skill: roomScene.getCurrentCardUseMethod(),
 --   --   interaction_data: roomScene.skillInteraction.item ?
@@ -71,14 +121,52 @@ end
 --   ClientInstance:notifyUI("ReplyToServer", "__cancel")
 -- end
 
+function ReqPlayCard:doOKButton()
+  local cardstr
+  -- 正在选技能
+  if self.skill_name then
+    cardstr = json.encode{
+      skill = self.skill_name,
+      subcards = self.pendings
+    }
+  else
+    cardstr = self.selected_card:getEffectiveId()
+  end
+  local reply = {
+    card = cardstr,
+    targets = self.selected_targets,
+  }
+  ClientInstance:notifyUI("ReplyToServer", json.encode(reply))
+end
+
 function ReqPlayCard:doEndButton()
-  self:disabledAll()
   ClientInstance:notifyUI("ReplyToServer", "")
+end
+
+function ReqPlayCard:selectSkill(skill, data)
+  local scene = self.scene
+  local selected = data.selected
+  scene:update("SkillButton", skill, data)
+
+  if selected then
+    self.skill_name = skill
+    self.selected_card = nil
+    ReqActiveSkill.updateCard(self)
+    ReqActiveSkill.updateTarget(self)
+  else
+    self.skill_name = nil
+    self:updateCard()
+    self:updateTarget()
+  end
 end
 
 function ReqPlayCard:selectCard(cid, data)
   local scene = self.scene
   local selected = data.selected
+  -- 正在选技能
+  if self.skill_name then
+    return ReqActiveSkill.selectCard(self, cid, data)
+  end
   scene:update("CardItem", cid, data)
 
   if selected then
@@ -97,16 +185,18 @@ end
 function ReqPlayCard:checkButton(data)
   local player = self.player
   local scene = self.scene
+  -- 正在选技能
+  if self.skill_name then
+    return ReqActiveSkill.checkButton(self, data)
+  end
   local card = self.selected_card
+  local dat = { enabled = false }
   if card then
     local skill = card.skill ---@type ActiveSkill
-    local ret = skill:feasible(self.selected_targets, { card.id }, player, card)
-    if ret then
-      scene:update("Button", "Ok", { enabled = true })
-      return
-    end
+    dat.enabled = not not (skill:feasible(self.selected_targets, { card.id },
+    player, card))
   end
-  scene:update("Button", "Ok", { enabled = false })
+  scene:update("Button", "OK", dat)
 end
 
 function ReqPlayCard:updateTarget(data)
@@ -114,30 +204,18 @@ function ReqPlayCard:updateTarget(data)
   local room = self.room
   local scene = self.scene
   local card = self.selected_card
+  -- 正在选技能
+  if self.skill_name then
+    return ReqActiveSkill.updateTarget(self, data)
+  end
   -- 重置
   self.selected_targets = {}
-  for _, p in ipairs(room.alive_players) do
-    local dat = {}
-    local pid = p.id
-    dat.state = "normal"
-    dat.enabled = false
-    dat.selected = false
-    scene:update("Photo", pid, dat)
-  end
+  local skill
   -- 选择实体卡牌时
   if card then
-    local skill = card.skill ---@type ActiveSkill
-    for _, p in ipairs(room.alive_players) do
-      local dat = {}
-      local pid = p.id
-      dat.state = "candidate"
-      dat.enabled = not not(not player:isProhibited(p, card) and skill and
-      skill:targetFilter(pid, self.selected_targets,
-      { card.id }, card, data.extra_data))
-      -- print(string.format("<%d %s>", pid, tostring(dat.enabled)))
-      scene:update("Photo", pid, dat)
-    end
+    skill = card.skill ---@type ActiveSkill
   end
+  self:checkTargets(skill, data)
   -- 确认按钮
   self:checkButton(data)
 end
@@ -148,6 +226,10 @@ function ReqPlayCard:selectTarget(playerid, data)
   local scene = self.scene
   local selected = data.selected
   local card = self.selected_card
+  -- 正在选技能
+  if self.skill_name then
+    return ReqActiveSkill.selectTarget(self, playerid, data)
+  end
   scene:update("Photo", playerid, data)
 
   if card then
@@ -174,24 +256,9 @@ function ReqPlayCard:selectTarget(playerid, data)
     end
     p(self.selected_targets)
     -- 剩余合法性检测
-    for _, p in ipairs(room.alive_players) do
-      local dat = {}
-      local pid = p.id
-      if not table.contains(self.selected_targets, pid) then
-        dat.enabled = not not(not player:isProhibited(p, card) and skill and
-        skill:targetFilter(pid, self.selected_targets,
-          {card.id}, card, data.extra_data))
-        print(string.format("<%d %s>", pid, tostring(dat.enabled)))
-        scene:update("Photo", pid, dat)
-      end
-    end
+    self:checkTargets(skill, data)
   else
-    for _, p in ipairs(room.alive_players) do
-      local dat = {}
-      local pid = p.id
-      dat.state = "normal"
-      scene:update("Photo", pid, dat)
-    end
+    self:checkTargets(nil, data)
   end
   -- 确认按钮
   self:checkButton(data)
@@ -200,7 +267,7 @@ end
 function ReqPlayCard:update(elemType, id, action, data)
   self.change = ClientInstance and {} or nil
   if elemType == "Button" then
-    if id == "Ok" then self:doOkButton()
+    if id == "OK" then self:doOKButton()
     elseif id == "Cancel" then self:doCancelButton()
     elseif id == "End" then self:doEndButton() end
     return
@@ -210,6 +277,7 @@ function ReqPlayCard:update(elemType, id, action, data)
   elseif elemType == "Photo" then
     self:selectTarget(id, data)
   elseif elemType == "SkillButton" then
+    self:selectSkill(id, data)
   end
   self.scene:notifyUI()
 end
