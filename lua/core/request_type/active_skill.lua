@@ -46,20 +46,6 @@ function ReqActiveSkill:checkTargets(skill, data)
   end
 end
 
-function ReqActiveSkill:checkCards(skill, data)
-  local scene = self.scene
-  local room = self.room
-
-  -- TODO: 统一调用一个公有ID表（代表屏幕亮出的这些牌）
-  for _, cid in ipairs(self.player:getCardIds("h")) do
-    local dat = {}
-    if not table.contains(self.pendings, cid) then
-      dat.enabled = not not(skill:cardFilter(cid, self.pendings))
-      scene:update("CardItem", cid, dat)
-    end
-  end
-end
-
 function ReqActiveSkill:setup()
   self.change = ClientInstance and {} or nil
   local scene = self.scene
@@ -118,7 +104,13 @@ function ReqActiveSkill:updateCard(data)
   local skill = Fk.skills[self.skill_name] ---@type ActiveSkill
   self.pendings = {}
 
-  self:checkCards(skill, data)
+  for _, cid in ipairs(self.player:getCardIds("h")) do
+    local dat = { selected = false }
+    if not table.contains(self.pendings, cid) then
+      dat.enabled = not not(skill:cardFilter(cid, self.pendings))
+      scene:update("CardItem", cid, dat)
+    end
+  end
 end
 
 function ReqActiveSkill:selectCard(cardid, data)
@@ -147,7 +139,13 @@ function ReqActiveSkill:selectCard(cardid, data)
     end
   end
   -- 剩余合法性检测
-  self:checkCards(skill, data)
+  for _, cid in ipairs(self.player:getCardIds("h")) do
+    local dat = {}
+    if not table.contains(self.pendings, cid) then
+      dat.enabled = not not(skill:cardFilter(cid, self.pendings))
+      scene:update("CardItem", cid, dat)
+    end
+  end
 end
 
 function ReqActiveSkill:updateTarget(data)
