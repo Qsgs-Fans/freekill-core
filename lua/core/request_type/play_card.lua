@@ -75,7 +75,7 @@ function ReqPlayCard:setup()
       for _, n in ipairs(cnames) do
         local c = Fk:cloneCard(n)
         c.skillName = skill.name
-        ret = c.skill:canUse(Self, c)
+        ret = self:canUseCard(player, c)
         if ret then break end
       end
     end
@@ -88,22 +88,6 @@ function ReqPlayCard:setup()
   scene:addItem(Button:new(self.scene, "End"))
   scene:update("Button", "End", { enabled = true })
   scene:notifyUI()
-end
-
-function ReqPlayCard:updateCard()
-  local scene = self.scene
-  local player = self.player
-  self.selected_card = nil
-  self.pendings = {}
-  -- TODO: 统一调用一个公有ID表（代表屏幕亮出的这些牌）
-  for _, cid in ipairs(player:getCardIds("h")) do
-    local dat = {
-      selected = false,
-      enabled = not not(self:canUseCard(player, Fk:getCardById(cid))),
-    }
-    -- print(string.format("<%d %s>", cid, inspect(dat)))
-    scene:update("CardItem", cid, dat)
-  end
 end
 
 -- function ReqPlayCard:doOKButton()
@@ -157,6 +141,22 @@ function ReqPlayCard:selectSkill(skill, data)
     self.skill_name = nil
     self:updateCard()
     self:updateTarget()
+  end
+end
+
+function ReqPlayCard:updateCard()
+  local scene = self.scene
+  local player = self.player
+  self.selected_card = nil
+  self.pendings = {}
+  -- TODO: 统一调用一个公有ID表（代表屏幕亮出的这些牌）
+  for _, cid in ipairs(player:getCardIds("h")) do
+    local dat = {
+      selected = false,
+      enabled = not not(self:canUseCard(player, Fk:getCardById(cid))),
+    }
+    -- print(string.format("<%d %s>", cid, inspect(dat)))
+    scene:update("CardItem", cid, dat)
   end
 end
 
