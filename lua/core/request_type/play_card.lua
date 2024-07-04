@@ -1,16 +1,16 @@
-local RoomScene = require 'ui_emu.roomscene'
 local ReqActiveSkill = require 'core.request_type.active_skill'
+local ReqUseCard = require 'lua.core.request_type.use_card'
 local control = require 'ui_emu.control'
 local Button = control.Button
 
----@class ReqPlayCard: ReqActiveSkill
+---@class ReqPlayCard: ReqUseCard
 ---@field public selected_card? Card 使用一张牌时会用到 支持VS技
-local ReqPlayCard = ReqActiveSkill:subclass("ReqPlayCard")
+local ReqPlayCard = ReqUseCard:subclass("ReqPlayCard")
 
-function ReqPlayCard:initialize(player)
-  ReqActiveSkill.initialize(self, player)
-  self.scene = RoomScene:new(self)
-end
+-- function ReqPlayCard:initialize(player)
+--   ReqUseCard.initialize(self, player)
+--   self.scene = RoomScene:new(self)
+-- end
 
 -- 这种具体的合法性分析代码要不要单独放到某个模块呢
 ---@param player Player @ 使用者
@@ -105,81 +105,26 @@ end
 --   ClientInstance:notifyUI("ReplyToServer", "__cancel")
 -- end
 
-function ReqPlayCard:doOKButton()
-  local cardstr
-  -- 正在选技能
-  if self.skill_name then
-    cardstr = json.encode{
-      skill = self.skill_name,
-      subcards = self.pendings
-    }
-  else
-    cardstr = self.selected_card:getEffectiveId()
-  end
-  local reply = {
-    card = cardstr,
-    targets = self.selected_targets,
-  }
-  ClientInstance:notifyUI("ReplyToServer", json.encode(reply))
-end
+-- function ReqPlayCard:doOKButton()
+--   local cardstr
+--   -- 正在选技能
+--   if self.skill_name then
+--     cardstr = json.encode{
+--       skill = self.skill_name,
+--       subcards = self.pendings
+--     }
+--   else
+--     cardstr = self.selected_card:getEffectiveId()
+--   end
+--   local reply = {
+--     card = cardstr,
+--     targets = self.selected_targets,
+--   }
+--   ClientInstance:notifyUI("ReplyToServer", json.encode(reply))
+-- end
 
 function ReqPlayCard:doEndButton()
   ClientInstance:notifyUI("ReplyToServer", "")
-end
-
-function ReqPlayCard:selectSkill(skill, data)
-  local scene = self.scene
-  local selected = data.selected
-  scene:update("SkillButton", skill, data)
-
-  if selected then
-    self.skill_name = skill
-    self.selected_card = nil
-    ReqActiveSkill.updateCard(self)
-    ReqActiveSkill.updateTarget(self)
-  else
-    self.skill_name = nil
-    self:updateCard()
-    self:updateTarget()
-  end
-end
-
-function ReqPlayCard:updateCard()
-  local scene = self.scene
-  local player = self.player
-  self.selected_card = nil
-  self.pendings = {}
-  -- TODO: 统一调用一个公有ID表（代表屏幕亮出的这些牌）
-  for _, cid in ipairs(player:getCardIds("h")) do
-    local dat = {
-      selected = false,
-      enabled = not not(self:canUseCard(player, Fk:getCardById(cid))),
-    }
-    -- print(string.format("<%d %s>", cid, inspect(dat)))
-    scene:update("CardItem", cid, dat)
-  end
-end
-
-function ReqPlayCard:selectCard(cid, data)
-  local scene = self.scene
-  local selected = data.selected
-  -- 正在选技能
-  if self.skill_name then
-    return ReqActiveSkill.selectCard(self, cid, data)
-  end
-  scene:update("CardItem", cid, data)
-
-  if selected then
-    self.selected_card = Fk:getCardById(cid)
-    local dat = { selected = false }
-    for _, id in ipairs(self.player:getCardIds("h")) do
-      if id ~= cid then
-        scene:update("CardItem", id, dat)
-      end
-    end
-  else
-    self.selected_card = nil
-  end
 end
 
 function ReqPlayCard:checkButton(data)
@@ -197,71 +142,6 @@ function ReqPlayCard:checkButton(data)
     player, card))
   end
   scene:update("Button", "OK", dat)
-end
-
-function ReqPlayCard:updateTarget(data)
-  local player = self.player
-  local room = self.room
-  local scene = self.scene
-  local card = self.selected_card
-  -- 正在选技能
-  if self.skill_name then
-    return ReqActiveSkill.updateTarget(self, data)
-  end
-  -- 重置
-  self.selected_targets = {}
-  local skill
-  -- 选择实体卡牌时
-  if card then
-    skill = card.skill ---@type ActiveSkill
-  end
-  self:checkTargets(skill, data)
-  -- 确认按钮
-  self:checkButton(data)
-end
-
-function ReqPlayCard:selectTarget(playerid, data)
-  local player = self.player
-  local room = self.room
-  local scene = self.scene
-  local selected = data.selected
-  local card = self.selected_card
-  -- 正在选技能
-  if self.skill_name then
-    return ReqActiveSkill.selectTarget(self, playerid, data)
-  end
-  scene:update("Photo", playerid, data)
-
-  if card then
-    local skill = card.skill ---@type ActiveSkill
-    if selected then
-      table.insert(self.selected_targets, playerid)
-    else
-      -- 存储剩余目标
-      local previous_targets = table.filter(self.selected_targets, function(id)
-        return id ~= playerid
-      end)
-      self.selected_targets = {}
-      for _, pid in ipairs(previous_targets) do
-        local ret
-        ret = not player:isProhibited(p, card) and skill and
-        skill:targetFilter(pid, self.selected_targets,
-        { card.id }, card, data.extra_data)
-        -- 从头开始写目标
-        if ret then
-          table.insert(self.selected_targets, pid)
-        end
-        scene:update("Photo", pid, { selected = not not ret })
-      end
-    end
-    p(self.selected_targets)
-    -- 剩余合法性检测
-    self:checkTargets(skill, data)
-  else
-    self:checkTargets(nil, data)
-  end
-  -- 确认按钮
-  self:checkButton(data)
 end
 
 function ReqPlayCard:update(elemType, id, action, data)

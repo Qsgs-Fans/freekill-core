@@ -1,14 +1,13 @@
-local RoomScene = require 'ui_emu.roomscene'
 local ReqActiveSkill = require 'core.request_type.active_skill'
 local ReqResponseCard = require 'core.request_type.response_card'
 
 ---@class ReqUseCard: ReqResponseCard
 local ReqUseCard = ReqResponseCard:subclass("ReqUseCard")
 
-function ReqUseCard:initialize(player)
-  ReqResponseCard.initialize(self, player)
-  self.scene = RoomScene:new(self)
-end
+-- function ReqUseCard:initialize(player)
+--   ReqResponseCard.initialize(self, player)
+--   self.scene = RoomScene:new(self)
+-- end
 
 -- 这种具体的合法性分析代码要不要单独放到某个模块呢
 ---@param player Player @ 使用者
@@ -73,7 +72,7 @@ function ReqUseCard:selectSkill(skill, data)
     self.skill_name = skill
     self.selected_card = nil
     ReqActiveSkill.updateCard(self, data)
-    ReqActiveSkill.updateTarget(data)
+    ReqActiveSkill.updateTarget(self, data)
   else
     self.skill_name = nil
     self:updateCard(data)
