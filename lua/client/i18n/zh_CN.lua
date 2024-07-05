@@ -29,6 +29,7 @@ Fk:loadTranslationTable{
   ["Hide unselectable cards"] = "下移不可选卡牌",
   ["Hide observer chatter"] = "屏蔽旁观者聊天",
   ["Rotate table card"] = "处理区的牌随机旋转",
+  ["Hide presents"] = "屏蔽送花砸蛋",
   ["Ban General Settings"] = "禁将",
   ["Set as Avatar"] = "设为头像",
   ["Search"] = "搜索",
