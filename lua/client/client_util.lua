@@ -430,6 +430,10 @@ function GetSkillData(skill_name)
   }
 end
 
+function GetSkillLocked(skill_name)
+  return not Fk.skills[skill_name]:isEffectable(Self)
+end
+
 function ActiveCanUse(skill_name, extra_data_str)
   local extra_data = extra_data_str == "" and nil or json.decode(extra_data_str)
   local skill = Fk.skills[skill_name]
