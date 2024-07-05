@@ -894,12 +894,24 @@ end
 fk.client_callback["AskForUseCard"] = function(data)
   -- jsonData: card, pattern, prompt, cancelable, {}
   Fk.currentResponsePattern = data[2]
+  local h = Fk.request_handlers["AskForUseCard"]:new(Self)
+  -- h.skill_name = data[1] (skill_name是给选中的视为技用的)
+  h.pattern    = data[2]
+  h.prompt     = data[3]
+  h.cancelable = data[4]
+  h:setup()
   ClientInstance:notifyUI("AskForUseCard", data)
 end
 
 fk.client_callback["AskForResponseCard"] = function(data)
   -- jsonData: card, pattern, prompt, cancelable, {}
   Fk.currentResponsePattern = data[2]
+  local h = Fk.request_handlers["AskForResponseCard"]:new(Self)
+  -- h.skill_name = data[1] (skill_name是给选中的视为技用的)
+  h.pattern    = data[2]
+  h.prompt     = data[3]
+  h.cancelable = data[4]
+  h:setup()
   ClientInstance:notifyUI("AskForResponseCard", data)
 end
 
