@@ -96,6 +96,7 @@ Fk:loadTranslationTable({
 
   ["$OnlineInfo"] = "Lobby: %1, Online: %2",
 
+  -- ["Overview"] = "一览",
   ["Generals Overview"] = "Characters",
   ["Cards Overview"] = "Cards",
   ["Special card skills:"] = "<b>Special use method:</b>",
@@ -104,7 +105,7 @@ Fk:loadTranslationTable({
   -- ["Female Audio"] = "女性音效",
   -- ["Equip Effect Audio"] = "效果音效",
   -- ["Equip Use Audio"] = "使用音效",
-  ["Scenarios Overview"] = "Game modes",
+  ["Modes Overview"] = "Game modes",
   -- ["Replay"] = "录像",
   -- ["Replay Manager"] = "来欣赏潇洒的录像吧！",
   -- ["Replay from File"] = "从文件打开",
@@ -149,6 +150,8 @@ Fk:loadTranslationTable({
   -- ["Quit"] = "退出",
   ["BanGeneral"] = "Ban",
   ["ResumeGeneral"] = "Unban",
+  -- ["Enable"] = "启用",
+  -- ["Prohibit"] = "禁",
   ["BanPackage"] = "Ban packages",
   ["$BanPkgHelp"] = "Banning packages",
   ["$BanCharaHelp"] = "Banning characters",
@@ -160,6 +163,10 @@ Fk:loadTranslationTable({
   ["Designer"] = "Designer: ",
   ["Voice Actor"] = "Voice Actor: ",
   ["Illustrator"] = "Illustrator: ",
+  -- ["Hidden General"] = "隐藏武将",
+  ["Audio Copy Success"] = "Audio code has been copied to your clipboard",
+  -- ["Copy Audio Code"] = "复制语音代码",
+  -- ["Copy Audio Text"] = "复制语音文本",
 
   ["$WelcomeToLobby"] = "Welcome to FreeKill lobby!",
   ["GameMode"] = "Game mode: ",
@@ -260,8 +267,12 @@ Fk:loadTranslationTable({
 
   -- ["Trust"] = "托管",
   ["Sort Cards"] = "Sort",
+  ["Sort by Type"] = "by Type",
+  ["Sort by Number"] = "by Num",
+  ["Sort by Suit"] = "by Suit",
   -- ["Chat"] = "聊天",
   ["Log"] = "Game Log",
+  -- ["Return to Bottom"] = "回到底部",
   -- ["Trusting ..."] = "托管中 ...",
   -- ["Observing ..."] = "旁观中 ...",
 

@@ -105,6 +105,7 @@ Fk:loadTranslationTable{
 
   ["$OnlineInfo"] = "大厅人数：%1，总在线人数：%2",
 
+  ["Overview"] = "一览",
   ["Generals Overview"] = "武将一览",
   ["Cards Overview"] = "卡牌一览",
   ["Special card skills:"] = "<b>卡牌的特殊用法:</b>",
@@ -113,7 +114,7 @@ Fk:loadTranslationTable{
   ["Female Audio"] = "女性音效",
   ["Equip Effect Audio"] = "效果音效",
   ["Equip Use Audio"] = "使用音效",
-  ["Scenarios Overview"] = "玩法一览",
+  ["Modes Overview"] = "玩法一览",
   ["Replay"] = "录像",
   ["Replay Manager"] = "来欣赏潇洒的录像吧！",
   ["Replay from File"] = "从文件打开",
@@ -128,6 +129,8 @@ Fk:loadTranslationTable{
 以便于DIY为首要目的的开源三国杀游戏。
 
 项目链接： https://github.com/Notify-ctrl/FreeKill
+
+使用手册： https://fkbook-all-in-one.readthedocs.io
 
 ---
 
@@ -204,6 +207,8 @@ FreeKill使用的是libgit2的C API，与此同时使用Git完成拓展包的下
   -- ["Quit"] = "退出",
   ["BanGeneral"] = "禁将",
   ["ResumeGeneral"] = "解禁",
+  ["Enable"] = "启用",
+  ["Prohibit"] = "禁",
   ["BanPackage"] = "禁拓展包",
   ["$BanPkgHelp"] = "正在禁用拓展包",
   ["$BanCharaHelp"] = "正在禁用武将",
@@ -215,6 +220,10 @@ FreeKill使用的是libgit2的C API，与此同时使用Git完成拓展包的下
   ["Designer"] = "设计：",
   ["Voice Actor"] = "配音：",
   ["Illustrator"] = "画师：",
+  ["Hidden General"] = "隐藏武将",
+  ["Audio Copy Success"] = "语音代码已复制到剪贴板。",
+  ["Copy Audio Code"] = "复制语音代码",
+  ["Copy Audio Text"] = "复制语音文本",
 
   ["$WelcomeToLobby"] = "欢迎进入新月杀游戏大厅！",
   ["GameMode"] = "游戏模式：",
@@ -315,8 +324,12 @@ FreeKill使用的是libgit2的C API，与此同时使用Git完成拓展包的下
 
   ["Trust"] = "托管",
   ["Sort Cards"] = "牌序",
+  ["Sort by Type"] = "按类型",
+  ["Sort by Number"] = "按点数",
+  ["Sort by Suit"] = "按花色",
   ["Chat"] = "聊天",
   ["Log"] = "战报",
+  ["Return to Bottom"] = "回到底部",
   ["Trusting ..."] = "托管中 ...",
   ["Observing ..."] = "旁观中 ...",
   ["Resting, don't leave!"] = "稍后你可返回战局，不要离开",

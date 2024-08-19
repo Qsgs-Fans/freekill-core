@@ -33,6 +33,8 @@ MarkEnum.UncompulsoryInvalidity = "UncompulsoryInvalidity"
 MarkEnum.RevealProhibited = "RevealProhibited"
 ---不计入距离、座次后缀
 MarkEnum.PlayerRemoved = "PlayerRemoved"
+---不能调整手牌
+MarkEnum.SortProhibited = "SortProhibited"
 
 ---各种清除标记后缀
 ---
