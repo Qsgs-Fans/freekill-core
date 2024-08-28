@@ -164,7 +164,8 @@ Fk:loadTranslationTable({
   ["Voice Actor"] = "Voice Actor: ",
   ["Illustrator"] = "Illustrator: ",
   -- ["Hidden General"] = "隐藏武将",
-  ["Audio Copy Success"] = "Audio code has been copied to your clipboard",
+  ["Audio Code Copy Success"] = "Audio code has been copied to your clipboard",
+  ["Audio Text Copy Success"] = "Audio text has been copied to your clipboard",
   -- ["Copy Audio Code"] = "复制语音代码",
   -- ["Copy Audio Text"] = "复制语音文本",
 

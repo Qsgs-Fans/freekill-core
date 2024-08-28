@@ -221,7 +221,8 @@ FreeKill使用的是libgit2的C API，与此同时使用Git完成拓展包的下
   ["Voice Actor"] = "配音：",
   ["Illustrator"] = "画师：",
   ["Hidden General"] = "隐藏武将",
-  ["Audio Copy Success"] = "语音代码已复制到剪贴板。",
+  ["Audio Code Copy Success"] = "语音代码已复制到剪贴板",
+  ["Audio Text Copy Success"] = "语音文本已复制到剪贴板",
   ["Copy Audio Code"] = "复制语音代码",
   ["Copy Audio Text"] = "复制语音文本",
 
