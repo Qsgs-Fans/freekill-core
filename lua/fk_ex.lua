@@ -71,6 +71,7 @@ local function readUsableSpecToSkill(skill, spec)
   }
   skill.distance_limit = spec.distance_limit or skill.distance_limit
   skill.expand_pile = spec.expand_pile
+  skill.times = spec.times or skill.times
 end
 
 local function readStatusSpecToSkill(skill, spec)
@@ -85,6 +86,7 @@ end
 ---@field public max_turn_use_time? integer
 ---@field public max_round_use_time? integer
 ---@field public max_game_use_time? integer
+---@field public times? integer | fun(self: UsableSkill): integer
 
 ---@class StatusSkillSpec: StatusSkill
 

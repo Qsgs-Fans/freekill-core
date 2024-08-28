@@ -349,6 +349,7 @@ function Phase:main()
       end,
       [Player.Play] = function()
         player._play_phase_end = false
+        room:doBroadcastNotify("UpdateSkill", "", {player})
         while not player.dead do
           logic:trigger(fk.StartPlayCard, player, nil, true)
           room:notifyMoveFocus(player, "PlayCard")

@@ -430,8 +430,16 @@ function GetSkillData(skill_name)
   }
 end
 
-function GetSkillLocked(skill_name)
-  return not Fk.skills[skill_name]:isEffectable(Self)
+function GetSkillStatus(skill_name)
+  local skill = Fk.skills[skill_name]
+  local locked = not skill:isEffectable(Self)
+  if not locked and type(Self:getMark(MarkEnum.InvalidSkills)) == "table" and table.contains(Self:getMark(MarkEnum.InvalidSkills), skill_name) then
+    locked = true
+  end
+  return {
+    locked = locked, ---@type boolean
+    times = skill:getTimes()
+  }
 end
 
 function ActiveCanUse(skill_name, extra_data_str)
