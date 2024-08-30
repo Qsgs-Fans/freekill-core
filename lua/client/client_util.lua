@@ -779,6 +779,10 @@ function GetCardProhibitReason(cid, method, pattern)
   end
 end
 
+function CanSortHandcards(pid)
+  return ClientInstance:getPlayerById(pid):getMark(MarkEnum.SortProhibited) == 0
+end
+
 function PoxiPrompt(poxi_type, data, extra_data)
   local poxi = Fk.poxi_methods[poxi_type]
   if not poxi or not poxi.prompt then return "" end
