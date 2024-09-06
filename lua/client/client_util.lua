@@ -37,31 +37,13 @@ function GetGeneralDetail(name)
     deputyMaxHp = general.deputyMaxHpAdjustedValue,
     gender = general.gender,
     skill = {},
-    related_skill = {},
     companions = general.companions
   }
-  for _, s in ipairs(general.skills) do
+  for _, s in ipairs(general.all_skills) do
     table.insert(ret.skill, {
-      name = s.name,
-      description = Fk:getDescription(s.name)
-    })
-  end
-  for _, s in ipairs(general.other_skills) do
-    table.insert(ret.skill, {
-      name = s,
-      description = Fk:getDescription(s)
-    })
-  end
-  for _, s in ipairs(general.related_skills) do
-    table.insert(ret.related_skill, {
-      name = s.name,
-      description = Fk:getDescription(s.name)
-    })
-  end
-  for _, s in ipairs(general.related_other_skills) do
-    table.insert(ret.related_skill, {
-      name = s,
-      description = Fk:getDescription(s)
+      name = s[1],
+      description = Fk:getDescription(s[1]),
+      is_related_skill = s[2],
     })
   end
   for _, g in pairs(Fk.generals) do
