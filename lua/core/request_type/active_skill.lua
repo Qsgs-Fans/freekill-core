@@ -1,6 +1,4 @@
 local RoomScene = require 'ui_emu.roomscene'
-local control = require 'ui_emu.control'
-local Button = control.Button
 
 -- 这里就要定义各种状态性质的属性了 参考一下目前的
 
