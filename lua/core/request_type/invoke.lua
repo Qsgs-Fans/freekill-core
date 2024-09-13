@@ -1,6 +1,4 @@
 local OKScene = require 'ui_emu.okscene'
-local control = require 'ui_emu.control'
-local Button = control.Button
 
 -- 极其简单的skillinvoke
 
