@@ -6,16 +6,12 @@ local Button = (require 'ui_emu.control').Button
 local ReqPlayCard = ReqUseCard:subclass("ReqPlayCard")
 
 function ReqPlayCard:setup()
-  self.change = ClientInstance and {} or nil
   local scene = self.scene
-
-  self:updateUnselectedCards()
-  self:updateSkillButtons()
+  ReqUseCard.setup(self)
 
   -- 出牌阶段还要多模拟一个结束按钮
   scene:addItem(Button:new(self.scene, "End"))
   scene:update("Button", "End", { enabled = true })
-  scene:notifyUI()
 end
 
 function ReqPlayCard:cardValidity(cid)
@@ -27,14 +23,15 @@ function ReqPlayCard:cardValidity(cid)
   if ret then
     local min_target = card.skill:getMinTargetNum()
     if min_target > 0 then
-      for _, p in ipairs(ClientInstance.players) do
-        if card.skill:targetFilter(p.id, {}, {}, card, self.extra_data) then
+      for pid, _ in pairs(self.scene:getAllItems("Photo")) do
+        if card.skill:targetFilter(pid, {}, {}, card, self.extra_data) then
           return true
         end
       end
       return false
     end
   end
+  return ret
 end
 
 function ReqPlayCard:skillButtonValidity(name)
@@ -66,21 +63,11 @@ function ReqPlayCard:doEndButton()
 end
 
 function ReqPlayCard:update(elemType, id, action, data)
-  self.change = ClientInstance and {} or nil
-  if elemType == "Button" then
-    if id == "OK" then self:doOKButton()
-    elseif id == "Cancel" then self:doCancelButton()
-    elseif id == "End" then self:doEndButton() end
-    return
-  elseif elemType == "CardItem" then
-    self:selectCard(id, data)
-    self:updateTargetsAfterCardSelected()
-  elseif elemType == "Photo" then
-    self:selectTarget(id, data)
-  elseif elemType == "SkillButton" then
-    self:selectSkill(id, data)
+  if elemType == "Button" and id == "End" then
+    self:doEndButton()
+    return true
   end
-  self.scene:notifyUI()
+  return ReqUseCard.update(self, elemType, id, action, data)
 end
 
 return ReqPlayCard

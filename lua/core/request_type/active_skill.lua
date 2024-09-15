@@ -25,19 +25,21 @@ local ReqActiveSkill = RequestHandler:subclass("ReqActiveSkill")
 function ReqActiveSkill:initialize(player)
   RequestHandler.initialize(self, player)
   self.scene = RoomScene:new(self)
-
-  self.pendings = {}
-  self.selected_targets = {}
 end
 
 function ReqActiveSkill:setup()
-  self.change = ClientInstance and {} or nil
   local scene = self.scene
+
   -- TODO: interaction
+  self.pendings = {}
+  scene:unselectAllCards()
   self:updateUnselectedCards()
-  self:updateTargetsAfterCardSelected()
+
+  self.selected_targets = {}
+  scene:unselectAllTargets()
+  self:updateUnselectedTargets()
+
   self:updateButtons()
-  scene:notifyUI()
 end
 
 function ReqActiveSkill:feasible()
@@ -190,18 +192,16 @@ function ReqActiveSkill:selectTarget(playerid, data)
 end
 
 function ReqActiveSkill:update(elemType, id, action, data)
-  self.change = ClientInstance and {} or nil
   if elemType == "Button" then
     if id == "OK" then self:doOKButton()
     elseif id == "Cancel" then self:doCancelButton() end
-    return
+    return true
   elseif elemType == "CardItem" then
     self:selectCard(id, data)
     self:updateTargetsAfterCardSelected()
   elseif elemType == "Photo" then
     self:selectTarget(id, data)
   end
-  self.scene:notifyUI()
 end
 
 return ReqActiveSkill

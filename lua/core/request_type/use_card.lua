@@ -56,7 +56,6 @@ function ReqUseCard:selectTarget(playerid, data)
   end
 
   local player = self.player
-  local room = self.room
   local scene = self.scene
   local selected = data.selected
   local card = self.selected_card
@@ -97,20 +96,11 @@ function ReqUseCard:selectSkill(skill, data)
 end
 
 function ReqUseCard:update(elemType, id, action, data)
-  self.change = ClientInstance and {} or nil
-  if elemType == "Button" then
-    if id == "OK" then self:doOKButton()
-    elseif id == "Cancel" then self:doCancelButton() end
-    return
-  elseif elemType == "CardItem" then
-    self:selectCard(id, data)
-    self:updateTargetsAfterCardSelected(data)
-  elseif elemType == "Photo" then
-    self:selectTarget(id, data)
-  elseif elemType == "SkillButton" then
-    self:selectSkill(id, data)
+  if elemType == "CardItem" or elemType == "Photo" then
+    return ReqActiveSkill.update(self, elemType, id, action, data)
+  else --if elemType == "Button" or elemType == "SkillButton" then
+    return ReqResponseCard.update(self, elemType, id, action, data)
   end
-  self.scene:notifyUI()
 end
 
 return ReqUseCard

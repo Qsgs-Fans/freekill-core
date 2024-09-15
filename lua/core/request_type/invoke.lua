@@ -11,12 +11,10 @@ function ReqInvoke:initialize(player)
 end
 
 function ReqInvoke:setup()
-  self.change = ClientInstance and {} or nil
   local scene = self.scene
 
   scene:update("Button", "OK", { enabled = true })
   scene:update("Button", "Cancel", { enabled = true })
-  scene:notifyUI()
 end
 
 function ReqInvoke:doOKButton()
@@ -31,6 +29,7 @@ function ReqInvoke:update(elemType, id, action, data)
   if elemType == "Button" then
     if id == "OK" then self:doOKButton()
     elseif id == "Cancel" then self:doCancelButton() end
+    return true
   end
 end
 

@@ -17,14 +17,8 @@ local ReqActiveSkill = require 'core.request_type.active_skill'
 local ReqResponseCard = ReqActiveSkill:subclass("ReqResponseCard")
 
 function ReqResponseCard:setup()
-  self.change = ClientInstance and {} or nil
-  local scene = self.scene
-
-  self:updateUnselectedCards()
-  self:updateButtons()
+  ReqActiveSkill.setup(self)
   self:updateSkillButtons()
-
-  scene:notifyUI()
 end
 
 function ReqResponseCard:skillButtonValidity(name)
@@ -91,7 +85,6 @@ end
 function ReqResponseCard:doCancelButton()
   if self.skill_name then
     self:selectSkill(self.skill_name, { selected = false })
-    self.skill_name = nil
     self.scene:notifyUI()
     return
   end
@@ -103,20 +96,16 @@ function ReqResponseCard:selectSkill(skill, data)
   local selected = data.selected
   scene:update("SkillButton", skill, data)
 
-  self.pendings = {}
-  self.selected_card = nil
-  scene:unselectAllCards()
   if selected then
     for name, item in pairs(scene:getAllItems("SkillButton")) do
       scene:update("SkillButton", name, { enabled = item.selected })
     end
     self.skill_name = skill
+    ReqActiveSkill.setup(self)
   else
     self.skill_name = nil
-    self:updateSkillButtons()
+    self:setup()
   end
-  self:updateUnselectedCards()
-  self:updateButtons()
 end
 
 function ReqResponseCard:selectCard(cid, data)
@@ -136,18 +125,14 @@ function ReqResponseCard:selectCard(cid, data)
 end
 
 function ReqResponseCard:update(elemType, id, action, data)
-  self.change = ClientInstance and {} or nil
   if elemType == "Button" then
-    if id == "OK" then self:doOKButton()
-    elseif id == "Cancel" then self:doCancelButton() end
-    return
+    return ReqActiveSkill.update(self, elemType, id, action, data)
   elseif elemType == "CardItem" then
     self:selectCard(id, data)
     self:updateButtons()
   elseif elemType == "SkillButton" then
     self:selectSkill(id, data)
   end
-  self.scene:notifyUI()
 end
 
 return ReqResponseCard

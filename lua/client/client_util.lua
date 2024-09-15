@@ -811,7 +811,12 @@ function ReloadPackage(path)
 end
 
 function UpdateRequestUI(elemType, id, action, data)
-  ClientInstance.current_request_handler:update(elemType, id, action, data)
+  local h = ClientInstance.current_request_handler
+  h.change = {}
+  local finish = h:update(elemType, id, action, data)
+  if not finish then
+    h.scene:notifyUI()
+  end
 end
 
 dofile "lua/client/i18n/init.lua"

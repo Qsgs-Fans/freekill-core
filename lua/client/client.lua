@@ -406,7 +406,9 @@ end
 
 fk.client_callback["PlayCard"] = function(data)
   local h = Fk.request_handlers["PlayCard"]:new(Self)
+  h.change = {}
   h:setup()
+  h.scene:notifyUI()
   ClientInstance:notifyUI("PlayCard", data)
 end
 
@@ -871,7 +873,9 @@ fk.client_callback["AskForSkillInvoke"] = function(data)
 
   local h = Fk.request_handlers["AskForSkillInvoke"]:new(Self)
   h.prompt = data[2]
+  h.change = {}
   h:setup()
+  h.scene:notifyUI()
   ClientInstance:notifyUI("AskForSkillInvoke", data)
 end
 
@@ -887,7 +891,9 @@ fk.client_callback["AskForUseActiveSkill"] = function(data)
   h.prompt     = data[2]
   h.cancelable = data[3]
   h.extra_data = data[4]
+  h.change = {}
   h:setup()
+  h.scene:notifyUI()
   ClientInstance:notifyUI("AskForUseActiveSkill", data)
 end
 
@@ -899,7 +905,9 @@ fk.client_callback["AskForUseCard"] = function(data)
   h.pattern    = data[2]
   h.prompt     = data[3]
   h.cancelable = data[4]
+  h.change = {}
   h:setup()
+  h.scene:notifyUI()
   ClientInstance:notifyUI("AskForUseCard", data)
 end
 
@@ -911,7 +919,9 @@ fk.client_callback["AskForResponseCard"] = function(data)
   h.pattern    = data[2]
   h.prompt     = data[3]
   h.cancelable = data[4]
+  h.change = {}
   h:setup()
+  h.scene:notifyUI()
   ClientInstance:notifyUI("AskForResponseCard", data)
 end
 
