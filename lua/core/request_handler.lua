@@ -1,11 +1,32 @@
--- 用于当一名玩家需要对Request作出回应时
--- 包含相关数据以及一个模拟UI场景 以及需要用到的所有UI合法性判断逻辑
+--[[
+  RequestHandler是当一名Player收到Request信息时，创建的数据结构。
+  根据Player是由真人控制还是由Bot控制，该数据可能创建于客户端或者服务端。
+
+  内容：
+  * 一个Scene对象，保存着在答复该Request时，界面上所有的可操作要素
+  * Player与currentRoom
+  * setup(): 初始化函数
+
+  当RequestHandler创建于客户端时，其还负责与实际显示出的UI进行通信。为了与实际
+  界面进行通信，需要额外的方法与数据：
+
+  * notifyUI(): 向qml发送所有与UI更新有关的信息
+  * update(): Qml向Lua发送UI事件后，这里做出相关的处理，
+              一般最后通过notifyUI反馈更新信息
+  * self.change: 一次update中，产生的UI变化；设置这个的目的是当notifyUI时
+              减少信息量，只将状态发生改变的元素发回客户端
+  (*) 在QML中需定义applyChange函数以接收来自Lua的更改
+
+  当RequestHandler创建于服务端时，因为并没有实际的界面，所以上述三个方法无用，
+  此时与RequestHandler进行交互的就是AI逻辑代码；这些就留到以后讨论了。
+--]]
 --@field public data any 相关数据，需要子类自行定义一个类或者模拟类
 
 ---@class RequestHandler: Object
 ---@field public room AbstractRoom
 ---@field public scene Scene
 ---@field public player Player 需要应答的玩家
+---@field public prompt string 提示信息
 ---@field public change { [string]: Item[] } 将会传递给UI的更新数据
 local RequestHandler = class("RequestHandler")
 

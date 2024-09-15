@@ -2,6 +2,7 @@
 -- 在客户端与Qml直接同步，在服务端中用于AI。
 
 -- 模拟UI组件。最基本的属性为enabled，表示是否可以进行交互。
+-- 注意在编写逻辑时不要直接修改Item的属性。用scene:update。
 ---@class Item: Object
 ---@field public parent Scene
 ---@field public enabled boolean
@@ -52,7 +53,29 @@ end
 -- 在派生类中视情况可能要为其传入参数表示修改后的值。
 function Item:interact() end
 
--- 模拟UI场景。用途是容纳所有模拟UI组件，并与实际的UI进行信息交换。
+--[[
+  模拟UI场景。用途是容纳所有模拟UI组件，并与实际的UI进行信息交换。
+
+  在实际针对Scene与Handler进行开发时，Scene只需要创建Item并管理就行了，
+  与逻辑相关的代码都在RequestHandler及其子类中编写，然而直接负责管理各个
+  UI组件的是Scene。以下是注意事项：
+  
+  1. 使用scene:update方法来更新Item的属性：
+  -------------------------------
+
+    [QML] cardItem.enabled = true;
+    [Lua] scene:update("CardItem", cid, { enabled = true })
+
+  这样做是为了在后续操作中能成功的将此处作出的修改传达给QML。因为没有类似QML的
+  属性绑定机制，因此要另外调用update方法来记录相关的属性变动。
+
+  2. 使用Scene提供的方法来访问元素
+  ---------------------------------
+  
+  例如RoomScene中已经创建了表达卡牌和技能的Item，因此在Handler的逻辑编写中，
+  应当避免再去使用getCards或者getSkills这样获取原始属性的函数，而是直接访问Item
+  例如：
+--]]
 ---@class Scene: Object
 ---@field public parent RequestHandler
 ---@field public items { [string]: { [string|integer]: Item } }
@@ -68,6 +91,10 @@ function Scene:addItem(item)
   local key = item.class.name
   self.items[key] = self.items[key] or {}
   self.items[key][item.id] = item
+end
+
+function Scene:getAllItems(elemType)
+  return self.items[elemType] or Util.DummyTable
 end
 
 -- 模拟一次UI交互，修改相关item的属性即可

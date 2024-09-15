@@ -3,7 +3,6 @@ local OKScene = require 'ui_emu.okscene'
 -- 极其简单的skillinvoke
 
 ---@class ReqInvoke: RequestHandler
----@field public prompt string 提示信息
 local ReqInvoke = RequestHandler:subclass("ReqInvoke")
 
 function ReqInvoke:initialize(player)
@@ -29,7 +28,6 @@ function ReqInvoke:doCancelButton()
 end
 
 function ReqInvoke:update(elemType, id, action, data)
-  self.change = ClientInstance and {} or nil
   if elemType == "Button" then
     if id == "OK" then self:doOKButton()
     elseif id == "Cancel" then self:doCancelButton() end

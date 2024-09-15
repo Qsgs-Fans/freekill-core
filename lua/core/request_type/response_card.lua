@@ -1,102 +1,101 @@
 local RoomScene = require 'ui_emu.roomscene'
 local ReqActiveSkill = require 'core.request_type.active_skill'
 
+--[[
+  负责处理AskForResponseCard的Handler。
+  涉及的UI组件：较基类增加技能按钮、减少角色
+  可能发生的事件：
+  * 点击手牌：取消选中其他牌
+  * 按下按钮：发送答复
+  * 点击技能按钮：若有则取消其他已按下按钮的按下，重置信息
+  若有按下的技能按钮则走ActiveSkill合法性流程
+--]]
+
 ---@class ReqResponseCard: ReqActiveSkill
 ---@field public selected_card? Card 使用一张牌时会用到 支持锁视技
 ---@field public pattern string 请求格式
 local ReqResponseCard = ReqActiveSkill:subclass("ReqResponseCard")
 
-function ReqResponseCard:initialize(player)
-  ReqActiveSkill.initialize(self, player)
-  self.scene = RoomScene:new(self)
-end
-
--- 这种具体的合法性分析代码要不要单独放到某个模块呢
----@param player Player @ 使用者
----@param card Card @ 目标卡牌
----@param data? any @ 额外数据?
-function ReqResponseCard:canUseCard(player, card, data)
-  -- TODO: 补全判断逻辑
-  -- 若需要其他辅助函数的话在这个文件进行local
-  local exp = Exppattern:Parse(self.pattern)
-  return not player:prohibitResponse(card) and exp:match(card)
-end
-
 function ReqResponseCard:setup()
   self.change = ClientInstance and {} or nil
   local scene = self.scene
-  local player = self.player
-  p("setup response!")
 
-  -- 准备牌堆
-  self:updateCard()
+  self:updateUnselectedCards()
+  self:updateButtons()
+  self:updateSkillButtons()
 
-  -- RoomScene.enableSkills();
-  local vss = table.filter(player:getAllSkills(), function(s)
-    return s:isInstanceOf(ViewAsSkill)
-  end)
-  ---@param skill ViewAsSkill
-  for _, skill in ipairs(vss) do
-    local ret = skill:enabledAtResponse(player, true)
-    if ret then
-      local exp = Exppattern:Parse(skill.pattern)
-      local cnames = {}
-      for _, m in ipairs(exp.matchers) do
-        if m.name then
-          table.insertTable(cnames, m.name)
-        end
-        if m.trueName then
-          table.insertTable(cnames, m.trueName)
-        end
-      end
-      for _, n in ipairs(cnames) do
-        local c = Fk:cloneCard(n)
-        c.skillName = skill.name
-        ret = self:canUseCard(player, c)
-        if ret then break end
-      end
-    end
-    scene:update("SkillButton", skill.name, {
-      enabled = ret
-    })
-  end
-
-  scene:update("Button", "Cancel", { enabled = self.cancelable })
   scene:notifyUI()
 end
 
-function ReqResponseCard:updateCard(data)
-  local scene = self.scene
+function ReqResponseCard:skillButtonValidity(name)
   local player = self.player
-  self.selected_card = nil
-  self.pendings = {}
-  -- TODO: 统一调用一个公有ID表（代表屏幕亮出的这些牌）
-  for _, cid in ipairs(player:getCardIds("h")) do
-    local dat = {
-      selected = false,
-      enabled = not not(self:canUseCard(player, Fk:getCardById(cid))),
-    }
-    -- print(string.format("<%d %s>", cid, inspect(dat)))
-    scene:update("CardItem", cid, dat)
+  local skill = Fk.skills[name]
+  return skill:isInstanceOf(ViewAsSkill) and skill:enabledAtResponse(player, true)
+end
+
+function ReqResponseCard:cardValidity(cid)
+  if self.skill_name then return ReqActiveSkill.cardValidity(self, cid) end
+  local exp = Exppattern:Parse(self.pattern)
+  local player = self.player
+  local card = cid
+  if type(cid) == "number" then card = Fk:getCardById(cid) end
+  return not player:prohibitResponse(card) and exp:match(card)
+end
+
+function ReqResponseCard:feasible()
+  local skill = Fk.skills[self.skill_name]
+  local card = self.selected_card
+  if skill then
+    card = skill:viewAs(self.pendings)
+  end
+  return card and self:cardValidity(card)
+end
+
+function ReqResponseCard:isCancelable()
+  if self.skill_name then return true end
+  return self.cancelable
+end
+
+function ReqResponseCard:updateSkillButtons()
+  local scene = self.scene
+  for name, item in pairs(scene:getAllItems("SkillButton")) do
+    local skill = Fk.skills[name]
+    local ret = self:skillButtonValidity(name)
+    if ret and skill:isInstanceOf(ViewAsSkill) then
+      local exp = Exppattern:Parse(skill.pattern)
+      local cnames = {}
+      for _, m in ipairs(exp.matchers) do
+        if m.name then table.insertTable(cnames, m.name) end
+        if m.trueName then table.insertTable(cnames, m.trueName) end
+      end
+      for _, n in ipairs(cnames) do
+        local c = Fk:cloneCard(n)
+        c.skillName = name
+        ret = self:cardValidity(c)
+        if ret then break end
+      end
+    end
+    scene:update("SkillButton", name, { enabled = not not ret })
   end
 end
 
 function ReqResponseCard:doOKButton()
-  local cardstr
-  -- 正在选技能
-  if self.skill_name then
-    cardstr = json.encode{
-      skill = self.skill_name,
-      subcards = self.pendings
-    }
-  else
-    cardstr = self.selected_card:getEffectiveId()
-  end
+  if self.skill_name then return ReqActiveSkill.doOKButton(self) end
   local reply = {
-    card = cardstr,
+    card = self.selected_card:getEffectiveId(),
     targets = self.selected_targets,
   }
   ClientInstance:notifyUI("ReplyToServer", json.encode(reply))
+end
+
+function ReqResponseCard:doCancelButton()
+  if self.skill_name then
+    self:selectSkill(self.skill_name, { selected = false })
+    self.skill_name = nil
+    self.scene:notifyUI()
+    return
+  end
+  return ReqActiveSkill:doCancelButton()
 end
 
 function ReqResponseCard:selectSkill(skill, data)
@@ -104,53 +103,36 @@ function ReqResponseCard:selectSkill(skill, data)
   local selected = data.selected
   scene:update("SkillButton", skill, data)
 
+  self.pendings = {}
+  self.selected_card = nil
+  scene:unselectAllCards()
   if selected then
+    for name, item in pairs(scene:getAllItems("SkillButton")) do
+      scene:update("SkillButton", name, { enabled = item.selected })
+    end
     self.skill_name = skill
-    self.selected_card = nil
-    ReqActiveSkill.updateCard(self)
-    ReqActiveSkill.checkButton(self)
   else
     self.skill_name = nil
-    self:updateCard()
-    self:checkButton()
+    self:updateSkillButtons()
   end
+  self:updateUnselectedCards()
+  self:updateButtons()
 end
 
 function ReqResponseCard:selectCard(cid, data)
-  local scene = self.scene
-  local selected = data.selected
-  -- 正在选技能
   if self.skill_name then
     return ReqActiveSkill.selectCard(self, cid, data)
   end
+  local scene = self.scene
+  local selected = data.selected
   scene:update("CardItem", cid, data)
 
   if selected then
     self.selected_card = Fk:getCardById(cid)
-    local dat = { selected = false }
-    for _, id in ipairs(self.player:getCardIds("h")) do
-      if id ~= cid then
-        scene:update("CardItem", id, dat)
-      end
-    end
+    scene:unselectOtherCards(cid)
   else
     self.selected_card = nil
   end
-end
-
-function ReqResponseCard:checkButton(data)
-  local scene = self.scene
-  local skill = Fk.skills[self.skill_name] ---@type ViewAsSkill
-  local card = self.selected_card
-  local dat = { enabled = false }
-  -- 正在选技能
-  if skill then
-    card = skill:viewAs(self.pendings)
-  end
-  if card and self:canUseCard(self.player, card) then
-    dat.enabled = true
-  end
-  scene:update("Button", "OK", dat)
 end
 
 function ReqResponseCard:update(elemType, id, action, data)
@@ -161,7 +143,7 @@ function ReqResponseCard:update(elemType, id, action, data)
     return
   elseif elemType == "CardItem" then
     self:selectCard(id, data)
-    self:checkButton(data)
+    self:updateButtons()
   elseif elemType == "SkillButton" then
     self:selectSkill(id, data)
   end
