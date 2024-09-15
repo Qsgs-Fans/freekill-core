@@ -18,6 +18,7 @@ local ReqResponseCard = ReqActiveSkill:subclass("ReqResponseCard")
 
 function ReqResponseCard:setup()
   ReqActiveSkill.setup(self)
+  self.selected_card = nil
   self:updateSkillButtons()
 end
 

@@ -30,13 +30,14 @@ end
 function ReqActiveSkill:setup()
   local scene = self.scene
 
-  -- TODO: interaction
+  -- 先清理所有不属于自己的interaction 再创建
   self.pendings = {}
   scene:unselectAllCards()
-  self:updateUnselectedCards()
 
   self.selected_targets = {}
   scene:unselectAllTargets()
+
+  self:updateUnselectedCards()
   self:updateUnselectedTargets()
 
   self:updateButtons()
@@ -72,6 +73,11 @@ end
 function ReqActiveSkill:targetValidity(pid)
   local skill = Fk.skills[self.skill_name]
   if not skill then return false end
+  if skill:isInstanceOf(ViewAsSkill) then
+    local card = skill:viewAs(self.pendings)
+    if not card then return false end
+    skill = card.skill
+  end
   return skill:targetFilter(pid, self.selected_targets, self.pendings)
 end
 
