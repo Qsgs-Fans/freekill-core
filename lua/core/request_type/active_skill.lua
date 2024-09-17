@@ -1,4 +1,5 @@
 local RoomScene = require 'ui_emu.roomscene'
+local Interaction = require 'ui_emu.interaction'
 
 --[[
   负责处理AskForUseActiveSkill的Handler。
@@ -27,10 +28,26 @@ function ReqActiveSkill:initialize(player)
   self.scene = RoomScene:new(self)
 end
 
-function ReqActiveSkill:setup()
+function ReqActiveSkill:setupInteraction()
+  local skill = Fk.skills[self.skill_name]
+  if skill and skill.interaction then
+    skill.interaction.data = nil -- FIXME
+    local interaction = skill:interaction()
+    -- 假设只有1个interaction （其实目前就是这样）
+    local i = Interaction:new(self.scene, "1", interaction)
+    i.skill_name = self.skill_name
+    self.scene:addItem(i)
+  end
+end
+
+function ReqActiveSkill:setup(ignoreInteraction)
   local scene = self.scene
 
-  -- 先清理所有不属于自己的interaction 再创建
+  if not ignoreInteraction then
+    scene:removeItem("Interaction", "1")
+    self:setupInteraction()
+  end
+
   self.pendings = {}
   scene:unselectAllCards()
 
@@ -127,7 +144,18 @@ function ReqActiveSkill:updateTargetsAfterCardSelected()
   self:updateButtons()
 end
 
+function ReqActiveSkill:updateInteraction(data)
+  local skill = Fk.skills[self.skill_name]
+  print(self.skill_name, "interaction", data)
+  if skill and skill.interaction then
+    skill.interaction.data = data
+    self.scene:update("Interaction", "1", { data = data })
+    ReqActiveSkill.setup(self, true) -- interaction变动后需复原
+  end
+end
+
 function ReqActiveSkill:doOKButton()
+  local skill = Fk.skills[self.skill_name]
   local cardstr = json.encode{
     skill = self.skill_name,
     subcards = self.pendings
@@ -135,6 +163,8 @@ function ReqActiveSkill:doOKButton()
   local reply = {
     card = cardstr,
     targets = self.selected_targets,
+    --special_skill = roomScene.getCurrentCardUseMethod(),
+    interaction_data = skill and skill.interaction and skill.interaction.data,
   }
   ClientInstance:notifyUI("ReplyToServer", json.encode(reply))
 end
@@ -207,6 +237,8 @@ function ReqActiveSkill:update(elemType, id, action, data)
     self:updateTargetsAfterCardSelected()
   elseif elemType == "Photo" then
     self:selectTarget(id, data)
+  elseif elemType == "Interaction" then
+    self:updateInteraction(data)
   end
 end
 

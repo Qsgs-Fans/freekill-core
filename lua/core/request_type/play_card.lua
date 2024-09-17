@@ -5,10 +5,10 @@ local Button = (require 'ui_emu.control').Button
 ---@class ReqPlayCard: ReqUseCard
 local ReqPlayCard = ReqUseCard:subclass("ReqPlayCard")
 
-function ReqPlayCard:setup()
-  local scene = self.scene
-  ReqUseCard.setup(self)
+function ReqPlayCard:initialize(player)
+  ReqUseCard.initialize(self, player)
 
+  local scene = self.scene
   -- 出牌阶段还要多模拟一个结束按钮
   scene:addItem(Button:new(self.scene, "End"))
   scene:update("Button", "End", { enabled = true })

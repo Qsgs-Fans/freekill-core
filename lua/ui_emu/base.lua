@@ -87,10 +87,37 @@ function Scene:initialize(parent)
 end
 
 ---@param item Item
-function Scene:addItem(item)
+function Scene:addItem(item, ui_data)
   local key = item.class.name
   self.items[key] = self.items[key] or {}
   self.items[key][item.id] = item
+  local changeData = self.parent.change
+  if changeData then
+    local k = "_new"
+    changeData[k] = changeData[k] or {}
+    table.insert(changeData[k], {
+      type = key,
+      data = item:toData(),
+      ui_data = ui_data,
+    })
+  end
+end
+
+function Scene:removeItem(elemType, id, ui_data)
+  local tab = self.items[elemType]
+  if type(tab) ~= "table" then return end
+  if not (tab and tab[id]) then return end
+  tab[id] = nil
+  local changeData = self.parent.change
+  if changeData then
+    local k = "_delete"
+    changeData[k] = changeData[k] or {}
+    table.insert(changeData[k], {
+      type = elemType,
+      id = id,
+      ui_data = ui_data,
+    })
+  end
 end
 
 function Scene:getAllItems(elemType)

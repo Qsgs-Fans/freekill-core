@@ -98,7 +98,7 @@ end
 function ReqUseCard:update(elemType, id, action, data)
   if elemType == "CardItem" or elemType == "Photo" then
     return ReqActiveSkill.update(self, elemType, id, action, data)
-  else --if elemType == "Button" or elemType == "SkillButton" then
+  else --if elemType == "Button" or elemType == "SkillButton" then or interaction
     return ReqResponseCard.update(self, elemType, id, action, data)
   end
 end

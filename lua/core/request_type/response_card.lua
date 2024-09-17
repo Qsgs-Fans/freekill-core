@@ -126,13 +126,13 @@ function ReqResponseCard:selectCard(cid, data)
 end
 
 function ReqResponseCard:update(elemType, id, action, data)
-  if elemType == "Button" then
-    return ReqActiveSkill.update(self, elemType, id, action, data)
-  elseif elemType == "CardItem" then
+  if elemType == "CardItem" then
     self:selectCard(id, data)
     self:updateButtons()
   elseif elemType == "SkillButton" then
     self:selectSkill(id, data)
+  else -- if elemType == "Button" or elemType == "Interaction" then
+    return ReqActiveSkill.update(self, elemType, id, action, data)
   end
 end
 
