@@ -1,5 +1,6 @@
 local RoomScene = require 'ui_emu.roomscene'
 local Interaction = require 'ui_emu.interaction'
+local CardItem = (require 'ui_emu.common').CardItem
 
 --[[
   负责处理AskForUseActiveSkill的Handler。
@@ -21,11 +22,41 @@ local Interaction = require 'ui_emu.interaction'
 ---@field public extra_data any 鬼晓得是啥 先any
 ---@field public pendings integer[] 卡牌id数组
 ---@field public selected_targets integer[] 选择的目标
+---@field public expanded_piles { [string]: integer[] } 用于展开/收起
 local ReqActiveSkill = RequestHandler:subclass("ReqActiveSkill")
 
 function ReqActiveSkill:initialize(player)
   RequestHandler.initialize(self, player)
   self.scene = RoomScene:new(self)
+
+  self.expanded_piles = {}
+end
+
+function ReqActiveSkill:setup(ignoreInteraction)
+  local scene = self.scene
+
+  -- FIXME: 偷懒了，让修改interaction时的全局刷新功能复用setup 总之这里写的很垃圾
+  if not ignoreInteraction then
+    scene:removeItem("Interaction", "1")
+    self:setupInteraction()
+  end
+
+  self.pendings = {}
+  self:retractAllPiles()
+  self:expandPiles()
+  scene:unselectAllCards()
+
+  self.selected_targets = {}
+  scene:unselectAllTargets()
+
+  self:updateUnselectedCards()
+  self:updateUnselectedTargets()
+
+  self:updateButtons()
+end
+
+function ReqActiveSkill:finish()
+  self:retractAllPiles()
 end
 
 function ReqActiveSkill:setupInteraction()
@@ -40,24 +71,77 @@ function ReqActiveSkill:setupInteraction()
   end
 end
 
-function ReqActiveSkill:setup(ignoreInteraction)
-  local scene = self.scene
+function ReqActiveSkill:expandPile(pile, extra_ids, extra_footnote)
+  if self.expanded_piles[pile] ~= nil then return end
+  local ids, footnote
+  local player = self.player
 
-  if not ignoreInteraction then
-    scene:removeItem("Interaction", "1")
-    self:setupInteraction()
+  if pile == "_equip" then
+    ids = player:getCardIds("e")
+    footnote = "$Equip"
+  elseif pile == "_extra" then
+    ids = extra_ids
+    footnote = extra_footnote
+    -- self.extra_cards = exira_ids
+  else
+    -- FIXME: 可能存在的浅拷贝
+    ids = table.simpleClone(player:getPile(pile))
+    footnote = pile
+  end
+  self.expanded_piles[pile] = ids
+
+  local scene = self.scene
+  for _, id in ipairs(ids) do
+    scene:addItem(CardItem:new(scene, id), {
+      reason = "expand",
+      footnote = footnote,
+    })
+  end
+end
+
+function ReqActiveSkill:retractPile(pile)
+  if self.expanded_piles[pile] == nil then return end
+  local ids = self.expanded_piles[pile]
+  self.expanded_piles[pile] = nil
+
+  local scene = self.scene
+  for _, id in ipairs(ids) do
+    scene:removeItem("CardItem", id, { reason = "retract" })
+  end
+end
+
+function ReqActiveSkill:retractAllPiles()
+  for k, v in pairs(self.expanded_piles) do
+    self:retractPile(k)
+  end
+end
+
+function ReqActiveSkill:expandPiles()
+  local skill = Fk.skills[self.skill_name]
+  local player = self.player
+  if not skill then return end
+  -- 特殊：equips至少有一张能亮着的情况下才展开 且无视是否存在skill.expand_pile
+  for _, id in ipairs(player:getCardIds("e")) do
+    if self:cardValidity(id) then
+      self:expandPile("_equip")
+      break
+    end
   end
 
-  self.pendings = {}
-  scene:unselectAllCards()
+  if not skill.expand_pile then return end
+  local pile = skill.expand_pile
+  if type(pile) == "function" then
+    pile = pile(skill)
+  end
 
-  self.selected_targets = {}
-  scene:unselectAllTargets()
+  local ids = pile
+  if type(pile) == "string" then
+    ids = player:getPile(pile)
+  else -- if type(pile) == "table" then
+    pile = "_extra"
+  end
 
-  self:updateUnselectedCards()
-  self:updateUnselectedTargets()
-
-  self:updateButtons()
+  self:expandPile(pile, ids, self.skill_name)
 end
 
 function ReqActiveSkill:feasible()
@@ -146,7 +230,6 @@ end
 
 function ReqActiveSkill:updateInteraction(data)
   local skill = Fk.skills[self.skill_name]
-  print(self.skill_name, "interaction", data)
   if skill and skill.interaction then
     skill.interaction.data = data
     self.scene:update("Interaction", "1", { data = data })

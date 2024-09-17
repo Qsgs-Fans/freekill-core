@@ -33,11 +33,28 @@ local RequestHandler = class("RequestHandler")
 function RequestHandler:initialize(player)
   self.room = Fk:currentRoom()
   self.player = player
+  -- finish只在Client执行 用于保证UI执行了某些必须执行的善后
+  if ClientInstance and ClientInstance.current_request_handler then
+    ClientInstance.current_request_handler:_finish()
+  end
   self.room.current_request_handler = self
 end
 
 -- 进入Request之后需要做的第一步操作，对应之前UI代码中state变换
 function RequestHandler:setup() end
+
+function RequestHandler:_finish()
+  if not self.finished then
+    self.finished = true
+    self.change = {}
+    self:finish()
+    self.scene:notifyUI()
+  end
+end
+
+-- 因为发送答复或者超时等原因导致UI进入notactive状态时调用。
+-- 只会由UI调用且只执行一次；意义主要在于清除那些传给了UI的半路新建的对象
+function RequestHandler:finish() end
 
 -- 产生UI事件后由UI触发
 -- 需要实现各种合法性检验，决定需要变更状态的UI，并最终将变更反馈给真实的界面

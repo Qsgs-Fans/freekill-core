@@ -11,7 +11,11 @@ function ReqPlayCard:initialize(player)
   local scene = self.scene
   -- 出牌阶段还要多模拟一个结束按钮
   scene:addItem(Button:new(self.scene, "End"))
-  scene:update("Button", "End", { enabled = true })
+end
+
+function ReqPlayCard:setup()
+  ReqUseCard.setup(self)
+  self.scene:update("Button", "End", { enabled = true })
 end
 
 function ReqPlayCard:cardValidity(cid)
