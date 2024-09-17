@@ -19,7 +19,7 @@ local CardItem = (require 'ui_emu.common').CardItem
 ---@field public skill_name string 当前响应的技能名
 ---@field public prompt string 提示信息
 ---@field public cancelable boolean 可否取消
----@field public extra_data any 鬼晓得是啥 先any
+---@field public extra_data UseExtraData 传入的额外信息
 ---@field public pendings integer[] 卡牌id数组
 ---@field public selected_targets integer[] 选择的目标
 ---@field public expanded_piles { [string]: integer[] } 用于展开/收起
@@ -172,14 +172,27 @@ function ReqActiveSkill:cardValidity(cid)
 end
 
 function ReqActiveSkill:targetValidity(pid)
-  local skill = Fk.skills[self.skill_name]
-  if not skill then return false end
-  if skill:isInstanceOf(ViewAsSkill) then
-    local card = skill:viewAs(self.pendings)
-    if not card then return false end
-    skill = card.skill
+  local data = self.extra_data or {}
+  -- 逻辑块地狱
+  if (not data.must_targets or
+    (#data.must_targets <= #self.selected_targets or
+      table.contains(data.must_targets, pid))) and
+  (not data.include_targets or
+    (table.hasIntersection(data.include_targets, self.selected_targets) or
+      table.contains(data.include_targets, pid))) and
+  (not data.exclusive_targets or
+    table.contains(data.exclusive_targets, pid)) then
+    local skill = Fk.skills[self.skill_name] --- @type ActiveSkill | ViewAsSkill
+    if not skill then return false end
+    local card -- 姑且接一下(雾)
+    if skill:isInstanceOf(ViewAsSkill) then
+      card = skill:viewAs(self.pendings)
+      if not card then return false end
+      skill = card.skill
+    end
+    return skill:targetFilter(pid, self.selected_targets, self.pendings, card, data)
   end
-  return skill:targetFilter(pid, self.selected_targets, self.pendings)
+  return false
 end
 
 function ReqActiveSkill:updateButtons()
@@ -208,8 +221,7 @@ function ReqActiveSkill:updateUnselectedTargets()
   end
 end
 
--- FIXME: 想办法换个名
-function ReqActiveSkill:updateTargetsAfterCardSelected()
+function ReqActiveSkill:initiateTargets()
   local room = self.room
   local scene = self.scene
   local skill = Fk.skills[self.skill_name]
@@ -317,7 +329,7 @@ function ReqActiveSkill:update(elemType, id, action, data)
     return true
   elseif elemType == "CardItem" then
     self:selectCard(id, data)
-    self:updateTargetsAfterCardSelected()
+    self:initiateTargets()
   elseif elemType == "Photo" then
     self:selectTarget(id, data)
   elseif elemType == "Interaction" then

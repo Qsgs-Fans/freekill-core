@@ -38,9 +38,9 @@ function ReqUseCard:feasible()
   return ret
 end
 
-function ReqUseCard:updateTargetsAfterCardSelected()
+function ReqUseCard:initiateTargets()
   if self.skill_name then
-    return ReqActiveSkill.updateTargetsAfterCardSelected(self)
+    return ReqActiveSkill.initiateTargets(self)
   end
 
   -- 重置

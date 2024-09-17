@@ -414,6 +414,17 @@ function table:assign(targetTbl)
   end
 end
 
+function table:hasIntersection(table)
+  local hash = {}
+  for _, value in ipairs(self) do
+    hash[value] = true
+  end
+  for _, value in ipairs(table) do
+    if hash[value] then return true end
+  end
+  return false
+end
+
 function table.empty(t)
   return next(t) == nil
 end
