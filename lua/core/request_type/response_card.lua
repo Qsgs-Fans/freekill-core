@@ -14,12 +14,28 @@ local ReqActiveSkill = require 'core.request_type.active_skill'
 ---@class ReqResponseCard: ReqActiveSkill
 ---@field public selected_card? Card 使用一张牌时会用到 支持锁视技
 ---@field public pattern string 请求格式
+---@field public original_prompt string 最开始的提示信息；这种涉及技能按钮的需要这样一下
 local ReqResponseCard = ReqActiveSkill:subclass("ReqResponseCard")
 
 function ReqResponseCard:setup()
+  if not self.original_prompt then
+    self.original_prompt = self.prompt or ""
+  end
+
   ReqActiveSkill.setup(self)
   self.selected_card = nil
   self:updateSkillButtons()
+end
+
+-- FIXME: 关于&牌堆的可使用打出瞎jb写了点 来个懂哥优化一下
+function ReqResponseCard:expandPiles()
+  if self.skill_name then return ReqActiveSkill.expandPiles(self) end
+  local player = self.player
+  for pile in pairs(player.special_cards) do
+    if pile:endsWith('&') then
+      self:expandPile(pile)
+    end
+  end
 end
 
 function ReqResponseCard:skillButtonValidity(name)
@@ -102,9 +118,12 @@ function ReqResponseCard:selectSkill(skill, data)
       scene:update("SkillButton", name, { enabled = item.selected })
     end
     self.skill_name = skill
+    self:setSkillPrompt(skill)
+
     ReqActiveSkill.setup(self)
   else
     self.skill_name = nil
+    self.prompt = self.original_prompt
     self:setup()
   end
 end

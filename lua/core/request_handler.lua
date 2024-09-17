@@ -22,6 +22,13 @@
 --]]
 --@field public data any 相关数据，需要子类自行定义一个类或者模拟类
 
+-- 关于self.change:
+-- * _new: 新创建的Item，一开始的时候UI上没显示它们
+-- * _delete: 删除新创建的Item
+-- * _prompt: 提示信息。实践证明prompt值得单开一个key
+-- * _misc: 其他乱七八糟的需要告诉UI的信息
+-- * Item类名：这类Item中某个Item发生的信息变动，change的主体部分
+
 ---@class RequestHandler: Object
 ---@field public room AbstractRoom
 ---@field public scene Scene
@@ -63,5 +70,11 @@ function RequestHandler:finish() end
 ---@param action string
 ---@param data any
 function RequestHandler:update(elemType, id, action, data) end
+
+function RequestHandler:setPrompt(str)
+  if not self.change then return end
+  self.prompt = str
+  self.change["_prompt"] = str
+end
 
 return RequestHandler

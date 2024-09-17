@@ -41,6 +41,8 @@ function ReqActiveSkill:setup(ignoreInteraction)
     self:setupInteraction()
   end
 
+  self:setPrompt(self.prompt)
+
   self.pendings = {}
   self:retractAllPiles()
   self:expandPiles()
@@ -57,6 +59,18 @@ end
 
 function ReqActiveSkill:finish()
   self:retractAllPiles()
+end
+
+function ReqActiveSkill:setSkillPrompt(skill, cid)
+  local prompt = skill.prompt
+  if type(skill.prompt) == "function" then
+    prompt = skill:prompt(cid or self.pendings, self.selected_targets)
+  end
+  if type(prompt) == "string" then
+    self:setPrompt(prompt)
+  else
+    self:setPrompt(self.original_prompt or "")
+  end
 end
 
 function ReqActiveSkill:setupInteraction()

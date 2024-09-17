@@ -8,6 +8,7 @@ local ReqPlayCard = ReqUseCard:subclass("ReqPlayCard")
 function ReqPlayCard:initialize(player)
   ReqUseCard.initialize(self, player)
 
+  self.original_prompt = "#PlayCard"
   local scene = self.scene
   -- 出牌阶段还要多模拟一个结束按钮
   scene:addItem(Button:new(self.scene, "End"))
@@ -15,6 +16,7 @@ end
 
 function ReqPlayCard:setup()
   ReqUseCard.setup(self)
+
   self.scene:update("Button", "End", { enabled = true })
 end
 
@@ -64,6 +66,17 @@ end
 
 function ReqPlayCard:doEndButton()
   ClientInstance:notifyUI("ReplyToServer", "")
+end
+
+function ReqPlayCard:selectCard(cid, data)
+  ReqUseCard.selectCard(self, cid, data)
+  if self.skill_name then return end
+
+  if self.selected_card then
+    self:setSkillPrompt(self.selected_card.skill, self.selected_card:getEffectiveId())
+  else
+    self:setPrompt(self.original_prompt)
+  end
 end
 
 function ReqPlayCard:update(elemType, id, action, data)
