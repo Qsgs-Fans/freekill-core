@@ -37,31 +37,13 @@ function GetGeneralDetail(name)
     deputyMaxHp = general.deputyMaxHpAdjustedValue,
     gender = general.gender,
     skill = {},
-    related_skill = {},
     companions = general.companions
   }
-  for _, s in ipairs(general.skills) do
+  for _, s in ipairs(general.all_skills) do
     table.insert(ret.skill, {
-      name = s.name,
-      description = Fk:getDescription(s.name)
-    })
-  end
-  for _, s in ipairs(general.other_skills) do
-    table.insert(ret.skill, {
-      name = s,
-      description = Fk:getDescription(s)
-    })
-  end
-  for _, s in ipairs(general.related_skills) do
-    table.insert(ret.related_skill, {
-      name = s.name,
-      description = Fk:getDescription(s.name)
-    })
-  end
-  for _, s in ipairs(general.related_other_skills) do
-    table.insert(ret.related_skill, {
-      name = s,
-      description = Fk:getDescription(s)
+      name = s[1],
+      description = Fk:getDescription(s[1]),
+      is_related_skill = s[2],
     })
   end
   for _, g in pairs(Fk.generals) do
@@ -430,6 +412,18 @@ function GetSkillData(skill_name)
   }
 end
 
+function GetSkillStatus(skill_name)
+  local skill = Fk.skills[skill_name]
+  local locked = not skill:isEffectable(Self)
+  if not locked and type(Self:getMark(MarkEnum.InvalidSkills)) == "table" and table.contains(Self:getMark(MarkEnum.InvalidSkills), skill_name) then
+    locked = true
+  end
+  return {
+    locked = locked, ---@type boolean
+    times = skill:getTimes()
+  }
+end
+
 function ActiveCanUse(skill_name, extra_data_str)
   local extra_data = extra_data_str == "" and nil or json.decode(extra_data_str)
   local skill = Fk.skills[skill_name]
@@ -765,6 +759,10 @@ function GetCardProhibitReason(cid, method, pattern)
   else
     return ret
   end
+end
+
+function CanSortHandcards(pid)
+  return ClientInstance:getPlayerById(pid):getMark(MarkEnum.SortProhibited) == 0
 end
 
 function PoxiPrompt(poxi_type, data, extra_data)
