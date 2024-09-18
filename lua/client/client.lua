@@ -82,6 +82,8 @@ function Client:initialize()
       for _, cid in ipairs(Self:getCardIds("h")) do
         self:notifyUI("UpdateCard", cid)
       end
+      -- 刷技能状态
+      self:notifyUI("UpdateSkill", nil)
     end
   end
 

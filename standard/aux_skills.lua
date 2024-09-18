@@ -87,6 +87,13 @@ local choosePlayersSkill = fk.CreateActiveSkill{
       return table.contains(self.targets, to_select)
     end
   end,
+  target_tip = function(self, to_select, selected, selected_cards, card, selectable, extra_data)
+    if self.targetTipName then
+      local targetTip = Fk.target_tips[self.targetTipName]
+      assert(targetTip)
+      return targetTip.target_tip(self, to_select, selected, selected_cards, card, selectable, extra_data)
+    end
+  end,
   card_num = function(self) return self.pattern ~= "" and 1 or 0 end,
   min_target_num = function(self) return self.min_num end,
   max_target_num = function(self) return self.num end,
@@ -117,6 +124,13 @@ local exChooseSkill = fk.CreateActiveSkill{
     if #cards < self.min_c_num then return end
     if #selected < self.max_t_num then
       return table.contains(self.targets, to_select)
+    end
+  end,
+  target_tip = function(self, to_select, selected, selected_cards, card, selectable, extra_data)
+    if self.targetTipName then
+      local targetTip = Fk.target_tips[self.targetTipName]
+      assert(targetTip)
+      return targetTip.target_tip(self, to_select, selected, selected_cards, card, selectable, extra_data)
     end
   end,
   min_target_num = function(self) return self.min_t_num end,

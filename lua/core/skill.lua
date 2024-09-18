@@ -16,6 +16,7 @@
 ---@field public attached_equip string @ 属于什么装备的技能？
 ---@field public relate_to_place string @ 主将技/副将技
 ---@field public switchSkillName string @ 转换技名字
+---@field public times integer @ 技能剩余次数，负数不显示，正数显示
 local Skill = class("Skill")
 
 ---@alias Frequency integer
@@ -142,6 +143,17 @@ end
 ---@return boolean
 function Skill:isPlayerSkill(player)
   return not (self:isEquipmentSkill(player) or self.name:endsWith("&"))
+end
+
+---@return integer
+function Skill:getTimes()
+  local ret = self.times
+  if not ret then
+    return -1
+  elseif type(ret) == "function" then
+    ret = ret(self)
+  end
+  return ret
 end
 
 return Skill

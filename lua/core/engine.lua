@@ -34,6 +34,7 @@
 ---@field public qml_marks table<string, QmlMarkSpec> @ 自定义Qml标记的表
 ---@field public mini_games table<string, MiniGameSpec> @ 自定义多人交互表
 ---@field public request_handlers table<string, RequestHandler> @ 请求处理程序
+---@field public target_tips table<string, TargetTipSpec> @ 选择目标提示对应表
 local Engine = class("Engine")
 
 --- Engine的构造函数。
@@ -75,6 +76,7 @@ function Engine:initialize()
   self.qml_marks = {}
   self.mini_games = {}
   self.request_handlers = {}
+  self.target_tips = {}
 
   self:loadPackages()
   self:loadDisabled()
@@ -204,14 +206,15 @@ end
 --- 标包和标准卡牌包比较特殊，它们永远会在第一个加载。
 ---@return nil
 function Engine:loadPackages()
+  local new_core = false
   if FileIO.pwd():endsWith("packages/freekill-core") then
-    UsingNewCore = true
+    new_core = true
     FileIO.cd("../..")
   end
   local directories = FileIO.ls("packages")
 
   -- load standard & standard_cards first
-  if UsingNewCore then
+  if new_core then
     self:loadPackage(require("packages.freekill-core.standard"))
     self:loadPackage(require("packages.freekill-core.standard_cards"))
     self:loadPackage(require("packages.freekill-core.maneuvering"))
@@ -250,7 +253,7 @@ function Engine:loadPackages()
     end
   end
 
-  if UsingNewCore then
+  if new_core then
     FileIO.cd("packages/freekill-core")
   end
 end
@@ -513,6 +516,15 @@ function Engine:addMiniGame(spec)
     fk.qCritical("Warning: duplicated mini game type " .. spec.name)
   end
   self.mini_games[spec.name] = spec
+end
+
+---@param spec TargetTipSpec
+function Engine:addTargetTip(spec)
+  assert(type(spec.name) == "string")
+  if self.target_tips[spec.name] then
+    fk.qCritical("Warning: duplicated target tip type " .. spec.name)
+  end
+  self.target_tips[spec.name] = spec
 end
 
 --- 从已经开启的拓展包中，随机选出若干名武将。

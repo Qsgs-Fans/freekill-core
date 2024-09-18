@@ -254,4 +254,12 @@ function ActiveSkill:onEffect(room, cardEffectEvent) end
 ---@param cardEffectEvent CardEffectEvent | SkillEffectEvent
 function ActiveSkill:onNullified(room, cardEffectEvent) end
 
+---@param to_select integer @ id of the target
+---@param selected integer[] @ ids of selected targets
+---@param selected_cards integer[] @ ids of selected cards
+---@param card Card @ helper
+---@param selectable boolean @can be selected
+---@param extra_data? any @ extra_data
+function ActiveSkill:targetTip(to_select, selected, selected_cards, card, selectable, extra_data) end
+
 return ActiveSkill

@@ -1,8 +1,5 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 
--- 本文件是用来处理各种异步请求的
--- 与游戏中常见的请求-答复没有什么联系
-
 local function tellRoomToObserver(self, player)
   local observee = self.players[1]
   local start_time = os.getms()
