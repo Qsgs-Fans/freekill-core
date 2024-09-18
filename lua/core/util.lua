@@ -133,6 +133,23 @@ Util.Name2SkillMapper = function(e) return Fk.skills[e] end
 --- 返回译文
 Util.TranslateMapper = function(str) return Fk:translate(str) end
 
+-- 阶段int型和string型互换
+---@return string|integer
+Util.PhaseStrMapper = function(phase)
+  local phase_table = {
+    [Player.RoundStart] = "phase_roundstart",
+    [Player.Start] = "phase_start",
+    [Player.Judge] = "phase_judge",
+    [Player.Draw] = "phase_draw",
+    [Player.Play] = "phase_play",
+    [Player.Discard] = "phase_discard",
+    [Player.Finish] = "phase_finish",
+    [Player.NotActive] = "phase_notactive",
+    [Player.PhaseNone] = "phase_phasenone",
+  }
+  return type(phase) == "string" and table.indexOf(phase_table, phase) or phase_table[phase]
+end
+
 -- for card preset
 
 --- 全局卡牌(包括自己)的canUse

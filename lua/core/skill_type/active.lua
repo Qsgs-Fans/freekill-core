@@ -26,8 +26,8 @@ end
 
 -- 判断该技能是否可主动发动
 ---@param player Player @ 使用者
----@param card Card @ 牌
----@param extra_data UseExtraData @ 额外数据
+---@param card? Card @ 牌，若该技能是卡牌的效果技能，需输入此值
+---@param extra_data? UseExtraData @ 额外数据
 ---@return bool
 function ActiveSkill:canUse(player, card, extra_data)
   return self:isEffectable(player)
@@ -83,8 +83,8 @@ function ActiveSkill:getMinTargetNum()
 end
 
 -- 获得技能的最大目标数
----@param player Player @ 使用者
----@param card Card @ 牌
+---@param player? Player @ 使用者
+---@param card? Card @ 牌
 ---@return number @ 最大目标数
 function ActiveSkill:getMaxTargetNum(player, card)
   local ret
@@ -99,11 +99,13 @@ function ActiveSkill:getMaxTargetNum(player, card)
     ret = ret[#ret]
   end
 
-  local status_skills = Fk:currentRoom().status_skills[TargetModSkill] or Util.DummyTable
-  for _, skill in ipairs(status_skills) do
-    local correct = skill:getExtraTargetNum(player, self, card)
-    if correct == nil then correct = 0 end
-    ret = ret + correct
+  if player and card then
+    local status_skills = Fk:currentRoom().status_skills[TargetModSkill] or Util.DummyTable
+    for _, skill in ipairs(status_skills) do
+      local correct = skill:getExtraTargetNum(player, self, card)
+      if correct == nil then correct = 0 end
+      ret = ret + correct
+    end
   end
   return ret
 end

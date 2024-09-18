@@ -221,6 +221,15 @@ function Player:getMark(mark)
   return mark
 end
 
+--- 获取角色对应Mark并初始化为table
+---@param mark string @ 标记
+---@return table
+function Player:getTableMark(mark)
+  local mark = self.mark[mark]
+  if type(mark) == "table" then return table.simpleClone(mark) end
+  return {}
+end
+
 --- 获取角色有哪些Mark。
 function Player:getMarkNames()
   local ret = {}
@@ -623,7 +632,7 @@ function Player:getNextAlive(ignoreRemoved, num, ignoreRest)
   num = num or 1
   for _ = 1, num do
     ret = ret.next
-    while (ret.dead and not ignoreRest) or (doNotIgnore and ret:isRemoved()) do
+    while (ret.dead and (ret.rest == 0 or not ignoreRest)) or (doNotIgnore and ret:isRemoved()) do
       ret = ret.next
     end
   end

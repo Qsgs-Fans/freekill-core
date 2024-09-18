@@ -162,15 +162,15 @@ local tuxi = fk.CreateTriggerSkill{
 
     local result = room:askForChoosePlayers(player, targets, 1, 2, "#tuxi-ask", self.name)
     if #result > 0 then
-      self.cost_data = result
+      room:sortPlayersByAction(result)
+      self.cost_data = {tos = result}
       return true
     end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    room:sortPlayersByAction(self.cost_data)
-    for _, id in ipairs(self.cost_data) do
-      if player.dead then return end
+    for _, id in ipairs(self.cost_data.tos) do
+      if player.dead then break end
       local p = room:getPlayerById(id)
       if not p.dead and not p:isKongcheng() then
         local c = room:askForCardChosen(player, p, "h", self.name)

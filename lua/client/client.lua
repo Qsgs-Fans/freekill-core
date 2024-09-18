@@ -28,6 +28,7 @@ local pattern_refresh_commands = {
 -- 无需进行JSON.parse，但可能传入JSON字符串的command
 local no_decode_commands = {
   "ErrorMsg",
+  "ErrorDlg",
   "Heartbeat",
 }
 
@@ -940,7 +941,7 @@ fk.client_callback["SetPlayerMark"] = function(data)
       local spec = Fk.qml_marks[mtype]
       if spec then
         local text = spec.how_to_show(mark, value, p)
-        if text == "#hidden" then return end
+        if text == "#hidden" then data[3] = 0 end
       end
     end
     ClientInstance:notifyUI("SetPlayerMark", data)

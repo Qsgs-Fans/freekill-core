@@ -4,6 +4,9 @@ local extension = Package:new("maneuvering", Package.CardPack)
 
 local slash = Fk:cloneCard("slash")
 
+Fk:addDamageNature(fk.FireDamage, "fire_damage")
+Fk:addDamageNature(fk.ThunderDamage, "thunder_damage")
+
 local thunderSlashSkill = fk.CreateActiveSkill{
   name = "thunder__slash_skill",
   prompt = function(self, selected_cards)
@@ -462,10 +465,21 @@ local silverLion = fk.CreateArmor{
 }
 extension:addCard(silverLion)
 
+local hualiuSkill = fk.CreateDistanceSkill{
+  name = "#hualiu_skill",
+  attached_equip = "hualiu",
+  correct_func = function(self, from, to)
+    if to:hasSkill(self) then
+      return 1
+    end
+  end,
+}
+Fk:addSkill(hualiuSkill)
 local huaLiu = fk.CreateDefensiveRide{
   name = "hualiu",
   suit = Card.Diamond,
   number = 13,
+  equip_skill = hualiuSkill,
 }
 
 extension:addCards({

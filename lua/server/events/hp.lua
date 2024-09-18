@@ -1,32 +1,33 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 
-local damage_nature_table = {
-  [fk.NormalDamage] = "normal_damage",
-  [fk.FireDamage] = "fire_damage",
-  [fk.ThunderDamage] = "thunder_damage",
-  [fk.IceDamage] = "ice_damage",
-}
+-- local damage_nature_table = {
+--   [fk.NormalDamage] = "normal_damage",
+--   [fk.FireDamage] = "fire_damage",
+--   [fk.ThunderDamage] = "thunder_damage",
+--   [fk.IceDamage] = "ice_damage",
+-- }
 
 local function sendDamageLog(room, damageStruct)
+  local damageName = Fk:getDamageNatureName(damageStruct.damageType)
   if damageStruct.from then
     room:sendLog{
       type = "#Damage",
       to = {damageStruct.from.id},
       from = damageStruct.to.id,
       arg = damageStruct.damage,
-      arg2 = damage_nature_table[damageStruct.damageType],
+      arg2 = damageName,
     }
   else
     room:sendLog{
       type = "#DamageWithNoFrom",
       from = damageStruct.to.id,
       arg = damageStruct.damage,
-      arg2 = damage_nature_table[damageStruct.damageType],
+      arg2 = damageName,
     }
   end
   room:sendLogEvent("Damage", {
     to = damageStruct.to.id,
-    damageType = damage_nature_table[damageStruct.damageType],
+    damageType = damageName,
     damageNum = damageStruct.damage,
   })
 end
@@ -51,6 +52,17 @@ function ChangeHp:main()
   }
 
   if reason == "damage" then
+    if damageStruct then
+      if Fk:canChain(damageStruct.damageType) and damageStruct.to.chained then
+        damageStruct.to:setChainState(false)
+        if not damageStruct.chain then
+          damageStruct.beginnerOfTheDamage = true
+          damageStruct.chain_table = table.filter(room:getOtherPlayers(damageStruct.to), function(p)
+            return p.chained
+          end)
+        end
+      end
+    end
     data.shield_lost = math.min(-num, player.shield)
     data.num = num + data.shield_lost
   end
@@ -178,11 +190,6 @@ function Damage:main()
     end
   end
 
-  if damageStruct.damageType ~= fk.NormalDamage and damageStruct.to.chained then
-    if not damageStruct.chain then damageStruct.beginnerOfTheDamage = true end
-    damageStruct.to:setChainState(false)
-  end
-
   if not room:changeHp(
     damageStruct.to,
     -damageStruct.damage,
@@ -213,11 +220,11 @@ function Damage:exit()
 
   logic:trigger(fk.DamageFinished, damageStruct.to, damageStruct)
 
-  if damageStruct.beginnerOfTheDamage and not damageStruct.chain then
-    local targets = table.filter(room:getOtherPlayers(damageStruct.to), function(p)
-      return p.chained
+  if damageStruct.chain_table and #damageStruct.chain_table > 0 then
+    damageStruct.chain_table = table.filter(damageStruct.chain_table, function(p)
+      return p:isAlive() and p.chained
     end)
-    for _, p in ipairs(targets) do
+    for _, p in ipairs(damageStruct.chain_table) do
       room:sendLog{
         type = "#ChainDamage",
         from = p.id
@@ -270,8 +277,21 @@ end
 
 ---@class GameEvent.Recover : GameEvent
 local Recover = GameEvent:subclass("GameEvent.Recover")
+function Recover:prepare()
+  local recoverStruct = table.unpack(self.data) ---@type RecoverStruct
+  local room = self.room
+  local logic = room.logic
+
+  local who = recoverStruct.who
+
+  if who.maxHp - who.hp < 0 then
+    return true
+  end
+
+end
+
 function Recover:main()
-  local recoverStruct = table.unpack(self.data)
+  local recoverStruct = table.unpack(self.data) ---@type RecoverStruct
   local room = self.room
   local logic = room.logic
 
@@ -283,14 +303,16 @@ function Recover:main()
     end
   end
 
-  if recoverStruct.num < 1 then
-    return false
-  end
-
   local who = recoverStruct.who
 
-  if logic:trigger(fk.PreHpRecover, who, recoverStruct) or recoverStruct.num < 1 then
+  if logic:trigger(fk.PreHpRecover, who, recoverStruct) then
     logic:breakEvent(false)
+  end
+
+  recoverStruct.num = math.min(recoverStruct.num, who.maxHp - who.hp)
+
+  if recoverStruct.num < 1 then
+    return false
   end
 
   if not room:changeHp(who, recoverStruct.num, "recover", recoverStruct.skillName) then

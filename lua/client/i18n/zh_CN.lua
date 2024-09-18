@@ -382,16 +382,20 @@ Fk:loadTranslationTable{
   ["hp_lost"] = "失去体力",
   ["lose_hp"] = "失去体力",
 
+  ["phase_roundstart"] = "回合开始",
   ["phase_start"] = "准备阶段",
   ["phase_judge"] = "判定阶段",
   ["phase_draw"] = "摸牌阶段",
   ["phase_play"] = "出牌阶段",
   ["phase_discard"] = "弃牌阶段",
   ["phase_finish"] = "结束阶段",
+  ["phase_notactive"] = "回合外",
+  ["phase_phasenone"] = "临时阶段",
 
   ["chained"] = "横置",
   ["un-chained"] = "重置",
   ["reset-general"] = "复原",
+  ["reset"] = "复原武将牌",
 
   ["yang"] = "阳",
   ["yin"] = "阴",
@@ -418,6 +422,7 @@ Fk:loadTranslationTable{
   ["Distance"] = "距离",
   ["Judge"] = "判定",
   ["Retrial"] = "改判",
+  ["Pindian"] = "拼点",
 
   ["_sealed"] = "废除",
   ["weapon_sealed"] = "武器栏废除",
@@ -430,6 +435,8 @@ Fk:loadTranslationTable{
   ["DefensiveRideSlot"] = "防御坐骑栏",
   ["TreasureSlot"] = "宝物栏",
   ["JudgeSlot"] = "判定区",
+
+  ["skill"] = "技能",
 }
 
 -- related to sendLog
@@ -496,9 +503,12 @@ Fk:loadTranslationTable{
   ["#ResponsePlayV0Card"] = "%from 打出了 %arg",
 
   ["#FilterCard"] = "由于 %arg 的效果，与 %from 相关的 %arg2 被视为了 %arg3",
+  ["#AddTargetsBySkill"] = "用于 %arg 的效果，%from 使用的 %arg2 增加了目标 %to",
+  ["#RemoveTargetsBySkill"] = "用于 %arg 的效果，%from 使用的 %arg2 取消了目标 %to",
 
   -- skill
   ["#InvokeSkill"] = "%from 发动了〖%arg〗",
+  ["#InvokeSkillTo"] = "%from 对 %to 发动了〖%arg〗",
 
   -- judge
   ["#StartJudgeReason"] = "%from 开始了 %arg 的判定",
@@ -510,6 +520,7 @@ Fk:loadTranslationTable{
   ["#TurnOver"] = "%from 将武将牌翻面，现在是 %arg",
   ["face_up"] = "正面朝上",
   ["face_down"] = "背面朝上",
+  ["turnOver"] = "翻面",
 
   -- damage, heal and lose HP
   ["#Damage"] = "%to 对 %from 造成了 %arg 点 %arg2 伤害",

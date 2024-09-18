@@ -113,7 +113,7 @@ end
 ---@param player Player @ 玩家
 ---@return boolean
 function Skill:isEffectable(player)
-  if self.cardSkill then
+  if self.cardSkill or self.permanent_skill then
     return true
   end
 

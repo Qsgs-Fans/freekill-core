@@ -331,6 +331,7 @@ function ServerPlayer:turnOver()
   self.room.logic:trigger(fk.TurnedOver, self)
 end
 
+---@param cards integer|integer[]|Card|Card[]
 function ServerPlayer:showCards(cards)
   cards = Card:getIdList(cards)
   for _, id in ipairs(cards) do
@@ -355,12 +356,7 @@ function ServerPlayer:showCards(cards)
   room.logic:trigger(fk.CardShown, self, { cardIds = cards })
 end
 
-local phase_name_table = {
-  [Player.Judge] = "phase_judge",
-  [Player.Draw] = "phase_draw",
-  [Player.Play] = "phase_play",
-  [Player.Discard] = "phase_discard",
-}
+
 
 ---@param from_phase Phase
 ---@param to_phase Phase
@@ -427,7 +423,7 @@ function ServerPlayer:gainAnExtraPhase(phase, delay)
     room:sendLog{
       type = "#GainAnExtraPhase",
       from = self.id,
-      arg = phase_name_table[phase],
+      arg = Util.PhaseStrMapper(phase),
     }
 
     GameEvent.Phase:create(self, self.phase):exec()
@@ -441,7 +437,7 @@ function ServerPlayer:gainAnExtraPhase(phase, delay)
     room:sendLog{
       type = "#PhaseSkipped",
       from = self.id,
-      arg = phase_name_table[phase],
+      arg = Util.PhaseStrMapper(phase),
     }
   end
 
@@ -479,7 +475,7 @@ function ServerPlayer:play(phase_table)
   end
 
   for i = 1, #phases do
-    if self.dead then
+    if self.dead or room:getTag("endTurn") or phases[i] == nil then
       self:changePhase(self.phase, Player.NotActive)
       break
     end
@@ -514,7 +510,7 @@ function ServerPlayer:play(phase_table)
       room:sendLog{
         type = "#PhaseSkipped",
         from = self.id,
-        arg = phase_name_table[self.phase],
+        arg = Util.PhaseStrMapper(self.phase),
       }
     end
   end
@@ -540,8 +536,15 @@ end
 
 --- 当进行到出牌阶段空闲点时，结束出牌阶段。
 function ServerPlayer:endPlayPhase()
-  self._play_phase_end = true
+  if self.phase == Player.Play then
+    self._phase_end = true
+  end
   -- TODO: send log
+end
+
+--- 结束当前阶段。
+function ServerPlayer:endCurrentPhase()
+  self._phase_end = true
 end
 
 --- 获得一个额外回合

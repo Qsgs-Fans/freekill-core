@@ -240,7 +240,7 @@ end
 ---@field public enabled_at_response? fun(self: ViewAsSkill, player: Player, response: boolean): boolean?
 ---@field public before_use? fun(self: ViewAsSkill, player: ServerPlayer, use: CardUseStruct): string?
 ---@field public after_use? fun(self: ViewAsSkill, player: ServerPlayer, use: CardUseStruct): string?
----@field public prompt? string|fun(self: ActiveSkill, selected: integer[], selected_cards: integer[]): string
+---@field public prompt? string|fun(self: ActiveSkill, selected_cards: integer[], selected: integer[]): string
 
 ---@param spec ViewAsSkillSpec
 ---@return ViewAsSkill

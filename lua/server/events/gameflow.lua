@@ -143,12 +143,27 @@ local Round = GameEvent:subclass("GameEvent.Round")
 function Round:action()
   local room = self.room
   local p
+  local nextTurnOwner
+  local skipRoundPlus = false
   repeat
+    nextTurnOwner = nil
+    skipRoundPlus = false
     p = room.current
     GameEvent.Turn:create(p):exec()
     if room.game_finished then break end
-    room.current = room.current:getNextAlive(true, nil, true)
-  until p.seat >= p:getNextAlive(true, nil, true).seat
+
+    local changingData = { from = room.current, to = room.current:getNextAlive(true, nil, true), skipRoundPlus = false }
+    room.logic:trigger(fk.EventTurnChanging, room.current, changingData, true)
+
+    skipRoundPlus = changingData.skipRoundPlus
+    local nextAlive = room.current:getNextAlive(true, nil, true)
+    if nextAlive ~= changingData.to and not changingData.to.dead then
+      room.current = changingData.to
+      nextTurnOwner = changingData.to
+    else
+      room.current = nextAlive
+    end
+  until p.seat >= (nextTurnOwner or p:getNextAlive(true, nil, true)).seat and not skipRoundPlus
 end
 
 function Round:main()
@@ -269,6 +284,8 @@ function Turn:clear()
   logic:trigger(fk.AfterTurnEnd, current, nil, self.interrupted)
   current.phase = Player.NotActive
 
+  room:setTag("endTurn", false)
+
   for _, p in ipairs(room.players) do
     p:setCardUseHistory("", 0, Player.HistoryTurn)
     p:setSkillUseHistory("", 0, Player.HistoryTurn)
@@ -317,6 +334,7 @@ function Phase:main()
       [Player.Judge] = function()
         local cards = player:getCardIds(Player.Judge)
         while #cards > 0 do
+          if player._phase_end then break end
           local cid = table.remove(cards)
           if not cid then return end
           local card = player:removeVirtualEquip(cid)
@@ -344,13 +362,17 @@ function Phase:main()
           n = 2
         }
         room.logic:trigger(fk.DrawNCards, player, data)
-        room:drawCards(player, data.n, "game_rule")
+        if not player._phase_end then
+          room:drawCards(player, data.n, "game_rule")
+        end
         room.logic:trigger(fk.AfterDrawNCards, player, data)
       end,
       [Player.Play] = function()
         player._play_phase_end = false
         room:doBroadcastNotify("UpdateSkill", "", {player})
+
         while not player.dead do
+          if player._phase_end then break end
           logic:trigger(fk.StartPlayCard, player, nil, true)
           room:notifyMoveFocus(player, "PlayCard")
           local result = room:doRequest(player, "PlayCard", player.id)
@@ -360,14 +382,10 @@ function Phase:main()
           if type(useResult) == "table" then
             room:useCard(useResult)
           end
-
-          if player._play_phase_end then
-            player._play_phase_end = false
-            break
-          end
         end
       end,
       [Player.Discard] = function()
+        if player._phase_end then return end
         local discardNum = #table.filter(
           player:getCardIds(Player.Hand), function(id)
             local card = Fk:getCardById(id)
@@ -409,6 +427,7 @@ function Phase:clear()
         room:setPlayerMark(p, name, 0)
       end
     end
+    p._phase_end = false
   end
 
   for cid, cmark in pairs(room.card_marks) do

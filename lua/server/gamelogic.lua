@@ -774,7 +774,7 @@ function GameLogic:damageByCardEffect(is_exact)
   local c_event = d_event:findParent(GameEvent.CardEffect, false, 2)
   if c_event == nil then return false end
   return damage.card == c_event.data[1].card and
-  (not is_exact or d_event.data[1].from.id == c_event.data[1].from)
+  (not is_exact or (damage.from or {}).id == c_event.data[1].from)
 end
 
 function GameLogic:dumpEventStack(detailed)
