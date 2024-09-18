@@ -36,7 +36,7 @@ end
 -- 判断一张牌是否可被此技能选中
 ---@param to_select integer @ 待选牌
 ---@param selected integer[] @ 已选牌
----@param selected_targets integer[] @ 已选目标
+---@param selected_targets? integer[] @ 已选目标
 ---@return bool
 function ActiveSkill:cardFilter(to_select, selected, selected_targets)
   return true
@@ -46,8 +46,8 @@ end
 ---@param to_select integer @ 待选目标
 ---@param selected integer[] @ 已选目标
 ---@param selected_cards integer[] @ 已选牌
----@param card Card @ 牌
----@param extra_data UseExtraData @ 额外数据
+---@param card? Card @ 牌
+---@param extra_data? UseExtraData @ 额外数据
 ---@return bool
 function ActiveSkill:targetFilter(to_select, selected, selected_cards, card, extra_data)
   return false
@@ -217,7 +217,7 @@ end
 ---@param selected integer[] @ 已选目标
 ---@param selected_cards integer[] @ 已选牌
 ---@param player Player @ 使用者
----@param card Card @ 牌
+---@param card? Card @ 牌
 ---@return bool
 function ActiveSkill:feasible(selected, selected_cards, player, card)
   return #selected >= self:getMinTargetNum() and #selected <= self:getMaxTargetNum(player, card)

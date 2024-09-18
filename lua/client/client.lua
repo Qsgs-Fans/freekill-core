@@ -406,6 +406,14 @@ fk.client_callback["PropertyUpdate"] = function(data)
   ClientInstance:notifyUI("PropertyUpdate", data)
 end
 
+fk.client_callback["PlayCard"] = function(data)
+  local h = Fk.request_handlers["PlayCard"]:new(Self)
+  h.change = {}
+  h:setup()
+  h.scene:notifyUI()
+  ClientInstance:notifyUI("PlayCard", data)
+end
+
 fk.client_callback["AskForCardChosen"] = function(data)
   -- jsonData: [ int target_id, string flag, int reason ]
   local id, flag, reason, prompt = data[1], data[2], data[3], data[4]
@@ -862,6 +870,17 @@ fk.client_callback["AddSkill"] = function(data)
   updateLimitSkill(id, skill, target:usedSkillTimes(skill_name, Player.HistoryGame))
 end
 
+fk.client_callback["AskForSkillInvoke"] = function(data)
+  -- jsonData: [ string name, string prompt ]
+
+  local h = Fk.request_handlers["AskForSkillInvoke"]:new(Self)
+  h.prompt = data[2]
+  h.change = {}
+  h:setup()
+  h.scene:notifyUI()
+  ClientInstance:notifyUI("AskForSkillInvoke", data)
+end
+
 fk.client_callback["AskForUseActiveSkill"] = function(data)
   -- jsonData: [ string skill_name, string prompt, bool cancelable. json extra_data ]
   local skill = Fk.skills[data[1]]
@@ -869,16 +888,42 @@ fk.client_callback["AskForUseActiveSkill"] = function(data)
   skill._extra_data = extra_data
 
   Fk.currentResponseReason = extra_data.skillName
+  local h = Fk.request_handlers["AskForUseActiveSkill"]:new(Self)
+  h.skill_name = data[1]
+  h.prompt     = data[2]
+  h.cancelable = data[3]
+  h.extra_data = data[4]
+  h.change = {}
+  h:setup()
+  h.scene:notifyUI()
   ClientInstance:notifyUI("AskForUseActiveSkill", data)
 end
 
 fk.client_callback["AskForUseCard"] = function(data)
+  -- jsonData: card, pattern, prompt, cancelable, {}
   Fk.currentResponsePattern = data[2]
+  local h = Fk.request_handlers["AskForUseCard"]:new(Self)
+  -- h.skill_name = data[1] (skill_name是给选中的视为技用的)
+  h.pattern    = data[2]
+  h.prompt     = data[3]
+  h.cancelable = data[4]
+  h.change = {}
+  h:setup()
+  h.scene:notifyUI()
   ClientInstance:notifyUI("AskForUseCard", data)
 end
 
 fk.client_callback["AskForResponseCard"] = function(data)
+  -- jsonData: card, pattern, prompt, cancelable, {}
   Fk.currentResponsePattern = data[2]
+  local h = Fk.request_handlers["AskForResponseCard"]:new(Self)
+  -- h.skill_name = data[1] (skill_name是给选中的视为技用的)
+  h.pattern    = data[2]
+  h.prompt     = data[3]
+  h.cancelable = data[4]
+  h.change = {}
+  h:setup()
+  h.scene:notifyUI()
   ClientInstance:notifyUI("AskForResponseCard", data)
 end
 

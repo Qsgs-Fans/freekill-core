@@ -56,6 +56,7 @@ StatusSkill = require "core.skill_type.status_skill"
 Player = require "core.player"
 GameMode = require "core.game_mode"
 AbstractRoom = require "core.abstract_room"
+RequestHandler = require "core.request_handler"
 UI = require "ui-util"
 
 -- 读取配置文件。

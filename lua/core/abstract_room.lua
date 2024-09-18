@@ -10,6 +10,7 @@
 ---@field public skill_costs table<string, any> @ 用来存skill.cost_data
 ---@field public card_marks table<integer, any> @ 用来存实体卡的card.mark
 ---@field public banners table<string, any> @ 全局mark
+---@field public current_request_handler RequestHandler @ 当前正处理的请求数据
 local AbstractRoom = class("AbstractRoom")
 
 function AbstractRoom:initialize()
@@ -32,7 +33,8 @@ end
 
 -- 仅供注释，其余空函数一样
 ---@param id integer
----@return Player?
+---@return Player
+---@diagnostic disable-next-line: missing-return
 function AbstractRoom:getPlayerById(id) end
 
 --- 获取一张牌所处的区域。
