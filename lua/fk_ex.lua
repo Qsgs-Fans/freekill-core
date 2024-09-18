@@ -216,6 +216,7 @@ function fk.CreateActiveSkill(spec)
   if spec.on_effect then skill.onEffect = spec.on_effect end
   if spec.on_nullified then skill.onNullified = spec.on_nullified end
   if spec.prompt then skill.prompt = spec.prompt end
+  if spec.target_tip then skill.targetTip = spec.target_tip end
 
   if spec.interaction then
     skill.interaction = setmetatable({}, {
@@ -394,6 +395,7 @@ end
 ---@field public bypass_distances? fun(self: TargetModSkill, player: Player, skill: ActiveSkill, card: Card, to: Player): boolean?
 ---@field public distance_limit_func? fun(self: TargetModSkill, player: Player, skill: ActiveSkill, card: Card, to: Player): number?
 ---@field public extra_target_func? fun(self: TargetModSkill, player: Player, skill: ActiveSkill, card: Card): number?
+---@field public target_tip_func? fun(self: TargetModSkill, player: Player, to_select: integer, selected: integer[], selected_cards: integer[], card: Card, selectable: boolean, extra_data: any): string|TargetTipDataSpec?
 
 ---@param spec TargetModSpec
 ---@return TargetModSkill
@@ -416,6 +418,9 @@ function fk.CreateTargetModSkill(spec)
   end
   if spec.extra_target_func then
     skill.getExtraTargetNum = spec.extra_target_func
+  end
+  if spec.target_tip_func then
+    skill.getTargetTip = spec.target_tip_func
   end
 
   return skill
@@ -665,3 +670,11 @@ end
 ---@field qml_path string | fun(player: Player, data: any): string
 ---@field update_func? fun(player: ServerPlayer, data: any)
 ---@field default_choice? fun(player: ServerPlayer, data: any): any
+
+---@class TargetTipDataSpec
+---@field content string
+---@field type "normal"|"warning"
+
+---@class TargetTipSpec
+---@field name string
+---@field target_tip fun(self: ActiveSkill, to_select: integer, selected: integer[], selected_cards: integer[], card: Card, selectable: boolean, extra_data: any): string|TargetTipDataSpec?
