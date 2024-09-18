@@ -36,7 +36,7 @@ end
 -- 判断一张牌是否可被此技能选中
 ---@param to_select integer @ 待选牌
 ---@param selected integer[] @ 已选牌
----@param selected_targets integer[] @ 已选目标
+---@param selected_targets? integer[] @ 已选目标
 ---@return bool
 function ActiveSkill:cardFilter(to_select, selected, selected_targets)
   return true

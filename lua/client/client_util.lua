@@ -891,4 +891,20 @@ function ReloadPackage(path)
   Fk:reloadPackage(path)
 end
 
+function UpdateRequestUI(elemType, id, action, data)
+  local h = ClientInstance.current_request_handler
+  h.change = {}
+  local finish = h:update(elemType, id, action, data)
+  if not finish then
+    h.scene:notifyUI()
+  else
+    h:_finish()
+  end
+end
+
+function FinishRequestUI()
+  local h = ClientInstance.current_request_handler
+  h:_finish()
+end
+
 dofile "lua/client/i18n/init.lua"
