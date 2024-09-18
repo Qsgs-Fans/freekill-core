@@ -33,6 +33,7 @@
 ---@field public poxi_methods table<string, PoxiSpec> @ “魄袭”框操作方法表
 ---@field public qml_marks table<string, QmlMarkSpec> @ 自定义Qml标记的表
 ---@field public mini_games table<string, MiniGameSpec> @ 自定义多人交互表
+---@field public target_tips table<string, TargetTipSpec> @ 选择目标提示对应表
 local Engine = class("Engine")
 
 --- Engine的构造函数。
@@ -73,6 +74,7 @@ function Engine:initialize()
   self.poxi_methods = {}
   self.qml_marks = {}
   self.mini_games = {}
+  self.target_tips = {}
 
   self:loadPackages()
   self:loadDisabled()
@@ -502,6 +504,15 @@ function Engine:addMiniGame(spec)
     fk.qCritical("Warning: duplicated mini game type " .. spec.name)
   end
   self.mini_games[spec.name] = spec
+end
+
+---@param spec TargetTipSpec
+function Engine:addTargetTip(spec)
+  assert(type(spec.name) == "string")
+  if self.target_tips[spec.name] then
+    fk.qCritical("Warning: duplicated target tip type " .. spec.name)
+  end
+  self.target_tips[spec.name] = spec
 end
 
 --- 从已经开启的拓展包中，随机选出若干名武将。
