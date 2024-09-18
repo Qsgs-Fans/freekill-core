@@ -20,7 +20,7 @@ function ReqUseCard:targetValidity(pid)
   local p = room:getPlayerById(pid)
   local card = self.selected_card
   local ret = card and not player:isProhibited(p, card) and
-    card.skill:targetFilter(pid, self.selected_targets, { card.id })
+    card.skill:targetFilter(pid, self.selected_targets, { card.id }, card, self.extra_data)
   return ret
 end
 
