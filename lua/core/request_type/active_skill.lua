@@ -171,7 +171,7 @@ function ReqActiveSkill:cardValidity(cid)
   return skill:cardFilter(cid, self.pendings)
 end
 
-function ReqActiveSkill:targetValidity(pid)
+function ReqActiveSkill:extraDataValidity(pid)
   local data = self.extra_data or {}
   -- 逻辑块地狱
   if data.must_targets then
@@ -188,16 +188,21 @@ function ReqActiveSkill:targetValidity(pid)
     -- exclusive_targets: **只能选择**exclusive_targets内的目标
     if not table.contains(data.exclusive_targets, pid) then return false end
   end
+  return true
+end
+
+function ReqActiveSkill:targetValidity(pid)
+  if not self:extraDataValidity(pid) then return false end
 
   local skill = Fk.skills[self.skill_name] --- @type ActiveSkill | ViewAsSkill
   if not skill then return false end
   local card -- 姑且接一下(雾)
   if skill:isInstanceOf(ViewAsSkill) then
     card = skill:viewAs(self.pendings)
-    if not card then return false end
+    if not card or self.player:isProhibited(self.room:getPlayerById(pid), card) then return false end
     skill = card.skill
   end
-  return skill:targetFilter(pid, self.selected_targets, self.pendings, card, data)
+  return skill:targetFilter(pid, self.selected_targets, self.pendings, card, self.extra_data)
 end
 
 function ReqActiveSkill:updateButtons()

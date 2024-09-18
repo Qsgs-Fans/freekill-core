@@ -30,10 +30,14 @@ end
 
 function ReqResponseCard:cardValidity(cid)
   if self.skill_name then return ReqActiveSkill.cardValidity(self, cid) end
-  local exp = Exppattern:Parse(self.pattern)
-  local player = self.player
   local card = cid
   if type(cid) == "number" then card = Fk:getCardById(cid) end
+  return self:cardFeasible(card)
+end
+
+function ReqResponseCard:cardFeasible(card)
+  local exp = Exppattern:Parse(self.pattern)
+  local player = self.player
   return not player:prohibitResponse(card) and exp:match(card)
 end
 
@@ -43,7 +47,7 @@ function ReqResponseCard:feasible()
   if skill then
     card = skill:viewAs(self.pendings)
   end
-  return card and self:cardValidity(card)
+  return card and self:cardFeasible(card)
 end
 
 function ReqResponseCard:isCancelable()

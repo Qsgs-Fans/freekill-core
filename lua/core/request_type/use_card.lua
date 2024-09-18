@@ -6,11 +6,9 @@ local ReqUseCard = ReqResponseCard:subclass("ReqUseCard")
 
 function ReqUseCard:cardValidity(cid)
   if self.skill_name then return ReqActiveSkill.cardValidity(self, cid) end
-  local exp = Exppattern:Parse(self.pattern)
-  local player = self.player
   local card = cid
   if type(cid) == "number" then card = Fk:getCardById(cid) end
-  return not player:prohibitUse(card) and exp:match(card)
+  return self:cardFeasible(card)
 end
 
 function ReqUseCard:targetValidity(pid)
@@ -24,14 +22,17 @@ function ReqUseCard:targetValidity(pid)
   return ret
 end
 
+function ReqUseCard:cardFeasible(card)
+  local exp = Exppattern:Parse(self.pattern)
+  local player = self.player
+  return not player:prohibitUse(card) and exp:match(card)
+end
+
 function ReqUseCard:feasible()
   local skill = Fk.skills[self.skill_name]
   local card = self.selected_card
   local ret = false
-  if skill then
-    card = skill:viewAs(self.pendings)
-  end
-  if card and self:cardValidity(card) then
+  if card and self:cardFeasible(card) then
     ret = card.skill:feasible(self.selected_targets,
       skill and self.pendings or { card.id }, self.player, card)
   end
