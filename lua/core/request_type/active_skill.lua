@@ -174,25 +174,30 @@ end
 function ReqActiveSkill:targetValidity(pid)
   local data = self.extra_data or {}
   -- 逻辑块地狱
-  if (not data.must_targets or
-    (#data.must_targets <= #self.selected_targets or
-      table.contains(data.must_targets, pid))) and
-  (not data.include_targets or
-    (table.hasIntersection(data.include_targets, self.selected_targets) or
-      table.contains(data.include_targets, pid))) and
-  (not data.exclusive_targets or
-    table.contains(data.exclusive_targets, pid)) then
-    local skill = Fk.skills[self.skill_name] --- @type ActiveSkill | ViewAsSkill
-    if not skill then return false end
-    local card -- 姑且接一下(雾)
-    if skill:isInstanceOf(ViewAsSkill) then
-      card = skill:viewAs(self.pendings)
-      if not card then return false end
-      skill = card.skill
-    end
-    return skill:targetFilter(pid, self.selected_targets, self.pendings, card, data)
+  if data.must_targets then
+    -- must_targets: 必须先选择must_targets内的**所有**目标
+    if not (#data.must_targets <= #self.selected_targets or
+      table.contains(data.must_targets, pid)) then return false end
   end
-  return false
+  if data.include_targets then
+    -- include_targets: 必须先选择include_targets内的**其中一个**目标
+    if not (table.hasIntersection(data.include_targets, self.selected_targets) or
+      table.contains(data.include_targets, pid)) then return false end
+  end
+  if data.exclusive_targets then
+    -- exclusive_targets: **只能选择**exclusive_targets内的目标
+    if not table.contains(data.exclusive_targets, pid) then return false end
+  end
+
+  local skill = Fk.skills[self.skill_name] --- @type ActiveSkill | ViewAsSkill
+  if not skill then return false end
+  local card -- 姑且接一下(雾)
+  if skill:isInstanceOf(ViewAsSkill) then
+    card = skill:viewAs(self.pendings)
+    if not card then return false end
+    skill = card.skill
+  end
+  return skill:targetFilter(pid, self.selected_targets, self.pendings, card, data)
 end
 
 function ReqActiveSkill:updateButtons()
