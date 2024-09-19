@@ -6,6 +6,7 @@ local SkillButton = common.SkillButton
 
 ---@class RoomScene: OKScene
 local RoomScene = OKScene:subclass("RoomScene")
+RoomScene.scene_name = "Room"
 
 ---@param parent RequestHandler
 function RoomScene:initialize(parent)

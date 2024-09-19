@@ -17,6 +17,7 @@ end
 function ReqPlayCard:setup()
   ReqUseCard.setup(self)
 
+  self:setPrompt(self.original_prompt)
   self.scene:update("Button", "End", { enabled = true })
 end
 
