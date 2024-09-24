@@ -904,7 +904,9 @@ end
 
 function FinishRequestUI()
   local h = ClientInstance.current_request_handler
-  h:_finish()
+  if h then
+    h:_finish()
+  end
 end
 
 dofile "lua/client/i18n/init.lua"
