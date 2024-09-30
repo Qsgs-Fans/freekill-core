@@ -21,7 +21,6 @@ function ReqPlayCard:setup()
 
   self:setPrompt(self.original_prompt)
   self.scene:update("Button", "End", { enabled = true })
-  self.scene:update("SpecialSkills", "1", { skills = {} })
 end
 
 function ReqPlayCard:cardValidity(cid)
@@ -82,7 +81,21 @@ function ReqPlayCard:selectSpecialUse(data)
   self:initiateTargets()
 end
 
+function ReqPlayCard:doOKButton()
+  self.scene:update("SpecialSkills", "1", { skills = {} })
+  self.scene:notifyUI()
+  return ReqUseCard.doOKButton(self)
+end
+
+function ReqPlayCard:doCancelButton()
+  self.scene:update("SpecialSkills", "1", { skills = {} })
+  self.scene:notifyUI()
+  return ReqUseCard.doCancelButton(self)
+end
+
 function ReqPlayCard:doEndButton()
+  self.scene:update("SpecialSkills", "1", { skills = {} })
+  self.scene:notifyUI()
   ClientInstance:notifyUI("ReplyToServer", "")
 end
 
