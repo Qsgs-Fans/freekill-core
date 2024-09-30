@@ -1,5 +1,6 @@
 local ReqActiveSkill = require 'core.request_type.active_skill'
 local ReqUseCard = require 'lua.core.request_type.use_card'
+local SpecialSkills = require 'ui_emu.specialskills'
 local Button = (require 'ui_emu.control').Button
 
 ---@class ReqPlayCard: ReqUseCard
@@ -12,6 +13,7 @@ function ReqPlayCard:initialize(player)
   local scene = self.scene
   -- 出牌阶段还要多模拟一个结束按钮
   scene:addItem(Button:new(self.scene, "End"))
+  scene:addItem(SpecialSkills:new(self.scene, "1"))
 end
 
 function ReqPlayCard:setup()
@@ -19,10 +21,11 @@ function ReqPlayCard:setup()
 
   self:setPrompt(self.original_prompt)
   self.scene:update("Button", "End", { enabled = true })
+  self.scene:update("SpecialSkills", "1", { skills = {} })
 end
 
 function ReqPlayCard:cardValidity(cid)
-  if self.skill_name then return ReqActiveSkill.cardValidity(self, cid) end
+  if self.skill_name and not self.selected_card then return ReqActiveSkill.cardValidity(self, cid) end
   local player = self.player
   local card = cid
   if type(cid) == "number" then card = Fk:getCardById(cid) end
@@ -65,18 +68,41 @@ function ReqPlayCard:feasible()
   return ret
 end
 
+function ReqPlayCard:selectSpecialUse(data)
+  -- 相当于使用一个以已选牌为pendings的主动技
+  if not data or data == "_normal_use" then
+    self.skill_name = nil 
+    self.pendings = nil
+    self:setSkillPrompt(self.selected_card.skill, self.selected_card:getEffectiveId())
+  else
+    self.skill_name = data
+    self.pendings = Card:getIdList(self.selected_card)
+    self:setSkillPrompt(Fk.skills[data], self.pendings)
+  end
+  self:initiateTargets()
+end
+
 function ReqPlayCard:doEndButton()
   ClientInstance:notifyUI("ReplyToServer", "")
 end
 
 function ReqPlayCard:selectCard(cid, data)
   ReqUseCard.selectCard(self, cid, data)
-  if self.skill_name then return end
+  if self.skill_name and not self.selected_card then return end
 
   if self.selected_card then
     self:setSkillPrompt(self.selected_card.skill, self.selected_card:getEffectiveId())
+    local sp_skills = {}
+    if self.selected_card.special_skills then
+      sp_skills = table.simpleClone(self.selected_card.special_skills)
+      if self:cardValidity(self.selected_card) then
+        table.insert(sp_skills, 1, "_normal_use")
+      end
+    end
+    self.scene:update("SpecialSkills", "1", { skills = sp_skills })
   else
     self:setPrompt(self.original_prompt)
+    self.scene:update("SpecialSkills", "1", { skills = {} })
   end
 end
 
@@ -84,6 +110,8 @@ function ReqPlayCard:update(elemType, id, action, data)
   if elemType == "Button" and id == "End" then
     self:doEndButton()
     return true
+  elseif elemType == "SpecialSkills" then
+    self:selectSpecialUse(data)
   end
   return ReqUseCard.update(self, elemType, id, action, data)
 end

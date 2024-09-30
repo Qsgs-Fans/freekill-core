@@ -122,6 +122,7 @@ function ReqResponseCard:selectSkill(skill, data)
       scene:update("SkillButton", name, { enabled = item.selected })
     end
     self.skill_name = skill
+    self.selected_card = nil
     self:setSkillPrompt(skill)
 
     ReqActiveSkill.setup(self)
@@ -133,7 +134,7 @@ function ReqResponseCard:selectSkill(skill, data)
 end
 
 function ReqResponseCard:selectCard(cid, data)
-  if self.skill_name then
+  if self.skill_name and not self.selected_card then
     return ReqActiveSkill.selectCard(self, cid, data)
   end
   local scene = self.scene
@@ -141,6 +142,7 @@ function ReqResponseCard:selectCard(cid, data)
   scene:update("CardItem", cid, data)
 
   if selected then
+    self.skill_name = nil
     self.selected_card = Fk:getCardById(cid)
     scene:unselectOtherCards(cid)
   else

@@ -285,6 +285,9 @@ function ReqActiveSkill:doOKButton()
     --special_skill = roomScene.getCurrentCardUseMethod(),
     interaction_data = skill and skill.interaction and skill.interaction.data,
   }
+  if self.selected_card then
+    reply.special_skill = self.skill_name
+  end
   ClientInstance:notifyUI("ReplyToServer", json.encode(reply))
 end
 
