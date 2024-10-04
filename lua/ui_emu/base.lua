@@ -78,6 +78,7 @@ function Item:interact() end
 --]]
 ---@class Scene: Object
 ---@field public parent RequestHandler
+---@field public scene_name string
 ---@field public items { [string]: { [string|integer]: Item } }
 local Scene = class("Scene")
 
@@ -140,7 +141,7 @@ end
 -- 调用者需要维护changeData，确保传给UI的数据最少
 function Scene:notifyUI()
   if not ClientInstance then return nil end
-  self.parent.change["_type"] = self.class.name
+  self.parent.change["_type"] = self.scene_name
   ClientInstance:notifyUI("UpdateRequestUI", self.parent.change)
 end
 
