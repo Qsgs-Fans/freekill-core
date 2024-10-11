@@ -5,6 +5,7 @@ local Button = control.Button
 
 ---@class OKScene: Scene
 local OKScene = Scene:subclass("OKScene")
+OKScene.scene_name = "Room"
 
 ---@param parent RequestHandler
 function OKScene:initialize(parent)
