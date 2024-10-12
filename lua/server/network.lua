@@ -12,8 +12,15 @@
 ---@field public receive_json boolean? @ 是否需要对reply使用json.decode，默认true
 ---@field private send_success table<fk.ServerPlayer, boolean> @ 数据是否发送成功，不成功的后面全部视为AI
 ---@field public result table<integer, any> @ 玩家id - 回复内容 nil表示完全未回复
+---@field public luck_data any? @ 是否是询问手气卡 TODO: 有需求的话把这个通用化一点
 ---@field private pending_requests table<fk.ServerPlayer, integer[]> @ 一控多时暂存的请求
 local Request = class("Request")
+
+-- TODO: 懒得思考了
+-- 手气卡用：目前暂时写死一个属性而不是给函数参数；
+-- player有个属性保存自己剩余手气卡次数
+-- request有个luck_data属性来处理OK消息
+-- 若还能再用一次，那就重新发Request并继续等
 
 ---@param command string
 ---@param players ServerPlayer[]
@@ -30,7 +37,8 @@ function Request:initialize(command, players, n)
   self.data = {}
   self.default_reply = {}
   for _, p in ipairs(players) do self.default_reply[p.id] = "__cancel" end
-  self.timeout = room.timeout -- TODO: 暂时无法考虑timeout
+  self.timestamp = math.ceil(os.getms() / 1000)
+  self.timeout = room.timeout
   self.send_json = true
   self.receive_json = true -- 除了几个特殊字符串之外都decode
 
@@ -74,7 +82,7 @@ function Request:_sendPacket(player)
   if self.send_json then jsonData = json.encode(jsonData) end
   -- FIXME: 这里确认数据是否发送的环节一定要写在C++代码中
   self.send_success[controller] = controller:getState() == fk.Player_Online
-  controller:doRequest(self.command, jsonData, self.timeout)
+  controller:doRequest(self.command, jsonData, self.timeout, self.timestamp)
   controller:setThinking(true)
 end
 
@@ -99,10 +107,26 @@ function Request:_checkReply(player, use_ai)
       reply = controller:waitForReply(0)
       if reply ~= "__notready" then
         controller:setThinking(false)
-        local pending_list = self.pending_requests[controller]
-        if pending_list and #pending_list > 0 then
-          local pid = table.remove(pending_list, 1)
-          self:_sendPacket(room:getPlayerById(pid))
+        -- FIXME: 写的依托且不考虑控制 后面看情况改！
+        if self.luck_data then
+          local luck_data = self.luck_data
+          if reply ~= "__cancel" then
+            local pdata = luck_data[player.id]
+            pdata.luckTime = pdata.luckTime - 1
+            luck_data.discardInit(room, player)
+            luck_data.drawInit(room, player, pdata.num)
+            if pdata.luckTime > 0 then
+              self:setData(player, { "AskForLuckCard", "#AskForLuckCard:::" .. pdata.luckTime })
+              self:_sendPacket(player)
+              reply = "__notready"
+            end
+          end
+        else
+          local pending_list = self.pending_requests[controller]
+          if pending_list and #pending_list > 0 then
+            local pid = table.remove(pending_list, 1)
+            self:_sendPacket(room:getPlayerById(pid))
+          end
         end
       end
     end
