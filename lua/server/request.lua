@@ -64,31 +64,6 @@ request_handlers["prelight"] = function(room, id, reqlist)
   end
 end
 
-request_handlers["luckcard"] = function(room, id, reqlist)
-  local p = room:getPlayerById(id)
-  local cancel = reqlist[3] == "false"
-  local luck_data = room:getTag("LuckCardData")
-  if not (p and luck_data) then return end
-  local pdata = luck_data[id]
-
-  if not cancel then
-    pdata.luckTime = pdata.luckTime - 1
-    luck_data.discardInit(room, p)
-    luck_data.drawInit(room, p, pdata.num)
-  else
-    pdata.luckTime = 0
-  end
-
-  if pdata.luckTime > 0 then
-    p:doNotify("AskForLuckCard", pdata.luckTime)
-  else
-    p.serverplayer:setThinking(false)
-    ResumeRoom(room.id)
-  end
-
-  room:setTag("LuckCardData", luck_data)
-end
-
 request_handlers["changeself"] = function(room, id, reqlist)
   local p = room:getPlayerById(id)
   local toId = tonumber(reqlist[3])
