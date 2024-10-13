@@ -305,7 +305,7 @@ local duelSkill = fk.CreateActiveSkill{
 
       local cardResponded
       for i = 1, loopTimes do
-        cardResponded = room:askForResponse(currentResponser, 'slash', nil, nil, false, nil, effect)
+        cardResponded = room:askForResponse(currentResponser, 'slash', nil, nil, true, nil, effect)
         if cardResponded then
           room:responseCard({
             from = currentResponser.id,
@@ -495,7 +495,7 @@ local savageAssaultSkill = fk.CreateActiveSkill{
     return user ~= to_select
   end,
   on_effect = function(self, room, effect)
-    local cardResponded = room:askForResponse(room:getPlayerById(effect.to), 'slash', nil, nil, false, nil, effect)
+    local cardResponded = room:askForResponse(room:getPlayerById(effect.to), 'slash', nil, nil, true, nil, effect)
 
     if cardResponded then
       room:responseCard({
@@ -539,7 +539,7 @@ local archeryAttackSkill = fk.CreateActiveSkill{
     return user ~= to_select
   end,
   on_effect = function(self, room, effect)
-    local cardResponded = room:askForResponse(room:getPlayerById(effect.to), 'jink', nil, nil, false, nil, effect)
+    local cardResponded = room:askForResponse(room:getPlayerById(effect.to), 'jink', nil, nil, true, nil, effect)
 
     if cardResponded then
       room:responseCard({
