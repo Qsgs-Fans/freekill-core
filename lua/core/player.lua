@@ -98,8 +98,8 @@ function Player:initialize()
     [Player.Equip] = {},
     [Player.Judge] = {},
   }
-  self.virtual_equips = {}
   self.special_cards = {}
+  self.virtual_equips = {}
 
   self.equipSlots = {
     Player.WeaponSlot,

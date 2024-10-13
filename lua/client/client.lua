@@ -6,7 +6,6 @@
 ---@field public alive_players ClientPlayer[] @ 所有存活玩家的数组
 ---@field public observers ClientPlayer[] @ 观察者的数组
 ---@field public current ClientPlayer @ 当前回合玩家
----@field public discard_pile integer[] @ 弃牌堆
 ---@field public observing boolean
 ---@field public record any
 ---@field public last_update_ui integer @ 上次刷新状态技UI的时间
@@ -35,7 +34,7 @@ local no_decode_commands = {
 function Client:initialize()
   AbstractRoom.initialize(self)
   self.client = fk.ClientInstance
-  self.notifyUI = function(self, command, data)
+  self.notifyUI = function(_, command, data)
     fk.Backend:notifyUI(command, data)
   end
   self.client.callback = function(_self, command, jsonData, isRequest)
@@ -88,7 +87,7 @@ function Client:initialize()
     end
   end
 
-  self.discard_pile = {}
+  -- self.discard_pile = {}
   self._processing = {}
 
   self.disabled_packs = {}
@@ -151,10 +150,12 @@ function Client:moveCards(moves)
 
     if move.to and move.toArea then
       local ids = move.ids
+      --[[
       if (move.toArea == Card.PlayerHand and not Self:isBuddy(self:getPlayerById(move.to))) or
       (move.toArea == Card.PlayerSpecial and not move.moveVisible) then
         ids = {-1}
       end
+      --]]
 
       self:getPlayerById(move.to):addCards(move.toArea, ids, move.specialName)
     elseif move.toArea == Card.DiscardPile then
@@ -567,7 +568,8 @@ local function mergeMoves(moves)
         proposer = move.proposer,
       }
     end
-    table.insert(temp[info].ids, move.moveVisible and move.ids[1] or -1)
+    -- table.insert(temp[info].ids, move.moveVisible and move.ids[1] or -1)
+    table.insert(temp[info].ids, move.ids[1])
   end
   for _, v in pairs(temp) do
     table.insert(ret, v)
@@ -1158,8 +1160,7 @@ end
 
 fk.client_callback["PrintCard"] = function(data)
   local n, s, num = table.unpack(data)
-  local cd = Fk:cloneCard(n, s, num)
-  Fk:_addPrintedCard(cd)
+  ClientInstance:printCard(n, s, num)
 end
 
 fk.client_callback["AddBuddy"] = function(data)

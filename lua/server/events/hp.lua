@@ -1,5 +1,15 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 
+---@class HpEventWrappers: Object
+local HpEventWrappers = {} -- mixin
+
+---@return boolean
+local function exec(tp, ...)
+  local event = tp:create(...)
+  local _, ret = event:exec()
+  return ret
+end
+
 -- local damage_nature_table = {
 --   [fk.NormalDamage] = "normal_damage",
 --   [fk.FireDamage] = "fire_damage",
@@ -126,6 +136,17 @@ function ChangeHp:main()
   return true
 end
 
+--- 改变一名玩家的体力。
+---@param player ServerPlayer @ 玩家
+---@param num integer @ 变化量
+---@param reason? string @ 原因
+---@param skillName? string @ 技能名
+---@param damageStruct? DamageStruct @ 伤害数据
+---@return boolean
+function HpEventWrappers:changeHp(player, num, reason, skillName, damageStruct)
+  return exec(ChangeHp, player, num, reason, skillName, damageStruct)
+end
+
 ---@class GameEvent.Damage : GameEvent
 local Damage = GameEvent:subclass("GameEvent.Damage")
 function Damage:main()
@@ -245,6 +266,13 @@ function Damage:exit()
   end
 end
 
+--- 根据伤害数据造成伤害。
+---@param damageStruct DamageStruct
+---@return boolean
+function HpEventWrappers:damage(damageStruct)
+  return exec(Damage, damageStruct)
+end
+
 ---@class GameEvent.LoseHp : GameEvent
 local LoseHp = GameEvent:subclass("GameEvent.LoseHp")
 function LoseHp:main()
@@ -273,6 +301,15 @@ function LoseHp:main()
 
   logic:trigger(fk.HpLost, player, data)
   return true
+end
+
+--- 令一名玩家失去体力。
+---@param player ServerPlayer @ 玩家
+---@param num integer @ 失去的数量
+---@param skillName? string @ 技能名
+---@return boolean
+function HpEventWrappers:loseHp(player, num, skillName)
+  return exec(LoseHp, player, num, skillName)
 end
 
 ---@class GameEvent.Recover : GameEvent
@@ -321,6 +358,13 @@ function Recover:main()
 
   logic:trigger(fk.HpRecover, who, recoverStruct)
   return true
+end
+
+--- 根据回复数据回复体力。
+---@param recoverStruct RecoverStruct
+---@return boolean
+function HpEventWrappers:recover(recoverStruct)
+  return exec(Recover, recoverStruct)
 end
 
 ---@class GameEvent.ChangeMaxHp : GameEvent
@@ -381,4 +425,12 @@ function ChangeMaxHp:main()
   return true
 end
 
-return { ChangeHp, Damage, LoseHp, Recover, ChangeMaxHp }
+--- 改变一名玩家的体力上限。
+---@param player ServerPlayer @ 玩家
+---@param num integer @ 变化量
+---@return boolean
+function HpEventWrappers:changeMaxHp(player, num)
+  return exec(ChangeMaxHp, player, num)
+end
+
+return { ChangeHp, Damage, LoseHp, Recover, ChangeMaxHp, HpEventWrappers }

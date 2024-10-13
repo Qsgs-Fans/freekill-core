@@ -7,6 +7,13 @@ Util.FalseFunc = function() return false end
 Util.DummyTable = setmetatable({}, {
   __newindex = function() error("Cannot assign to dummy table") end
 })
+Util.array2hash = function(t)
+  local ret = {}
+  for _, e in ipairs(t) do
+    ret[e] = true
+  end
+  return ret
+end
 
 local metamethods = {
   "__add", "__sub", "__mul", "__div", "__mod", "__pow", "__unm", "__idiv",
