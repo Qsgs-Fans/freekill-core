@@ -80,61 +80,20 @@ function DrawInitial:main()
     return
   end
 
-  room:setTag("LuckCardData", luck_data)
   room:notifyMoveFocus(room.alive_players, "AskForLuckCard")
-  room:doBroadcastNotify("AskForLuckCard", room.settings.luckTime or 4)
-  room.room:setRequestTimer(room.timeout * 1000 + 1000)
-
-  local remainTime = room.timeout + 1
-  local currentTime = os.time()
-  local elapsed = 0
-
-  for _, id in ipairs(luck_data.playerList) do
-    local pl = room:getPlayerById(id)
-    if luck_data[id].luckTime > 0 then
-      pl.serverplayer:setThinking(true)
-    end
+  local request = Request:new("AskForSkillInvoke", room.alive_players)
+  for _, p in ipairs(room.alive_players) do
+    request:setData(p, { "AskForLuckCard", "#AskForLuckCard:::" .. room.settings.luckTime })
   end
-
-  while true do
-    elapsed = os.time() - currentTime
-    if remainTime - elapsed <= 0 then
-      break
-    end
-
-    -- local ldata = room:getTag("LuckCardData")
-    local ldata = luck_data
-
-    if table.every(ldata.playerList, function(id)
-      return ldata[id].luckTime == 0
-    end) then
-      break
-    end
-
-    for _, id in ipairs(ldata.playerList) do
-      local pl = room:getPlayerById(id)
-      if pl._splayer:getState() ~= fk.Player_Online then
-        ldata[id].luckTime = 0
-        pl.serverplayer:setThinking(false)
-      end
-    end
-
-    -- room:setTag("LuckCardData", ldata)
-
-    room:checkNoHuman()
-
-    coroutine.yield("__handleRequest", (remainTime - elapsed) * 1000)
-  end
-
-  room.room:destroyRequestTimer()
+  request.luck_data = luck_data
+  request.accept_cancel = true
+  request:ask()
 
   for _, player in ipairs(room.alive_players) do
     local draw_data = luck_data[player.id]
     draw_data.luckTime = nil
     room.logic:trigger(fk.AfterDrawInitialCards, player, draw_data)
   end
-
-  room:removeTag("LuckCardData")
 end
 
 ---@class GameEvent.Round : GameEvent

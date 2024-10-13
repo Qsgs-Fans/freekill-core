@@ -1,5 +1,8 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 
+-- 本文件是用来处理各种异步请求的
+-- 与游戏中常见的请求-答复没有什么联系
+
 local function tellRoomToObserver(self, player)
   local observee = self.players[1]
   local start_time = os.getms()
@@ -59,31 +62,6 @@ request_handlers["prelight"] = function(room, id, reqlist)
   if p then
     p:prelightSkill(reqlist[3], reqlist[4] == "true")
   end
-end
-
-request_handlers["luckcard"] = function(room, id, reqlist)
-  local p = room:getPlayerById(id)
-  local cancel = reqlist[3] == "false"
-  local luck_data = room:getTag("LuckCardData")
-  if not (p and luck_data) then return end
-  local pdata = luck_data[id]
-
-  if not cancel then
-    pdata.luckTime = pdata.luckTime - 1
-    luck_data.discardInit(room, p)
-    luck_data.drawInit(room, p, pdata.num)
-  else
-    pdata.luckTime = 0
-  end
-
-  if pdata.luckTime > 0 then
-    p:doNotify("AskForLuckCard", pdata.luckTime)
-  else
-    p.serverplayer:setThinking(false)
-    ResumeRoom(room.id)
-  end
-
-  room:setTag("LuckCardData", luck_data)
 end
 
 request_handlers["changeself"] = function(room, id, reqlist)
