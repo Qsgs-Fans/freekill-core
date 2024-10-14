@@ -40,7 +40,7 @@ function AbstractRoom:getPlayerById(id) end
 
 --- 获得拥有某一张牌的玩家。
 ---@param cardId integer | Card @ 要获得主人的那张牌，可以是Card实例或者id
----@return Player? @ 这张牌的主人的，可能返回nil
+---@return Player? @ 这张牌的主人，可能返回nil
 function AbstractRoom:getCardOwner(cardId)
   local ret = CardManager.getCardOwner(self, cardId)
   return ret and self:getPlayerById(ret)

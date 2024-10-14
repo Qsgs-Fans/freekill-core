@@ -56,6 +56,71 @@ function CardManager:getCardOwner(cardId)
   return self.owner_map[cardId] or nil
 end
 
+local playerAreas = { Player.Hand, Player.Equip, Player.Judge, Player.Special }
+
+--- 根据area获取相关的数组，若为玩家的区域则需指定玩家
+--- 
+--- 若不存在这种区域，需要返回nil
+---@param area CardArea
+---@param player Player?
+---@param dup boolean? 是否返回复制 默认true
+---@param special_name string?
+function CardManager:getCardsByArea(area, player, dup, special_name)
+  local ret
+  dup = dup == nil and true or false
+
+  if area == Card.Processing then
+    ret = self.processing_area
+  elseif area == Card.DrawPile then
+    ret = self.draw_pile
+  elseif area == Card.DiscardPile then
+    ret = self.discard_pile
+  elseif area == Card.Void then
+    ret = self.void
+  elseif table.contains(playerAreas, area) then
+    assert(player ~= nil)
+    if area == Player.Special then
+      assert(special_name ~= nil)
+      ret = player.special_cards[special_name]
+    else
+      ret = player.player_cards[area]
+    end
+  end
+
+  if dup and ret then ret = table.simpleClone(ret) end
+  return ret
+end
+
+--- 根据moveInfo来移动牌，先将牌从旧数组移动到新数组，再更新两个map表
+---@param data CardsMoveStruct
+---@param info MoveInfo
+function CardManager:applyMoveInfo(data, info)
+  local realFromArea = self:getCardArea(info.cardId)
+  local room = Fk:currentRoom()
+
+  local fromAreaIds = self:getCardsByArea(realFromArea,
+    data.from and room:getPlayerById(data.from), false, info.fromSpecialName)
+
+  table.removeOne(fromAreaIds, info.cardId)
+
+  local toAreaIds = self:getCardsByArea(data.toArea,
+    data.to and room:getPlayerById(data.to), false, data.specialName)
+
+  if data.toArea == Card.DrawPile then
+    local putIndex = data.drawPilePosition or 1
+    if putIndex == -1 then
+      putIndex = #self.draw_pile + 1
+    elseif putIndex < 1 or putIndex > #self.draw_pile + 1 then
+      putIndex = 1
+    end
+
+    table.insert(toAreaIds, putIndex, info.cardId)
+  else
+    table.insert(toAreaIds, info.cardId)
+  end
+  self:setCardArea(info.cardId, data.toArea, data.to)
+end
+
 --- 对那个id应用锁定视为技，将它变成要被锁定视为的牌。
 ---@param id integer @ 要处理的id
 ---@param player Player @ 和这张牌扯上关系的那名玩家
@@ -131,6 +196,38 @@ function CardManager:printCard(name, suit, number)
 end
 
 -- misc
+
+function CardManager:prepareDrawPile(seed)
+  local allCardIds = Fk:getAllCardIds()
+
+  for i = #allCardIds, 1, -1 do
+    if Fk:getCardById(allCardIds[i]).is_derived then
+      local id = allCardIds[i]
+      table.removeOne(allCardIds, id)
+      table.insert(self.void, id)
+      self:setCardArea(id, Card.Void, nil)
+    end
+  end
+
+  table.shuffle(allCardIds, seed)
+  self.draw_pile = allCardIds
+  for _, id in ipairs(self.draw_pile) do
+    self:setCardArea(id, Card.DrawPile, nil)
+  end
+end
+
+function CardManager:shuffleDrawPile(seed)
+  if #self.draw_pile + #self.discard_pile == 0 then
+    return
+  end
+
+  table.insertTable(self.draw_pile, self.discard_pile)
+  for _, id in ipairs(self.discard_pile) do
+    self:setCardArea(id, Card.DrawPile, nil)
+  end
+  self.discard_pile = {}
+  table.shuffle(self.draw_pile, seed)
+end
 
 ---@param card Card
 ---@param fromAreas? CardArea[]

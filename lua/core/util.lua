@@ -273,14 +273,16 @@ function table:contains(element)
   end
 end
 
-function table:shuffle()
+function table:shuffle(seed)
+  seed = seed or math.random(2 << 32 - 1)
+  local rnd = fk.QRandomGenerator(seed)
   if #self == 2 then
-    if math.random() < 0.5 then
+    if rnd:random() < 0.5 then
       self[1], self[2] = self[2], self[1]
     end
   else
     for i = #self, 2, -1 do
-        local j = math.random(i)
+        local j = rnd:random(i)
         self[i], self[j] = self[j], self[i]
     end
   end

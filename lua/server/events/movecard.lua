@@ -112,58 +112,7 @@ function MoveCards:main()
 
       ---@param info MoveInfo
       for _, info in ipairs(data.moveInfo) do
-        local realFromArea = room:getCardArea(info.cardId)
-        local playerAreas = { Player.Hand, Player.Equip, Player.Judge, Player.Special }
-
-        if table.contains(playerAreas, realFromArea) and data.from then
-          local from = room:getPlayerById(data.from)
-          from:removeCards(realFromArea, { info.cardId }, info.fromSpecialName)
-
-        elseif realFromArea ~= Card.Unknown then
-          local fromAreaIds = {}
-          if realFromArea == Card.Processing then
-            fromAreaIds = room.processing_area
-          elseif realFromArea == Card.DrawPile then
-            fromAreaIds = room.draw_pile
-          elseif realFromArea == Card.DiscardPile then
-            fromAreaIds = room.discard_pile
-          elseif realFromArea == Card.Void then
-            fromAreaIds = room.void
-          end
-
-          table.removeOne(fromAreaIds, info.cardId)
-        end
-
-        if table.contains(playerAreas, data.toArea) and data.to then
-          local to = room:getPlayerById(data.to)
-          to:addCards(data.toArea, { info.cardId }, data.specialName)
-
-        else
-          local toAreaIds = {}
-          if data.toArea == Card.Processing then
-            toAreaIds = room.processing_area
-          elseif data.toArea == Card.DrawPile then
-            toAreaIds = room.draw_pile
-          elseif data.toArea == Card.DiscardPile then
-            toAreaIds = room.discard_pile
-          elseif data.toArea == Card.Void then
-            toAreaIds = room.void
-          end
-
-          if data.toArea == Card.DrawPile then
-            local putIndex = data.drawPilePosition or 1
-            if putIndex == -1 then
-              putIndex = #room.draw_pile + 1
-            elseif putIndex < 1 or putIndex > #room.draw_pile + 1 then
-              putIndex = 1
-            end
-
-            table.insert(toAreaIds, putIndex, info.cardId)
-          else
-            table.insert(toAreaIds, info.cardId)
-          end
-        end
-        room:setCardArea(info.cardId, data.toArea, data.to)
+        room:applyMoveInfo(data, info)
         if data.toArea == Card.DrawPile or realFromArea == Card.DrawPile then
           room:doBroadcastNotify("UpdateDrawPile", #room.draw_pile)
         end

@@ -87,9 +87,6 @@ function Client:initialize()
     end
   end
 
-  -- self.discard_pile = {}
-  self._processing = {}
-
   self.disabled_packs = {}
   self.disabled_generals = {}
   -- self.last_update_ui = os.getms()
@@ -107,75 +104,14 @@ function Client:getPlayerById(id)
   return nil
 end
 
----@param cardId integer | Card
----@return CardArea
-function Client:getCardArea(cardId)
-  local cardIds = Card:getIdList(cardId)
-  local resultPos = {}
-  for _, cid in ipairs(cardIds) do
-    if not table.contains(resultPos, Card.PlayerHand) and table.contains(Self.player_cards[Player.Hand], cid) then
-      table.insert(resultPos, Card.PlayerHand)
-    end
-    if not table.contains(resultPos, Card.PlayerEquip) and table.contains(Self.player_cards[Player.Equip], cid) then
-      table.insert(resultPos, Card.PlayerEquip)
-    end
-    for _, t in pairs(Self.special_cards) do
-      if table.contains(t, cid) then
-        table.insertIfNeed(resultPos, Card.PlayerSpecial)
-      end
-    end
-  end
-  if #resultPos == 1 then
-    return resultPos[1]
-  end
-  return Card.Unknown
-end
-
+---@param moves CardsMoveStruct[]
 function Client:moveCards(moves)
-  for _, move in ipairs(moves) do
-    if move.from and move.fromArea then
-      local from = self:getPlayerById(move.from)
-      if move.fromArea == Card.PlayerHand and not Self:isBuddy(self:getPlayerById(move.from)) then
-        for _ = 1, #move.ids do
-          table.remove(from.player_cards[Player.Hand])
-        end
-      else
-        if table.contains({ Player.Hand, Player.Equip, Player.Judge, Player.Special }, move.fromArea) then
-          from:removeCards(move.fromArea, move.ids, move.fromSpecialName)
-        end
+  for _, data in ipairs(moves) do
+    if #data.moveInfo > 0 then
+      for _, info in ipairs(data.moveInfo) do
+        self:applyMoveInfo(data, info)
+        Fk:filterCard(info.cardId, self:getPlayerById(data.to))
       end
-    elseif move.fromArea == Card.DiscardPile then
-      table.removeOne(self.discard_pile, move.ids[1])
-    end
-
-    if move.to and move.toArea then
-      local ids = move.ids
-      --[[
-      if (move.toArea == Card.PlayerHand and not Self:isBuddy(self:getPlayerById(move.to))) or
-      (move.toArea == Card.PlayerSpecial and not move.moveVisible) then
-        ids = {-1}
-      end
-      --]]
-
-      self:getPlayerById(move.to):addCards(move.toArea, ids, move.specialName)
-    elseif move.toArea == Card.DiscardPile then
-      table.insert(self.discard_pile, move.ids[1])
-    end
-
-    -- FIXME: 需要系统化的重构
-    if move.fromArea == Card.Processing then
-      for _, v in ipairs(move.ids) do
-        self._processing[v] = nil
-      end
-    end
-    if move.toArea == Card.Processing then
-      for _, v in ipairs(move.ids) do
-        self._processing[v] = true
-      end
-    end
-
-    if (move.ids[1] ~= -1) then
-      Fk:filterCard(move.ids[1], ClientInstance:getPlayerById(move.to))
     end
   end
 end
@@ -738,8 +674,8 @@ end
 
 fk.client_callback["MoveCards"] = function(raw_moves)
   -- jsonData: CardsMoveStruct[]
+  ClientInstance:moveCards(raw_moves)
   local separated = separateMoves(raw_moves)
-  ClientInstance:moveCards(separated)
   local merged = mergeMoves(separated)
   ClientInstance:notifyUI("MoveCards", merged)
   for _, move in ipairs(merged) do
@@ -1333,6 +1269,16 @@ fk.client_callback["Observe"] = function(data)
   fk.client_callback["StartGame"]("")
 
   loadRoomSummary(data)
+end
+
+fk.client_callback["PrepareDrawPile"] = function(data)
+  local seed = tonumber(data)
+  ClientInstance:prepareDrawPile(seed)
+end
+
+fk.client_callback["ShuffleDrawPile"] = function(data)
+  local seed = tonumber(data)
+  ClientInstance:shuffleDrawPile(seed)
 end
 
 -- Create ClientInstance (used by Lua)

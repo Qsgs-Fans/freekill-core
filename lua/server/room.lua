@@ -2699,18 +2699,11 @@ end
 
 --- 洗牌。
 function Room:shuffleDrawPile()
-  if #self.draw_pile + #self.discard_pile == 0 then
-    return
-  end
+  local seed = math.random(2 << 32 - 1)
+  AbstractRoom.shuffleDrawPile(self, seed)
 
-  table.insertTable(self.draw_pile, self.discard_pile)
-  for _, id in ipairs(self.discard_pile) do
-    self:setCardArea(id, Card.DrawPile, nil)
-  end
-  self.discard_pile = {}
-  table.shuffle(self.draw_pile)
-
-  self:doBroadcastNotify("UpdateDrawPile", #self.draw_pile)
+  -- self:doBroadcastNotify("UpdateDrawPile", #self.draw_pile)
+  self:doBroadcastNotify("ShuffleDrawPile", seed)
 
   self.logic:trigger(fk.AfterDrawPileShuffle, nil, {})
 end
