@@ -11,6 +11,8 @@
 ---@field public card_marks table<integer, any> @ 用来存实体卡的card.mark
 ---@field public banners table<string, any> @ 全局mark
 ---@field public current_request_handler RequestHandler @ 当前正处理的请求数据
+---@field public timeout integer @ 出牌时长上限
+---@field public settings table @ 房间的额外设置，差不多是json对象
 local AbstractRoom = class("AbstractRoom")
 
 local CardManager = require 'core.room.card_manager'
@@ -53,6 +55,38 @@ end
 
 function AbstractRoom:getBanner(name)
   return self.banners[name]
+end
+
+function AbstractRoom:toJsonObject()
+  local card_manager = CardManager.toJsonObject(self)
+
+  local players = {}
+  for _, p in ipairs(self.players) do
+    players[tostring(p.id)] = p:toJsonObject()
+  end
+
+  return {
+    card_manager = card_manager,
+    circle = table.map(self.players, Util.IdMapper),
+    banners = self.banners,
+    timeout = self.timeout,
+    settings = self.settings,
+
+    players = players,
+  }
+end
+
+function AbstractRoom:loadJsonObject(o)
+  CardManager.loadJsonObject(self, o.card_manager)
+
+  -- 需要上层（目前是Client）自己根据circle添加玩家
+  self.banners = o.banners
+  self.timeout = o.timeout
+  self.settings = o.settings
+  for k, v in pairs(o.players) do
+    local pid = tonumber(k)
+    self:getPlayerById(pid):loadJsonObject(v)
+  end
 end
 
 return AbstractRoom

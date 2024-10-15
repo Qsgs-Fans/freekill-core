@@ -13,10 +13,8 @@
 ---@field public current ServerPlayer @ 当前回合玩家
 ---@field public game_started boolean @ 游戏是否已经开始
 ---@field public game_finished boolean @ 游戏是否已经结束
----@field public timeout integer @ 出牌时长上限
 ---@field public tag table<string, any> @ Tag清单，其实跟Player的标记是差不多的东西
 ---@field public general_pile string[] @ 武将牌堆，这是可用武将名的数组
----@field public settings table @ 房间的额外设置，差不多是json对象
 ---@field public logic GameLogic @ 这个房间使用的游戏逻辑，可能根据游戏模式而变动
 ---@field public request_queue table<userdata, table>
 ---@field public request_self table<integer, integer>
@@ -639,6 +637,12 @@ function Room:getSummary(player, observe)
     rnd = self:getTag("RoundCount") or 0,
     dp = #self.draw_pile,
   }
+end
+
+function Room:toJsonObject()
+  local o = AbstractRoom.toJsonObject(self)
+  o.round_count = self:getTag("RoundCount") or 0
+  return o
 end
 
 ------------------------------------------------------------------------

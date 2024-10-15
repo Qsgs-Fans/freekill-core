@@ -176,6 +176,22 @@ function ServerPlayer:getSummary(player, observe)
   }
 end
 
+function ServerPlayer:toJsonObject()
+  local o = Player.toJsonObject(self)
+  local sp = self._splayer
+  o.setup_data = {
+    self.id,
+    sp:getScreenName(),
+    sp:getAvatar(),
+    false,
+    sp:getTotalGameTime(),
+  }
+  return o
+end
+
+-- 似乎没有必要
+-- function ServerPlayer:loadJsonObject() end
+
 function ServerPlayer:reconnect()
   local room = self.room
   self.serverplayer:setState(fk.Player_Online)

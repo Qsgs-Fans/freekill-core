@@ -1213,4 +1213,56 @@ function Player:isFemale()
   return self.gender == General.Female or self.gender == General.Bigender
 end
 
+local properties = {
+  "general", "deputyGeneral", "maxHp", "hp", "shield", "gender", "kingdom",
+  "dead", "role", "rest", "seat", "phase", "faceup", "chained",
+  "sealedSlots",
+}
+
+function Player:toJsonObject()
+  local ptable = {}
+  for _, k in ipairs(properties) do
+    ptable[k] = self[k]
+  end
+
+  return {
+    properties = ptable,
+    card_history = self.cardUsedHistory,
+    skill_history = self.skillUsedHistory,
+    mark = self.mark,
+    skills = table.map(self.player_skills, Util.NameMapper),
+    player_cards = self.player_cards,
+    special_cards = self.special_cards,
+    buddy_list = self.buddy_list,
+  }
+end
+
+function Player:loadJsonObject(o)
+  for k, v in pairs(o.properties) do self[k] = v end
+  self.cardUsedHistory = o.card_history
+  self.skillUsedHistory = o.skill_history
+  self.mark = mark
+  for _, sname in ipairs(o.skills) do self:addSkill(sname) end
+  self.player_cards = o.player_cards
+  self.special_cards = o.special_cards
+  self.buddy_list = o.buddy_list
+
+  local pid = self.id
+  local room = Fk:currentRoom()
+  for _, id in ipairs(o.player_cards[Player.Hand]) do
+    room:setCardArea(id, Card.PlayerHand, pid)
+  end
+  for _, id in ipairs(o.player_cards[Player.Equip]) do
+    room:setCardArea(id, Card.PlayerEquip, pid)
+  end
+  for _, id in ipairs(o.player_cards[Player.Judge]) do
+    room:setCardArea(id, Card.PlayerJudge, pid)
+  end
+  for _, ids in ipairs(o.special_cards) do
+    for _, id in ipairs(ids) do
+      room:setCardArea(id, Card.PlayerSpecial, pid)
+    end
+  end
+end
+
 return Player

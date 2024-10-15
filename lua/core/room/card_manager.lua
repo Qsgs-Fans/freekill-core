@@ -307,4 +307,49 @@ function CardManager:getCardsFromPileByRule(pattern, num, fromPile)
   return cardPack
 end
 
+function CardManager:toJsonObject()
+  local printed_cards = {}
+  for i = -2, -math.huge, -1 do
+    local c = self.printed_cards[i]
+    if not c then break end
+    table.insert(printed_cards, { c.name, c.suit, c.number })
+  end
+
+  local cmarks = {}
+  for k, v in pairs(self.card_marks) do
+    cmarks[tostring(k)] = v
+  end
+
+  return {
+    draw_pile = self.draw_pile,
+    discard_pile = self.discard_pile,
+    processing_area = self.processing_area,
+    void = self.void,
+    -- card_place和owner_map没必要；载入时setCardArea
+
+    printed_cards = printed_cards,
+    card_marks = cmarks,
+  }
+end
+
+function CardManager:loadJsonObject(o)
+  self.draw_pile = o.draw_pile
+  self.discard_pile = o.discard_pile
+  self.processing_area = o.processing_area
+  self.void = o.void
+
+  for _, id in ipairs(o.draw_pile) do self:setCardArea(id, Card.DrawPile, nil) end
+  for _, id in ipairs(o.discard_pile) do self:setCardArea(id, Card.DiscardPile, nil) end
+  for _, id in ipairs(o.processing_area) do self:setCardArea(id, Card.Processing, nil) end
+  for _, id in ipairs(o.void) do self:setCardArea(id, Card.Void, nil) end
+
+  for _, data in ipairs(o.printed_cards) do self:printCard(table.unpack(data)) end
+
+  for cid, marks in pairs(o.card_marks) do
+    for k, v in pairs(marks) do
+      Fk:getCardById(tonumber(cid)):setMark(k, v)
+    end
+  end
+end
+
 return CardManager
