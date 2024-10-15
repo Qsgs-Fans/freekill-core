@@ -13,6 +13,7 @@
 ---@field public shield integer @ 护甲数
 ---@field public kingdom string @ 势力
 ---@field public role string @ 身份
+---@field public role_shown boolean
 ---@field public general string @ 武将
 ---@field public deputyGeneral string @ 副将
 ---@field public gender integer @ 性别
@@ -1215,7 +1216,7 @@ end
 
 local properties = {
   "general", "deputyGeneral", "maxHp", "hp", "shield", "gender", "kingdom",
-  "dead", "role", "rest", "seat", "phase", "faceup", "chained",
+  "dead", "role", "role_shown", "rest", "seat", "phase", "faceup", "chained",
   "sealedSlots",
 }
 

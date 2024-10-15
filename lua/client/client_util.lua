@@ -909,4 +909,11 @@ function FinishRequestUI()
   end
 end
 
+-- TODO 传参带上cardMoveData...
+function CardVisibility(cardId)
+  local player = Self
+  local card = Fk:getCardById(cardId)
+  return math.random() < 0.5
+end
+
 dofile "lua/client/i18n/init.lua"

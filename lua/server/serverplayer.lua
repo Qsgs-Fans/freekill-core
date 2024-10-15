@@ -14,7 +14,6 @@
 ---@field public skipped_phases Phase[]
 ---@field public phase_state table[]
 ---@field public phase_index integer
----@field public role_shown boolean
 ---@field private _fake_skills Skill[]
 ---@field private _manually_fake_skills Skill[]
 ---@field public prelighted_skills Skill[]
