@@ -1004,10 +1004,11 @@ fk.client_callback["Heartbeat"] = function()
 end
 
 fk.client_callback["ChangeSelf"] = function(data)
-  local p = ClientInstance:getPlayerById(data.id)
-  p.player_cards[Player.Hand] = data.handcards
-  p.special_cards = data.special_cards
-  ClientInstance:notifyUI("ChangeSelf", data.id)
+  local pid = tonumber(data)
+  local c = ClientInstance
+  c.client:changeSelf(pid) -- for qml
+  Self = c:getPlayerById(pid)
+  ClientInstance:notifyUI("ChangeSelf", pid)
 end
 
 fk.client_callback["UpdateQuestSkillUI"] = function(data)

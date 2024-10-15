@@ -74,7 +74,14 @@ function Request:_sendPacket(player)
 
   -- 若控制者目前的视角不是player，先发个数据指示切换视角
   if not table.contains(player._observers, controller) then
-    controller:doNotify("StartChangeSelf", tostring(player.id))
+    local from = table.find(self.room.players, function(p)
+      return table.contains(p._observers, controller)
+    end)
+
+    -- 切换视角
+    table.removeOne(from._observers, controller)
+    table.insert(player._observers, controller)
+    controller:doNotify("ChangeSelf", tostring(player.id))
   end
 
   -- 发送请求数据并将控制者标记为烧条中

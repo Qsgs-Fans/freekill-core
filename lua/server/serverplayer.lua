@@ -95,86 +95,6 @@ function ServerPlayer:chat(msg)
   })
 end
 
-local function assign(t1, t2, k)
-  t1[k] = t2[k]
-end
-
--- 获取摘要信息。供重连/旁观使用
--- 根据参数，返回一个大表保存自己的信息，客户端自行分析
----@param player ServerPlayer
----@param observe? boolean
-function ServerPlayer:getSummary(player, observe)
-  local room = self.room
-  if not room.game_started then
-    local ret = { p = {} }
-    -- If game does not starts, that mean we are entering room that
-    -- all players are choosing their generals.
-    -- Note that when we are in this function, the main thread must be
-    -- calling delay() or waiting for reply.
-    if self.role_shown then
-      -- room:notifyProperty(player, self, "role")
-      ret.p.general = self.general
-      ret.p.deputyGeneral = self.deputyGeneral
-      ret.p.role = self.role
-    end
-    return ret
-  end
-
-  local properties = {}
-
-  assign(properties, self, "general")
-  assign(properties, self, "deputyGeneral")
-  assign(properties, self, "maxHp")
-  assign(properties, self, "hp")
-  assign(properties, self, "shield")
-  assign(properties, self, "gender")
-  assign(properties, self, "kingdom")
-
-  if self.dead then
-    assign(properties, self, "dead")
-    assign(properties, self, self.rest > 0 and "rest" or "role")
-  else
-    assign(properties, self, "seat")
-    assign(properties, self, "phase")
-  end
-
-  if not self.faceup then
-    assign(properties, self, "faceup")
-  end
-
-  if self.chained then
-    assign(properties, self, "chained")
-  end
-
-  if self.role_shown then
-    assign(properties, self, "role")
-  end
-
-  if #self.sealedSlots > 0 then
-    assign(properties, self, "sealedSlots")
-  end
-
-  local sp = self._splayer
-
-  return {
-    -- data for Setup/AddPlayer
-    d = {
-      self.id,
-      sp:getScreenName(),
-      sp:getAvatar(),
-      false,
-      sp:getTotalGameTime(),
-    },
-    p = properties,
-    ch = self.cardUsedHistory,
-    sh = self.skillUsedHistory,
-    m = self.mark,
-    s = table.map(self.player_skills, Util.NameMapper),
-    c = self.player_cards,
-    sc = self.special_cards,
-  }
-end
-
 function ServerPlayer:toJsonObject()
   local o = Player.toJsonObject(self)
   local sp = self._splayer
@@ -909,6 +829,20 @@ function ServerPlayer:control(p)
     self.room:setPlayerMark(p, "@ControledBy", "seat#" .. self.seat)
   end
   p.serverplayer = self._splayer
+end
+
+function ServerPlayer:changeSelf()
+  local controller = self.serverplayer
+  if not table.contains(self._observers, controller) then
+    local from = table.find(self.room.players, function(p)
+      return table.contains(p._observers, controller)
+    end)
+
+    -- 切换视角
+    table.removeOne(from._observers, controller)
+    table.insert(self._observers, controller)
+    controller:doNotify("ChangeSelf", tostring(self.id))
+  end
 end
 
 -- 22
