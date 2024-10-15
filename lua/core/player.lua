@@ -1189,6 +1189,38 @@ function Player:isBuddy(other)
   return self.id == id or table.contains(self.buddy_list, id)
 end
 
+--- Player是否可看到某card
+--- @param cardId integer
+---@param move? CardsMoveStruct
+---@return boolean
+function Player:cardVisible(cardId, move)
+  if move then
+    if table.find(move.moveInfo, function(info) return info.cardId == cardId end) then
+      if move.moveVisible then return true end
+      -- specialVisible还要控制这个pile对他人是否应该可见，但是不在这里生效
+      if move.specialVisible then return true end
+
+      if (type(move.visiblePlayers) == "number" and move.visiblePlayers == self.id) or
+      (type(move.visiblePlayers) == "table" and table.find(move.visiblePlayers, self.id)) then
+        return true
+      end
+    end
+  end
+
+  local room = Fk:currentRoom()
+  local area = room:getCardArea(cardId)
+  local public_areas = {Card.DiscardPile, Card.Processing, Card.Void}
+  local player_areas = {Card.PlayerHand, Card.PlayerEquip, Card.PlayerJudge, Card.PlayerSpecial}
+
+  if area == Card.DrawPile then return false
+  elseif table.contains(public_areas, area) then return true
+  elseif table.contains(player_areas, area) then
+    return room:getCardOwner(cardId) == self
+  else
+    return false
+  end
+end
+
 --- 比较两名角色的性别是否相同。
 ---@param other Player @ 另一名角色
 ---@param diff? bool @ 比较二者不同
