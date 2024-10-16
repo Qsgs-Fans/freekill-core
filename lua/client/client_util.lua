@@ -891,6 +891,37 @@ function ReloadPackage(path)
   Fk:reloadPackage(path)
 end
 
+function GetPendingSkill()
+  local h = ClientInstance.current_request_handler
+  local reqActive = Fk.request_handlers["AskForUseActiveSkill"]
+  return h and h:isInstanceOf(reqActive) and
+    (h.selected_card == nil and h.skill_name) or ""
+end
+
+function RevertSelection()
+  local h = ClientInstance.current_request_handler ---@type ReqActiveSkill
+  local reqActive = Fk.request_handlers["AskForUseActiveSkill"]
+  if not (h and h:isInstanceOf(reqActive) and h.pendings) then return end
+  h.change = {}
+  -- 1. 取消选中所有已选 2. 尝试选中所有之前未选的牌
+  local unselectData = { selected = false }
+  local selectData = { selected = true }
+  local to_select = {}
+  for cid, cardItem in pairs(h.scene:getAllItems("CardItem")) do
+    if table.contains(h.pendings, cid) then
+      h:selectCard(cid, unselectData)
+    else
+      table.insert(to_select, cardItem)
+    end
+  end
+  for _, cardItem in ipairs(to_select) do
+    if cardItem.enabled then
+      h:selectCard(cardItem.id, selectData)
+    end
+  end
+  h.scene:notifyUI()
+end
+
 function UpdateRequestUI(elemType, id, action, data)
   local h = ClientInstance.current_request_handler
   h.change = {}
