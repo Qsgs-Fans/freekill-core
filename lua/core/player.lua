@@ -72,6 +72,11 @@ Player.JudgeSlot = 'JudgeSlot'
 --- 构造函数。总之这不是随便调用的函数
 function Player:initialize()
   self.id = 0
+  self.property_keys = {
+    "general", "deputyGeneral", "maxHp", "hp", "shield", "gender", "kingdom",
+    "dead", "role", "role_shown", "rest", "seat", "phase", "faceup", "chained",
+    "sealedSlots",
+  }
   self.hp = 0
   self.maxHp = 0
   self.kingdom = "qun"
@@ -1246,15 +1251,9 @@ function Player:isFemale()
   return self.gender == General.Female or self.gender == General.Bigender
 end
 
-local properties = {
-  "general", "deputyGeneral", "maxHp", "hp", "shield", "gender", "kingdom",
-  "dead", "role", "role_shown", "rest", "seat", "phase", "faceup", "chained",
-  "sealedSlots",
-}
-
 function Player:toJsonObject()
   local ptable = {}
-  for _, k in ipairs(properties) do
+  for _, k in ipairs(self.property_keys) do
     ptable[k] = self[k]
   end
 
@@ -1274,7 +1273,7 @@ function Player:loadJsonObject(o)
   for k, v in pairs(o.properties) do self[k] = v end
   self.cardUsedHistory = o.card_history
   self.skillUsedHistory = o.skill_history
-  self.mark = mark
+  self.mark = o.mark
   for _, sname in ipairs(o.skills) do self:addSkill(sname) end
   self.player_cards = o.player_cards
   self.special_cards = o.special_cards

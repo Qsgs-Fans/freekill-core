@@ -115,7 +115,7 @@ function ServerPlayer:reconnect()
   local room = self.room
   self.serverplayer:setState(fk.Player_Online)
 
-  local summary = room:getSummary(self, false)
+  local summary = room:toJsonObject(self)
   self:doNotify("Reconnect", json.encode(summary))
   room:notifyProperty(self, self, "role")
   self:doNotify("RoomOwner", json.encode{ room.room:getOwner():getId() })
@@ -829,20 +829,6 @@ function ServerPlayer:control(p)
     self.room:setPlayerMark(p, "@ControledBy", "seat#" .. self.seat)
   end
   p.serverplayer = self._splayer
-end
-
-function ServerPlayer:changeSelf()
-  local controller = self.serverplayer
-  if not table.contains(self._observers, controller) then
-    local from = table.find(self.room.players, function(p)
-      return table.contains(p._observers, controller)
-    end)
-
-    -- 切换视角
-    table.removeOne(from._observers, controller)
-    table.insert(self._observers, controller)
-    controller:doNotify("ChangeSelf", tostring(self.id))
-  end
 end
 
 -- 22

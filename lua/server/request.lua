@@ -6,7 +6,7 @@
 local function tellRoomToObserver(self, player)
   local observee = self.players[1]
   local start_time = os.getms()
-  local summary = self:getSummary(observee, true)
+  local summary = self:toJsonObject(observee)
   player:doNotify("Observe", json.encode(summary))
 
   fk.qInfo(string.format("[Observe] %d, %s, in %.3fms",

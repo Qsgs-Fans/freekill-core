@@ -639,9 +639,12 @@ function Room:getSummary(player, observe)
   }
 end
 
-function Room:toJsonObject()
+function Room:toJsonObject(player)
   local o = AbstractRoom.toJsonObject(self)
   o.round_count = self:getTag("RoundCount") or 0
+  if player then
+    o.you = player.id
+  end
   return o
 end
 
