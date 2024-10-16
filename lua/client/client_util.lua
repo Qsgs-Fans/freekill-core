@@ -96,7 +96,8 @@ function GetCardData(id, virtualCardForm)
     color = card:getColorString(),
     mark = mark,
     type = card.type,
-    subtype = cardSubtypeStrings[card.sub_type]
+    subtype = cardSubtypeStrings[card.sub_type],
+    known = Self:cardVisible(id)
   }
   if card.skillName ~= "" then
     local orig = Fk:getCardById(id, true)
