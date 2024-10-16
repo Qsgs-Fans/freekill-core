@@ -6,4 +6,17 @@
 ---@class VisibilitySkill : StatusSkill
 local VisibilitySkill = StatusSkill:subclass("VisibilitySkill")
 
+---@param player Player
+---@param card Card
+---@return bool
+function VisibilitySkill:cardVisible(player, card)
+  return nil
+end
+
+---@param player Player
+---@return bool
+function VisibilitySkill:roleVisible(player)
+  return nil
+end
+
 return VisibilitySkill

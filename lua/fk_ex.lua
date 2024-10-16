@@ -18,6 +18,7 @@ MaxCardsSkill = require "core.skill_type.max_cards"
 TargetModSkill = require "core.skill_type.target_mod"
 FilterSkill = require "core.skill_type.filter"
 InvaliditySkill = require "lua.core.skill_type.invalidity"
+VisibilitySkill = require "lua.core.skill_type.visibility"
 
 BasicCard = require "core.card_type.basic"
 local Trick = require "core.card_type.trick"
