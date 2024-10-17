@@ -1214,8 +1214,18 @@ function Player:cardVisible(cardId, move)
 
   local room = Fk:currentRoom()
   local area = room:getCardArea(cardId)
+  local card = Fk:getCardById(cardId)
+
   local public_areas = {Card.DiscardPile, Card.Processing, Card.Void}
   local player_areas = {Card.PlayerHand, Card.PlayerEquip, Card.PlayerJudge, Card.PlayerSpecial}
+
+  local status_skills = Fk:currentRoom().status_skills[VisibilitySkill] or Util.DummyTable
+  for _, skill in ipairs(status_skills) do
+    local f = skill:cardVisible(self, card)
+    if f ~= nil then
+      return f
+    end
+  end
 
   if area == Card.DrawPile then return false
   elseif table.contains(public_areas, area) then return true
