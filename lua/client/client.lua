@@ -908,6 +908,7 @@ fk.client_callback["AskForUseCard"] = function(data)
   h.pattern    = data[2]
   h.prompt     = data[3]
   h.cancelable = data[4]
+  h.extra_data = data[5]
   h.change = {}
   h:setup()
   h.scene:notifyUI()
@@ -922,6 +923,7 @@ fk.client_callback["AskForResponseCard"] = function(data)
   h.pattern    = data[2]
   h.prompt     = data[3]
   h.cancelable = data[4]
+  h.extra_data = data[5]
   h.change = {}
   h:setup()
   h.scene:notifyUI()
