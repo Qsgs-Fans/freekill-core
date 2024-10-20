@@ -1236,6 +1236,21 @@ function Player:cardVisible(cardId, move)
   end
 end
 
+--- Player是否可看到某target的身份
+--- @param target Player
+---@return boolean
+function Player:roleVisible(target)
+  local status_skills = Fk:currentRoom().status_skills[VisibilitySkill] or Util.DummyTable
+  for _, skill in ipairs(status_skills) do
+    local f = skill:roleVisible(self, target)
+    if f ~= nil then
+      return f
+    end
+  end
+
+  return target.role_shown
+end
+
 --- 比较两名角色的性别是否相同。
 ---@param other Player @ 另一名角色
 ---@param diff? bool @ 比较二者不同
