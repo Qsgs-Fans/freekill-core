@@ -171,11 +171,15 @@ local function parseMsg(msg, nocolor, visible_data)
   else
     local card_str = {}
     for _, id in ipairs(card) do
-      table.insert(card_str, Fk:getCardById(id, true):toLogString())
+      local known = id ~= -1
+      if visible_data then known = visible_data[tostring(id)] end
+      if known then
+        table.insert(card_str, Fk:getCardById(id, true):toLogString())
+      end
     end
     if unknownCount > 0 then
-      table.insert(card_str, Fk:translate("unknown_card")
-        .. unknownCount == 1 and "x" .. unknownCount or "")
+      local suffix = unknownCount > 1 and ("x" .. unknownCount) or ""
+      table.insert(card_str, Fk:translate("unknown_card") .. suffix)
     end
     card = table.concat(card_str, ", ")
   end
@@ -239,7 +243,10 @@ end
 
 fk.client_callback["EnterRoom"] = function(_data)
   Self = ClientPlayer:new(fk.Self)
+  -- 垃圾bug 怎么把这玩意忘了
+  local ob = ClientInstance.observing
   ClientInstance = Client:new() -- clear old client data
+  ClientInstance.observing = ob
   ClientInstance.players = {Self}
   ClientInstance.alive_players = {Self}
   ClientInstance.discard_pile = {}

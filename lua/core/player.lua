@@ -1219,6 +1219,8 @@ function Player:cardVisible(cardId, move)
   local public_areas = {Card.DiscardPile, Card.Processing, Card.Void, Card.PlayerEquip, Card.PlayerJudge}
   local player_areas = {Card.PlayerHand, Card.PlayerSpecial}
 
+  if room.observing == true then return table.contains(public_areas, area) end
+
   local status_skills = Fk:currentRoom().status_skills[VisibilitySkill] or Util.DummyTable
   for _, skill in ipairs(status_skills) do
     local f = skill:cardVisible(self, card)
@@ -1229,8 +1231,11 @@ function Player:cardVisible(cardId, move)
 
   if area == Card.DrawPile then return false
   elseif table.contains(public_areas, area) then return true
+  elseif move and area == Card.PlayerSpecial and not move.specialName:startsWith("$") then
+    return true
   elseif table.contains(player_areas, area) then
-    return room:getCardOwner(cardId) == self
+    local to = room:getCardOwner(cardId)
+    return to == self or self:isBuddy(to)
   else
     return false
   end

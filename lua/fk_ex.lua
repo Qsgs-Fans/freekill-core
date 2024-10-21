@@ -461,6 +461,22 @@ function fk.CreateInvaliditySkill(spec)
   return skill
 end
 
+---@class VisibilitySpec: StatusSkillSpec
+---@field public card_visible? fun(self: VisibilitySkill, player: Player, card: Card): boolean?
+---@field public role_visible? fun(self: VisibilitySkill, player: Player, target: Player): boolean?
+
+---@param spec VisibilitySpec
+function fk.CreateVisibilitySkill(spec)
+  assert(type(spec.name) == "string")
+
+  local skill = VisibilitySkill:new(spec.name)
+  readStatusSpecToSkill(skill, spec)
+  if spec.card_visible then skill.cardVisible = spec.card_visible end
+  if spec.role_visible then skill.roleVisible = spec.role_visible end
+
+  return skill
+end
+
 ---@class CardSpec: Card
 ---@field public skill? Skill
 ---@field public equip_skill? Skill

@@ -925,4 +925,21 @@ function IsMyBuddy(me, other)
   return from and to and from:isBuddy(to)
 end
 
+-- special_name 为nil时是手牌
+function HasVisibleCard(me, other, special_name)
+  local from = ClientInstance:getPlayerById(me)
+  local to = ClientInstance:getPlayerById(other)
+  if not (from and to) then return false end
+  local ids
+  if not special_name then ids = to:getCardIds("h")
+  else ids = to:getPile(special_name) end
+
+  for _, id in ipairs(ids) do
+    if from:cardVisible(id) then
+      return true
+    end
+  end
+  return false
+end
+
 dofile "lua/client/i18n/init.lua"
