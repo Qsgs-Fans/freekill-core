@@ -838,7 +838,7 @@ function ServerPlayer:addBuddy(other)
     other = self.room:getPlayerById(other)
   end
   Player.addBuddy(self, other)
-  self:doNotify("AddBuddy", json.encode{ other.id, other.player_cards[Player.Hand] })
+  self.room:doBroadcastNotify("AddBuddy", json.encode{ self.id, other.id })
 end
 
 function ServerPlayer:removeBuddy(other)
@@ -846,7 +846,7 @@ function ServerPlayer:removeBuddy(other)
     other = self.room:getPlayerById(other)
   end
   Player.removeBuddy(self, other)
-  self:doNotify("RmBuddy", tostring(other.id))
+  self.room:doBroadcastNotify("RmBuddy", json.encode{ self.id, other.id })
 end
 
 return ServerPlayer

@@ -1115,18 +1115,18 @@ end
 
 fk.client_callback["AddBuddy"] = function(data)
   local c = ClientInstance
-  local id, hand = table.unpack(data)
+  local fromid, id = table.unpack(data)
+  local from = c:getPlayerById(fromid)
   local to = c:getPlayerById(id)
-  Self:addBuddy(to)
-  to.player_cards[Player.Hand] = hand
+  from:addBuddy(to)
 end
 
 fk.client_callback["RmBuddy"] = function(data)
   local c = ClientInstance
-  local id = data
+  local fromid, id = table.unpack(data)
+  local from = c:getPlayerById(fromid)
   local to = c:getPlayerById(id)
-  Self:removeBuddy(to)
-  to.player_cards[Player.Hand] = table.map(to.player_cards, function() return -1 end)
+  from:removeBuddy(to)
 end
 
 local function loadRoomSummary(data)

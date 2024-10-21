@@ -919,4 +919,10 @@ function RoleVisibility(targetId)
   return player:roleVisible(target)
 end
 
+function IsMyBuddy(me, other)
+  local from = ClientInstance:getPlayerById(me)
+  local to = ClientInstance:getPlayerById(other)
+  return from and to and from:isBuddy(to)
+end
+
 dofile "lua/client/i18n/init.lua"
