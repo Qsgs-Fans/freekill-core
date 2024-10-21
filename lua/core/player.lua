@@ -1216,8 +1216,8 @@ function Player:cardVisible(cardId, move)
   local area = room:getCardArea(cardId)
   local card = Fk:getCardById(cardId)
 
-  local public_areas = {Card.DiscardPile, Card.Processing, Card.Void}
-  local player_areas = {Card.PlayerHand, Card.PlayerEquip, Card.PlayerJudge, Card.PlayerSpecial}
+  local public_areas = {Card.DiscardPile, Card.Processing, Card.Void, Card.PlayerEquip, Card.PlayerJudge}
+  local player_areas = {Card.PlayerHand, Card.PlayerSpecial}
 
   local status_skills = Fk:currentRoom().status_skills[VisibilitySkill] or Util.DummyTable
   for _, skill in ipairs(status_skills) do
