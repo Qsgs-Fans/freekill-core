@@ -916,8 +916,6 @@ function RoleVisibility(targetId)
   local player = Self
   local target = ClientInstance:getPlayerById(targetId)
   if not target then return false end
-  p(target.role)
-  p(target.role_shown)
   return player:roleVisible(target)
 end
 
