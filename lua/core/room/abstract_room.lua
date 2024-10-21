@@ -83,18 +83,9 @@ function AbstractRoom:loadJsonObject(o)
   self.banners = o.banners
   self.timeout = o.timeout
   self.settings = o.settings
-  local you = self:getPlayerById(o.you) ---@type Player
-
   for k, v in pairs(o.players) do
     local pid = tonumber(k)
     self:getPlayerById(pid):loadJsonObject(v)
-  end
-
-  -- 做一些临时修正——
-  for _, target in ipairs(self.players) do
-    if not you:roleVisible(target) then
-      target.role = "unknown"
-    end
   end
 end
 
