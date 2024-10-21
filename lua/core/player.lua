@@ -1240,7 +1240,8 @@ end
 --- @param target Player
 ---@return boolean
 function Player:roleVisible(target)
-  local status_skills = Fk:currentRoom().status_skills[VisibilitySkill] or Util.DummyTable
+  local room = Fk:currentRoom()
+  local status_skills = room.status_skills[VisibilitySkill] or Util.DummyTable
   for _, skill in ipairs(status_skills) do
     local f = skill:roleVisible(self, target)
     if f ~= nil then
@@ -1248,7 +1249,7 @@ function Player:roleVisible(target)
     end
   end
 
-  if target == self then return true end
+  if room.observing == false and target == self then return true end
 
   return target.role_shown
 end
