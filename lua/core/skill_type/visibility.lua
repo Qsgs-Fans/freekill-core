@@ -15,7 +15,7 @@ end
 
 ---@param player Player
 ---@return bool
-function VisibilitySkill:roleVisible(player)
+function VisibilitySkill:roleVisible(player, target)
   return nil
 end
 

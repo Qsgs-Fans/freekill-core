@@ -1216,8 +1216,8 @@ function Player:cardVisible(cardId, move)
   local area = room:getCardArea(cardId)
   local card = Fk:getCardById(cardId)
 
-  local public_areas = {Card.DiscardPile, Card.Processing, Card.Void}
-  local player_areas = {Card.PlayerHand, Card.PlayerEquip, Card.PlayerJudge, Card.PlayerSpecial}
+  local public_areas = {Card.DiscardPile, Card.Processing, Card.Void, Card.PlayerEquip, Card.PlayerJudge}
+  local player_areas = {Card.PlayerHand, Card.PlayerSpecial}
 
   local status_skills = Fk:currentRoom().status_skills[VisibilitySkill] or Util.DummyTable
   for _, skill in ipairs(status_skills) do
@@ -1234,6 +1234,21 @@ function Player:cardVisible(cardId, move)
   else
     return false
   end
+end
+
+--- Player是否可看到某target的身份
+--- @param target Player
+---@return boolean
+function Player:roleVisible(target)
+  local status_skills = Fk:currentRoom().status_skills[VisibilitySkill] or Util.DummyTable
+  for _, skill in ipairs(status_skills) do
+    local f = skill:roleVisible(self, target)
+    if f ~= nil then
+      return f
+    end
+  end
+
+  return target.role_shown
 end
 
 --- 比较两名角色的性别是否相同。
