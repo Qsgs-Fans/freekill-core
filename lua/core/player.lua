@@ -1248,6 +1248,8 @@ function Player:roleVisible(target)
     end
   end
 
+  if target == self then return true end
+
   return target.role_shown
 end
 
