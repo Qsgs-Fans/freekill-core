@@ -905,10 +905,20 @@ function FinishRequestUI()
 end
 
 -- TODO 传参带上cardMoveData...
-function CardVisibility(cardId)
+function CardVisibility(cardId, move)
   local player = Self
   local card = Fk:getCardById(cardId)
-  return math.random() < 0.5
+  if not card then return false end
+  return player:cardVisible(cardId, move)
+end
+
+function RoleVisibility(targetId)
+  local player = Self
+  local target = ClientInstance:getPlayerById(targetId)
+  if not target then return false end
+  p(target.role)
+  p(target.role_shown)
+  return player:roleVisible(target)
 end
 
 dofile "lua/client/i18n/init.lua"
