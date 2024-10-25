@@ -1614,17 +1614,21 @@ function Room:askForCardsChosen(chooser, target, min, max, flag, reason, prompt)
     skillName = reason,
     prompt = prompt,
   }
+  local visible_data = {}
   local cards_data = {}
   if type(flag) == "string" then
     local handcards = target:getCardIds(Player.Hand)
     local equips = target:getCardIds(Player.Equip)
     local judges = target:getCardIds(Player.Judge)
     if string.find(flag, "h") and #handcards > 0 then
-      -- TODO: 关于明置的牌
-      if target ~= chooser then
-        handcards = table.map(handcards, function() return -1 end)
-      end
       table.insert(cards_data, {"$Hand", handcards})
+      for _, id in ipairs(handcards) do
+        if not chooser:cardVisible(id) then
+          visible_data[tostring(id)] = false
+        end
+      end
+      if next(visible_data) == nil then visible_data = nil end
+      data.visible_data = visible_data
     end
     if string.find(flag, "e") and #equips > 0 then
       table.insert(cards_data, {"$Equip", equips})
