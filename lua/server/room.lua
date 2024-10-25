@@ -2714,7 +2714,8 @@ function Room:gameOver(winner)
   self.game_finished = true
 
   for _, p in ipairs(self.players) do
-    self:broadcastProperty(p, "role")
+    -- self:broadcastProperty(p, "role")
+    self:setPlayerProperty(p, "role_shown", true)
   end
   self:doBroadcastNotify("GameOver", winner)
   fk.qInfo(string.format("[GameOver] %d, %s, %s, in %ds", self.id, self.settings.gameMode, winner, os.time() - self.start_time))
