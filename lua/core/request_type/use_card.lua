@@ -8,6 +8,7 @@ function ReqUseCard:skillButtonValidity(name)
   local player = self.player
   local skill = Fk.skills[name]
   return skill:isInstanceOf(ViewAsSkill) and skill:enabledAtResponse(player, false)
+    and skill.pattern and Exppattern:Parse(self.pattern):matchExp(skill.pattern)
 end
 
 function ReqUseCard:cardValidity(cid)

@@ -56,8 +56,29 @@ end
 function ReqPlayCard:skillButtonValidity(name)
   local player = self.player
   local skill = Fk.skills[name]
+  local ret = false
   if skill:isInstanceOf(ViewAsSkill) then
-    return skill:enabledAtPlay(player, true)
+    ret =  skill:enabledAtPlay(player, true)
+    if ret then -- 没有pattern，或者至少有一个满足
+      local exp = Exppattern:Parse(skill.pattern)
+      local cnames = {}
+      for _, m in ipairs(exp.matchers) do
+        if m.name then
+          table.insertTable(cnames, m.name)
+        end
+        if m.trueName then
+          table.insertTable(cnames, m.trueName)
+        end
+      end
+      local extra_data = self.extra_data
+      for _, n in ipairs(cnames) do
+        local c = Fk:cloneCard(n)
+        c.skillName = name
+        ret = c.skill:canUse(Self, c, extra_data)
+        if ret then break end
+      end
+    end
+    return ret
   elseif skill:isInstanceOf(ActiveSkill) then
     return skill:canUse(player, nil)
   end
