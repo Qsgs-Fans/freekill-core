@@ -1199,6 +1199,9 @@ end
 ---@param move? CardsMoveStruct
 ---@return boolean
 function Player:cardVisible(cardId, move)
+  local room = Fk:currentRoom()
+  if room.replaying and room.replaying_show then return true end
+
   local falsy = false -- 当难以决定时是否要选择暗置？
   if move then
     if table.find(move.moveInfo, function(info) return info.cardId == cardId end) then
@@ -1214,14 +1217,13 @@ function Player:cardVisible(cardId, move)
     end
   end
 
-  local room = Fk:currentRoom()
   local area = room:getCardArea(cardId)
   local card = Fk:getCardById(cardId)
 
   local public_areas = {Card.DiscardPile, Card.Processing, Card.Void, Card.PlayerEquip, Card.PlayerJudge}
   local player_areas = {Card.PlayerHand, Card.PlayerSpecial}
 
-  if room.observing == true then return table.contains(public_areas, area) end
+  if room.observing and not room.replaying then return table.contains(public_areas, area) end
 
   local status_skills = Fk:currentRoom().status_skills[VisibilitySkill] or Util.DummyTable
   for _, skill in ipairs(status_skills) do
@@ -1256,7 +1258,8 @@ function Player:roleVisible(target)
     end
   end
 
-  if not room.observing and target == self then return true end
+  if (room.replaying or not room.observing) and target == self then return true end
+  if room.replaying and room.replaying_show then return true end
 
   return target.role_shown
 end

@@ -799,6 +799,19 @@ function SetObserving(o)
   ClientInstance.observing = o
 end
 
+function SetReplaying(o)
+  ClientInstance.replaying = o
+end
+
+function SetReplayingShowCards(o)
+  ClientInstance.replaying_show = o
+  if o then
+    for _, p in ipairs(ClientInstance.players) do
+      ClientInstance:notifyUI("PropertyUpdate", { p.id, "role_shown", true })
+    end
+  end
+end
+
 function CheckSurrenderAvailable(playedTime)
   local curMode = ClientInstance.room_settings.gameMode
   return Fk.game_modes[curMode]:surrenderFunc(playedTime)

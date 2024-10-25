@@ -6,7 +6,9 @@
 ---@field public alive_players ClientPlayer[] @ 所有存活玩家的数组
 ---@field public observers ClientPlayer[] @ 观察者的数组
 ---@field public current ClientPlayer @ 当前回合玩家
----@field public observing boolean
+---@field public observing boolean 客户端是否在旁观
+---@field public replaying boolean 客户端是否在重放
+---@field public replaying_show boolean 重放时是否要看到全部牌
 ---@field public record any
 ---@field public last_update_ui integer @ 上次刷新状态技UI的时间
 Client = AbstractRoom:subclass('Client')
@@ -248,8 +250,12 @@ fk.client_callback["EnterRoom"] = function(_data)
   Self = ClientPlayer:new(fk.Self)
   -- FIXME: 需要改Qml
   local ob = ClientInstance.observing
+  local replaying = ClientInstance.replaying
+  local showcards = ClientInstance.replaying_show
   ClientInstance = Client:new() -- clear old client data
   ClientInstance.observing = ob
+  ClientInstance.replaying = replaying
+  ClientInstance.replaying_show = showcards
   ClientInstance.players = {Self}
   ClientInstance.alive_players = {Self}
   ClientInstance.discard_pile = {}
