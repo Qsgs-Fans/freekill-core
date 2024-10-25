@@ -56,9 +56,8 @@ end
 function ReqPlayCard:skillButtonValidity(name)
   local player = self.player
   local skill = Fk.skills[name]
-  local ret = false
   if skill:isInstanceOf(ViewAsSkill) then
-    ret =  skill:enabledAtPlay(player, true)
+    local ret = skill:enabledAtPlay(player, true)
     if ret then -- 没有pattern，或者至少有一个满足
       local exp = Exppattern:Parse(skill.pattern)
       local cnames = {}
