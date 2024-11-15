@@ -566,5 +566,6 @@ Fk:loadTranslationTable{
 local pkgprefix = "packages/"
 if UsingNewCore then pkgprefix = "packages/freekill-core/" end
 Fk:loadTranslationTable(require(pkgprefix .. 'maneuvering/i18n/en_US'), 'en_US')
+Fk:loadTranslationTable(require(pkgprefix .. 'maneuvering/i18n/vi_VN'), 'vi_VN')
 
 return extension
