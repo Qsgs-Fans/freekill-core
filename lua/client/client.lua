@@ -34,42 +34,44 @@ local no_decode_commands = {
   "Heartbeat",
 }
 
+ClientCallback = function(_self, command, jsonData, isRequest)
+  local self = ClientInstance
+  if self.recording then
+    table.insert(self.record, {math.floor(os.getms() / 1000), isRequest, command, jsonData})
+  end
+
+  local cb = fk.client_callback[command]
+  local data
+  if table.contains(no_decode_commands, command) then
+    data = jsonData
+  else
+    local err, ret = pcall(json.decode, jsonData)
+    if err == false then
+      -- 不关心报错
+      data = jsonData
+    else
+      data = ret
+    end
+  end
+
+  if table.contains(pattern_refresh_commands, command) then
+    Fk.currentResponsePattern = nil
+    Fk.currentResponseReason = nil
+  end
+
+  if (type(cb) == "function") then
+    if command:startsWith("AskFor") or command == "PlayCard" then
+      self:notifyUI("CancelRequest") -- 确保变成notactive 防止卡双active 权宜之计
+    end
+    cb(self, data)
+  else
+    self:notifyUI(command, data)
+  end
+end
+
 function Client:initialize()
   AbstractRoom.initialize(self)
   self.client = fk.ClientInstance
-  self.client.callback = function(_self, command, jsonData, isRequest)
-    if self.recording then
-      table.insert(self.record, {math.floor(os.getms() / 1000), isRequest, command, jsonData})
-    end
-
-    local cb = fk.client_callback[command]
-    local data
-    if table.contains(no_decode_commands, command) then
-      data = jsonData
-    else
-      local err, ret = pcall(json.decode, jsonData)
-      if err == false then
-        -- 不关心报错
-        data = jsonData
-      else
-        data = ret
-      end
-    end
-
-    if table.contains(pattern_refresh_commands, command) then
-      Fk.currentResponsePattern = nil
-      Fk.currentResponseReason = nil
-    end
-
-    if (type(cb) == "function") then
-      if command:startsWith("AskFor") or command == "PlayCard" then
-        self:notifyUI("CancelRequest") -- 确保变成notactive 防止卡双active 权宜之计
-      end
-      cb(self, data)
-    else
-      self:notifyUI(command, data)
-    end
-  end
 
   self.disabled_packs = {}
   self.disabled_generals = {}
@@ -213,6 +215,14 @@ end
 
 fk.client_callback["SetCardFootnote"] = function(self, data)
   self:setCardNote(data[1], data[2]);
+end
+
+fk.client_callback["NetworkDelayTest"] = function(self, data)
+  self.client:sendSetupPacket(data)
+end
+
+fk.client_callback["InstallKey"] = function(self)
+  self.client:installMyAESKey()
 end
 
 function Client:setup(id, name, avatar, msec)
