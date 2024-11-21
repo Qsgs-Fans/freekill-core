@@ -226,7 +226,7 @@ fk.client_callback["InstallKey"] = function(self)
 end
 
 function Client:setup(id, name, avatar, msec)
-  local self_player = fk.Self
+  local self_player = self.client:getSelf()
   self_player:setId(id)
   self_player:setScreenName(name)
   self_player:setAvatar(avatar)
@@ -243,7 +243,7 @@ fk.client_callback["Setup"] = function(self, data)
 end
 
 function Client:enterRoom(_data)
-  Self = ClientPlayer:new(fk.Self)
+  Self = ClientPlayer:new(self.client:getSelf())
   -- FIXME: 需要改Qml
   local ob = self.observing
   local replaying = self.replaying
@@ -256,7 +256,6 @@ function Client:enterRoom(_data)
 
   self.players = {Self}
   self.alive_players = {Self}
-  self.discard_pile = {}
 
   local data = _data[3]
   self.enter_room_data = json.encode(_data);
@@ -1086,7 +1085,7 @@ fk.client_callback["StartGame"] = function(self, jsonData)
     fk.FK_VER,
     os.date("%Y%m%d%H%M%S"),
     self.enter_room_data,
-    json.encode { Self.id, fk.Self:getScreenName(), fk.Self:getAvatar() },
+    json.encode { Self.id, Self.player:getScreenName(), Self.player:getAvatar() },
     -- RESERVED
     "",
     "",

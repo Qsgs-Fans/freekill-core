@@ -351,7 +351,7 @@ end
 function ResetClientLua()
   local _data = ClientInstance.enter_room_data;
   local data = ClientInstance.settings
-  Self = ClientPlayer:new(fk.Self)
+  Self = ClientPlayer:new(ClientInstance.client:getSelf())
   ClientInstance = Client:new() -- clear old client data
   ClientInstance.players = {Self}
   ClientInstance.alive_players = {Self}
