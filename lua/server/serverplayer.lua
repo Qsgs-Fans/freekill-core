@@ -119,11 +119,9 @@ end
 
 function ServerPlayer:reconnect()
   local room = self.room
-  self.serverplayer:setState(fk.Player_Online)
 
   local summary = room:toJsonObject(self)
   self:doNotify("Reconnect", json.encode(summary))
-  room:notifyProperty(self, self, "role")
   self:doNotify("RoomOwner", json.encode{ room.room:getOwner():getId() })
 
   -- send fake skills
