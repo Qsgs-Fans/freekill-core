@@ -69,9 +69,9 @@ ClientCallback = function(_self, command, jsonData, isRequest)
   end
 end
 
-function Client:initialize()
+function Client:initialize(_client)
   AbstractRoom.initialize(self)
-  self.client = fk.ClientInstance
+  self.client = _client
 
   self.disabled_packs = {}
   self.disabled_generals = {}
@@ -248,8 +248,7 @@ function Client:enterRoom(_data)
   local ob = self.observing
   local replaying = self.replaying
   local showcards = self.replaying_show
-  ClientInstance = Client:new() -- clear old client data
-  self = ClientInstance
+  self:initialize(self.client) -- clear old client data
   self.observing = ob
   self.replaying = replaying
   self.replaying_show = showcards
@@ -1181,15 +1180,15 @@ end
 local function loadRoomSummary(self, data)
   local players = data.players
 
-  fk.client_callback["StartGame"]("")
+  fk.client_callback["StartGame"](self, "")
 
   for _, pid in ipairs(data.circle) do
     if pid ~= data.you then
-      fk.client_callback["AddPlayer"](players[tostring(pid)].setup_data)
+      fk.client_callback["AddPlayer"](self, players[tostring(pid)].setup_data)
     end
   end
 
-  fk.client_callback["ArrangeSeats"](data.circle)
+  fk.client_callback["ArrangeSeats"](self, data.circle)
 
   self:loadJsonObject(data) -- 此处已同步全部数据 剩下就是更新UI
 
@@ -1209,13 +1208,13 @@ fk.client_callback["Reconnect"] = function(self, data)
   local players = data.players
 
   local setup_data = players[tostring(data.you)].setup_data
-  setup(setup_data[1], setup_data[2], setup_data[3])
-  fk.client_callback["AddTotalGameTime"]{ setup_data[1], setup_data[5] }
+  self:setup(setup_data[1], setup_data[2], setup_data[3])
+  fk.client_callback["AddTotalGameTime"](self, { setup_data[1], setup_data[5] })
 
   local enter_room_data = { data.timeout, data.settings }
   table.insert(enter_room_data, 1, #data.circle)
-  fk.client_callback["EnterLobby"]("")
-  fk.client_callback["EnterRoom"](enter_room_data)
+  fk.client_callback["EnterLobby"](self, "")
+  fk.client_callback["EnterRoom"](self, enter_room_data)
 
   loadRoomSummary(self, data)
 end
@@ -1224,13 +1223,13 @@ fk.client_callback["Observe"] = function(self, data)
   local players = data.players
 
   local setup_data = players[tostring(data.you)].setup_data
-  setup(setup_data[1], setup_data[2], setup_data[3])
+  self:setup(setup_data[1], setup_data[2], setup_data[3])
 
   local enter_room_data = { data.timeout, data.settings }
   table.insert(enter_room_data, 1, #data.circle)
-  fk.client_callback["EnterRoom"](enter_room_data)
+  fk.client_callback["EnterRoom"](self, enter_room_data)
 
-  loadRoomSummary(data)
+  loadRoomSummary(self, data)
 end
 
 fk.client_callback["PrepareDrawPile"] = function(self, data)
@@ -1248,7 +1247,10 @@ fk.client_callback["SyncDrawPile"] = function(self, data)
 end
 
 -- Create ClientInstance (used by Lua)
-ClientInstance = Client:new()
+-- Let Cpp call this function to create
+function CreateLuaClient(cpp_client)
+  ClientInstance = Client:new(cpp_client)
+end
 dofile "lua/client/client_util.lua"
 
 if FileIO.pwd():endsWith("packages/freekill-core") then

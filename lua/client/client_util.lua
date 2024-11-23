@@ -349,24 +349,25 @@ function GetPlayerEquips(pid)
 end
 
 function ResetClientLua()
-  local _data = ClientInstance.enter_room_data;
-  local data = ClientInstance.settings
-  Self = ClientPlayer:new(ClientInstance.client:getSelf())
-  ClientInstance = Client:new() -- clear old client data
-  ClientInstance.players = {Self}
-  ClientInstance.alive_players = {Self}
-  ClientInstance.discard_pile = {}
+  local self = ClientInstance
+  local _data = self.enter_room_data;
+  local data = self.settings
+  Self = ClientPlayer:new(self.client:getSelf())
+  self:initialize(self.client) -- clear old client data
+  self.players = {Self}
+  self.alive_players = {Self}
+  self.discard_pile = {}
 
-  ClientInstance.enter_room_data = _data;
-  ClientInstance.settings = data
+  self.enter_room_data = _data;
+  self.settings = data
 
-  ClientInstance.disabled_packs = data.disabledPack
-  ClientInstance.disabled_generals = data.disabledGenerals
+  self.disabled_packs = data.disabledPack
+  self.disabled_generals = data.disabledGenerals
   -- ClientInstance:notifyUI("EnterRoom", jsonData)
 end
 
 function ResetAddPlayer(j)
-  fk.client_callback["AddPlayer"](j)
+  fk.client_callback["AddPlayer"](ClientInstance, j)
 end
 
 function GetRoomConfig()
