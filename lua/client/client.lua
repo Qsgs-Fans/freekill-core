@@ -69,9 +69,9 @@ ClientCallback = function(_self, command, jsonData, isRequest)
   end
 end
 
-function Client:initialize()
+function Client:initialize(_client)
   AbstractRoom.initialize(self)
-  self.client = fk.ClientInstance
+  self.client = _client
 
   self.disabled_packs = {}
   self.disabled_generals = {}
@@ -248,7 +248,7 @@ function Client:enterRoom(_data)
   local ob = self.observing
   local replaying = self.replaying
   local showcards = self.replaying_show
-  self:initialize() -- clear old client data
+  self:initialize(self.client) -- clear old client data
   self.observing = ob
   self.replaying = replaying
   self.replaying_show = showcards
@@ -1247,7 +1247,10 @@ fk.client_callback["SyncDrawPile"] = function(self, data)
 end
 
 -- Create ClientInstance (used by Lua)
-ClientInstance = Client:new()
+-- Let Cpp call this function to create
+function CreateLuaClient(cpp_client)
+  ClientInstance = Client:new(cpp_client)
+end
 dofile "lua/client/client_util.lua"
 
 if FileIO.pwd():endsWith("packages/freekill-core") then
