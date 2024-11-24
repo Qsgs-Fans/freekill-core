@@ -1130,13 +1130,26 @@ fk.client_callback["GameOver"] = function(self, jsonData)
     self.recording = false
     self.record[2] = table.concat({
       self.record[2],
-      Self.player:getScreenName(),
+      Self.player:getScreenName():gsub("%.", "%%2e"),
       self.settings.gameMode,
       Self.general,
       Self.role,
       jsonData,
     }, ".")
-    -- c.client:saveRecord(json.encode(c.record), c.record[2])
+    if not self.observing and not self.replaying then
+      local result
+      local winner = jsonData
+      if table.contains(winner:split("+"), Self.role) then
+        result = 1
+      elseif winner == "" then
+        result = 3
+      else
+        result = 2
+      end
+      self.client:saveGameData(self.settings.gameMode, Self.general,
+        Self.deputyGeneral or "", Self.role, result, self.record[2],
+        json.encode(self:toJsonObject()), json.encode(self.record))
+    end
   end
   self:notifyUI("GameOver", jsonData)
 end
@@ -1147,7 +1160,7 @@ fk.client_callback["EnterLobby"] = function(self, jsonData)
     self.recording = false
     self.record[2] = table.concat({
       self.record[2],
-      Self.player:getScreenName(),
+      Self.player:getScreenName():gsub("%.", "%%2e"),
       self.settings.gameMode,
       Self.general,
       Self.role,
@@ -1180,8 +1193,6 @@ end
 local function loadRoomSummary(self, data)
   local players = data.players
 
-  fk.client_callback["StartGame"](self, "")
-
   for _, pid in ipairs(data.circle) do
     if pid ~= data.you then
       fk.client_callback["AddPlayer"](self, players[tostring(pid)].setup_data)
@@ -1189,6 +1200,8 @@ local function loadRoomSummary(self, data)
   end
 
   fk.client_callback["ArrangeSeats"](self, data.circle)
+
+  fk.client_callback["StartGame"](self, "")
 
   self:loadJsonObject(data) -- 此处已同步全部数据 剩下就是更新UI
 

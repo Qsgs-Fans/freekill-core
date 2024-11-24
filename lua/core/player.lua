@@ -76,6 +76,8 @@ function Player:initialize()
     "general", "deputyGeneral", "maxHp", "hp", "shield", "gender", "kingdom",
     "dead", "role", "role_shown", "rest", "seat", "phase", "faceup", "chained",
     "sealedSlots",
+
+    "surrendered",
   }
   self.hp = 0
   self.maxHp = 0
