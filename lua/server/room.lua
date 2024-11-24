@@ -2670,11 +2670,11 @@ function Room:gameOver(winner)
 
       if p.id > 0 then
         if table.contains(winner:split("+"), p.role) then
-          self.room:updateWinRate(id, general, mode, 1, p.dead)
+          self.room:updateWinRate(id, general, mode, p.role, 1)
         elseif winner == "" then
-          self.room:updateWinRate(id, general, mode, 3, p.dead)
+          self.room:updateWinRate(id, general, mode, p.role, 3)
         else
-          self.room:updateWinRate(id, general, mode, 2, p.dead)
+          self.room:updateWinRate(id, general, mode, p.role, 2)
         end
       end
     end
