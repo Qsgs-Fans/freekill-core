@@ -213,6 +213,12 @@ function Client:setCardNote(ids, msg)
   end
 end
 
+function Client:toJsonObject()
+  local o = AbstractRoom.toJsonObject(self)
+  o.you = Self.id
+  return o
+end
+
 fk.client_callback["SetCardFootnote"] = function(self, data)
   self:setCardNote(data[1], data[2]);
 end
@@ -1233,6 +1239,7 @@ fk.client_callback["Reconnect"] = function(self, data)
 end
 
 fk.client_callback["Observe"] = function(self, data)
+  p(data)
   local players = data.players
 
   local setup_data = players[tostring(data.you)].setup_data
