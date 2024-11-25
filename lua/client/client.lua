@@ -84,6 +84,54 @@ function Client:notifyUI(command, data)
   self.client:notifyUI(command, data)
 end
 
+function Client:startRecording()
+  if self.recording then return end
+  if self.replaying then return end
+  self.record = {
+    fk.FK_VER,
+    os.date("%Y%m%d%H%M%S"),
+    self.enter_room_data,
+    json.encode { Self.id, Self.player:getScreenName(), Self.player:getAvatar() },
+    -- RESERVED
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+  }
+  for _, p in ipairs(self.players) do
+    if p.id ~= Self.id then
+      table.insert(self.record, {
+        math.floor(os.getms() / 1000),
+        false,
+        "AddPlayer",
+        json.encode {
+          p.player:getId(),
+          p.player:getScreenName(),
+          p.player:getAvatar(),
+          true,
+          p.player:getTotalGameTime(),
+        },
+      })
+    end
+  end
+  self.recording = true
+end
+
+function Client:stopRecording(jsonData)
+  if not self.recording then return end
+  self.record[2] = table.concat({
+    self.record[2],
+    Self.player:getScreenName():gsub("%.", "%%2e"),
+    self.settings.gameMode,
+    Self.general,
+    Self.role,
+    jsonData,
+  }, ".")
+  self.recording = false
+end
+
 ---@param id integer
 ---@return ClientPlayer
 function Client:getPlayerById(id)
@@ -1099,50 +1147,13 @@ fk.client_callback["AddTotalGameTime"] = function(self, data)
 end
 
 fk.client_callback["StartGame"] = function(self, jsonData)
-  self.record = {
-    fk.FK_VER,
-    os.date("%Y%m%d%H%M%S"),
-    self.enter_room_data,
-    json.encode { Self.id, Self.player:getScreenName(), Self.player:getAvatar() },
-    -- RESERVED
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-  }
-  for _, p in ipairs(self.players) do
-    if p.id ~= Self.id then
-      table.insert(self.record, {
-        math.floor(os.getms() / 1000),
-        false,
-        "AddPlayer",
-        json.encode {
-          p.player:getId(),
-          p.player:getScreenName(),
-          p.player:getAvatar(),
-          true,
-          p.player:getTotalGameTime(),
-        },
-      })
-    end
-  end
-  self.recording = true
+  self:startRecording()
   self:notifyUI("StartGame", jsonData)
 end
 
 fk.client_callback["GameOver"] = function(self, jsonData)
   if self.recording then
-    self.recording = false
-    self.record[2] = table.concat({
-      self.record[2],
-      Self.player:getScreenName():gsub("%.", "%%2e"),
-      self.settings.gameMode,
-      Self.general,
-      Self.role,
-      jsonData,
-    }, ".")
+    self:stopRecording(jsonData)
     if not self.observing and not self.replaying then
       local result
       local winner = jsonData
@@ -1162,19 +1173,7 @@ fk.client_callback["GameOver"] = function(self, jsonData)
 end
 
 fk.client_callback["EnterLobby"] = function(self, jsonData)
-  ---[[
-  if self.recording and not self.observing then
-    self.recording = false
-    self.record[2] = table.concat({
-      self.record[2],
-      Self.player:getScreenName():gsub("%.", "%%2e"),
-      self.settings.gameMode,
-      Self.general,
-      Self.role,
-      "",
-    }, ".")
-  end
-  --]]
+  self:stopRecording("")
   self:notifyUI("EnterLobby", jsonData)
 end
 
@@ -1227,14 +1226,19 @@ end
 fk.client_callback["Reconnect"] = function(self, data)
   local players = data.players
 
-  local setup_data = players[tostring(data.you)].setup_data
-  self:setup(setup_data[1], setup_data[2], setup_data[3])
-  fk.client_callback["AddTotalGameTime"](self, { setup_data[1], setup_data[5] })
+  if not self.replaying then
+    local setup_data = players[tostring(data.you)].setup_data
+    self:setup(setup_data[1], setup_data[2], setup_data[3])
+    fk.client_callback["AddTotalGameTime"](self, { setup_data[1], setup_data[5] })
 
-  local enter_room_data = { data.timeout, data.settings }
-  table.insert(enter_room_data, 1, #data.circle)
-  fk.client_callback["EnterLobby"](self, "")
-  fk.client_callback["EnterRoom"](self, enter_room_data)
+    local enter_room_data = { data.timeout, data.settings }
+    table.insert(enter_room_data, 1, #data.circle)
+    fk.client_callback["EnterLobby"](self, "")
+    fk.client_callback["EnterRoom"](self, enter_room_data)
+
+    self:startRecording()
+    table.insert(self.record, {math.floor(os.getms() / 1000), false, "Reconnect", json.encode(data)})
+  end
 
   loadRoomSummary(self, data)
 end
@@ -1242,12 +1246,17 @@ end
 fk.client_callback["Observe"] = function(self, data)
   local players = data.players
 
-  local setup_data = players[tostring(data.you)].setup_data
-  self:setup(setup_data[1], setup_data[2], setup_data[3])
+  if not self.replaying then
+    local setup_data = players[tostring(data.you)].setup_data
+    self:setup(setup_data[1], setup_data[2], setup_data[3])
 
-  local enter_room_data = { data.timeout, data.settings }
-  table.insert(enter_room_data, 1, #data.circle)
-  fk.client_callback["EnterRoom"](self, enter_room_data)
+    local enter_room_data = { data.timeout, data.settings }
+    table.insert(enter_room_data, 1, #data.circle)
+    fk.client_callback["EnterRoom"](self, enter_room_data)
+
+    self:startRecording()
+    table.insert(self.record, {math.floor(os.getms() / 1000), false, "Observe", json.encode(data)})
+  end
 
   loadRoomSummary(self, data)
 end
