@@ -264,6 +264,7 @@ function Client:enterRoom(_data)
 
   local data = _data[3]
   self.enter_room_data = json.encode(_data);
+  self.timeout = _data[2]
   self.settings = data
   table.insertTableIfNeed(
     data.disabledPack,
@@ -1239,7 +1240,6 @@ fk.client_callback["Reconnect"] = function(self, data)
 end
 
 fk.client_callback["Observe"] = function(self, data)
-  p(data)
   local players = data.players
 
   local setup_data = players[tostring(data.you)].setup_data
