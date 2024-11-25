@@ -82,4 +82,17 @@ function ClientPlayer:sendDataToUI()
   end
 end
 
+function ClientPlayer:toJsonObject()
+  local o = Player.toJsonObject(self)
+  local sp = self.player
+  o.setup_data = {
+    self.id,
+    sp:getScreenName(),
+    sp:getAvatar(),
+    false,
+    sp:getTotalGameTime(),
+  }
+  return o
+end
+
 return ClientPlayer
