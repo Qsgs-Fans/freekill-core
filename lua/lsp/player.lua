@@ -3,23 +3,74 @@
 ---@meta
 
 ---@class fk.Player
-FPlayer = {}
+local FPlayer = {}
 
-function FPlayer:getId()end
-function FPlayer:getScreenName()end
-function FPlayer:getAvatar()end
+---@return integer
+function FPlayer:getId()
+end
 
----@class fk.ServerPlayer : fk.Player
-FServerPlayer = {}
+---@param id integer
+function FPlayer:setId(id)
+end
 
-function FServerPlayer:doRequest(command,jsonData,timeout)end
-function FServerPlayer:waitForReply(timeout)end
-function FServerPlayer:doNotify(command,jsonData)end
-function FServerPlayer:setBusy(_) end
-function FServerPlayer:isBusy(_) end
-function FServerPlayer:setThinking(_) end
+---@return string
+function FPlayer:getScreenName()
+end
 
-function FServerPlayer:getState() end
+---@param name string
+function FPlayer:setScreenName(name)
+end
 
----@type any
-fk.Self = nil
+---@return string
+function FPlayer:getAvatar()
+end
+
+---@param avatar string
+function FPlayer:setAvatar(avatar)
+end
+
+---@return integer
+function FPlayer:getTotalGameTime()
+end
+
+---@param toAdd integer
+function FPlayer:addTotalGameTime(toAdd)
+end
+
+---@return integer
+function FPlayer:getState()
+end
+
+---@param state integer
+function FPlayer:setState(state)
+end
+
+---@return integer[]
+function FPlayer:getGameData()
+end
+
+---@param total integer
+---@param win integer
+---@param run integer
+function FPlayer:setGameData(total, win, run)
+end
+
+---@return boolean
+function FPlayer:isDied()
+end
+
+---@param died boolean
+function FPlayer:setDied(died)
+end
+
+-- Enum definition
+fk.Player_Invalid = 0
+fk.Player_Online = 1
+fk.Player_Trust = 2
+fk.Player_Run = 3
+fk.Player_Leave = 4
+fk.Player_Robot = 5
+fk.Player_Offline = 6
+
+---@class fk.ClientPlayer : fk.Player
+local FClientPlayer = {}
