@@ -3,56 +3,23 @@
 
 ---@meta
 
----@class fk.QmlBackend
-local FQmlBackend = {}
-
----@param path string
-function FQmlBackend.cd(path)
-end
-
----@param dir string
----@return string[]
-function FQmlBackend.ls(dir)
-end
-
----@return string
-function FQmlBackend.pwd()
-end
-
----@param file string
----@return boolean
-function FQmlBackend.exists(file)
-end
-
----@param file string
----@return boolean
-function FQmlBackend.isDir(file)
-end
-
--- External instance of QmlBackend
-fk.Backend = FQmlBackend
-
--- Static method references
-fk.QmlBackend_cd = FQmlBackend.cd
-fk.QmlBackend_ls = FQmlBackend.ls
-fk.QmlBackend_pwd = FQmlBackend.pwd
-fk.QmlBackend_exists = FQmlBackend.exists
-fk.QmlBackend_isDir = FQmlBackend.isDir
-
 ---@class fk.Client
+---@field private _self fk.Player
+---@field private players table<integer, fk.Player>
+---@field public _reply any
+---@field public _ui any
 local FClient = {}
 
 ---@param pubkey string
-function FClient:sendSetupPacket(pubkey)
-end
+function FClient:sendSetupPacket(pubkey) end
 
 ---@param server_time integer
-function FClient:setupServerLag(server_time)
-end
+function FClient:setupServerLag(server_time) end
 
 ---@param command string
 ---@param json_data string
 function FClient:replyToServer(command, json_data)
+  self._reply = json_data
 end
 
 ---@param command string
@@ -60,44 +27,50 @@ end
 function FClient:notifyServer(command, json_data)
 end
 
----@param id int
+---@param id integer
 ---@param name string
 ---@param avatar string
----@return fk.ClientPlayer
+---@return fk.Player
 function FClient:addPlayer(id, name, avatar)
+  self.players[id] = CreateFakePlayer(id, name, avatar)
+  return self.players[id]
 end
 
----@param id int
+---@param id integer
 function FClient:removePlayer(id)
+  self.players[id] = nil
 end
 
----@return fk.ClientPlayer
+---@return fk.Player
 function FClient:getSelf()
+  return self._self
 end
 
----@param id int
+---@param id integer
 function FClient:changeSelf(id)
+  self._self = self.players[id] or self._self
 end
 
 ---@param json string
 ---@param fname string
-function FClient:saveRecord(json, fname)
-end
+function FClient:saveRecord(json, fname) end
 
 ---@param mode string
 ---@param general string
 ---@param deputy string
 ---@param role string
----@param result int
+---@param result integer
 ---@param replay string
 ---@param room_data string
 ---@param record string
-function FClient:saveGameData(mode, general, deputy, role, result, replay, room_data, record)
-end
+function FClient:saveGameData(mode, general, deputy, role, result, replay, room_data, record) end
 
 ---@param command string
 ---@param jsonData any
 function FClient:notifyUI(command, jsonData)
+  self._ui.cb(command, jsonData)
 end
 
 function FClient:installMyAESKey() end
+
+return FClient

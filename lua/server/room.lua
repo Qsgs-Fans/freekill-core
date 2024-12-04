@@ -653,10 +653,6 @@ end
 --- 延迟一段时间。
 ---@param ms integer @ 要延迟的毫秒数
 function Room:delay(ms)
-  local start = os.getms()
-  self.delay_start = start
-  self.delay_duration = ms
-  self.in_delay = true
   self.room:delay(math.ceil(ms))
   coroutine.yield("__handleRequest", ms)
 end
