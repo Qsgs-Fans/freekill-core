@@ -23,6 +23,7 @@
 ---@field public skill_costs table<string, any> @ 存放skill.cost_data用
 ---@field public card_marks table<integer, any> @ 存放card.mark之用
 ---@field public current_cost_skill TriggerSkill? @ AI用
+---@field public _test_disable_delay boolean? 测试专用 会禁用delay和烧条
 local Room = AbstractRoom:subclass("Room")
 
 -- load classes used by the game
@@ -654,6 +655,7 @@ end
 ---@param ms integer @ 要延迟的毫秒数
 function Room:delay(ms)
   self.room:delay(math.ceil(ms))
+  if self._test_disable_delay then return end
   coroutine.yield("__handleRequest", ms)
 end
 

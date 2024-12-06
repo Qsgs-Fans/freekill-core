@@ -424,20 +424,20 @@ function GameLogic:start()
     local ce = self:getCurrentCleaner()
     local e = ce and (ce.id >= ne.id and ce or ne) or ne
 
-    if e == ne and e.killed then
-      e.interrupted = true
-      self:clearEvent(e)
-      coroutine.close(e._co)
-      e.status = "dead"
-      e = self:getCurrentCleaner()
-    end
-
     if not e then -- 没有事件，按理说不应该，平局处理
       self.room:sendLog{
         type = "#NoEventDraw",
         toast = true,
       }
       self.room:gameOver("")
+    end
+
+    if e == ne and e.killed then
+      e.interrupted = true
+      self:clearEvent(e)
+      coroutine.close(e._co)
+      e.status = "dead"
+      e = self:getCurrentCleaner()
     end
 
     -- ret, evt解释：
