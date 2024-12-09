@@ -119,9 +119,11 @@ end
 ---@return string
 function FServerPlayer:waitForReply(timeout)
   if self._fake_router then
-    return self._fake_router._reply
+    local list = self._fake_router._reply_list
+    local ret = table.remove(list, 1)
+    if ret then return ret end
   end
-  return "__notready"
+  return "__cancel"
 end
 
 ---@param command string

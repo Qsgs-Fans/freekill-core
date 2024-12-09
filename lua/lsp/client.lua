@@ -6,7 +6,7 @@
 ---@class fk.Client
 ---@field private _self fk.Player
 ---@field private players table<integer, fk.Player>
----@field public _reply any
+---@field public _reply_list any
 ---@field public _ui any
 local FClient = {}
 
@@ -18,9 +18,7 @@ function FClient:setupServerLag(server_time) end
 
 ---@param command string
 ---@param json_data string
-function FClient:replyToServer(command, json_data)
-  self._reply = json_data
-end
+function FClient:replyToServer(command, json_data) end
 
 ---@param command string
 ---@param json_data string
