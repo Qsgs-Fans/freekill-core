@@ -28,6 +28,8 @@ TrickCard, DelayedTrickCard = table.unpack(Trick)
 local Equip = require "core.card_type.equip"
 _, Weapon, Armor, DefensiveRide, OffensiveRide, Treasure = table.unpack(Equip)
 
+dofile "lua/compat/fk_ex.lua"
+
 function fk.readCommonSpecToSkill(skill, spec)
   skill.mute = spec.mute
   skill.no_indicate = spec.no_indicate
@@ -96,6 +98,7 @@ function fk.readStatusSpecToSkill(skill, spec)
 end
 
 ---@class SkillSpec
+---@field public package? Package
 ---@field public name string @ 技能名
 ---@field public frequency? Frequency @ 技能发动的频繁程度，通常compulsory（锁定技）及limited（限定技）用的多。
 ---@field public mute? boolean @ 决定是否关闭技能配音
@@ -108,6 +111,122 @@ end
 ---@field public on_acquire? fun(self: UsableSkill, player: ServerPlayer, is_start: boolean)
 ---@field public on_lose? fun(self: UsableSkill, player: ServerPlayer, is_death: boolean)
 ---@field public attached_skill_name? string @ 给其他角色添加技能的名称
+
+---@class SkillSkeleton : Object, SkillSpec
+---@field public effect_list ([any, any, any])[]
+local SkillSkeleton = class("SkillSkeleton")
+
+---@param spec SkillSpec
+function SkillSkeleton:initialize(spec)
+  self.name = spec.name
+  self.frequency = spec.frequency or Skill.NotFrequent
+  fk.readCommonSpecToSkill(self, spec)
+  table.insert(spec.package.skill_skels, self)
+  self.effect_list = {}
+end
+
+function SkillSkeleton:addEffect(key, attribute, data)
+  table.insert(self.effect_list, { key, attribute, data })
+  return self
+end
+
+---@return Skill
+function SkillSkeleton:createSkill()
+  local frequency = self.frequency
+  local skill = Skill:new(self.name, frequency)
+  fk.readCommonSpecToSkill(skill, self)
+  for i, effect in ipairs(self.effect_list) do
+    local k, attr, data = table.unpack(effect)
+    attr = attr or Util.DummyTable
+    local sk
+    if k == 'foo' then
+    elseif k == 'bar' then
+    else
+      sk = self:createTriggerSkill(skill, i, k, attr, data)
+    end
+    if sk then
+      if not attr.is_delay_effect then
+        sk.main_skill = skill
+      end
+      skill:addRelatedSkill(sk)
+    end
+  end
+  return skill
+end
+
+---@class TrigSkelAttribute
+---@field public is_delay_effect? boolean
+--- 若为true，则不贴main_skill
+---@field public not_has_skill? boolean
+--- 若为false或nil，自动添加判断player:hasSkill(<主技能>)
+---@field public player_not_target? boolean
+--- 若为false或nil，自动添加判断(target == nil or target == player)
+
+---@alias TrigFunc fun(self: TriggerSkill, event: TriggerEvent|integer|string, target: ServerPlayer, player: ServerPlayer, data: any): any
+---@class TrigSkelSpec
+---@field public on_trigger? TrigFunc
+---@field public can_trigger? TrigFunc
+---@field public on_cost? TrigFunc
+---@field public on_use? TrigFunc
+---@field public on_refresh? TrigFunc
+---@field public can_refresh? TrigFunc
+---@field public can_wake? TrigFunc
+
+---@param skill Skill
+---@param idx integer
+---@param key TriggerEvent|integer|string
+---@param attr TrigSkelAttribute
+---@param spec TrigSkelSpec
+---@return TriggerSkill
+function SkillSkeleton:createTriggerSkill(skill, idx, key, attr, spec)
+  local new_name = string.format("#%s_%d_trig", skill.name, idx)
+  -- 先用牢TriggerSkill顶住 船新Trigger再说吧
+  local sk = TriggerSkill:new(new_name, skill.frequency)
+  fk.readCommonSpecToSkill(sk, self)
+  Fk:loadTranslationTable({ [new_name] = Fk:translate(skill.name) }, Config.language)
+  if spec.can_trigger or spec.on_trigger or spec.on_cost or spec.on_use or
+    spec.can_wake then
+    sk.events = { key }
+    if spec.can_trigger then
+      local can_trigger = function(_self, event, target, player, data)
+        if (not attr.not_has_skill) and not
+          player:hasSkill(attr.is_delay_effect and sk or skill) then return end
+        if (not attr.player_not_target) and
+          not (target == nil or target == player) then return end
+        return spec.can_trigger(_self, event, target, player, data)
+      end
+      if skill.frequency == Skill.Wake then
+        sk.triggerable = function(_self, event, target, player, data)
+          return can_trigger(_self, event, target, player, data) and
+            sk:enableToWake(event, target, player, data)
+        end
+      else
+        sk.triggerable = can_trigger
+      end
+      if skill.frequency == Skill.Wake and spec.can_wake then
+        sk.canWake = spec.can_wake
+      end
+    end
+    if spec.on_trigger then sk.trigger = spec.on_trigger end
+    if spec.on_cost then sk.cost = spec.on_cost end
+    if spec.on_use then sk.use = spec.on_use end
+    -- TODO
+    sk.priority_table[key] = 1
+  end
+  if spec.can_refresh or spec.on_refresh then
+    sk.refresh_events = { key }
+    if spec.can_refresh then sk.canRefresh = spec.can_refresh end
+    if spec.on_refresh then sk.refresh = spec.on_refresh end
+  end
+  -- TODO: useAbleSpec
+  return sk
+end
+
+---@param spec SkillSpec
+---@return SkillSkeleton
+function fk.CreateSkill(spec)
+  return SkillSkeleton:new(spec)
+end
 
 ---@class UsableSkillSpec: SkillSpec
 ---@field public main_skill? UsableSkill
@@ -129,93 +248,6 @@ end
 ---@field public card_num_table? integer[]
 
 ---@class StatusSkillSpec: SkillSpec
-
----@alias TrigFunc fun(self: TriggerSkill, event: Event, target: ServerPlayer, player: ServerPlayer, data: any): any
----@class TriggerSkillSpec: UsableSkillSpec
----@field public global? boolean
----@field public events? Event | Event[]
----@field public refresh_events? Event | Event[]
----@field public priority? number | table<Event, number>
----@field public on_trigger? TrigFunc
----@field public can_trigger? TrigFunc
----@field public on_cost? TrigFunc
----@field public on_use? TrigFunc
----@field public on_refresh? TrigFunc
----@field public can_refresh? TrigFunc
----@field public can_wake? TrigFunc
-
----@param spec TriggerSkillSpec
----@return TriggerSkill
-function fk.CreateTriggerSkill(spec)
-  assert(type(spec.name) == "string")
-  --assert(type(spec.on_trigger) == "function")
-  if spec.frequency then assert(type(spec.frequency) == "number") end
-
-  local frequency = spec.frequency or Skill.NotFrequent
-  local skill = TriggerSkill:new(spec.name, frequency)
-  fk.readUsableSpecToSkill(skill, spec)
-
-  if type(spec.events) == "number" then
-    table.insert(skill.events, spec.events)
-  elseif type(spec.events) == "table" then
-    table.insertTable(skill.events, spec.events)
-  end
-
-  if type(spec.refresh_events) == "number" then
-    table.insert(skill.refresh_events, spec.refresh_events)
-  elseif type(spec.refresh_events) == "table" then
-    table.insertTable(skill.refresh_events, spec.refresh_events)
-  end
-
-  if type(spec.global) == "boolean" then skill.global = spec.global end
-
-  if spec.on_trigger then skill.trigger = spec.on_trigger end
-
-  if spec.can_trigger then
-    if spec.frequency == Skill.Wake then
-      skill.triggerable = function(self, event, target, player, data)
-        return spec.can_trigger(self, event, target, player, data) and
-          skill:enableToWake(event, target, player, data)
-      end
-    else
-      skill.triggerable = spec.can_trigger
-    end
-  end
-
-  if skill.frequency == Skill.Wake and spec.can_wake then
-    skill.canWake = spec.can_wake
-  end
-
-  if spec.on_cost then skill.cost = spec.on_cost end
-  if spec.on_use then skill.use = spec.on_use end
-
-  if spec.can_refresh then
-    skill.canRefresh = spec.can_refresh
-  end
-
-  if spec.on_refresh then
-    skill.refresh = spec.on_refresh
-  end
-
-  if spec.attached_equip then
-    if not spec.priority then
-      spec.priority = 0.1
-    end
-  elseif not spec.priority then
-    spec.priority = 1
-  end
-
-  if type(spec.priority) == "number" then
-    for _, event in ipairs(skill.events) do
-      skill.priority_table[event] = spec.priority
-    end
-  elseif type(spec.priority) == "table" then
-    for event, priority in pairs(spec.priority) do
-      skill.priority_table[event] = priority
-    end
-  end
-  return skill
-end
 
 ---@class ActiveSkillSpec: UsableSkillSpec
 ---@field public can_use? fun(self: ActiveSkill, player: Player, card?: Card, extra_data: any): any

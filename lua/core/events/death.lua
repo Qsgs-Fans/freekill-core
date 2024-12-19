@@ -1,0 +1,23 @@
+---@class fk.EnterDying: TriggerEvent
+fk.EnterDying = TriggerEvent:subclass("fk.EnterDying")
+---@class fk.Dying: TriggerEvent
+fk.Dying = TriggerEvent:subclass("fk.Dying")
+---@class fk.AfterDying: TriggerEvent
+fk.AfterDying = TriggerEvent:subclass("fk.AfterDying")
+
+---@class fk.AskForPeaches: TriggerEvent
+fk.AskForPeaches = TriggerEvent:subclass("fk.AskForPeaches")
+---@class fk.AskForPeachesDone: TriggerEvent
+fk.AskForPeachesDone = TriggerEvent:subclass("fk.AskForPeachesDone")
+---@class fk.Death: TriggerEvent
+fk.Death = TriggerEvent:subclass("fk.Death")
+---@class fk.BeforeGameOverJudge: TriggerEvent
+fk.BeforeGameOverJudge = TriggerEvent:subclass("fk.BeforeGameOverJudge")
+---@class fk.GameOverJudge: TriggerEvent
+fk.GameOverJudge = TriggerEvent:subclass("fk.GameOverJudge")
+---@class fk.Deathed: TriggerEvent
+fk.Deathed = TriggerEvent:subclass("fk.Deathed")
+---@class fk.BuryVictim: TriggerEvent
+fk.BuryVictim = TriggerEvent:subclass("fk.BuryVictim")
+---@class fk.AfterPlayerRevived: TriggerEvent
+fk.AfterPlayerRevived = TriggerEvent:subclass("fk.AfterPlayerRevived")

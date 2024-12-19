@@ -15,6 +15,7 @@
 ---@field public game_modes GameMode[] @ 拓展包包含的游戏模式
 ---@field public game_modes_whitelist? string[] @ 拓展包关于游戏模式的白名单
 ---@field public game_modes_blacklist? string[] @ 拓展包关于游戏模式的黑名单
+---@field public skill_skels SkillSkeleton[]
 local Package = class("Package")
 
 ---@alias PackageType integer
@@ -38,6 +39,7 @@ function Package:initialize(name, _type)
   self.related_skills = {}
   self.cards = {}
   self.game_modes = {}
+  self.skill_skels = {}
 end
 
 --- 获得这个包涉及的所有技能。

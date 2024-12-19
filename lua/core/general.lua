@@ -85,6 +85,13 @@ function General:addSkill(skill)
   end
 end
 
+---@param skill_list string[]
+function General:addSkills(skill_list)
+  for _, skill in ipairs(skill_list) do
+    self:addSkill(skill)
+  end
+end
+
 --- 为武将增加相关技能，需要注意增加其他武将技能时的处理方式。
 ---@param skill Skill|string @ （单个）武将技能
 function General:addRelatedSkill(skill)
@@ -96,6 +103,13 @@ function General:addRelatedSkill(skill)
     table.insert(self.all_skills, {skill.name, true}) -- only for UI
     Fk:addSkill(skill)
     skill.package = self.package
+  end
+end
+
+---@param skill_list string[]
+function General:addRelatedSkills(skill_list)
+  for _, skill in ipairs(skill_list) do
+    self:addRelatedSkill(skill)
   end
 end
 

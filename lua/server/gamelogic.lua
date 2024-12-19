@@ -2,9 +2,9 @@
 
 ---@class GameLogic: Object
 ---@field public room Room
----@field public skill_table table<Event, TriggerSkill[]>
----@field public skill_priority_table table<Event, number[]>
----@field public refresh_skill_table table<Event, TriggerSkill[]>
+---@field public skill_table table<(TriggerEvent|integer|string), TriggerSkill[]>
+---@field public skill_priority_table table<(TriggerEvent|integer|string), number[]>
+---@field public refresh_skill_table table<(TriggerEvent|integer|string), TriggerSkill[]>
 ---@field public skills string[]
 ---@field public game_event_stack Stack
 ---@field public cleaner_stack Stack
@@ -352,7 +352,7 @@ function GameLogic:addTriggerSkill(skill)
   end
 end
 
----@param event Event
+---@param event TriggerEvent|integer|string
 ---@param target? ServerPlayer
 ---@param data? any
 function GameLogic:trigger(event, target, data, refresh_only)

@@ -125,6 +125,11 @@ function Engine:loadPackage(pack)
   self.packages[pack.name] = pack
   table.insert(self.package_names, pack.name)
 
+  -- create skills for skel
+  for _, skel in ipairs(pack.skill_skels) do
+    table.insert(pack.related_skills, skel:createSkill())
+  end
+
   -- add cards, generals and skills to Engine
   if pack.type == Package.CardPack then
     self:addCards(pack.cards)
@@ -347,7 +352,7 @@ end
 --- 如果技能有关联技能，那么递归地加载那些关联技能。
 ---@param skill Skill @ 要加载的技能
 function Engine:addSkill(skill)
-  assert(skill.class:isSubclassOf(Skill))
+  assert(skill:isInstanceOf(Skill))
   if self.skills[skill.name] ~= nil then
     fk.qWarning(string.format("Duplicate skill %s detected", skill.name))
   end

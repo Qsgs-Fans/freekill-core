@@ -11,24 +11,29 @@ dofile(pkgprefix .. "standard/aux_poxi.lua")
 
 Fk:appendKingdomMap("god", {"wei", "shu", "wu", "qun"})
 
-local jianxiong = fk.CreateTriggerSkill{
+fk.CreateSkill{
   name = "jianxiong",
   anim_type = "masochism",
-  events = {fk.Damaged},
+  package = extension,
+} :addEffect(fk.Damaged, nil, {
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and data.card and player.room:getCardArea(data.card) == Card.Processing
+    if data.card.suit == Card.Heart then
+      print 'a'
+    end
+    if data.card.id == 1 then return true end
+    if data.from.hp == 3 then return true end
+    local from = data.from
+    if from.hp == 3 then return true end
+    return data.card and player.room:getCardArea(data.card) == Card.Processing
   end,
   on_use = function(self, event, target, player, data)
     player.room:obtainCard(player.id, data.card, true, fk.ReasonJustMove)
   end,
-}
+})
 
-local hujia = fk.CreateTriggerSkill{
-  name = "hujia$",
-  anim_type = "defensive",
-  events = {fk.AskForCardUse, fk.AskForCardResponse},
+local hujia_spec = {
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and
+    return
       (data.cardName == "jink" or (data.pattern and Exppattern:Parse(data.pattern):matchExp("jink|0|nosuit|none"))) and
       (data.extraData == nil or data.extraData.hujia_ask == nil) and
       not table.every(player.room.alive_players, function(p)
@@ -70,10 +75,15 @@ local hujia = fk.CreateTriggerSkill{
     end
   end,
 }
+fk.CreateSkill{
+  name = "hujia$",
+  anim_type = "defensive",
+  package = extension,
+} :addEffect(fk.AskForCardUse, nil, hujia_spec)
+  :addEffect(fk.AskForCardResponse, nil, hujia_spec)
 
 local caocao = General:new(extension, "caocao", "wei", 4)
-caocao:addSkill(jianxiong)
-caocao:addSkill(hujia)
+caocao:addSkills { "jianxiong", "hujia" }
 
 local guicai = fk.CreateTriggerSkill{
   name = "guicai",

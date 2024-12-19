@@ -1,0 +1,24 @@
+-- 全是答辩的世界
+-- sumneko佬，球球快支持泛型类罢，我什么都愿意做
+
+---@alias DamageTrigFunc fun(self: TriggerSkill, event: DamageEvent,
+---  target: ServerPlayer, player: ServerPlayer, data: DamageStruct): any
+---@class DamageSkelSpec: TrigSkelSpec
+---@field public on_trigger? DamageTrigFunc
+---@field public can_trigger? DamageTrigFunc
+---@field public on_cost? DamageTrigFunc
+---@field public on_use? DamageTrigFunc
+---@field public on_refresh? DamageTrigFunc
+---@field public can_refresh? DamageTrigFunc
+---@field public can_wake? DamageTrigFunc
+
+---@alias HpChangedTrigFunc fun(self: TriggerSkill, event: HpChangedEvent,
+---  target: ServerPlayer, player: ServerPlayer, data: HpChangedData): any
+---@class HpChangedSkelSpec: TrigSkelSpec
+---@field public on_trigger? HpChangedTrigFunc
+---@field public can_trigger? HpChangedTrigFunc
+---@field public on_cost? HpChangedTrigFunc
+---@field public on_use? HpChangedTrigFunc
+---@field public on_refresh? HpChangedTrigFunc
+---@field public can_refresh? HpChangedTrigFunc
+---@field public can_wake? HpChangedTrigFunc

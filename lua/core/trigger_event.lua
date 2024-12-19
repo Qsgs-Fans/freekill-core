@@ -1,4 +1,4 @@
----@class TriggerEvent
+---@class TriggerEvent: Object
 ---@field public id integer
 ---@field public room Room
 ---@field public target ServerPlayer?

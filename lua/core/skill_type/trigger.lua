@@ -2,9 +2,9 @@
 
 ---@class TriggerSkill : UsableSkill
 ---@field public global boolean
----@field public events Event[]
----@field public refresh_events Event[]
----@field public priority_table table<Event, number>
+---@field public events (TriggerEvent|integer|string)[]
+---@field public refresh_events (TriggerEvent|integer|string)[]
+---@field public priority_table table<(TriggerEvent|integer|string), number>
 local TriggerSkill = UsableSkill:subclass("TriggerSkill")
 
 function TriggerSkill:initialize(name, frequency)
@@ -19,21 +19,21 @@ end
 -- Default functions
 
 ---Determine whether a skill can refresh at this moment
----@param event Event @ TriggerEvent
+---@param event TriggerEvent|integer|string @ TriggerEvent
 ---@param target ServerPlayer @ Player who triggered this event
 ---@param player ServerPlayer @ Player who is operating
 ---@param data any @ useful data of the event
 function TriggerSkill:canRefresh(event, target, player, data) return false end
 
 ---Refresh the skill (e.g. clear marks)
----@param event Event @ TriggerEvent
+---@param event TriggerEvent|integer|string @ TriggerEvent
 ---@param target ServerPlayer @ Player who triggered this event
 ---@param player ServerPlayer @ Player who is operating
 ---@param data any @ useful data of the event
 function TriggerSkill:refresh(event, target, player, data) end
 
 ---Determine whether a skill can trigger at this moment
----@param event Event @ TriggerEvent
+---@param event TriggerEvent|integer|string @ TriggerEvent
 ---@param target ServerPlayer @ Player who triggered this event
 ---@param player ServerPlayer @ Player who is operating
 ---@param data any @ useful data of the event
@@ -44,7 +44,7 @@ function TriggerSkill:triggerable(event, target, player, data)
 end
 
 -- Determine how to cost this skill.
----@param event Event @ TriggerEvent
+---@param event TriggerEvent|integer|string @ TriggerEvent
 ---@param target ServerPlayer @ Player who triggered this event
 ---@param player ServerPlayer @ Player who is operating
 ---@param data any @ useful data of the event
@@ -90,7 +90,7 @@ function TriggerSkill:doCost(event, target, player, data)
 end
 
 -- ask player how to use this skill.
----@param event Event @ TriggerEvent
+---@param event TriggerEvent|integer|string @ TriggerEvent
 ---@param target ServerPlayer @ Player who triggered this event
 ---@param player ServerPlayer @ Player who is operating
 ---@param data any @ useful data of the event
@@ -108,7 +108,7 @@ function TriggerSkill:cost(event, target, player, data)
 end
 
 ---Use this skill
----@param event Event @ TriggerEvent
+---@param event TriggerEvent|integer|string @ TriggerEvent
 ---@param target ServerPlayer @ Player who triggered this event
 ---@param player ServerPlayer @ Player who is operating
 ---@param data any @ useful data of the event
@@ -119,7 +119,7 @@ function TriggerSkill:canWake(event, target, player, data)
   return true
 end
 
----@param event Event @ TriggerEvent
+---@param event TriggerEvent|integer|string @ TriggerEvent
 ---@param target ServerPlayer @ Player who triggered this event
 ---@param player ServerPlayer @ Player who is operating
 ---@param data any @ useful data of the event
