@@ -143,6 +143,26 @@ function TestStandard:testLuoYi()
   lu.assertEquals(comp2.hp, origin_hp - 1)
 end
 
+function TestStandard:testTianDu()
+  local room = LRoom ---@type Room
+  local me = room.players[1] ---@type ServerPlayer
+
+  RunInRoom(function()
+    room:handleAddLoseSkills(me, "tiandu")
+  end)
+  SetNextReplies(me, { "1", "1", "1", "1", "1", "1", "1", "1" }) -- 试图领取所有人的判定牌
+  RunInRoom(function()
+    for _, p in ipairs(room.players) do
+      room:judge{
+        who = p,
+        pattern = ".",
+        reason = "test"
+      }
+    end
+  end)
+  lu.assertEquals(#me:getCardIds("h"), 1)
+end
+
 function TestStandard:testLuoShen()
   local room = LRoom ---@type Room
   local me = room.players[1] ---@type ServerPlayer
