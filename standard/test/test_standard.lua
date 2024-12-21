@@ -204,3 +204,57 @@ function TestStandard:testMashu()
     lu.assertEquals(me:distanceTo(other), math.max(origin[i] - 1, 1))
   end
 end
+
+function TestStandard:testJiZhi()
+  local room = LRoom ---@type Room
+  local me, comp2 = room.players[1], room.players[2] ---@type ServerPlayer, ServerPlayer
+
+  RunInRoom(function()
+    room:handleAddLoseSkills(me, "jizhi")
+  end)
+
+  local slash = Fk:getCardById(1)
+  local god_salvation = Fk:getCardById(table.find(room.draw_pile, function(cid)
+    return Fk:getCardById(cid).trueName == "god_salvation"
+  end))
+
+  SetNextReplies(me, { "1", "1" })
+  RunInRoom(function()
+    room:moveCardTo({2, 3, 4, 5}, Card.DrawPile) -- 都是杀……吧？
+    room:useCard{
+      from = me.id,
+      tos = { { comp2.id } },
+      card = slash,
+    }
+  end)
+  lu.assertEquals(#me:getCardIds("h"), 0)
+  RunInRoom(function()
+    room:useCard{
+      from = me.id,
+      tos = { { comp2.id } },
+      card = god_salvation,
+    }
+  end)
+  lu.assertEquals(#me:getCardIds("h"), 1)
+end
+
+function TestStandard:testMashu()
+  local room = LRoom ---@type Room
+  local me, comp2 = room.players[1], room.players[3] ---@type ServerPlayer, ServerPlayer
+
+  local faraway = table.filter(room:getOtherPlayers(me), function(other) return me:distanceTo(other) > 1 end)
+
+  RunInRoom(function()
+    room:handleAddLoseSkills(me, "qicai")
+    -- 让顺手牵羊可以用一下
+    for _, other in ipairs(room:getOtherPlayers(me, false)) do
+      other:drawCards(1)
+    end
+  end)
+  local snatch = Fk:cloneCard("snatch")
+
+  for _, other in ipairs(faraway) do
+    -- printf('%s', other)
+    lu.assertTrue(me:canUseTo(snatch, other))
+  end
+end
