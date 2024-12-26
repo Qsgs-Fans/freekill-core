@@ -2,7 +2,7 @@ TestStandard = { setup = InitRoom, tearDown = ClearRoom }
 
 function TestStandard:testJianxiong()
   local room = LRoom
-  local me, comp2 = room.players[1], room.players[2] ---@type ServerPlayer, ServerPlayer
+  local me, comp2 = room.players[1], room.players[2]
   RunInRoom(function() room:handleAddLoseSkills(me, "jianxiong") end)
 
   local slash = Fk:getCardById(1)
@@ -20,7 +20,7 @@ end
 
 function TestStandard:testFanKui()
   local room = LRoom
-  local me, comp2 = room.players[1], room.players[2] ---@type ServerPlayer, ServerPlayer
+  local me, comp2 = room.players[1], room.players[2]
   RunInRoom(function() room:handleAddLoseSkills(me, "fankui") end)
 
   -- 空牌的情况
@@ -50,7 +50,7 @@ end
 
 function TestStandard:testGangLie()
   local room = LRoom ---@type Room
-  local me, comp2 = room.players[1], room.players[2] ---@type ServerPlayer, ServerPlayer
+  local me, comp2 = room.players[1], room.players[2]
   RunInRoom(function()
     room:handleAddLoseSkills(me, "ganglie")
   end)
@@ -111,7 +111,7 @@ end
 
 function TestStandard:testLuoYi()
   local room = LRoom ---@type Room
-  local me, comp2 = room.players[1], room.players[2] ---@type ServerPlayer, ServerPlayer
+  local me, comp2 = room.players[1], room.players[2]
   RunInRoom(function()
     room:handleAddLoseSkills(me, "luoyi")
   end)
@@ -145,7 +145,7 @@ end
 
 function TestStandard:testTianDu()
   local room = LRoom ---@type Room
-  local me = room.players[1] ---@type ServerPlayer
+  local me = room.players[1]
 
   RunInRoom(function()
     room:handleAddLoseSkills(me, "tiandu")
@@ -165,7 +165,7 @@ end
 
 function TestStandard:testLuoShen()
   local room = LRoom ---@type Room
-  local me = room.players[1] ---@type ServerPlayer
+  local me = room.players[1]
 
   RunInRoom(function()
     room:handleAddLoseSkills(me, "luoshen")
@@ -190,9 +190,27 @@ function TestStandard:testLuoShen()
   lu.assertEquals(#me:getCardIds("h"), rnd)
 end
 
+function TestStandard:testKongCheng()
+  local room = LRoom ---@type Room
+  local me, comp2 = room.players[1], room.players[2]
+
+  RunInRoom(function()
+    room:handleAddLoseSkills(me, "kongcheng")
+  end)
+  local slash = Fk:cloneCard("slash")
+  local duel = Fk:cloneCard("duel")
+  lu.assertFalse(comp2:canUseTo(slash, me))
+  lu.assertFalse(comp2:canUseTo(duel, me))
+  RunInRoom(function()
+    me:drawCards(1)
+  end)
+  lu.assertTrue(comp2:canUseTo(slash, me))
+  lu.assertTrue(comp2:canUseTo(duel, me))
+end
+
 function TestStandard:testMashu()
   local room = LRoom ---@type Room
-  local me = room.players[1] ---@type ServerPlayer
+  local me = room.players[1]
 
   local origin = table.map(room:getOtherPlayers(me), function(other) return me:distanceTo(other) end)
 
@@ -207,7 +225,7 @@ end
 
 function TestStandard:testJiZhi()
   local room = LRoom ---@type Room
-  local me, comp2 = room.players[1], room.players[2] ---@type ServerPlayer, ServerPlayer
+  local me, comp2 = room.players[1], room.players[2]
 
   RunInRoom(function()
     room:handleAddLoseSkills(me, "jizhi")
@@ -238,9 +256,9 @@ function TestStandard:testJiZhi()
   lu.assertEquals(#me:getCardIds("h"), 1)
 end
 
-function TestStandard:testMashu()
+function TestStandard:testQiCai()
   local room = LRoom ---@type Room
-  local me, comp2 = room.players[1], room.players[3] ---@type ServerPlayer, ServerPlayer
+  local me = room.players[1]
 
   local faraway = table.filter(room:getOtherPlayers(me), function(other) return me:distanceTo(other) > 1 end)
 
@@ -257,4 +275,125 @@ function TestStandard:testMashu()
     -- printf('%s', other)
     lu.assertTrue(me:canUseTo(snatch, other))
   end
+end
+
+function TestStandard:testKeJi()
+  local room = LRoom ---@type Room
+  local me = room.players[1]
+  RunInRoom(function()
+    room:handleAddLoseSkills(me, "keji")
+  end)
+
+  SetNextReplies(me, { "1" })
+  RunInRoom(function()
+    me:drawCards(10)
+    GameEvent.Turn:create(me, { phase_table = { Player.Discard } }):exec()
+  end)
+
+  lu.assertEquals(#me:getCardIds("h"), 10)
+end
+
+function TestStandard:testYingzi()
+  local room = LRoom ---@type Room
+  local me = room.players[1]
+  RunInRoom(function()
+    room:handleAddLoseSkills(me, "yingzi")
+  end)
+
+  SetNextReplies(me, { "1" })
+  RunInRoom(function()
+    GameEvent.Turn:create(me, { phase_table = { Player.Draw } }):exec()
+  end)
+
+  lu.assertEquals(#me:getCardIds("h"), 3)
+end
+
+function TestStandard:testQianXun()
+  local room = LRoom ---@type Room
+  local me, comp2 = room.players[1], room.players[2]
+
+  local snatch = Fk:getCardById(table.find(room.draw_pile, function(cid)
+    return Fk:getCardById(cid).trueName == "snatch"
+  end))
+  local indulgence = Fk:getCardById(table.find(room.draw_pile, function(cid)
+    return Fk:getCardById(cid).trueName == "indulgence"
+  end))
+
+  RunInRoom(function()
+    -- 让顺手牵羊可以用一下
+    me:drawCards(1)
+  end)
+
+  lu.assertTrue(comp2:canUseTo(snatch, me))
+  lu.assertTrue(comp2:canUseTo(indulgence, me))
+
+  RunInRoom(function()
+    room:handleAddLoseSkills(me, "qianxun")
+  end)
+
+  lu.assertFalse(comp2:canUseTo(snatch, me))
+  lu.assertFalse(comp2:canUseTo(indulgence, me))
+end
+
+function TestStandard:testLianYing()
+  local room = LRoom ---@type Room
+  local me = room.players[1]
+
+  RunInRoom(function()
+    room:handleAddLoseSkills(me, "lianying")
+  end)
+  SetNextReplies(me, { "1", "1", "1", "1", "1", "1", "1", "1" })
+  RunInRoom(function()
+    me:drawCards(3)
+    room:throwCard(me:getCardIds("h"), nil, me, me)
+  end)
+  lu.assertEquals(#me:getCardIds("h"), 1)
+end
+
+function TestStandard:testXiaoJi()
+  local room = LRoom ---@type Room
+  local me = room.players[1]
+
+  RunInRoom(function()
+    room:handleAddLoseSkills(me, "xiaoji")
+  end)
+  SetNextReplies(me, { "1", "1", "1", "1", "1", "1", "1", "1" })
+
+  local nioh = Fk:getCardById(table.find(room.draw_pile, function(cid)
+    return Fk:getCardById(cid).trueName == "nioh_shield"
+  end))
+
+  local spear = Fk:getCardById(table.find(room.draw_pile, function(cid)
+    return Fk:getCardById(cid).trueName == "spear"
+  end))
+
+  RunInRoom(function()
+    room:useCard{
+      from = me.id,
+      tos = {{me.id}},
+      card = nioh
+    }
+    room:useCard{
+      from = me.id,
+      tos = {{me.id}},
+      card = spear
+    }
+    room:throwCard(me:getCardIds("he"), nil, me, me)
+  end)
+  lu.assertEquals(#me:getCardIds("h"), 4)
+end
+
+function TestStandard:testBiYue()
+  local room = LRoom ---@type Room
+  local me = room.players[1]
+  RunInRoom(function()
+    room:handleAddLoseSkills(me, "biyue")
+  end)
+
+  SetNextReplies(me, { "1" })
+  RunInRoom(function()
+    GameEvent.Turn:create(me, { phase_table = { Player.Finish } }):exec()
+  end)
+
+  lu.assertEquals(#me:getCardIds("h"), 1)
 end
