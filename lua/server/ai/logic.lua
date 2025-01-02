@@ -37,8 +37,17 @@ end
 function AIGameLogic:trigger(event, target, data)
   local ai = self.ai
   local logic = ai.room.logic
-  local skills = logic.skill_table[event] or Util.DummyTable
-  local refresh_skills = logic.refresh_skill_table[event] or Util.DummyTable
+  local skills, refresh_skills = Util.DummyTable
+  if logic.skill_table then
+    skills = logic.skill_table[event]
+  end
+  table.insertTableIfNeed(skills, logic.legacy_skill_table[event])
+
+  if logic.refresh_skill_table then
+    refresh_skills = logic.refresh_skill_table[event]
+  end
+  table.insertTableIfNeed(refresh_skills, logic.legacy_refresh_skill_table[event])
+
   local _target = ai.room.current -- for iteration
   local player = _target
   local exit

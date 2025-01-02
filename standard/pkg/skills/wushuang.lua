@@ -6,7 +6,7 @@ local wushuang_spec = {
     else
       data.fixedResponseTimes["slash"] = 2
       data.fixedAddTimesResponsors = data.fixedAddTimesResponsors or {}
-      table.insert(data.fixedAddTimesResponsors, (event == fk.TargetSpecified and data.to or data.from))
+      table.insert(data.fixedAddTimesResponsors, (event == fk.TargetSpecified) and data.to or data.from)
     end
   end,
 }
@@ -18,11 +18,11 @@ return fk.CreateSkill({
   can_trigger = function(self, event, target, player, data)
     return table.contains({ "slash", "duel" }, data.card.trueName)
   end,
-  wushuang_spec
+  on_use = wushuang_spec.on_use
 })
   :addEffect(fk.TargetConfirmed, nil, {
   can_trigger = function(self, event, target, player, data)
     return data.card.trueName == "duel"
   end,
-  wushuang_spec
+  on_use = wushuang_spec.on_use
 })
