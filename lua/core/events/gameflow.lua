@@ -1,3 +1,10 @@
+
+--- RoundData 轮次的数据
+---@class RoundDataSpec -- TODO: 发挥想象力，填写这个Spec吧
+
+---@class RoundData: RoundDataSpec, TriggerData
+RoundData = TriggerData:subclass("RoundData")
+
 ---@class fk.DrawInitialCards: TriggerEvent
 fk.DrawInitialCards = TriggerEvent:subclass("fk.DrawInitialCards")
 ---@class fk.AfterDrawInitialCards: TriggerEvent
@@ -20,6 +27,15 @@ fk.RoundEnd = RoundEvent:subclass("fk.RoundEnd")
 ---@class fk.AfterRoundEnd: RoundEvent
 fk.AfterRoundEnd = RoundEvent:subclass("fk.AfterRoundEnd")
 
+--- TurnData 回合的数据
+---@class TurnDataSpec -- TODO: 发挥想象力，填写这个Spec吧
+---@field owner ServerPlayer @ 回合所有者
+---@field extra_reason? string @ 额外回合的指示物
+---@field phase_table? table @ 额定阶段表
+
+---@class TurnData: TurnDataSpec, TriggerData
+TurnData = TriggerData:subclass("TurnData")
+
 ---@class TurnEvent: TriggerEvent
 ---@field data TurnData
 local TurnEvent = TriggerEvent:subclass("TurnEvent")
@@ -34,6 +50,15 @@ fk.TurnStart = TurnEvent:subclass("fk.TurnStart")
 fk.TurnEnd = TurnEvent:subclass("fk.TurnEnd")
 ---@class fk.AfterTurnEnd: TurnEvent
 fk.AfterTurnEnd = TurnEvent:subclass("fk.AfterTurnEnd")
+
+--- PhaseData 阶段的数据
+---@class PhaseDataSpec -- TODO: 发挥想象力，填写这个Spec吧
+---@field owner ServerPlayer @ 阶段所有者
+---@field extra_reason? string @ 额外阶段的指示物
+---@field phase_end? boolean @ 该阶段是否即将结束
+
+---@class PhaseData: PhaseDataSpec, TriggerData
+PhaseData = TriggerData:subclass("PhaseData")
 
 ---@class PhaseEvent: TriggerEvent
 ---@field data PhaseData
@@ -61,3 +86,22 @@ fk.AfterDrawNCards = TriggerEvent:subclass("fk.AfterDrawNCards")
 
 ---@class fk.StartPlayCard: TriggerEvent
 fk.StartPlayCard = TriggerEvent:subclass("fk.StartPlayCard")
+
+-- 注释
+
+---@alias RoundFunc fun(self: TriggerSkill, event: RoundEvent,
+---  target: ServerPlayer, player: ServerPlayer, data: RoundData): any
+
+---@alias TurnFunc fun(self: TriggerSkill, event: TurnEvent,
+---  target: ServerPlayer, player: ServerPlayer, data: TurnData): any
+
+---@alias PhaseFunc fun(self: TriggerSkill, event: PhaseEvent,
+---  target: ServerPlayer, player: ServerPlayer, data: PhaseData): any
+
+---@class SkillSkeleton
+---@field public addEffect fun(self: SkillSkeleton, key: RoundEvent,
+---  attr: TrigSkelAttribute?, data: TrigSkelSpec<RoundFunc>): SkillSkeleton
+---@field public addEffect fun(self: SkillSkeleton, key: TurnEvent,
+---  attr: TrigSkelAttribute?, data: TrigSkelSpec<TurnFunc>): SkillSkeleton
+---@field public addEffect fun(self: SkillSkeleton, key: PhaseEvent,
+---  attr: TrigSkelAttribute?, data: TrigSkelSpec<PhaseFunc>): SkillSkeleton

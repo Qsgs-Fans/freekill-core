@@ -1,3 +1,47 @@
+
+--- RespondCardData 打出牌的数据
+---@class RespondCardDataSpec
+---@field public from ServerPlayer @ 响应者
+---@field public card Card @ 卡牌本牌
+---@field public responseToEvent? CardEffectEvent @ 响应事件目标
+---@field public skipDrop? boolean @ 是否不进入弃牌堆
+---@field public customFrom? ServerPlayer @ 新响应者
+
+---@class RespondCardData: RespondCardDataSpec, TriggerData
+RespondCardData = TriggerData:subclass("RespondCardData")
+
+---@class RespondCardEvent: TriggerEvent
+---@field data RespondCardData
+local RespondCardEvent = TriggerEvent:subclass("RespondCardEvent")
+
+---@class fk.PreCardRespond: RespondCardEvent
+fk.PreCardRespond = RespondCardEvent:subclass("fk.PreCardRespond")
+---@class fk.CardResponding: RespondCardEvent
+fk.CardResponding = RespondCardEvent:subclass("fk.CardResponding")
+---@class fk.CardRespondFinished: RespondCardEvent
+fk.CardRespondFinished = RespondCardEvent:subclass("fk.CardRespondFinished")
+
+--- UseCardData 使用牌的数据
+---@class UseCardDataSpec: RespondCardDataSpec
+---@field public tos TargetGroup @ 角色目标组
+---@field public toCard? Card @ 卡牌目标
+---@field public responseToEvent? CardUseStruct @ 响应事件目标
+---@field public nullifiedTargets? ServerPlayer[] @ 对这些角色无效
+---@field public extraUse? boolean @ 是否不计入次数
+---@field public disresponsiveList? ServerPlayer[] @ 这些角色不可响应此牌
+---@field public unoffsetableList? ServerPlayer[] @ 这些角色不可抵消此牌
+---@field public additionalDamage? integer @ 额外伤害值（如酒之于杀）
+---@field public additionalRecover? integer @ 额外回复值
+---@field public extra_data? any @ 额外数据（如目标过滤等）
+---@field public cardsResponded? Card[] @ 响应此牌的牌
+---@field public prohibitedCardNames? string[] @ 这些牌名的牌不可响应此牌
+---@field public damageDealt? table<PlayerId, number> @ 此牌造成的伤害
+---@field public additionalEffect? integer @ 额外结算次数
+---@field public noIndicate? boolean @ 隐藏指示线
+
+---@class UseCardData: UseCardDataSpec, TriggerData
+UseCardData = TriggerData:subclass("UseCardData")
+
 ---@class UseCardEvent: TriggerEvent
 ---@field data UseCardData
 local UseCardEvent = TriggerEvent:subclass("UseCardEvent")
@@ -23,16 +67,30 @@ fk.TargetConfirmed = UseCardEvent:subclass("fk.TargetConfirmed")
 ---@class fk.CardUseFinished: UseCardEvent
 fk.CardUseFinished = UseCardEvent:subclass("fk.CardUseFinished")
 
----@class RespondCardEvent: TriggerEvent
----@field data RespondCardData
-local RespondCardEvent = TriggerEvent:subclass("RespondCardEvent")
+--- CardEffectData 卡牌效果的数据
+---@class CardEffectDataSpec: RespondCardDataSpec
+---@field public to ServerPlayer @ 角色目标
+---@field public subTargets? ServerPlayer[] @ 子目标（借刀！）
+---@field public tos TargetGroup @ 目标组
+---@field public toCard? Card @ 卡牌目标
+---@field public responseToEvent? CardUseStruct @ 响应事件目标
+---@field public nullifiedTargets? ServerPlayer[] @ 对这些角色无效
+---@field public extraUse? boolean @ 是否不计入次数
+---@field public disresponsiveList? ServerPlayer[] @ 这些角色不可响应此牌
+---@field public unoffsetableList? ServerPlayer[] @ 这些角色不可抵消此牌
+---@field public additionalDamage? integer @ 额外伤害值（如酒之于杀）
+---@field public additionalRecover? integer @ 额外回复值
+---@field public extra_data? any @ 额外数据（如目标过滤等）
+---@field public cardsResponded? Card[] @ 响应此牌的牌
+---@field public disresponsive? boolean @ 是否不可响应
+---@field public unoffsetable? boolean @ 是否不可抵消
+---@field public isCancellOut? boolean @ 是否被抵消
+---@field public fixedResponseTimes? table<string, integer>|integer @ 额外响应请求
+---@field public fixedAddTimesResponsors? integer[] @ 额外响应请求次数
+---@field public prohibitedCardNames? string[] @ 这些牌名的牌不可响应此牌
 
----@class fk.PreCardRespond: RespondCardEvent
-fk.PreCardRespond = RespondCardEvent:subclass("fk.PreCardRespond")
----@class fk.CardResponding: RespondCardEvent
-fk.CardResponding = RespondCardEvent:subclass("fk.CardResponding")
----@class fk.CardRespondFinished: RespondCardEvent
-fk.CardRespondFinished = RespondCardEvent:subclass("fk.CardRespondFinished")
+---@class CardEffectData: CardEffectDataSpec, TriggerData
+CardEffectData = TriggerData:subclass("CardEffectData")
 
 ---@class CardEffectEvent: TriggerEvent
 ---@field data CardEffectData
@@ -48,3 +106,22 @@ fk.CardEffecting = CardEffectEvent:subclass("fk.CardEffecting")
 fk.CardEffectFinished = CardEffectEvent:subclass("fk.CardEffectFinished")
 ---@class fk.CardEffectCancelledOut: CardEffectEvent
 fk.CardEffectCancelledOut = CardEffectEvent:subclass("fk.CardEffectCancelledOut")
+
+-- 注释
+
+---@alias RespondCardFunc fun(self: TriggerSkill, event: RespondCardEvent,
+---  target: ServerPlayer, player: ServerPlayer, data: RespondCardData): any
+
+---@alias UseCardFunc fun(self: TriggerSkill, event: UseCardEvent,
+---  target: ServerPlayer, player: ServerPlayer, data: UseCardData): any
+
+---@alias CardEffectFunc fun(self: TriggerSkill, event: CardEffectEvent,
+---  target: ServerPlayer, player: ServerPlayer, data: CardEffectData): any
+
+---@class SkillSkeleton
+---@field public addEffect fun(self: SkillSkeleton, key: RespondCardEvent,
+---  attr: TrigSkelAttribute?, data: TrigSkelSpec<RespondCardFunc>): SkillSkeleton
+---@field public addEffect fun(self: SkillSkeleton, key: UseCardEvent,
+---  attr: TrigSkelAttribute?, data: TrigSkelSpec<UseCardFunc>): SkillSkeleton
+---@field public addEffect fun(self: SkillSkeleton, key: CardEffectEvent,
+---  attr: TrigSkelAttribute?, data: TrigSkelSpec<CardEffectFunc>): SkillSkeleton

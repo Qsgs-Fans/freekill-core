@@ -149,7 +149,7 @@ function MoveCards:main()
           if type(mark) == "string" then
             room:setCardMark(currentCard, mark, 1)
           elseif type(mark) == "table" then
-            mark = table.clone(data.moveMark) or {"", 0}
+            mark = table.clone(mark)
             room:setCardMark(currentCard, mark[1], mark[2])
           end
         end

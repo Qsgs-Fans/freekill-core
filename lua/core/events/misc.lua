@@ -1,3 +1,10 @@
+
+--- PropertyChangeData 武将牌属性变化的数据
+---@class PropertyChangeDataSpec
+
+---@class PropertyChangeData: PropertyChangeDataSpec, TriggerData
+PropertyChangeData = TriggerData:subclass("PropertyChangeData")
+
 ---@class PropertyChangeEvent: TriggerEvent
 ---@field data PropertyChangeData
 local PropertyChangeEvent = TriggerEvent:subclass("PropertyChangeEvent")
@@ -8,6 +15,15 @@ fk.BeforePropertyChange = PropertyChangeEvent:subclass("fk.BeforePropertyChange"
 fk.PropertyChange = PropertyChangeEvent:subclass("fk.PropertyChange")
 ---@class fk.AfterPropertyChange: PropertyChangeEvent
 fk.AfterPropertyChange = PropertyChangeEvent:subclass("fk.AfterPropertyChange")
+
+-- 注释
+
+---@alias PropertyChangeFunc fun(self: TriggerSkill, event: PropertyChangeEvent,
+---  target: ServerPlayer, player: ServerPlayer, data: PropertyChangeData): any
+
+---@class SkillSkeleton
+---@field public addEffect fun(self: SkillSkeleton, key: PropertyChangeEvent,
+---  attr: TrigSkelAttribute?, data: TrigSkelSpec<PropertyChangeFunc>): SkillSkeleton
 
 ---@class fk.BeforeTurnOver: TriggerEvent
 fk.BeforeTurnOver = TriggerEvent:subclass("fk.BeforeTurnOver")

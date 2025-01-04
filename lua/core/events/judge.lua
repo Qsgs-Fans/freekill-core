@@ -1,3 +1,15 @@
+
+--- JudgeData 判定的数据
+---@class JudgeDataSpec
+---@field public who ServerPlayer @ 判定者
+---@field public pattern string @ 钩叉条件
+---@field public reason string @ 判定原因
+---@field public card? Card? @ 当前判定牌
+---@field public skipDrop? boolean @ 是否不进入弃牌堆
+
+---@class JudgeData: JudgeDataSpec, TriggerData
+JudgeData = TriggerData:subclass("JudgeData")
+
 ---@class JudgeEvent: TriggerEvent
 ---@field data JudgeData
 local JudgeEvent = TriggerEvent:subclass("JudgeEvent")
@@ -11,3 +23,11 @@ fk.FinishRetrial = JudgeEvent:subclass("fk.FinishRetrial")
 ---@class fk.FinishJudge: JudgeEvent
 fk.FinishJudge = JudgeEvent:subclass("fk.FinishJudge")
 
+-- 注释
+
+---@alias JudgeTrigFunc fun(self: TriggerSkill, event: JudgeEvent,
+---  target: ServerPlayer, player: ServerPlayer, data: JudgeData): any
+
+---@class SkillSkeleton
+---@field public addEffect fun(self: SkillSkeleton, key: JudgeEvent,
+---  attr: TrigSkelAttribute?, data: TrigSkelSpec<JudgeTrigFunc>): SkillSkeleton
