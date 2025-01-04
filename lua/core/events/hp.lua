@@ -2,7 +2,7 @@
 --- HpChangedData 描述和一次体力变化有关的数据
 ---@class HpChangedDataSpec
 ---@field public num integer @ 体力变化量，可能是正数或者负数
----@field public shield_lost? integer
+---@field public shield_lost? integer @ 护甲变化量
 ---@field public reason string @ 体力变化原因
 ---@field public skillName string @ 引起体力变化的技能名
 ---@field public damageEvent? DamageStruct @ 引起这次体力变化的伤害数据

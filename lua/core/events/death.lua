@@ -1,7 +1,7 @@
 
 --- DyingData 描述和濒死事件有关的数据
 ---@class DyingDataSpec
----@field public who integer @ 濒死角色
+---@field public who ServerPlayer @ 濒死角色
 ---@field public damage DamageStruct @ 造成此次濒死的伤害数据
 ---@field public ignoreDeath? boolean @ 是否不进行死亡结算
 
@@ -25,7 +25,7 @@ fk.AskForPeachesDone = DyingEvent:subclass("fk.AskForPeachesDone")
 
 --- DeathData 描述和死亡事件有关的数据
 ---@class DeathDataSpec
----@field public who integer @ 死亡角色
+---@field public who ServerPlayer @ 死亡角色
 ---@field public damage DamageStruct @ 造成此次死亡的伤害数据
 
 ---@class DeathData: DeathDataSpec, TriggerData
