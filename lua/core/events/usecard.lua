@@ -1,7 +1,7 @@
 
 --- RespondCardData 打出牌的数据
 ---@class RespondCardDataSpec
----@field public from ServerPlayer @ 响应者
+---@field public from PlayerId @ 响应者
 ---@field public card Card @ 卡牌本牌
 ---@field public responseToEvent? CardEffectEvent @ 响应事件目标
 ---@field public skipDrop? boolean @ 是否不进入弃牌堆
@@ -25,11 +25,11 @@ fk.CardRespondFinished = RespondCardEvent:subclass("fk.CardRespondFinished")
 ---@class UseCardDataSpec: RespondCardDataSpec
 ---@field public tos TargetGroup @ 角色目标组
 ---@field public toCard? Card @ 卡牌目标
----@field public responseToEvent? CardUseStruct @ 响应事件目标
----@field public nullifiedTargets? ServerPlayer[] @ 对这些角色无效
+---@field public responseToEvent? UseCardDataSpec @ 响应事件目标
+---@field public nullifiedTargets? PlayerId[] @ 对这些角色无效
 ---@field public extraUse? boolean @ 是否不计入次数
----@field public disresponsiveList? ServerPlayer[] @ 这些角色不可响应此牌
----@field public unoffsetableList? ServerPlayer[] @ 这些角色不可抵消此牌
+---@field public disresponsiveList? PlayerId[] @ 这些角色不可响应此牌
+---@field public unoffsetableList? PlayerId[] @ 这些角色不可抵消此牌
 ---@field public additionalDamage? integer @ 额外伤害值（如酒之于杀）
 ---@field public additionalRecover? integer @ 额外回复值
 ---@field public extra_data? any @ 额外数据（如目标过滤等）
@@ -69,15 +69,15 @@ fk.CardUseFinished = UseCardEvent:subclass("fk.CardUseFinished")
 
 --- CardEffectData 卡牌效果的数据
 ---@class CardEffectDataSpec: RespondCardDataSpec
----@field public to ServerPlayer @ 角色目标
----@field public subTargets? ServerPlayer[] @ 子目标（借刀！）
+---@field public to PlayerId @ 角色目标
+---@field public subTargets? PlayerId[] @ 子目标（借刀！）
 ---@field public tos TargetGroup @ 目标组
 ---@field public toCard? Card @ 卡牌目标
----@field public responseToEvent? CardUseStruct @ 响应事件目标
----@field public nullifiedTargets? ServerPlayer[] @ 对这些角色无效
+---@field public responseToEvent? CardEffectDataSpec @ 响应事件目标
+---@field public nullifiedTargets? PlayerId[] @ 对这些角色无效
 ---@field public extraUse? boolean @ 是否不计入次数
----@field public disresponsiveList? ServerPlayer[] @ 这些角色不可响应此牌
----@field public unoffsetableList? ServerPlayer[] @ 这些角色不可抵消此牌
+---@field public disresponsiveList? PlayerId[] @ 这些角色不可响应此牌
+---@field public unoffsetableList? PlayerId[] @ 这些角色不可抵消此牌
 ---@field public additionalDamage? integer @ 额外伤害值（如酒之于杀）
 ---@field public additionalRecover? integer @ 额外回复值
 ---@field public extra_data? any @ 额外数据（如目标过滤等）

@@ -1,6 +1,7 @@
 
 --- RoundData 轮次的数据
 ---@class RoundDataSpec -- TODO: 发挥想象力，填写这个Spec吧
+---@field turn_table? integer[] @ 额定回合表，填空则为正常流程
 
 ---@class RoundData: RoundDataSpec, TriggerData
 RoundData = TriggerData:subclass("RoundData")
@@ -30,8 +31,8 @@ fk.AfterRoundEnd = RoundEvent:subclass("fk.AfterRoundEnd")
 --- TurnData 回合的数据
 ---@class TurnDataSpec -- TODO: 发挥想象力，填写这个Spec吧
 ---@field owner ServerPlayer @ 回合所有者
----@field extra_reason? string @ 额外回合的指示物
----@field phase_table? table @ 额定阶段表
+---@field reason? string @ 当前额外回合的原因，不为额外回合则为game_rule
+---@field phase_table? Phase[] @ 额定阶段表，填空则为正常流程
 
 ---@class TurnData: TurnDataSpec, TriggerData
 TurnData = TriggerData:subclass("TurnData")
@@ -54,7 +55,7 @@ fk.AfterTurnEnd = TurnEvent:subclass("fk.AfterTurnEnd")
 --- PhaseData 阶段的数据
 ---@class PhaseDataSpec -- TODO: 发挥想象力，填写这个Spec吧
 ---@field owner ServerPlayer @ 阶段所有者
----@field extra_reason? string @ 额外阶段的指示物
+---@field reason? string @ 额外阶段的指示物
 ---@field phase_end? boolean @ 该阶段是否即将结束
 
 ---@class PhaseData: PhaseDataSpec, TriggerData

@@ -1,8 +1,8 @@
 
 --- SkillEffectData 技能效果的数据
 ---@class SkillEffectDataSpec
----@field public from ServerPlayer @ 使用者
----@field public tos ServerPlayer[] @ 角色目标
+---@field public from PlayerId @ 使用者
+---@field public tos PlayerId[] @ 角色目标
 ---@field public cards integer[] @ 选择卡牌
 
 ---@class SkillEffectData: SkillEffectDataSpec, TriggerData

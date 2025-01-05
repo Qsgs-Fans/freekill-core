@@ -1,6 +1,6 @@
 
 --- PropertyChangeData 武将牌属性变化的数据
----@class PropertyChangeDataSpec
+---@class PropertyChangeDataSpec -- TODO: 发挥想象力，填写这个Spec吧
 
 ---@class PropertyChangeData: PropertyChangeDataSpec, TriggerData
 PropertyChangeData = TriggerData:subclass("PropertyChangeData")
