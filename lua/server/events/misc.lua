@@ -10,6 +10,7 @@ function Game:main()
 end
 
 ---@class GameEvent.ChangeProperty : GameEvent
+---@field public data [PropertyChangeData]
 local ChangeProperty = GameEvent:subclass("GameEvent.Game")
 function ChangeProperty:main()
   local data = table.unpack(self.data)
