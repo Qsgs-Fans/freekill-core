@@ -87,7 +87,7 @@ end
 -- 判定
 
 --- 根据判定数据进行判定。判定的结果直接保存在这个数据中。
----@param data JudgeStruct
+---@param data JudgeDataSpec
 function JudgeEventWrappers:judge(data)
   return exec(Judge, data)
 end
@@ -95,7 +95,7 @@ end
 --- 改判。
 ---@param card Card @ 改判的牌
 ---@param player ServerPlayer @ 改判的玩家
----@param judge JudgeStruct @ 要被改判的判定数据
+---@param judge JudgeData @ 要被改判的判定数据
 ---@param skillName? string @ 技能名
 ---@param exchange? boolean @ 是否要替换原有判定牌（即类似鬼道那样）
 function JudgeEventWrappers:retrial(card, player, judge, skillName, exchange)
