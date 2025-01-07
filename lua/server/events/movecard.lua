@@ -11,18 +11,19 @@ local function exec(tp, ...)
 end
 
 ---@class GameEvent.MoveCards : GameEvent
+---@field public data CardsMoveInfo[]
 local MoveCards = GameEvent:subclass("GameEvent.MoveCards")
 function MoveCards:main()
   local args = self.data
   local room = self.room
-  ---@type CardsMoveStruct[]
-  local cardsMoveStructs = {}
+  ---@type MoveCardsDataSpec[]
+  local moveCardsSpecs = {}
+  local moveCardsData = MoveCardsData:new(moveCardsSpecs)
   local infoCheck = function(info)
     assert(table.contains({ Card.PlayerHand, Card.PlayerEquip, Card.PlayerJudge, Card.PlayerSpecial, Card.Processing, Card.DrawPile, Card.DiscardPile, Card.Void }, info.toArea))
     assert(info.toArea ~= Card.PlayerSpecial or type(info.specialName) == "string")
     assert(type(info.moveReason) == "number")
   end
-  --- @param cardsMoveInfo CardsMoveInfo
   for _, cardsMoveInfo in ipairs(args) do
     if #cardsMoveInfo.ids > 0 then
       infoCheck(cardsMoveInfo)
@@ -55,8 +56,8 @@ function MoveCards:main()
       end
 
       if #infos > 0 then
-        ---@type CardsMoveStruct
-        local cardsMoveStruct = {
+        ---@type MoveCardsDataSpec
+        local moveCardsSpec = {
           moveInfo = infos,
           from = cardsMoveInfo.from,
           to = cardsMoveInfo.to,
@@ -72,12 +73,12 @@ function MoveCards:main()
           visiblePlayers = cardsMoveInfo.visiblePlayers,
         }
 
-        table.insert(cardsMoveStructs, cardsMoveStruct)
+        table.insert(moveCardsSpecs, moveCardsSpec)
       end
 
       if #abortMoveInfos > 0 then
-        ---@type CardsMoveStruct
-        local cardsMoveStruct = {
+        ---@type MoveCardsDataSpec
+        local moveCardsSpec = {
           moveInfo = abortMoveInfos,
           from = cardsMoveInfo.from,
           toArea = Card.DiscardPile,
@@ -89,24 +90,24 @@ function MoveCards:main()
           --moveMark = cardsMoveInfo.moveMark,
         }
 
-        table.insert(cardsMoveStructs, cardsMoveStruct)
+        table.insert(moveCardsSpecs, moveCardsSpec)
       end
     end
   end
 
-  self.data = cardsMoveStructs
+  self.data = moveCardsData
 
-  if #cardsMoveStructs < 1 then
+  if #moveCardsSpecs < 1 then
     return false
   end
 
-  if room.logic:trigger(fk.BeforeCardsMove, nil, cardsMoveStructs) then
+  if room.logic:trigger(fk.BeforeCardsMove, nil, moveCardsData) then
     room.logic:breakEvent(false)
   end
 
-  room:notifyMoveCards(nil, cardsMoveStructs)
+  room:notifyMoveCards(nil, moveCardsSpecs) --- FIXME: 小心table.clone
 
-  for _, data in ipairs(cardsMoveStructs) do
+  for _, data in ipairs(moveCardsSpecs) do
     if #data.moveInfo > 0 then
       infoCheck(data)
 
@@ -166,7 +167,7 @@ function MoveCards:main()
     end
   end
 
-  room.logic:trigger(fk.AfterCardsMove, nil, cardsMoveStructs)
+  room.logic:trigger(fk.AfterCardsMove, nil, moveCardsData)
   return true
 end
 
@@ -195,11 +196,11 @@ end
 ---@param player ServerPlayer @ 摸牌的玩家
 ---@param num integer @ 摸牌数
 ---@param skillName? string @ 技能名
----@param fromPlace? string @ 摸牌的位置，"top" 或者 "bottom"
+---@param fromPlace? DrawPilePos @ 摸牌的位置
 ---@param moveMark? table|string @ 移动后自动赋予标记，格式：{标记名(支持-inarea后缀，移出值代表区域后清除), 值}
 ---@return integer[] @ 摸到的牌
 function MoveEventWrappers:drawCards(player, num, skillName, fromPlace, moveMark)
-  local drawData = {
+  local drawData = DrawData:new{
     who = player,
     num = num,
     skillName = skillName,
@@ -426,9 +427,9 @@ function MoveEventWrappers:moveCardIntoEquip(target, cards, skillName, convert, 
 end
 
 --- 取消一些牌的移动。请仅用于BeforeCardsMove时机
----@param data CardsMoveStruct[]
+---@param data MoveCardsData[]
 ---@param ids? integer[] @ 取消移动的牌的id列表，填nil则取消所有
----@param func? fun(move: CardsMoveStruct, info: MoveInfo): boolean @ 筛选取消移动的函数，与ids取并集，填nil则取消所有
+---@param func? fun(move: MoveCardsData, info: MoveInfo): boolean @ 筛选取消移动的函数，与ids取并集，填nil则取消所有
 ---@return integer[] @ 成功取消移动的牌id列表
 function MoveEventWrappers:cancelMove(data, ids, func)
   local ret = {}

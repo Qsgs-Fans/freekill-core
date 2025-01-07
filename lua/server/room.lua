@@ -676,10 +676,14 @@ end
 
 --- 向多名玩家告知一次移牌行为。
 ---@param players? ServerPlayer[] @ 要被告知的玩家列表，默认为全员
----@param card_moves CardsMoveStruct[] @ 要告知的移牌信息列表
+---@param moveData MoveCardsData @ 要告知的移牌信息列表
 ---@param forceVisible? boolean @ 是否让所有牌对告知目标可见
-function Room:notifyMoveCards(players, card_moves, forceVisible)
+function Room:notifyMoveCards(players, moveData, forceVisible)
   if players == nil or players == {} then players = self.players end
+  local card_moves = {}
+  for _, move in ipairs(moveData) do
+    table.insert(card_moves, move)
+  end
   for _, p in ipairs(players) do
     local arg = table.clone(card_moves)
     for _, move in ipairs(arg) do

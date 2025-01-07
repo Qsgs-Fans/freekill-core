@@ -287,7 +287,7 @@ function LoseHp:main()
     return false
   end
 
-  local data = HpLostData:new{ -- FIXME: 现场造data，有点蚌埠住了……
+  local data = HpLostData:new{
     num = num,
     skillName = skillName,
   }
@@ -376,7 +376,7 @@ function ChangeMaxHp:main()
   local player, num = table.unpack(self.data)
   local room = self.room
 
-  local data = MaxHpChangedData:new{ -- FIXME: 现场造data，有点蚌埠住了……
+  local data = MaxHpChangedData:new{
     num = num,
   }
 

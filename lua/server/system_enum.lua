@@ -2,22 +2,6 @@
 
 ---@alias PlayerId integer
 
---- CardsMoveInfo 一组牌的移动信息
----@class CardsMoveInfo
----@field public ids integer[] @ 移动卡牌ID数组
----@field public from? integer @ 移动来源玩家ID
----@field public to? integer @ 移动终点玩家ID
----@field public toArea? CardArea @ 移动终点区域
----@field public moveReason? CardMoveReason @ 移动原因
----@field public proposer? integer @ 移动执行者
----@field public skillName? string @ 移动技能名
----@field public moveVisible? boolean @ 控制移动是否可见
----@field public specialName? string @ 若终点区域为PlayerSpecial，则存至对应私人牌堆内
----@field public specialVisible? boolean @ 控制上述创建私人牌堆后是否令其可见
----@field public drawPilePosition? integer @ 移至牌堆的索引位置，值为-1代表置入牌堆底，或者牌堆牌数+1也为牌堆底
----@field public moveMark? table|string @ 移动后自动赋予标记，格式：{标记名(支持-inarea后缀，移出值代表区域后清除), 值}
----@field public visiblePlayers? integer|integer[] @ 控制移动对特定角色可见（在moveVisible为false时生效）
-
 --- askForUseCard中的extra_data
 ---@class UseExtraData
 ---@field public must_targets? integer[] @ 必须选择这些目标？
@@ -44,22 +28,23 @@
 ---@field public fixedResponseTimes? table<string, integer>|integer @ 额外响应请求
 ---@field public fixedAddTimesResponsors? integer[] @ 额外响应请求次数
 ---@field public additionalEffect? integer @额外结算次数
+---@field public extraData? UseExtraData | any @ 额外数据
 
 --- AskForCardUse 询问使用卡牌的数据
 ---@class AskForCardUse
 ---@field public user ServerPlayer @ 使用者
 ---@field public cardName string @ 烧条信息
 ---@field public pattern string @ 可用牌过滤
----@field public eventData CardEffectEvent @ 事件数据
----@field public extraData UseExtraData @ 额外数据
----@field public result? CardUseStruct @ 使用结果
+---@field public eventData? CardEffectEvent @ 事件数据
+---@field public extraData? UseExtraData | any @ 额外数据
+---@field public result? UseCardDataSpec @ 使用结果
 
 --- AskForCardResponse 询问响应卡牌的数据
 ---@class AskForCardResponse
 ---@field public user ServerPlayer @ 响应者
 ---@field public cardName string @ 烧条信息
 ---@field public pattern string @ 可用牌过滤
----@field public extraData UseExtraData @ 额外数据
+---@field public extraData? UseExtraData | any @ 额外数据
 ---@field public result? Card
 
 --- LogMessage 战报信息

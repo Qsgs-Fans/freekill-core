@@ -1,9 +1,9 @@
 
 --- RespondCardData 打出牌的数据
 ---@class RespondCardDataSpec
----@field public from PlayerId @ 响应者
+---@field public from PlayerId @ 使用/打出者
 ---@field public card Card @ 卡牌本牌
----@field public responseToEvent? CardEffectEvent @ 响应事件目标
+---@field public responseToEvent? CardEffectData @ 响应事件目标
 ---@field public skipDrop? boolean @ 是否不进入弃牌堆
 ---@field public customFrom? ServerPlayer @ 新响应者
 
@@ -25,7 +25,8 @@ fk.CardRespondFinished = RespondCardEvent:subclass("fk.CardRespondFinished")
 ---@class UseCardDataSpec: RespondCardDataSpec
 ---@field public tos TargetGroup @ 角色目标组
 ---@field public toCard? Card @ 卡牌目标
----@field public responseToEvent? UseCardDataSpec @ 响应事件目标
+---@field public toPutSlot? string @ 使用的装备牌所置入的装备栏
+---@field public responseToEvent? CardEffectData @ 响应事件目标
 ---@field public nullifiedTargets? PlayerId[] @ 对这些角色无效
 ---@field public extraUse? boolean @ 是否不计入次数
 ---@field public disresponsiveList? PlayerId[] @ 这些角色不可响应此牌
@@ -73,7 +74,7 @@ fk.CardUseFinished = UseCardEvent:subclass("fk.CardUseFinished")
 ---@field public subTargets? PlayerId[] @ 子目标（借刀！）
 ---@field public tos TargetGroup @ 目标组
 ---@field public toCard? Card @ 卡牌目标
----@field public responseToEvent? CardEffectDataSpec @ 响应事件目标
+---@field public responseToEvent? CardEffectData @ 响应事件目标
 ---@field public nullifiedTargets? PlayerId[] @ 对这些角色无效
 ---@field public extraUse? boolean @ 是否不计入次数
 ---@field public disresponsiveList? PlayerId[] @ 这些角色不可响应此牌

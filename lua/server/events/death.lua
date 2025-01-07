@@ -150,7 +150,7 @@ function Revive:main()
   end
 
   reason = reason or ""
-  local data = ReviveData:new{ -- FIXME: 好了，原地造了个data出来……
+  local data = ReviveData:new{
     who = player,
     reason = reason
   }
