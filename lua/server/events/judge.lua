@@ -89,6 +89,7 @@ end
 --- 根据判定数据进行判定。判定的结果直接保存在这个数据中。
 ---@param data JudgeDataSpec
 function JudgeEventWrappers:judge(data)
+  data = JudgeData:new(data)
   return exec(Judge, data)
 end
 
