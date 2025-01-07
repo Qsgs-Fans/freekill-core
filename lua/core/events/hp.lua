@@ -5,9 +5,10 @@
 ---@field public shield_lost? integer @ 护甲变化量
 ---@field public reason string @ 体力变化原因
 ---@field public skillName string @ 引起体力变化的技能名
----@field public damageEvent? DamageStruct @ 引起这次体力变化的伤害数据
+---@field public damageEvent? DamageData @ 引起这次体力变化的伤害数据
 ---@field public preventDying? boolean @ 是否阻止本次体力变更流程引发濒死流程
 
+--- 描述和一次体力变化有关的数据
 ---@class HpChangedData: HpChangedDataSpec, TriggerData
 HpChangedData = TriggerData:subclass("HpChangedData")
 
@@ -16,6 +17,7 @@ HpChangedData = TriggerData:subclass("HpChangedData")
 ---@field public num integer @ 失去体力的数值
 ---@field public skillName string @ 导致这次失去的技能名
 
+--- 描述跟失去体力有关的数据
 ---@class HpLostData: HpLostDataSpec, TriggerData
 HpLostData = TriggerData:subclass("HpLostData")
 
@@ -23,6 +25,7 @@ HpLostData = TriggerData:subclass("HpLostData")
 ---@class MaxHpChangedDataSpec
 ---@field public num integer @ 体力上限变化量，可能是正数或者负数
 
+--- 描述跟体力上限变化有关的数据
 ---@class MaxHpChangedData: MaxHpChangedDataSpec, TriggerData
 MaxHpChangedData = TriggerData:subclass("MaxHpChangedData")
 
@@ -34,8 +37,8 @@ fk.ThunderDamage = 2
 fk.FireDamage = 3
 fk.IceDamage = 4
 
---- DamageStruct 描述和伤害事件有关的数据。
----@class DamageStructSpec
+--- DamageData 描述和伤害事件有关的数据
+---@class DamageDataSpec
 ---@field public from? ServerPlayer @ 伤害来源
 ---@field public to ServerPlayer @ 伤害目标
 ---@field public damage integer @ 伤害值
@@ -47,21 +50,23 @@ fk.IceDamage = 4
 ---@field public by_user? boolean @ 是否由卡牌直接生效造成的伤害
 ---@field public chain_table? ServerPlayer[] @ 铁索连环表
 ---@field public isVirtualDMG? boolean @ 是否是虚拟伤害
----@field public dealtRecorderId integer? @ 这啥啊
+---@field public dealtRecorderId integer? @ “实际造成的伤害”中对应的事件ID
 
----@class DamageStruct: DamageStructSpec, TriggerData
-DamageStruct = TriggerData:subclass("DamageStruct")
+--- 描述和伤害事件有关的数据
+---@class DamageData: DamageDataSpec, TriggerData
+DamageData = TriggerData:subclass("DamageData")
 
---- RecoverStruct 描述和回复体力有关的数据。
----@class RecoverStructSpec
+--- RecoverData 描述和回复体力有关的数据
+---@class RecoverDataSpec
 ---@field public who ServerPlayer @ 回复体力的角色
 ---@field public num integer @ 回复值
 ---@field public recoverBy? ServerPlayer @ 此次回复的回复来源
 ---@field public skillName? string @ 因何种技能而回复
 ---@field public card? Card @ 造成此次回复的卡牌
 
----@class RecoverStruct: RecoverStructSpec, TriggerData
-RecoverStruct = TriggerData:subclass("RecoverStruct")
+--- 描述和回复体力有关的数据
+---@class RecoverData: RecoverDataSpec, TriggerData
+RecoverData = TriggerData:subclass("RecoverData")
 
 ---@class HpChangedEvent: TriggerEvent
 ---@field data HpChangedData
@@ -73,7 +78,7 @@ fk.BeforeHpChanged = HpChangedEvent:subclass("fk.BeforeHpChanged")
 fk.HpChanged = HpChangedEvent:subclass("fk.HpChanged")
 
 ---@class DamageEvent: TriggerEvent
----@field data DamageStruct
+---@field data DamageData
 local DamageEvent = TriggerEvent:subclass("DamageEvent")
 
 ---@class fk.PreDamage: DamageEvent
@@ -99,7 +104,7 @@ fk.PreHpLost = HpLostEvent:subclass("fk.PreHpLost")
 fk.HpLost = HpLostEvent:subclass("fk.HpLost")
 
 ---@class RecoverEvent: TriggerEvent
----@field public data RecoverStruct
+---@field public data RecoverData
 local RecoverEvent = TriggerEvent:subclass("RecoverEvent")
 
 ---@class fk.PreHpRecover: RecoverEvent
@@ -123,9 +128,9 @@ fk.MaxHpChanged = MaxHpChangedEvent:subclass("fk.MaxHpChanged")
 ---@alias HpLostTrigFunc fun(self: TriggerSkill, event: HpLostEvent,
 ---  target: ServerPlayer, player: ServerPlayer, data: HpLostData): any
 ---@alias DamageTrigFunc fun(self: TriggerSkill, event: DamageEvent,
----  target: ServerPlayer, player: ServerPlayer, data: DamageStruct): any
+---  target: ServerPlayer, player: ServerPlayer, data: DamageData): any
 ---@alias RecoverTrigFunc fun(self: TriggerSkill, event: RecoverEvent,
----  target: ServerPlayer, player: ServerPlayer, data: RecoverStruct): any
+---  target: ServerPlayer, player: ServerPlayer, data: RecoverData): any
 ---@alias MaxHpChangedTrigFunc fun(self: TriggerSkill, event: MaxHpChangedEvent,
 ---  target: ServerPlayer, player: ServerPlayer, data: MaxHpChangedData): any
 

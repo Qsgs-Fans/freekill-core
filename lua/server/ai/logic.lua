@@ -177,14 +177,14 @@ local ChangeHp = AIGameEvent:subclass("AIGameEvent.ChangeHp")
 fk.ai_events.ChangeHp = ChangeHp
 function ChangeHp:exec()
   local logic = self.logic
-  local player, num, reason, skillName, damageStruct = table.unpack(self.data)
+  local player, num, reason, skillName, damageData = table.unpack(self.data)
 
   ---@type HpChangedData
   local data = {
     num = num,
     reason = reason,
     skillName = skillName,
-    damageEvent = damageStruct,
+    damageEvent = damageData,
   }
 
   if logic:trigger(fk.BeforeHpChanged, player, data) then
@@ -195,23 +195,23 @@ function ChangeHp:exec()
   logic:trigger(fk.HpChanged, player, data)
 end
 
-function AIGameLogic:changeHp(player, num, reason, skillName, damageStruct)
-  return not ChangeHp:new(self, player, num, reason, skillName, damageStruct):getBenefit()
+function AIGameLogic:changeHp(player, num, reason, skillName, damageData)
+  return not ChangeHp:new(self, player, num, reason, skillName, damageData):getBenefit()
 end
 
 local Damage = AIGameEvent:subclass("AIGameEvent.Damage")
 fk.ai_events.Damage = Damage
 function Damage:exec()
   local logic = self.logic
-  local damageStruct = table.unpack(self.data)
-  if (not damageStruct.chain) and (not damageStruct.chain_table) and Fk:canChain(damageStruct.damageType) then
-    damageStruct.chain_table = table.filter(self.ai.room:getOtherPlayers(damageStruct.to), function(p)
+  local damageData = table.unpack(self.data)
+  if (not damageData.chain) and (not damageData.chain_table) and Fk:canChain(damageData.damageType) then
+    damageData.chain_table = table.filter(self.ai.room:getOtherPlayers(damageData.to), function(p)
       return p.chained
     end)
   end
 
   local stages = {}
-  if not damageStruct.isVirtualDMG then
+  if not damageData.isVirtualDMG then
     stages = {
       { fk.PreDamage, "from"},
       { fk.DamageCaused, "from" },
@@ -221,30 +221,30 @@ function Damage:exec()
 
   for _, struct in ipairs(stages) do
     local event, player = table.unpack(struct)
-    if logic:trigger(event, damageStruct[player], damageStruct) then
+    if logic:trigger(event, damageData[player], damageData) then
       return true
     end
-    if damageStruct.damage < 1 then return true end
+    if damageData.damage < 1 then return true end
   end
 
-  if not damageStruct.isVirtualDMG then
-    ChangeHp:new(logic, damageStruct.to, -damageStruct.damage,
-      "damage", damageStruct.skillName, damageStruct):getBenefit()
+  if not damageData.isVirtualDMG then
+    ChangeHp:new(logic, damageData.to, -damageData.damage,
+      "damage", damageData.skillName, damageData):getBenefit()
   end
 
-  logic:trigger(fk.Damage, damageStruct.from, damageStruct)
-  logic:trigger(fk.Damaged, damageStruct.to, damageStruct)
-  logic:trigger(fk.DamageFinished, damageStruct.to, damageStruct)
+  logic:trigger(fk.Damage, damageData.from, damageData)
+  logic:trigger(fk.Damaged, damageData.to, damageData)
+  logic:trigger(fk.DamageFinished, damageData.to, damageData)
 
-  if damageStruct.chain_table and #damageStruct.chain_table > 0 then
-    for _, p in ipairs(damageStruct.chain_table) do
+  if damageData.chain_table and #damageData.chain_table > 0 then
+    for _, p in ipairs(damageData.chain_table) do
       local dmg = {
-        from = damageStruct.from,
+        from = damageData.from,
         to = p,
-        damage = damageStruct.damage,
-        damageType = damageStruct.damageType,
-        card = damageStruct.card,
-        skillName = damageStruct.skillName,
+        damage = damageData.damage,
+        damageType = damageData.damageType,
+        card = damageData.card,
+        skillName = damageData.skillName,
         chain = true,
       }
 
@@ -253,8 +253,8 @@ function Damage:exec()
   end
 end
 
-function AIGameLogic:damage(damageStruct)
-  return not Damage:new(self, damageStruct):getBenefit()
+function AIGameLogic:damage(damageData)
+  return not Damage:new(self, damageData):getBenefit()
 end
 
 local LoseHp = AIGameEvent:subclass("AIGameEvent.LoseHp")
@@ -268,7 +268,7 @@ end
 local Recover = AIGameEvent:subclass("AIGameEvent.Recover")
 fk.ai_events.Recover = Recover
 function Recover:exec()
-  local recoverStruct = table.unpack(self.data) ---@type RecoverStruct
+  local recoverStruct = table.unpack(self.data) ---@type RecoverData
   local logic = self.logic
 
   local who = recoverStruct.who

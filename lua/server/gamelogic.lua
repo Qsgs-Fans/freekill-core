@@ -621,14 +621,14 @@ function GameLogic:getActualDamageEvents(n, func, scope, end_id)
 
     if not start_event then return {} end
 
-    local events = self.event_recorder[eventType] or Util.DummyTable
+    local events = self.event_recorder[eventType] or Util.DummyTable ---@type GameEvent.Damage[]
     local from = start_event.id
     local to = start_event.end_id
     if math.abs(to) == 1 then to = #self.all_game_events end
 
     for _, v in ipairs(events) do
-      local damageStruct = v.data[1]
-      if damageStruct.dealtRecorderId then
+      local damageData = v.data[1]
+      if damageData.dealtRecorderId then
         if endIdRecorded and v.id > endIdRecorded then
           local result = addTempEvents()
           if result then
@@ -655,14 +655,14 @@ function GameLogic:getActualDamageEvents(n, func, scope, end_id)
 
     addTempEvents()
   else
-    local events = self.event_recorder[eventType] or Util.DummyTable
+    local events = self.event_recorder[eventType] or Util.DummyTable ---@type GameEvent.Damage[]
 
     for i = #events, 1, -1 do
       local e = events[i]
       if e.id <= end_id then break end
 
-      local damageStruct = e.data[1]
-      if damageStruct.dealtRecorderId then
+      local damageData = e.data[1]
+      if damageData.dealtRecorderId then
         if e.end_id == -1 or (endIdRecorded and endIdRecorded > e.end_id) then
           local result = addTempEvents(true)
           if result then

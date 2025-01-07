@@ -6,7 +6,7 @@ end
 
 SmartAI:setSkillAI("jianxiong", {
   think_skill_invoke = function(self, ai, skill_name, prompt)
-    ---@type DamageStruct
+    ---@type DamageData
     local dmg = ai.room.logic:getCurrentEvent().data[1]
     local player = ai.player
     local card = dmg.card
@@ -47,7 +47,7 @@ SmartAI:setSkillAI("ganglie", {
   end,
 
   think_skill_invoke = function(self, ai, skill_name, prompt)
-    ---@type DamageStruct
+    ---@type DamageData
     local dmg = ai.room.logic:getCurrentEvent().data[1]
     local from = dmg.from
     if not from then return false end
@@ -76,7 +76,7 @@ SmartAI:setSkillAI("ganglie", {
 
 SmartAI:setSkillAI("fankui", {
   think_skill_invoke = function(self, ai, skill_name, prompt)
-    ---@type DamageStruct
+    ---@type DamageData
     local dmg = ai.room.logic:getCurrentEvent().data[1]
     local player = ai.player
     local from = dmg.from
@@ -319,7 +319,7 @@ SmartAI:setSkillAI("qingnang", {
     --- 对所有目标计算回血的收益
     local benefits = table.map(players, function(p)
       return { p, ai:getBenefitOfEvents(function(logic)
-        --- @type RecoverStruct
+        --- @type RecoverData
         logic:recover{
           who = p,
           num = 1,

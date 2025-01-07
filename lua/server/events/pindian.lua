@@ -11,6 +11,7 @@ local function exec(tp, ...)
 end
 
 ---@class GameEvent.Pindian : GameEvent
+---@field public data [PindianData]
 local Pindian = GameEvent:subclass("GameEvent.Pindian")
 function Pindian:main()
   local pindianData = table.unpack(self.data)
@@ -211,7 +212,7 @@ end
 
 
 --- 根据拼点信息开始拼点。
----@param pindianData PindianStruct
+---@param pindianData PindianData
 function PindianEventWrappers:pindian(pindianData)
   return exec(Pindian, pindianData)
 end

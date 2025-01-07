@@ -17,28 +17,28 @@ end
 --   [fk.IceDamage] = "ice_damage",
 -- }
 
-local function sendDamageLog(room, damageStruct)
-  local damageName = Fk:getDamageNatureName(damageStruct.damageType)
-  if damageStruct.from then
+local function sendDamageLog(room, damageData)
+  local damageName = Fk:getDamageNatureName(damageData.damageType)
+  if damageData.from then
     room:sendLog{
       type = "#Damage",
-      to = {damageStruct.from.id},
-      from = damageStruct.to.id,
-      arg = damageStruct.damage,
+      to = {damageData.from.id},
+      from = damageData.to.id,
+      arg = damageData.damage,
       arg2 = damageName,
     }
   else
     room:sendLog{
       type = "#DamageWithNoFrom",
-      from = damageStruct.to.id,
-      arg = damageStruct.damage,
+      from = damageData.to.id,
+      arg = damageData.damage,
       arg2 = damageName,
     }
   end
   room:sendLogEvent("Damage", {
-    to = damageStruct.to.id,
+    to = damageData.to.id,
     damageType = damageName,
-    damageNum = damageStruct.damage,
+    damageNum = damageData.damage,
   })
 end
 
@@ -51,19 +51,19 @@ function ChangeHp:main()
   local logic = room.logic
   local num = data.num
   local reason = data.reason
-  local damageStruct = data.damageEvent
+  local damageData = data.damageEvent
   if num == 0 then
     return false
   end
   assert(reason == nil or table.contains({ "loseHp", "damage", "recover" }, reason))
 
   if reason == "damage" then
-    if damageStruct then
-      if Fk:canChain(damageStruct.damageType) and damageStruct.to.chained then
-        damageStruct.to:setChainState(false)
-        if not damageStruct.chain then
-          damageStruct.beginnerOfTheDamage = true
-          damageStruct.chain_table = table.filter(room:getOtherPlayers(damageStruct.to), function(p)
+    if damageData then
+      if Fk:canChain(damageData.damageType) and damageData.to.chained then
+        damageData.to:setChainState(false)
+        if not damageData.chain then
+          damageData.beginnerOfTheDamage = true
+          damageData.chain_table = table.filter(room:getOtherPlayers(damageData.to), function(p)
             return p.chained
           end)
         end
@@ -77,15 +77,15 @@ function ChangeHp:main()
     logic:breakEvent(false)
   end
 
-  if reason == "damage" and data.shield_lost > 0 and not damageStruct.isVirtualDMG then
+  if reason == "damage" and data.shield_lost > 0 and not (damageData and damageData.isVirtualDMG) then
     room:changeShield(player, -data.shield_lost)
   end
 
   if reason == "damage" then
-    sendDamageLog(room, damageStruct)
+    sendDamageLog(room, damageData)
   end
 
-  if not (reason == "damage" and (data.num == 0 or damageStruct.isVirtualDMG)) then
+  if not (reason == "damage" and (data.num == 0 or (damageData and damageData.isVirtualDMG))) then
     assert(not (data.reason == "recover" and data.num < 0))
     player.hp = math.min(player.hp + data.num, player.maxHp)
     room:broadcastProperty(player, "hp")
@@ -117,12 +117,11 @@ function ChangeHp:main()
 
   if player.hp < 1 then
     if num < 0 and not data.preventDying then
-      ---@type DyingStruct
-      local dyingStruct = {
+      local dyingDataSpec = {
         who = player.id,
-        damage = damageStruct,
+        damage = damageData,
       }
-      room:enterDying(dyingStruct)
+      room:enterDying(dyingDataSpec)
     end
   elseif player.dying then
     player.dying = false
@@ -137,49 +136,49 @@ end
 ---@param num integer @ 变化量
 ---@param reason? string @ 原因
 ---@param skillName? string @ 技能名
----@param damageStruct? DamageStruct @ 伤害数据
+---@param damageData? DamageData @ 伤害数据
 ---@return boolean
-function HpEventWrappers:changeHp(player, num, reason, skillName, damageStruct)
-  local data = HpChangedData {
+function HpEventWrappers:changeHp(player, num, reason, skillName, damageData)
+  local data = HpChangedData:new{
     num = num, reason = reason,
-    skillName = skillName, damageEvent = damageStruct
+    skillName = skillName, damageEvent = damageData
   }
   return exec(ChangeHp, player, data)
 end
 
 ---@class GameEvent.Damage : GameEvent
----@field public data [DamageStruct]
+---@field public data [DamageData]
 local Damage = GameEvent:subclass("GameEvent.Damage")
 function Damage:main()
-  local damageStruct = table.unpack(self.data)
+  local damageData = table.unpack(self.data)
   local room = self.room
   local logic = room.logic
 
-  if not damageStruct.chain and logic:damageByCardEffect(false) then
+  if not damageData.chain and logic:damageByCardEffect(false) then
     local cardEffectData = logic:getCurrentEvent():findParent(GameEvent.CardEffect)
     if cardEffectData then
       local cardEffectEvent = cardEffectData.data[1]
-      damageStruct.damage = damageStruct.damage + (cardEffectEvent.additionalDamage or 0)
-      if damageStruct.from and cardEffectEvent.from == damageStruct.from.id then
-        damageStruct.by_user = true
+      damageData.damage = damageData.damage + (cardEffectEvent.additionalDamage or 0)
+      if damageData.from and cardEffectEvent.from == damageData.from.id then
+        damageData.by_user = true
       end
     end
   end
 
-  if damageStruct.damage < 1 then
+  if damageData.damage < 1 then
     return false
   end
-  damageStruct.damageType = damageStruct.damageType or fk.NormalDamage
+  damageData.damageType = damageData.damageType or fk.NormalDamage
 
-  if damageStruct.from and damageStruct.from.dead then
-    damageStruct.from = nil
+  if damageData.from and damageData.from.dead then
+    damageData.from = nil
   end
 
-  assert(damageStruct.to:isInstanceOf(ServerPlayer))
+  assert(damageData.to:isInstanceOf(ServerPlayer))
 
   local stages = {}
 
-  if not damageStruct.isVirtualDMG then
+  if not damageData.isVirtualDMG then
     stages = {
       { fk.PreDamage, "from"},
       { fk.DamageCaused, "from" },
@@ -189,35 +188,35 @@ function Damage:main()
 
   for _, struct in ipairs(stages) do
     local event, player = table.unpack(struct)
-    if logic:trigger(event, damageStruct[player], damageStruct) or damageStruct.damage < 1 then
+    if logic:trigger(event, damageData[player], damageData) or damageData.damage < 1 then
       logic:breakEvent(false)
     end
 
-    assert(damageStruct.to:isInstanceOf(ServerPlayer))
+    assert(damageData.to:isInstanceOf(ServerPlayer))
   end
 
-  if damageStruct.to.dead then
+  if damageData.to.dead then
     return false
   end
 
-  damageStruct.dealtRecorderId = room.logic.specific_events_id[GameEvent.Damage]
+  damageData.dealtRecorderId = room.logic.specific_events_id[GameEvent.Damage]
   room.logic.specific_events_id[GameEvent.Damage] = room.logic.specific_events_id[GameEvent.Damage] + 1
 
-  if damageStruct.card and damageStruct.damage > 0 then
+  if damageData.card and damageData.damage > 0 then
     local parentUseData = logic:getCurrentEvent():findParent(GameEvent.UseCard)
     if parentUseData then
       local cardUseEvent = parentUseData.data[1]
       cardUseEvent.damageDealt = cardUseEvent.damageDealt or {}
-      cardUseEvent.damageDealt[damageStruct.to.id] = (cardUseEvent.damageDealt[damageStruct.to.id] or 0) + damageStruct.damage
+      cardUseEvent.damageDealt[damageData.to.id] = (cardUseEvent.damageDealt[damageData.to.id] or 0) + damageData.damage
     end
   end
 
   if not room:changeHp(
-    damageStruct.to,
-    -damageStruct.damage,
+    damageData.to,
+    -damageData.damage,
     "damage",
-    damageStruct.skillName,
-    damageStruct) then
+    damageData.skillName,
+    damageData) then
     logic:breakEvent(false)
   end
 
@@ -229,7 +228,7 @@ function Damage:main()
 
   for _, struct in ipairs(stages) do
     local event, player = table.unpack(struct)
-    logic:trigger(event, damageStruct[player], damageStruct)
+    logic:trigger(event, damageData[player], damageData)
   end
 
   return true
@@ -238,27 +237,27 @@ end
 function Damage:exit()
   local room = self.room
   local logic = room.logic
-  local damageStruct = self.data[1]
+  local damageData = self.data[1]
 
-  logic:trigger(fk.DamageFinished, damageStruct.to, damageStruct)
+  logic:trigger(fk.DamageFinished, damageData.to, damageData)
 
-  if damageStruct.chain_table and #damageStruct.chain_table > 0 then
-    damageStruct.chain_table = table.filter(damageStruct.chain_table, function(p)
+  if damageData.chain_table and #damageData.chain_table > 0 then
+    damageData.chain_table = table.filter(damageData.chain_table, function(p)
       return p:isAlive() and p.chained
     end)
-    for _, p in ipairs(damageStruct.chain_table) do
+    for _, p in ipairs(damageData.chain_table) do
       room:sendLog{
         type = "#ChainDamage",
         from = p.id
       }
 
       local dmg = {
-        from = damageStruct.from,
+        from = damageData.from,
         to = p,
-        damage = damageStruct.damage,
-        damageType = damageStruct.damageType,
-        card = damageStruct.card,
-        skillName = damageStruct.skillName,
+        damage = damageData.damage,
+        damageType = damageData.damageType,
+        card = damageData.card,
+        skillName = damageData.skillName,
         chain = true,
       }
 
@@ -268,10 +267,10 @@ function Damage:exit()
 end
 
 --- 根据伤害数据造成伤害。
----@param damageStruct DamageStructSpec
+---@param damageData DamageDataSpec
 ---@return boolean
-function HpEventWrappers:damage(damageStruct)
-  local data = DamageStruct:new(damageStruct)
+function HpEventWrappers:damage(damageData)
+  local data = DamageData:new(damageData)
   return exec(Damage, data)
 end
 
@@ -288,8 +287,7 @@ function LoseHp:main()
     return false
   end
 
-  ---@type HpLostData
-  local data = {
+  local data = HpLostData:new{ -- FIXME: 现场造data，有点蚌埠住了……
     num = num,
     skillName = skillName,
   }
@@ -315,13 +313,14 @@ function HpEventWrappers:loseHp(player, num, skillName)
 end
 
 ---@class GameEvent.Recover : GameEvent
+---@field public data [RecoverData]
 local Recover = GameEvent:subclass("GameEvent.Recover")
 function Recover:prepare()
-  local recoverStruct = table.unpack(self.data) ---@type RecoverStruct
-  local room = self.room
-  local logic = room.logic
+  local recoverData = table.unpack(self.data)
+  -- local room = self.room
+  -- local logic = room.logic
 
-  local who = recoverStruct.who
+  local who = recoverData.who
 
   if who.maxHp - who.hp < 0 then
     return true
@@ -330,53 +329,54 @@ function Recover:prepare()
 end
 
 function Recover:main()
-  local recoverStruct = table.unpack(self.data) ---@type RecoverStruct
+  local recoverData = table.unpack(self.data)
   local room = self.room
   local logic = room.logic
 
-  if recoverStruct.card then
+  if recoverData.card then
     local cardEffectData = logic:getCurrentEvent():findParent(GameEvent.CardEffect)
     if cardEffectData then
       local cardEffectEvent = cardEffectData.data[1]
-      recoverStruct.num = recoverStruct.num + (cardEffectEvent.additionalRecover or 0)
+      recoverData.num = recoverData.num + (cardEffectEvent.additionalRecover or 0)
     end
   end
 
-  local who = recoverStruct.who
+  local who = recoverData.who
 
-  if logic:trigger(fk.PreHpRecover, who, recoverStruct) then
+  if logic:trigger(fk.PreHpRecover, who, recoverData) then
     logic:breakEvent(false)
   end
 
-  recoverStruct.num = math.min(recoverStruct.num, who.maxHp - who.hp)
+  recoverData.num = math.min(recoverData.num, who.maxHp - who.hp)
 
-  if recoverStruct.num < 1 then
+  if recoverData.num < 1 then
     return false
   end
 
-  if not room:changeHp(who, recoverStruct.num, "recover", recoverStruct.skillName) then
+  if not room:changeHp(who, recoverData.num, "recover", recoverData.skillName) then
     logic:breakEvent(false)
   end
 
-  logic:trigger(fk.HpRecover, who, recoverStruct)
+  logic:trigger(fk.HpRecover, who, recoverData)
   return true
 end
 
 --- 根据回复数据回复体力。
----@param recoverStruct RecoverStruct
+---@param recoverDataSpec RecoverDataSpec
 ---@return boolean
-function HpEventWrappers:recover(recoverStruct)
-  return exec(Recover, recoverStruct)
+function HpEventWrappers:recover(recoverDataSpec)
+  local recoverData = RecoverData:new(recoverDataSpec)
+  return exec(Recover, recoverData)
 end
 
 ---@class GameEvent.ChangeMaxHp : GameEvent
+---@field public data [ServerPlayer, integer]
 local ChangeMaxHp = GameEvent:subclass("GameEvent.ChangeMaxHp")
 function ChangeMaxHp:main()
   local player, num = table.unpack(self.data)
   local room = self.room
 
-  ---@type MaxHpChangedData
-  local data = {
+  local data = MaxHpChangedData:new{ -- FIXME: 现场造data，有点蚌埠住了……
     num = num,
   }
 
@@ -423,7 +423,7 @@ function ChangeMaxHp:main()
     arg2 = player.maxHp,
   }
 
-  room.logic:trigger(fk.MaxHpChanged, player, { num = num })
+  room.logic:trigger(fk.MaxHpChanged, player, data)
   return true
 end
 

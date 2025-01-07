@@ -11,69 +11,72 @@ local function exec(tp, ...)
 end
 
 ---@class GameEvent.Dying : GameEvent
+---@field data [DyingData]
 local Dying = GameEvent:subclass("GameEvent.Dying")
 function Dying:main()
-  local dyingStruct = table.unpack(self.data)
+  local dyingData = table.unpack(self.data)
   local room = self.room
   local logic = room.logic
-  local dyingPlayer = room:getPlayerById(dyingStruct.who)
+  local dyingPlayer = room:getPlayerById(dyingData.who)
   dyingPlayer.dying = true
   room:broadcastProperty(dyingPlayer, "dying")
   room:sendLog{
     type = "#EnterDying",
     from = dyingPlayer.id,
   }
-  logic:trigger(fk.EnterDying, dyingPlayer, dyingStruct)
+  logic:trigger(fk.EnterDying, dyingPlayer, dyingData)
 
   if dyingPlayer.hp < 1 then
     -- room.logic:trigger(fk.Dying, dyingPlayer, dyingStruct)
     local savers = room:getAlivePlayers()
     for _, p in ipairs(savers) do
       if not p.dead then
-        if dyingPlayer.hp > 0 or dyingPlayer.dead or logic:trigger(fk.AskForPeaches, p, dyingStruct) then
+        if dyingPlayer.hp > 0 or dyingPlayer.dead or logic:trigger(fk.AskForPeaches, p, dyingData) then
           break
         end
       end
     end
-    logic:trigger(fk.AskForPeachesDone, dyingPlayer, dyingStruct)
+    logic:trigger(fk.AskForPeachesDone, dyingPlayer, dyingData)
   end
 end
 
 function Dying:exit()
   local room = self.room
   local logic = room.logic
-  local dyingStruct = self.data[1]
+  local dyingData = self.data[1]
 
-  local dyingPlayer = room:getPlayerById(dyingStruct.who)
+  local dyingPlayer = room:getPlayerById(dyingData.who)
 
   if dyingPlayer.dying then
     dyingPlayer.dying = false
     room:broadcastProperty(dyingPlayer, "dying")
   end
-  logic:trigger(fk.AfterDying, dyingPlayer, dyingStruct, self.interrupted)
+  logic:trigger(fk.AfterDying, dyingPlayer, dyingData, self.interrupted)
 end
 
 --- 根据濒死数据让人进入濒死。
----@param dyingStruct DyingStruct
-function DeathEventWrappers:enterDying(dyingStruct)
-  return exec(Dying, dyingStruct)
+---@param dyingDataSpec DyingDataSpec
+function DeathEventWrappers:enterDying(dyingDataSpec)
+  local dyingData = DyingData:new(dyingDataSpec)
+  return exec(Dying, dyingData)
 end
 
 ---@class GameEvent.Death : GameEvent
+---@field data [DeathData]
 local Death = GameEvent:subclass("GameEvent.Death")
 function Death:prepare()
-  local deathStruct = table.unpack(self.data)
+  local deathData = table.unpack(self.data)
   local room = self.room
-  local victim = room:getPlayerById(deathStruct.who)
+  local victim = room:getPlayerById(deathData.who)
   if victim.dead then
     return true
   end
 end
 
 function Death:main()
-  local deathStruct = table.unpack(self.data)
+  local deathData = table.unpack(self.data)
   local room = self.room
-  local victim = room:getPlayerById(deathStruct.who)
+  local victim = room:getPlayerById(deathData.who)
   victim.dead = true
 
   if victim.rest <= 0 then
@@ -83,9 +86,9 @@ function Death:main()
   table.removeOne(room.alive_players, victim)
 
   local logic = room.logic
-  logic:trigger(fk.BeforeGameOverJudge, victim, deathStruct)
+  logic:trigger(fk.BeforeGameOverJudge, victim, deathData)
 
-  local killer = deathStruct.damage and deathStruct.damage.from or nil
+  local killer = deathData.damage and deathData.damage.from or nil
   if killer then
     room:sendLog{
       type = "#KillPlayer",
@@ -113,20 +116,22 @@ function Death:main()
   victim.shield = 0
   room:broadcastProperty(victim, "shield")
 
-  logic:trigger(fk.GameOverJudge, victim, deathStruct)
-  logic:trigger(fk.Death, victim, deathStruct)
-  logic:trigger(fk.BuryVictim, victim, deathStruct)
+  logic:trigger(fk.GameOverJudge, victim, deathData)
+  logic:trigger(fk.Death, victim, deathData)
+  logic:trigger(fk.BuryVictim, victim, deathData)
 
-  logic:trigger(fk.Deathed, victim, deathStruct)
+  logic:trigger(fk.Deathed, victim, deathData)
 end
 
 --- 根据死亡数据杀死角色。
----@param deathStruct DeathStruct
-function DeathEventWrappers:killPlayer(deathStruct)
-  return exec(Death, deathStruct)
+---@param deathDataSpec DeathDataSpec
+function DeathEventWrappers:killPlayer(deathDataSpec)
+  local deathData = DeathData:new(deathDataSpec)
+  return exec(Death, deathData)
 end
 
 ---@class GameEvent.Revive : GameEvent
+---@field data [ServerPlayer, boolean?, string?]
 local Revive = GameEvent:subclass("GameEvent.Revive")
 function Revive:main()
   local room = self.room
@@ -148,8 +153,10 @@ function Revive:main()
   room.logic:trigger(fk.AfterPlayerRevived, player, { reason = reason })
 end
 
----@param player ServerPlayer
----@param sendLog? boolean?
+--- 复活一个角色
+---@param player ServerPlayer @ 要复活的角色
+---@param sendLog? boolean? @ 是否播放战报
+---@param reason? string? @ 复活原因
 function DeathEventWrappers:revivePlayer(player, sendLog, reason)
   return exec(Revive, player, sendLog, reason)
 end
