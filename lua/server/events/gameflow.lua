@@ -8,11 +8,12 @@ local function drawInit(room, player, n)
     Fk:filterCard(id, player)
   end
 
-  local move_to_notify = {}   ---@type CardsMoveStruct
-  move_to_notify.toArea = Card.PlayerHand
-  move_to_notify.to = player.id
-  move_to_notify.moveInfo = {}
-  move_to_notify.moveReason = fk.ReasonDraw
+  local move_to_notify = {   ---@type MoveCardsDataSpec
+    moveInfo = {},
+    to = player.id,
+    toArea = Card.PlayerHand,
+    moveReason = fk.ReasonDraw
+  }
   for _, id in ipairs(cardIds) do
     table.insert(move_to_notify.moveInfo,
     { cardId = id, fromArea = Card.DrawPile })
@@ -33,11 +34,12 @@ local function discardInit(room, player)
     Fk:filterCard(id, nil)
   end
 
-  local move_to_notify = {}   ---@type CardsMoveStruct
-  move_to_notify.from = player.id
-  move_to_notify.toArea = Card.DrawPile
-  move_to_notify.moveInfo = {}
-  move_to_notify.moveReason = fk.ReasonJustMove
+  local move_to_notify = { ---@type MoveCardsDataSpec
+    moveInfo = {},
+    from = player.id,
+    toArea = Card.DrawPile,
+    moveReason = fk.ReasonJustMove
+  }
   for _, id in ipairs(cardIds) do
     table.insert(move_to_notify.moveInfo,
     { cardId = id, fromArea = Card.PlayerHand })
@@ -61,7 +63,7 @@ function DrawInitial:main()
   }
 
   for _, player in ipairs(room.alive_players) do
-    local draw_data = { num = 4 }
+    local draw_data = DrawInitialData:new{ num = 4 }
     room.logic:trigger(fk.DrawInitialCards, player, draw_data)
     luck_data[player.id] = draw_data
     luck_data[player.id].luckTime = room.settings.luckTime
@@ -99,11 +101,13 @@ function DrawInitial:main()
 end
 
 ---@class GameEvent.Round : GameEvent
+---@field public data [RoundData]
 local Round = GameEvent:subclass("GameEvent.Round")
 
 function Round:action()
+  -- local data = table.unpack(self.data)
   local room = self.room
-  local currentPlayer
+  -- local currentPlayer
 
   while true do
     GameEvent.Turn:create(room.current):exec()
@@ -119,6 +123,17 @@ function Round:action()
       room:setCurrent(nextTurnOwner)
     end
   end
+  -- for _, seat in ipairs(data.turn_table) do
+  --   local current_player = table.find(room.alive_players, function(p) return p.seat == seat end)
+  --   if current_player then
+  --     GameEvent.Turn:create(current_player):exec()
+  
+  --     local changingData = { from = room.current, to = room.current.next, skipRoundPlus = false }
+  --     room.logic:trigger(fk.EventTurnChanging, current_player, changingData, true)
+
+  --     --- TODO: 给我整不会了
+  --   end
+  -- end
 end
 
 function Round:main()
@@ -181,13 +196,14 @@ function Round:clear()
 end
 
 ---@class GameEvent.Turn : GameEvent
+---@field public data [ServerPlayer, TurnData]
 local Turn = GameEvent:subclass("GameEvent.Turn")
 function Turn:prepare()
   local room = self.room
   local logic = room.logic
-  local player = self.data[1]---@type ServerPlayer
+  local player = self.data[1]
   if self.data[2] == nil then self.data[2] = {} end
-  local data = self.data[2]---@type TurnStruct
+  local data = self.data[2]
   data.reason = data.reason or "game_rule"
 
   if player.rest > 0 and player.rest < 999 then
@@ -217,8 +233,8 @@ end
 
 function Turn:main()
   local room = self.room
-  local player = self.data[1]---@type ServerPlayer
-  local data = self.data[2]---@type TurnStruct
+  local player = self.data[1]
+  local data = self.data[2]
   player.phase = Player.PhaseNone
   room.logic:trigger(fk.TurnStart, player, data)
   player.phase = Player.NotActive
@@ -227,8 +243,8 @@ end
 
 function Turn:clear()
   local room = self.room
-  local current = self.data[1]---@type ServerPlayer
-  local data = self.data[2]---@type TurnStruct
+  local current = self.data[1]
+  local data = self.data[2]
 
   local logic = room.logic
   if self.interrupted then
@@ -277,12 +293,13 @@ function Turn:clear()
 end
 
 ---@class GameEvent.Phase : GameEvent
+---@field public data [ServerPlayer, PhaseData]
 local Phase = GameEvent:subclass("GameEvent.Phase")
 function Phase:main()
   local room = self.room
   local logic = room.logic
 
-  local player = self.data[1] ---@type ServerPlayer
+  local player = self.data[1]
   if not logic:trigger(fk.EventPhaseStart, player) then
     if player.phase ~= Player.NotActive then
       logic:trigger(fk.EventPhaseProceeding, player)

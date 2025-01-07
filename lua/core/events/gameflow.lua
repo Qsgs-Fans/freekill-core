@@ -1,14 +1,19 @@
 
---- RoundData 轮次的数据
----@class RoundDataSpec -- TODO: 发挥想象力，填写这个Spec吧
----@field turn_table? integer[] @ 额定回合表，填空则为正常流程
+--- DrawInitialData 关于摸起始手牌的数据
+---@class DrawInitialDataSpec
+---@field public num integer @ 摸牌数
 
----@class RoundData: RoundDataSpec, TriggerData
-RoundData = TriggerData:subclass("RoundData")
+--- 关于摸起始手牌的数据
+---@class DrawInitialData: DrawInitialDataSpec, TriggerData
+DrawInitialData = TriggerData:subclass("DrawInitialData")
 
----@class fk.DrawInitialCards: TriggerEvent
+---@class DrawInitialEvent: TriggerEvent
+---@field data DrawInitialData
+local DrawInitialEvent = TriggerEvent:subclass("DrawInitialEvent")
+
+---@class fk.DrawInitialCards: DrawInitialEvent
 fk.DrawInitialCards = TriggerEvent:subclass("fk.DrawInitialCards")
----@class fk.AfterDrawInitialCards: TriggerEvent
+---@class fk.AfterDrawInitialCards: DrawInitialEvent
 fk.AfterDrawInitialCards = TriggerEvent:subclass("fk.AfterDrawInitialCards")
 
 ---@class fk.EventTurnChanging: TriggerEvent
@@ -16,6 +21,15 @@ fk.EventTurnChanging = TriggerEvent:subclass("fk.EventTurnChanging")
 
 ---@class fk.GameStart: TriggerEvent
 fk.GameStart = TriggerEvent:subclass("fk.GameStart")
+
+--- RoundData 轮次的数据
+---@class RoundDataSpec -- TODO: 发挥想象力，填写这个Spec吧
+---@field turn_table? integer[] @ 额定回合表，填空则为正常流程
+
+--- 轮次的数据
+---@class RoundData: RoundDataSpec, TriggerData
+---@field turn_table integer[] @ 额定回合表
+RoundData = TriggerData:subclass("RoundData")
 
 ---@class RoundEvent: TriggerEvent
 ---@field data RoundData
@@ -33,6 +47,7 @@ fk.AfterRoundEnd = RoundEvent:subclass("fk.AfterRoundEnd")
 ---@field reason? string @ 当前额外回合的原因，不为额外回合则为game_rule
 ---@field phase_table? Phase[] @ 额定阶段表，填空则为正常流程
 
+--- 回合的数据
 ---@class TurnData: TurnDataSpec, TriggerData
 TurnData = TriggerData:subclass("TurnData")
 
@@ -56,6 +71,7 @@ fk.AfterTurnEnd = TurnEvent:subclass("fk.AfterTurnEnd")
 ---@field reason? string @ 额外阶段的指示物
 ---@field phase_end? boolean @ 该阶段是否即将结束
 
+--- 阶段的数据
 ---@class PhaseData: PhaseDataSpec, TriggerData
 PhaseData = TriggerData:subclass("PhaseData")
 
