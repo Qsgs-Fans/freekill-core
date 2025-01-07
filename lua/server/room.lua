@@ -198,8 +198,8 @@ end
 -- getters/setters
 ------------------------------------------------------------------------
 
---- 根据玩家id，获得那名玩家本人。
----@param id integer @ 玩家的id
+--- 根据角色id，获得那名角色本人
+---@param id integer @ 角色的id
 ---@return ServerPlayer @ 这个id对应的ServerPlayer实例
 function Room:getPlayerById(id)
   if not id then return nil end
@@ -214,8 +214,8 @@ function Room:getPlayerById(id)
   return nil
 end
 
---- 将房间中的玩家按照行动顺序重新排序。
----@param playerIds integer[] @ 玩家id列表，这个数组会被这个函数排序
+--- 将房间中的角色按照行动顺序重新排序。
+---@param playerIds integer[] @ 角色id列表，这个数组会被这个函数排序
 function Room:sortPlayersByAction(playerIds, isTargetGroup)
   table.sort(playerIds, function(prev, next)
     local prevSeat = self:getPlayerById(isTargetGroup and prev[1] or prev).seat
@@ -248,11 +248,11 @@ function Room:deadPlayerFilter(playerIds)
   return newPlayerIds
 end
 
---- 获得当前房间中的所有玩家。
+--- 获得当前房间中的所有角色。
 ---
---- 返回的数组的第一个元素是当前回合玩家，并且按行动顺序进行排序。
+--- 如果按照座位排序，返回的数组的第一个元素是当前回合角色，并且按行动顺序进行排序。
 ---@param sortBySeat? boolean @ 是否按座位排序，默认是
----@return ServerPlayer[] @ 房间中玩家的数组
+---@return ServerPlayer[] @ 房间中角色的数组
 function Room:getAllPlayers(sortBySeat)
   if not self.game_started then
     return { table.unpack(self.players) }
@@ -272,7 +272,7 @@ function Room:getAllPlayers(sortBySeat)
   end
 end
 
---- 获得所有存活玩家，参看getAllPlayers
+--- 获得所有存活角色，参看getAllPlayers
 ---@param sortBySeat? boolean @ 是否按座位排序，默认是
 ---@return ServerPlayer[]
 function Room:getAlivePlayers(sortBySeat)
@@ -298,11 +298,11 @@ function Room:getAlivePlayers(sortBySeat)
   end
 end
 
---- 获得除一名玩家外的其他玩家。
----@param player ServerPlayer @ 要排除的玩家
+--- 获得除一名角色外的其他角色。
+---@param player ServerPlayer @ 要排除的角色
 ---@param sortBySeat? boolean @ 是否按座位排序，默认是
 ---@param include_dead? boolean @ 是否要把死人也算进去？
----@return ServerPlayer[] @ 其他玩家列表
+---@return ServerPlayer[] @ 其他角色列表
 function Room:getOtherPlayers(player, sortBySeat, include_dead)
   if sortBySeat == nil then
     sortBySeat = true
