@@ -38,6 +38,7 @@
 ---@field public fromArea CardArea
 ---@field public fromSpecialName? string
 
+--- 移动牌的数据（数组）
 ---@class MoveCardsData: MoveCardsDataSpec, TriggerData
 MoveCardsData = TriggerData:subclass("MoveCardsData")
 
@@ -54,6 +55,7 @@ local MoveCardsEvent = TriggerEvent:subclass("MoveCardsEvent")
 
 ---@alias DrawPilePos "top" | "bottom"
 
+--- 关于摸牌的数据
 ---@class DrawData: DrawDataSpec, TriggerData
 DrawData = TriggerData:subclass("DrawData")
 

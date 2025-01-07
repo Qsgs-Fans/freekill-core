@@ -7,6 +7,7 @@
 ---@field public card? Card? @ 当前判定牌
 ---@field public skipDrop? boolean @ 是否不进入弃牌堆
 
+--- 判定的数据
 ---@class JudgeData: JudgeDataSpec, TriggerData
 JudgeData = TriggerData:subclass("JudgeData")
 

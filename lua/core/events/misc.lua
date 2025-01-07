@@ -9,6 +9,7 @@
 ---@field public sendLog? boolean @ 是否发Log
 ---@field public results? table @ 这次改变的结果
 
+--- 武将牌属性变化的数据
 ---@class PropertyChangeData: PropertyChangeDataSpec, TriggerData
 PropertyChangeData = TriggerData:subclass("PropertyChangeData")
 

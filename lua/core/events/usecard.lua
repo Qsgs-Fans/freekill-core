@@ -7,6 +7,7 @@
 ---@field public skipDrop? boolean @ 是否不进入弃牌堆
 ---@field public customFrom? ServerPlayer @ 新响应者
 
+--- 打出牌的数据
 ---@class RespondCardData: RespondCardDataSpec, TriggerData
 RespondCardData = TriggerData:subclass("RespondCardData")
 
@@ -40,6 +41,7 @@ fk.CardRespondFinished = RespondCardEvent:subclass("fk.CardRespondFinished")
 ---@field public additionalEffect? integer @ 额外结算次数
 ---@field public noIndicate? boolean @ 隐藏指示线
 
+--- 使用牌的数据
 ---@class UseCardData: UseCardDataSpec, TriggerData
 UseCardData = TriggerData:subclass("UseCardData")
 
@@ -90,6 +92,7 @@ fk.CardUseFinished = UseCardEvent:subclass("fk.CardUseFinished")
 ---@field public fixedAddTimesResponsors? integer[] @ 额外响应请求次数
 ---@field public prohibitedCardNames? string[] @ 这些牌名的牌不可响应此牌
 
+--- 卡牌效果的数据
 ---@class CardEffectData: CardEffectDataSpec, TriggerData
 CardEffectData = TriggerData:subclass("CardEffectData")
 
