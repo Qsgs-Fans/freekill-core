@@ -150,7 +150,11 @@ function Revive:main()
   end
 
   reason = reason or ""
-  room.logic:trigger(fk.AfterPlayerRevived, player, { reason = reason })
+  local data = ReviveData:new{ -- FIXME: 好了，原地造了个data出来……
+    who = player,
+    reason = reason
+  }
+  room.logic:trigger(fk.AfterPlayerRevived, player, data)
 end
 
 --- 复活一个角色

@@ -48,8 +48,22 @@ fk.Deathed = DeathEvent:subclass("fk.Deathed")
 ---@class fk.BuryVictim: DeathEvent
 fk.BuryVictim = DeathEvent:subclass("fk.BuryVictim")
 
----@class fk.AfterPlayerRevived: TriggerEvent
-fk.AfterPlayerRevived = TriggerEvent:subclass("fk.AfterPlayerRevived")
+--- ReviveData 描述和复活事件有关的数据
+---@class ReviveDataSpec
+---@field public who ServerPlayer @ 复活角色
+---@field public reason? string @ 复活角色的原因
+
+--- 描述和复活事件有关的数据
+---@class ReviveData: ReviveDataSpec, TriggerData
+---@overload fun(spec: ReviveDataSpec): ReviveData
+ReviveData = TriggerData:subclass("ReviveData")
+
+---@class ReviveEvent: TriggerEvent
+---@field data ReviveData
+local ReviveEvent = TriggerEvent:subclass("ReviveEvent")
+
+---@class fk.AfterPlayerRevived: ReviveEvent
+fk.AfterPlayerRevived = ReviveEvent:subclass("fk.AfterPlayerRevived")
 
 -- 注释
 
@@ -66,3 +80,10 @@ fk.AfterPlayerRevived = TriggerEvent:subclass("fk.AfterPlayerRevived")
 ---@class SkillSkeleton
 ---@field public addEffect fun(self: SkillSkeleton, key: DeathEvent,
 ---  attr: TrigSkelAttribute?, data: TrigSkelSpec<DeathDataSpec>): SkillSkeleton
+
+---@alias ReviveTrigFunc fun(self: TriggerSkill, event: ReviveEvent,
+---  target: ServerPlayer, player: ServerPlayer, data: ReviveData): any
+
+---@class SkillSkeleton
+---@field public addEffect fun(self: SkillSkeleton, key: ReviveEvent,
+---  attr: TrigSkelAttribute?, data: TrigSkelSpec<ReviveDataSpec>): SkillSkeleton
