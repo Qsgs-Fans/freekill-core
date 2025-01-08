@@ -64,7 +64,7 @@ GameRule = fk.CreateTriggerSkill{
     end,
     [fk.AskForPeachesDone] = function()
       if player.hp < 1 and not data.ignoreDeath then
-        ---@type DamageData
+        ---@type DeathDataSpec
         local deathData = {
           who = player.id,
           damage = data.damage,

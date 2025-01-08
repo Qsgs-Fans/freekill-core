@@ -179,8 +179,7 @@ function ChangeHp:exec()
   local logic = self.logic
   local player, num, reason, skillName, damageData = table.unpack(self.data)
 
-  ---@type HpChangedData
-  local data = {
+  local data = HpChangedData:new{
     num = num,
     reason = reason,
     skillName = skillName,

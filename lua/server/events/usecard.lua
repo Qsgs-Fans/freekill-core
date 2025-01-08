@@ -683,7 +683,7 @@ function UseCardEventWrappers:doCardUseEffect(useCardData)
     local collaboratorsIndex = {}
     for _, toId in ipairs(TargetGroup:getRealTargets(useCardData.tos)) do
       if self:getPlayerById(toId):isAlive() then
-        ---@class CardEffectEvent
+        ---@class CardEffectDataSpec
         local cardEffectData = {
           from = useCardData.from,
           tos = useCardData.tos,
