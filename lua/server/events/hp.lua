@@ -165,15 +165,6 @@ function Damage:main()
     end
   end
 
-  if damageData.damage < 1 then
-    return false
-  end
-  damageData.damageType = damageData.damageType or fk.NormalDamage
-
-  if damageData.from and damageData.from.dead then
-    damageData.from = nil
-  end
-
   assert(damageData.to:isInstanceOf(ServerPlayer))
 
   local stages = {}
@@ -188,15 +179,9 @@ function Damage:main()
 
   for _, struct in ipairs(stages) do
     local event, player = table.unpack(struct)
-    if logic:trigger(event, damageData[player], damageData) or damageData.damage < 1 then
+    if logic:trigger(event, damageData[player], damageData) or damageData:checkBreak() then
       logic:breakEvent(false)
     end
-
-    assert(damageData.to:isInstanceOf(ServerPlayer))
-  end
-
-  if damageData.to.dead then
-    return false
   end
 
   damageData.dealtRecorderId = room.logic.specific_events_id[GameEvent.Damage]
@@ -289,17 +274,18 @@ function LoseHp:main()
 
   local data = HpLostData:new{
     num = num,
+    who = player,
     skillName = skillName,
   }
-  if logic:trigger(fk.PreHpLost, player, data) or data.num < 1 then
+  if logic:trigger(fk.PreHpLost, data.who, data) or data.num < 1 then
     logic:breakEvent(false)
   end
 
-  if not room:changeHp(player, -data.num, "loseHp", skillName) then
+  if not room:changeHp(data.who, -data.num, "loseHp", skillName) then
     logic:breakEvent(false)
   end
 
-  logic:trigger(fk.HpLost, player, data)
+  logic:trigger(fk.HpLost, data.who, data)
   return true
 end
 

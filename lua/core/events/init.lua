@@ -5,6 +5,7 @@ TriggerData = class("TriggerData")
 function TriggerData:initialize(spec)
   -- table.assign(self, spec)
   self._data = spec
+  self:fillData()
 end
 
 function TriggerData:__index(k)
@@ -18,6 +19,27 @@ function TriggerData:__newindex(k, v)
   self._data[k] = v
 end
 
+--fill_missing_data(default_value)
+function TriggerData:fillData()
+
+end
+
+--condition for break event
+function TriggerData:checkBreak()
+
+end
+function TriggerData:initCardSkillName()
+  if self.card and not self.skillName then
+    self.skillName = self.card.skill.name
+  end
+end
+-- mainly for no_source if dead
+---@field playerKey string @"from" or "to"
+function TriggerData:removeDeathPlayer(playerKey)
+  if self[playerKey] and self[playerKey].dead then
+    self[playerKey] = nil
+  end
+end
 require "core.events.misc"
 require "core.events.hp"
 require "core.events.death"

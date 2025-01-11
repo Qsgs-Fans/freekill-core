@@ -14,13 +14,25 @@ HpChangedData = TriggerData:subclass("HpChangedData")
 
 --- HpLostData 描述跟失去体力有关的数据
 ---@class HpLostDataSpec
+---@field public ServerPlayer who @ 谁失去体力
 ---@field public num integer @ 失去体力的数值
 ---@field public skillName string @ 导致这次失去的技能名
 
 --- 描述跟失去体力有关的数据
 ---@class HpLostData: HpLostDataSpec, TriggerData
 HpLostData = TriggerData:subclass("HpLostData")
-
+function HpLostData:fillData()
+    self.num = self.num or 1
+  end
+  
+  function HpLostData:checkBreak()
+    return self.num < 1 or not self.who or self.who.dead
+  end
+  --失去体力足以进濒死
+  function HpLostData:lethal()
+    if self:checkBreak() then return false end
+    return self.num >= math.max(0, self.who.hp)
+  end
 --- MaxHpChangedData 描述跟体力上限变化有关的数据
 ---@class MaxHpChangedDataSpec
 ---@field public num integer @ 体力上限变化量，可能是正数或者负数
@@ -56,6 +68,25 @@ fk.IceDamage = 4
 ---@class DamageData: DamageDataSpec, TriggerData
 DamageData = TriggerData:subclass("DamageData")
 
+function DamageData:fillData()
+  self.damage = self.damage or 1
+  self.damageType = self.damageType or fk.NormalDamage
+  self:initCardSkillName()
+  self:removeDeathPlayer("from")
+end
+
+function DamageData:checkBreak()
+  if self.dealtRecorderId then return false end
+  return self.damage < 1 or not self.to or self.to.dead
+end
+--受到伤害足以进濒死
+function DamageData:lethal(ignore_shield)
+  if self:checkBreak() then return false end
+  local shield = ignore_shield and self.to.shield or 0
+  return self.damage >= (math.max(0, self.to.hp) + shield)
+end
+
+
 --- RecoverData 描述和回复体力有关的数据
 ---@class RecoverDataSpec
 ---@field public who ServerPlayer @ 回复体力的角色
@@ -67,7 +98,14 @@ DamageData = TriggerData:subclass("DamageData")
 --- 描述和回复体力有关的数据
 ---@class RecoverData: RecoverDataSpec, TriggerData
 RecoverData = TriggerData:subclass("RecoverData")
-
+function RecoverData:fillData()
+  self.num = self.num or 1
+  self:initCardSkillName()
+  self:removeDeathPlayer("recoverBy")
+end
+function RecoverData:checkBreak()
+    return self.num < 1 or not self.who or self.who.dead
+end
 ---@class HpChangedEvent: TriggerEvent
 ---@field data HpChangedData
 local HpChangedEvent = TriggerEvent:subclass("HpChangedEvent")
