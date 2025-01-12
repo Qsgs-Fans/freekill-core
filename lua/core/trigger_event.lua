@@ -111,14 +111,19 @@ function TriggerEvent:exec()
         ---@cast skill TriggerSkill
 
         table.insert(invoked_skills, skill)
-        broken = skill:trigger(self, target, player, data)
+        broken = skill:trigger(self, target, player, data) or data:checkBreak()
         skill_names = table.map(table.filter(skills, filter_func), Util.NameMapper)
 
         -- TODO: 这段开个方法，搬家到相关时机的某个方法内
+        --[[
         broken = broken or (event == fk.AskForPeaches
           and room:getPlayerById(data.who).hp > 0) or
           (table.contains({fk.PreDamage, fk.DamageCaused, fk.DamageInflicted}, event) and data.damage < 1) or
           cur_event.killed
+
+        --]]
+        broken = broken or (event == fk.AskForPeaches and room:getPlayerById(data.who).hp > 0)
+          or cur_event.killed
 
         if broken then break end
       end
