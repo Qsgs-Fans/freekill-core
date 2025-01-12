@@ -49,39 +49,19 @@ function ChangeHp:main()
   local player, data = table.unpack(self.data)
   local room = self.room
   local logic = room.logic
-  local num = data.num
-  local reason = data.reason
-  local damageData = data.damageEvent
-  if num == 0 then
-    return false
-  end
-  assert(reason == nil or table.contains({ "loseHp", "damage", "recover" }, reason))
-
-  if reason == "damage" then
-    if damageData then
-      if Fk:canChain(damageData.damageType) and damageData.to.chained then
-        damageData.to:setChainState(false)
-        if not damageData.chain then
-          damageData.beginnerOfTheDamage = true
-          damageData.chain_table = table.filter(room:getOtherPlayers(damageData.to), function(p)
-            return p.chained
-          end)
-        end
-      end
-    end
-    data.shield_lost = math.min(-num, player.shield)
-    data.num = num + data.shield_lost
-  end
-
-  if logic:trigger(fk.BeforeHpChanged, player, data) then
+  if data:initData(room) then return false end
+  
+  if logic:trigger(fk.BeforeHpChanged, data.who, data) then
     logic:breakEvent(false)
   end
 
-  if reason == "damage" and data.shield_lost > 0 and not (damageData and damageData.isVirtualDMG) then
-    room:changeShield(player, -data.shield_lost)
-  end
+  local reason, damageData = data.reason, data.damageEvent
+  local player, num = data.who, data.num
 
   if reason == "damage" then
+    if data.shield_lost > 0 and not (damageData and damageData.isVirtualDMG) then
+      room:changeShield(data.who, -data.shield_lost)
+    end
     sendDamageLog(room, damageData)
   end
 
@@ -140,6 +120,7 @@ end
 ---@return boolean
 function HpEventWrappers:changeHp(player, num, reason, skillName, damageData)
   local data = HpChangedData:new{
+    who = player,
     num = num, reason = reason,
     skillName = skillName, damageEvent = damageData
   }
@@ -154,18 +135,7 @@ function Damage:main()
   local room = self.room
   local logic = room.logic
 
-  if not damageData.chain and logic:damageByCardEffect(false) then
-    local cardEffectData = logic:getCurrentEvent():findParent(GameEvent.CardEffect)
-    if cardEffectData then
-      local cardEffectEvent = cardEffectData.data[1]
-      damageData.damage = damageData.damage + (cardEffectEvent.additionalDamage or 0)
-      if damageData.from and cardEffectEvent.from == damageData.from.id then
-        damageData.by_user = true
-      end
-    end
-  end
-
-  assert(damageData.to:isInstanceOf(ServerPlayer))
+  damageData:initData(room)
 
   local stages = {}
 
@@ -179,7 +149,7 @@ function Damage:main()
 
   for _, struct in ipairs(stages) do
     local event, player = table.unpack(struct)
-    if logic:trigger(event, damageData[player], damageData) or damageData:checkBreak() then
+    if logic:trigger(event, damageData[player], damageData) then
       logic:breakEvent(false)
     end
   end
@@ -230,21 +200,20 @@ function Damage:exit()
     damageData.chain_table = table.filter(damageData.chain_table, function(p)
       return p:isAlive() and p.chained
     end)
+    local dmg = {
+      from = damageData.from,
+      damage = damageData.damage,
+      damageType = damageData.damageType,
+      card = damageData.card,
+      skillName = damageData.skillName,
+      chain = true,
+    }
     for _, p in ipairs(damageData.chain_table) do
       room:sendLog{
         type = "#ChainDamage",
         from = p.id
       }
-
-      local dmg = {
-        from = damageData.from,
-        to = p,
-        damage = damageData.damage,
-        damageType = damageData.damageType,
-        card = damageData.card,
-        skillName = damageData.skillName,
-        chain = true,
-      }
+      dmg.to = p
 
       room:damage(dmg)
     end
@@ -266,18 +235,12 @@ function LoseHp:main()
   local room = self.room
   local logic = room.logic
 
-  if num == nil then
-    num = 1
-  elseif num < 1 then
-    return false
-  end
-
   local data = HpLostData:new{
     num = num,
     who = player,
     skillName = skillName,
   }
-  if logic:trigger(fk.PreHpLost, data.who, data) or data.num < 1 then
+  if logic:trigger(fk.PreHpLost, data.who, data) then
     logic:breakEvent(false)
   end
 
@@ -318,15 +281,7 @@ function Recover:main()
   local recoverData = table.unpack(self.data)
   local room = self.room
   local logic = room.logic
-
-  if recoverData.card then
-    local cardEffectData = logic:getCurrentEvent():findParent(GameEvent.CardEffect)
-    if cardEffectData then
-      local cardEffectEvent = cardEffectData.data[1]
-      recoverData.num = recoverData.num + (cardEffectEvent.additionalRecover or 0)
-    end
-  end
-
+  recoverData:initData(room)
   local who = recoverData.who
 
   if logic:trigger(fk.PreHpRecover, who, recoverData) then
@@ -335,11 +290,7 @@ function Recover:main()
 
   recoverData.num = math.min(recoverData.num, who.maxHp - who.hp)
 
-  if recoverData.num < 1 then
-    return false
-  end
-
-  if not room:changeHp(who, recoverData.num, "recover", recoverData.skillName) then
+  if recoverData:checkBreak() or not room:changeHp(who, recoverData.num, "recover", recoverData.skillName) then
     logic:breakEvent(false)
   end
 
@@ -361,16 +312,16 @@ local ChangeMaxHp = GameEvent:subclass("GameEvent.ChangeMaxHp")
 function ChangeMaxHp:main()
   local player, num = table.unpack(self.data)
   local room = self.room
-
   local data = MaxHpChangedData:new{
+    who = player,
     num = num,
   }
 
-  if room.logic:trigger(fk.BeforeMaxHpChanged, player, data) or data.num == 0 then
+  if data:checkBreak() or room.logic:trigger(fk.BeforeMaxHpChanged, data.who, data) then
     return false
   end
 
-  num = data.num
+  player, num = data.who, data.num
 
   room:setPlayerProperty(player, "maxHp", math.max(player.maxHp + num, 0))
   room:sendLogEvent("ChangeMaxHp", {

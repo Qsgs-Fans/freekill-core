@@ -1,6 +1,7 @@
 
 --- HpChangedData 描述和一次体力变化有关的数据
 ---@class HpChangedDataSpec
+---@field public who ServerPlayer @ 体力变化的角色
 ---@field public num integer @ 体力变化量，可能是正数或者负数
 ---@field public shield_lost? integer @ 护甲变化量
 ---@field public reason string @ 体力变化原因
@@ -11,35 +12,68 @@
 --- 描述和一次体力变化有关的数据
 ---@class HpChangedData: HpChangedDataSpec, TriggerData
 HpChangedData = TriggerData:subclass("HpChangedData")
+HpChangedData.default_values.shield_lost = 0
+function HpChangedData:initData(room)
+  local logic = room.logic
+  local num = self.num
+  local reason = self.reason
+  local damageData = self.damageEvent
+  if self:checkBreak() then return true end
 
+  assert(reason == nil or table.contains({ "loseHp", "damage", "recover" }, reason))
+
+  if reason == "damage" then
+    if damageData then
+      if Fk:canChain(damageData.damageType) and damageData.to.chained then
+        damageData.to:setChainState(false)
+        if not damageData.chain then
+          damageData.beginnerOfTheDamage = true
+          damageData.chain_table = table.filter(room:getOtherPlayers(damageData.to), function(p)
+            return p.chained
+          end)
+        end
+      end
+    end
+    self.shield_lost = math.min(-num, self.who.shield)
+    self.num = num + self.shield_lost
+  end
+end
+function HpChangedData:checkBreak()
+  if not self.who or self.who.dead then return true end
+  return self.num == 0 and self.shield_lost == 0
+end
 --- HpLostData 描述跟失去体力有关的数据
 ---@class HpLostDataSpec
----@field public ServerPlayer who @ 谁失去体力
+---@field public who ServerPlayer @ 失去体力的角色
 ---@field public num integer @ 失去体力的数值
 ---@field public skillName string @ 导致这次失去的技能名
 
 --- 描述跟失去体力有关的数据
 ---@class HpLostData: HpLostDataSpec, TriggerData
 HpLostData = TriggerData:subclass("HpLostData")
-function HpLostData:fillData()
-    self.num = self.num or 1
-  end
-  
-  function HpLostData:checkBreak()
-    return self.num < 1 or not self.who or self.who.dead
-  end
+HpLostData.default_values.num = 1
+
+function HpLostData:checkBreak()
+  return self.num < 1 or not self.who or self.who.dead
+end
   --失去体力足以进濒死
-  function HpLostData:lethal()
-    if self:checkBreak() then return false end
-    return self.num >= math.max(0, self.who.hp)
-  end
+function HpLostData:lethal()
+  if self:checkBreak() then return false end
+  return self.num >= math.max(0, self.who.hp)
+end
 --- MaxHpChangedData 描述跟体力上限变化有关的数据
 ---@class MaxHpChangedDataSpec
+---@field public who ServerPlayer @ 体力上限变化的角色
 ---@field public num integer @ 体力上限变化量，可能是正数或者负数
 
 --- 描述跟体力上限变化有关的数据
 ---@class MaxHpChangedData: MaxHpChangedDataSpec, TriggerData
 MaxHpChangedData = TriggerData:subclass("MaxHpChangedData")
+
+function MaxHpChangedData:checkBreak()
+  if not self.who or self.who.dead then return true end
+  return self.num == 0
+end
 
 --- DamageType 伤害的属性
 ---@alias DamageType integer
@@ -67,21 +101,34 @@ fk.IceDamage = 4
 --- 描述和伤害事件有关的数据
 ---@class DamageData: DamageDataSpec, TriggerData
 DamageData = TriggerData:subclass("DamageData")
-
-function DamageData:fillData()
-  self.damage = self.damage or 1
-  self.damageType = self.damageType or fk.NormalDamage
+DamageData.default_values = {
+  damage = 1,
+  damageType = fk.NormalDamage
+}
+function DamageData:initData(room)
+  local logic = room.logic
+  if not self.chain and logic:damageByCardEffect(false) then
+    local cardEffectData = logic:getCurrentEvent():findParent(GameEvent.CardEffect)
+    if cardEffectData then
+      local cardEffectEvent = cardEffectData.data[1]
+      self.damage = self.damage + (cardEffectEvent.additionalDamage or 0)
+      if self.from and cardEffectEvent.from == self.from.id then
+        self.by_user = true
+      end
+    end
+  end
+  assert(self.to:isInstanceOf(ServerPlayer))
   self:initCardSkillName()
   self:removeDeathPlayer("from")
 end
 
 function DamageData:checkBreak()
+  self:removeDeathPlayer("from")
   if self.dealtRecorderId then return false end
   return self.damage < 1 or not self.to or self.to.dead
 end
 --受到伤害足以进濒死
 function DamageData:lethal(ignore_shield)
-  if self:checkBreak() then return false end
   local shield = ignore_shield and self.to.shield or 0
   return self.damage >= (math.max(0, self.to.hp) + shield)
 end
@@ -98,13 +145,22 @@ end
 --- 描述和回复体力有关的数据
 ---@class RecoverData: RecoverDataSpec, TriggerData
 RecoverData = TriggerData:subclass("RecoverData")
-function RecoverData:fillData()
-  self.num = self.num or 1
+RecoverData.default_values.num = 1
+function RecoverData:initData(room)
+  local logic = room.logic
+  if self.card then
+    local cardEffectData = logic:getCurrentEvent():findParent(GameEvent.CardEffect)
+    if cardEffectData then
+      local cardEffectEvent = cardEffectData.data[1]
+      self.num = self.num + (cardEffectEvent.additionalRecover or 0)
+    end
+  end
   self:initCardSkillName()
   self:removeDeathPlayer("recoverBy")
 end
 function RecoverData:checkBreak()
-    return self.num < 1 or not self.who or self.who.dead
+  self:removeDeathPlayer("recoverBy")
+  return self.num < 1 or not self.who or self.who.dead
 end
 ---@class HpChangedEvent: TriggerEvent
 ---@field data HpChangedData
