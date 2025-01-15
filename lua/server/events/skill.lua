@@ -14,7 +14,8 @@ end
 ---@field public data [SkillEffectData]
 local SkillEffect = GameEvent:subclass("GameEvent.SkillEffect")
 function SkillEffect:main()
-  local effect_cb, player, skill, skill_data = table.unpack(self.data)
+  local data = table.unpack(self.data)
+  local effect_cb, player, skill, skill_data = data.skill_cb, data.who, data.skill, data.skill_data
   local room = self.room
   local logic = room.logic
   local main_skill = skill.main_skill and skill.main_skill or skill
@@ -89,7 +90,13 @@ end
 ---@param effect_cb fun() @ 实际要调用的函数
 ---@param skill_data? table @ 技能的信息
 function SkillEventWrappers:useSkill(player, skill, effect_cb, skill_data)
-  return exec(SkillEffect, effect_cb, player, skill, skill_data or Util.DummyTable)
+  local data = SkillEffectData:new{
+    who = player,
+    skill = skill,
+    skill_cb = effect_cb,
+    skill_data = skill_data
+  }
+  return exec(SkillEffect, data)
 end
 
 --- 令一名玩家获得/失去技能。
