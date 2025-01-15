@@ -18,11 +18,11 @@ local function infoCheck(info)
 end
 
 ---@class GameEvent.MoveCards : GameEvent
----@field public data [MoveCardsData[]]
+---@field public data MoveCardsData[]
 local MoveCards = GameEvent:subclass("GameEvent.MoveCards")
 function MoveCards:main()
   local room = self.room
-  local moveCardsData = table.unpack(self.data)
+  local moveCardsData = self.data
 
   if room.logic:trigger(fk.BeforeCardsMove, nil, moveCardsData) then
     room.logic:breakEvent(false)
@@ -181,7 +181,7 @@ function MoveEventWrappers:moveCards(...)
   if #datas < 1 then
     return false
   end
-  return exec(MoveCards, datas)
+  return exec(MoveCards, table.unpack(datas))
 end
 
 --- 让一名玩家获得一张牌

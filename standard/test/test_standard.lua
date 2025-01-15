@@ -118,7 +118,11 @@ function TestStandard:testLuoYi()
   local origin_hp = comp2.hp
   FkTest.runInRoom(function()
     room:obtainCard(me, 1)
-    GameEvent.Turn:create(me):exec()
+    local data = { ---@type TurnDataSpec
+      who = me,
+      reason = "game_rule",
+    }
+    GameEvent.Turn:create(TurnData:new(data)):exec()
   end)
   -- p(me:getCardIds("h"))
   lu.assertEquals(#me:getCardIds("h"), 1)
@@ -178,7 +182,12 @@ function TestStandard:testLuoShen()
     room:moveCardTo(red, Card.DrawPile)
     if rnd > 0 then room:moveCardTo(table.slice(blacks, 1, rnd + 1), Card.DrawPile) end
 
-    GameEvent.Turn:create(me, { phase_table = { Player.Start } }):exec()
+    local data = { ---@type TurnDataSpec
+      who = me,
+      reason = "game_rule",
+      phase_table = { Player.Start }
+    }
+    GameEvent.Turn:create(TurnData:new(data)):exec()
   end)
   lu.assertEquals(#me:getCardIds("h"), rnd)
 end
@@ -280,7 +289,12 @@ function TestStandard:testKeJi()
   FkTest.setNextReplies(me, { "1" })
   FkTest.runInRoom(function()
     me:drawCards(10)
-    GameEvent.Turn:create(me, { phase_table = { Player.Discard } }):exec()
+    local data = { ---@type TurnDataSpec
+      who = me,
+      reason = "game_rule",
+      phase_table = { Player.Discard }
+    }
+    GameEvent.Turn:create(TurnData:new(data)):exec()
   end)
 
   lu.assertEquals(#me:getCardIds("h"), 10)
@@ -293,9 +307,14 @@ function TestStandard:testYingzi()
     room:handleAddLoseSkills(me, "yingzi")
   end)
 
-  FkTest.setNextReplies(me, { "1" })
-  FkTest.runInRoom(function()
-    GameEvent.Turn:create(me, { phase_table = { Player.Draw } }):exec()
+  SetNextReplies(me, { "1" })
+  RunInRoom(function()
+    local data = { ---@type TurnDataSpec
+      who = me,
+      reason = "game_rule",
+      phase_table = { Player.Draw }
+    }
+    GameEvent.Turn:create(TurnData:new(data)):exec()
   end)
 
   lu.assertEquals(#me:getCardIds("h"), 3)
@@ -383,9 +402,14 @@ function TestStandard:testBiYue()
     room:handleAddLoseSkills(me, "biyue")
   end)
 
-  FkTest.setNextReplies(me, { "1" })
-  FkTest.runInRoom(function()
-    GameEvent.Turn:create(me, { phase_table = { Player.Finish } }):exec()
+  SetNextReplies(me, { "1" })
+  RunInRoom(function()
+    local data = { ---@type TurnDataSpec
+      who = me,
+      reason = "game_rule",
+      phase_table = { Player.Finish }
+    }
+    GameEvent.Turn:create(TurnData:new(data)):exec()
   end)
 
   lu.assertEquals(#me:getCardIds("h"), 1)

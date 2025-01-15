@@ -105,12 +105,16 @@ end
 local Round = GameEvent:subclass("GameEvent.Round")
 
 function Round:action()
-  local data = table.unpack(self.data)
+  -- local data = table.unpack(self.data)
   local room = self.room
   -- local currentPlayer
 
   while true do
-    GameEvent.Turn:create(room.current):exec()
+    local data = { ---@type TurnDataSpec
+      who = room.current,
+      reason = "game_rule"
+    }
+    GameEvent.Turn:create(TurnData:new(data)):exec()
     if room.game_finished then break end
 
     local changingData = { from = room.current, to = room.current.next, skipRoundPlus = false }
