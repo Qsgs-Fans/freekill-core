@@ -470,7 +470,7 @@ function Judge:exec()
   local logic = self.logic
   local who = data.who
 
-  data.isJudgeEvent = true
+  -- data.isJudgeEvent = true
   logic:trigger(fk.StartJudge, who, data)
   data.card = data.card or Fk:getCardById(self.ai.room.draw_pile[1] or 1)
 

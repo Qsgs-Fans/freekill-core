@@ -1,6 +1,7 @@
 
 --- HpChangedData 描述和一次体力变化有关的数据
 ---@class HpChangedDataSpec
+---@field public who ServerPlayer @ 体力变化的角色
 ---@field public num integer @ 体力变化量，可能是正数或者负数
 ---@field public shield_lost? integer @ 护甲变化量
 ---@field public reason string @ 体力变化原因
@@ -14,6 +15,7 @@ HpChangedData = TriggerData:subclass("HpChangedData")
 
 --- HpLostData 描述跟失去体力有关的数据
 ---@class HpLostDataSpec
+---@field public who ServerPlayer @ 失去体力的角色
 ---@field public num integer @ 失去体力的数值
 ---@field public skillName string @ 导致这次失去的技能名
 
@@ -23,6 +25,7 @@ HpLostData = TriggerData:subclass("HpLostData")
 
 --- MaxHpChangedData 描述跟体力上限变化有关的数据
 ---@class MaxHpChangedDataSpec
+---@field public who ServerPlayer @ 改变体力上限的角色
 ---@field public num integer @ 体力上限变化量，可能是正数或者负数
 
 --- 描述跟体力上限变化有关的数据

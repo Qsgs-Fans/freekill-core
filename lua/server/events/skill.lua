@@ -11,6 +11,7 @@ local function exec(tp, ...)
 end
 
 ---@class GameEvent.SkillEffect : GameEvent
+---@field public data [SkillEffectData]
 local SkillEffect = GameEvent:subclass("GameEvent.SkillEffect")
 function SkillEffect:main()
   local effect_cb, player, skill, skill_data = table.unpack(self.data)
