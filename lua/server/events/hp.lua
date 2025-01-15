@@ -43,10 +43,10 @@ local function sendDamageLog(room, damageData)
 end
 
 ---@class GameEvent.ChangeHp : GameEvent
----@field public data [ServerPlayer, HpChangedData]
+---@field public data [HpChangedData]
 local ChangeHp = GameEvent:subclass("GameEvent.ChangeHp")
 function ChangeHp:main()
-  local player, data = table.unpack(self.data)
+  local data = table.unpack(self.data)
   local room = self.room
   local logic = room.logic
   local num = data.num
@@ -69,16 +69,16 @@ function ChangeHp:main()
         end
       end
     end
-    data.shield_lost = math.min(-num, player.shield)
+    data.shield_lost = math.min(-num, data.who.shield)
     data.num = num + data.shield_lost
   end
 
-  if logic:trigger(fk.BeforeHpChanged, player, data) then
+  if logic:trigger(fk.BeforeHpChanged, data.who, data) then
     logic:breakEvent(false)
   end
 
   if reason == "damage" and data.shield_lost > 0 and not (damageData and damageData.isVirtualDMG) then
-    room:changeShield(player, -data.shield_lost)
+    room:changeShield(data.who, -data.shield_lost)
   end
 
   if reason == "damage" then
@@ -87,45 +87,45 @@ function ChangeHp:main()
 
   if not (reason == "damage" and (data.num == 0 or (damageData and damageData.isVirtualDMG))) then
     assert(not (data.reason == "recover" and data.num < 0))
-    player.hp = math.min(player.hp + data.num, player.maxHp)
-    room:broadcastProperty(player, "hp")
+    data.who.hp = math.min(data.who.hp + data.num, data.who.maxHp)
+    room:broadcastProperty(data.who, "hp")
 
     if reason == "loseHp" then
       room:sendLog{
         type = "#LoseHP",
-        from = player.id,
+        from = data.who.id,
         arg = 0 - data.num,
       }
       room:sendLogEvent("LoseHP", {})
     elseif reason == "recover" then
       room:sendLog{
         type = "#HealHP",
-        from = player.id,
+        from = data.who.id,
         arg = data.num,
       }
     end
 
     room:sendLog{
       type = "#ShowHPAndMaxHP",
-      from = player.id,
-      arg = player.hp,
-      arg2 = player.maxHp,
+      from = data.who.id,
+      arg = data.who.hp,
+      arg2 = data.who.maxHp,
     }
   end
 
-  logic:trigger(fk.HpChanged, player, data)
+  logic:trigger(fk.HpChanged, data.who, data)
 
-  if player.hp < 1 then
+  if data.who.hp < 1 then
     if num < 0 and not data.preventDying then
       local dyingDataSpec = {
-        who = player.id,
+        who = data.who.id,
         damage = damageData,
       }
       room:enterDying(dyingDataSpec)
     end
-  elseif player.dying then
-    player.dying = false
-    room:broadcastProperty(player, "dying")
+  elseif data.who.dying then
+    data.who.dying = false
+    room:broadcastProperty(data.who, "dying")
   end
 
   return true
@@ -140,10 +140,13 @@ end
 ---@return boolean
 function HpEventWrappers:changeHp(player, num, reason, skillName, damageData)
   local data = HpChangedData:new{
-    num = num, reason = reason,
-    skillName = skillName, damageEvent = damageData
+    who = player,
+    num = num,
+    reason = reason,
+    skillName = skillName,
+    damageEvent = damageData
   }
-  return exec(ChangeHp, player, data)
+  return exec(ChangeHp, data)
 end
 
 ---@class GameEvent.Damage : GameEvent
@@ -275,31 +278,28 @@ function HpEventWrappers:damage(damageData)
 end
 
 ---@class GameEvent.LoseHp : GameEvent
+---@field public data [HpLostData]
 local LoseHp = GameEvent:subclass("GameEvent.LoseHp")
 function LoseHp:main()
-  local player, num, skillName = table.unpack(self.data)
+  local data = table.unpack(self.data)
   local room = self.room
   local logic = room.logic
 
-  if num == nil then
-    num = 1
-  elseif num < 1 then
+  if data.num == nil then
+    data.num = 1
+  elseif data.num < 1 then
     return false
   end
 
-  local data = HpLostData:new{
-    num = num,
-    skillName = skillName,
-  }
-  if logic:trigger(fk.PreHpLost, player, data) or data.num < 1 then
+  if logic:trigger(fk.PreHpLost, data.who, data) or data.num < 1 then
     logic:breakEvent(false)
   end
 
-  if not room:changeHp(player, -data.num, "loseHp", skillName) then
+  if not room:changeHp(data.who, -data.num, "loseHp", data.skillName) then
     logic:breakEvent(false)
   end
 
-  logic:trigger(fk.HpLost, player, data)
+  logic:trigger(fk.HpLost, data.who, data)
   return true
 end
 
@@ -309,7 +309,12 @@ end
 ---@param skillName? string @ 技能名
 ---@return boolean
 function HpEventWrappers:loseHp(player, num, skillName)
-  return exec(LoseHp, player, num, skillName)
+  local data = HpLostData:new{
+    who = player,
+    num = num,
+    skillName = skillName,
+  }
+  return exec(LoseHp, data)
 end
 
 ---@class GameEvent.Recover : GameEvent
@@ -370,21 +375,18 @@ function HpEventWrappers:recover(recoverDataSpec)
 end
 
 ---@class GameEvent.ChangeMaxHp : GameEvent
----@field public data [ServerPlayer, integer]
+---@field public data [MaxHpChangedData]
 local ChangeMaxHp = GameEvent:subclass("GameEvent.ChangeMaxHp")
 function ChangeMaxHp:main()
-  local player, num = table.unpack(self.data)
+  local data = table.unpack(self.data)
   local room = self.room
 
-  local data = MaxHpChangedData:new{
-    num = num,
-  }
-
-  if room.logic:trigger(fk.BeforeMaxHpChanged, player, data) or data.num == 0 then
+  if room.logic:trigger(fk.BeforeMaxHpChanged, data.who, data) or data.num == 0 then
     return false
   end
 
-  num = data.num
+  local player = data.who
+  local num = data.num
 
   room:setPlayerProperty(player, "maxHp", math.max(player.maxHp + num, 0))
   room:sendLogEvent("ChangeMaxHp", {
@@ -432,7 +434,11 @@ end
 ---@param num integer @ 变化量
 ---@return boolean
 function HpEventWrappers:changeMaxHp(player, num)
-  return exec(ChangeMaxHp, player, num)
+  local data = MaxHpChangedData:new{
+    who = player,
+    num = num,
+  }
+  return exec(ChangeMaxHp, data)
 end
 
 return { ChangeHp, Damage, LoseHp, Recover, ChangeMaxHp, HpEventWrappers }

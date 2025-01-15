@@ -11,6 +11,7 @@ local function exec(tp, ...)
 end
 
 ---@class GameEvent.Judge : GameEvent
+---@field public data [JudgeData]
 local Judge = GameEvent:subclass("GameEvent.Judge")
 function Judge:main()
   local data = table.unpack(self.data)
@@ -18,7 +19,7 @@ function Judge:main()
   local logic = room.logic
   local who = data.who
 
-  data.isJudgeEvent = true
+  -- data.isJudgeEvent = true
   logic:trigger(fk.StartJudge, who, data)
   data.card = data.card or Fk:getCardById(room:getNCards(1)[1])
 

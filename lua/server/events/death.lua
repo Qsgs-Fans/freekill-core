@@ -131,30 +131,24 @@ function DeathEventWrappers:killPlayer(deathDataSpec)
 end
 
 ---@class GameEvent.Revive : GameEvent
----@field data [ServerPlayer, boolean?, string?]
+---@field data [ReviveData]
 local Revive = GameEvent:subclass("GameEvent.Revive")
 function Revive:main()
   local room = self.room
-  local player, sendLog, reason = table.unpack(self.data)
+  local data = table.unpack(self.data)
 
-  if not player.dead then return end
-  room:setPlayerProperty(player, "dead", false)
-  player._splayer:setDied(false)
-  room:setPlayerProperty(player, "dying", false)
-  room:setPlayerProperty(player, "hp", player.maxHp)
-  table.insertIfNeed(room.alive_players, player)
+  if not data.who.dead then return end
+  room:setPlayerProperty(data.who, "dead", false)
+  data.who._splayer:setDied(false)
+  room:setPlayerProperty(data.who, "dying", false)
+  room:setPlayerProperty(data.who, "hp", data.who.maxHp)
+  table.insertIfNeed(room.alive_players, data.who)
 
-  sendLog = (sendLog == nil) and true or sendLog
-  if sendLog then
-    room:sendLog { type = "#Revive", from = player.id }
+  if data.send_log then
+    room:sendLog { type = "#Revive", from = data.who.id }
   end
 
-  reason = reason or ""
-  local data = ReviveData:new{
-    who = player,
-    reason = reason
-  }
-  room.logic:trigger(fk.AfterPlayerRevived, player, data)
+  room.logic:trigger(fk.AfterPlayerRevived, data.who, data)
 end
 
 --- 复活一个角色
@@ -162,7 +156,14 @@ end
 ---@param sendLog? boolean? @ 是否播放战报
 ---@param reason? string? @ 复活原因
 function DeathEventWrappers:revivePlayer(player, sendLog, reason)
-  return exec(Revive, player, sendLog, reason)
+  sendLog = (sendLog == nil) and true or sendLog
+  reason = reason or ""
+  local data = ReviveData:new{
+    who = player,
+    reason = reason,
+    send_log = sendLog
+  }
+  return exec(Revive, data)
 end
 
 return { Dying, Death, Revive, DeathEventWrappers }

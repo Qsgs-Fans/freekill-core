@@ -51,7 +51,8 @@ fk.BuryVictim = DeathEvent:subclass("fk.BuryVictim")
 --- ReviveData 描述和复活事件有关的数据
 ---@class ReviveDataSpec
 ---@field public who ServerPlayer @ 复活角色
----@field public reason? string @ 复活角色的原因
+---@field public reason string @ 复活角色的原因
+---@field public send_log? boolean @ 是否发送战报
 
 --- 描述和复活事件有关的数据
 ---@class ReviveData: ReviveDataSpec, TriggerData

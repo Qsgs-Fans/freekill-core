@@ -208,7 +208,12 @@ function ServerPlayer:changePhase(from_phase, to_phase)
     table.remove(self.phases, 1)
   end
 
-  GameEvent.Phase:create(self, self.phase):exec()
+  local data = { ---@type PhaseDataSpec
+    who = self,
+    reason = "game_rule",
+    phase = self.phase -- FIXME: 等待拆分
+  }
+  GameEvent.Phase:create(PhaseData:new(data)):exec()
 
   return false
 end
@@ -251,7 +256,12 @@ function ServerPlayer:gainAnExtraPhase(phase, delay)
       arg = Util.PhaseStrMapper(phase),
     }
 
-    GameEvent.Phase:create(self, self.phase):exec()
+    local data = { ---@type PhaseDataSpec
+      who = self,
+      reason = "game_rule",
+      phase = self.phase -- FIXME: 等待拆分
+    }
+    GameEvent.Phase:create(PhaseData:new(data)):exec()
 
     phase_change = {
       from = phase,
@@ -335,7 +345,12 @@ function ServerPlayer:play(phase_table)
     end
 
     if (not skip) or (cancel_skip) then
-      GameEvent.Phase:create(self, self.phase):exec()
+      local data = { ---@type PhaseDataSpec
+        who = self,
+        reason = "game_rule",
+        phase = self.phase -- FIXME: 等待拆分
+      }
+      GameEvent.Phase:create(PhaseData:new(data)):exec()
     else
       room:sendLog{
         type = "#PhaseSkipped",
@@ -382,12 +397,13 @@ end
 --- 获得一个额外回合
 ---@param delay? boolean @ 是否延迟到当前回合结束再开启额外回合，默认是
 ---@param skillName? string @ 额外回合原因
----@param turnData? TurnStruct @ 额外回合的信息
+---@param turnData? TurnDataSpec @ 额外回合的信息
 function ServerPlayer:gainAnExtraTurn(delay, skillName, turnData)
   local room = self.room
   delay = (delay == nil) and true or delay
   skillName = skillName or room.logic:getCurrentSkillName() or "game_rule"
   turnData = turnData or {}
+  turnData.who = self
   turnData.reason = skillName
   if delay then
     local turn = room.logic:getCurrentEvent():findParent(GameEvent.Turn, true)
@@ -407,7 +423,7 @@ function ServerPlayer:gainAnExtraTurn(delay, skillName, turnData)
 
   room:addTableMark(self, "_extra_turn_count", skillName)
 
-  GameEvent.Turn:create(self, turnData):exec()
+  GameEvent.Turn:create(TurnData:new(turnData)):exec()
 
   local mark = self:getTableMark("_extra_turn_count")
   if #mark > 0 then

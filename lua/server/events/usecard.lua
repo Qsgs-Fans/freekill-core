@@ -891,9 +891,15 @@ function UseCardEventWrappers:handleCardEffect(event, cardEffectData)
     Fk.currentResponsePattern = nil
   elseif event == fk.CardEffecting then
     if cardEffectData.card.skill then
-      exec(GameEvent.SkillEffect, function ()
-        cardEffectData.card.skill:onEffect(self, cardEffectData)
-      end, self:getPlayerById(cardEffectData.from), cardEffectData.card.skill)
+      local data = { ---@type SkillEffectDataSpec
+        who = self:getPlayerById(cardEffectData.from),
+        skill = cardEffectData.card.skill,
+        skill_cb = function ()
+          cardEffectData.card.skill:onEffect(self, cardEffectData)
+        end,
+        skill_data = Util.DummyTable
+      }
+      exec(GameEvent.SkillEffect, SkillEffectData:new(data))
     end
   end
 end
