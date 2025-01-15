@@ -105,7 +105,7 @@ end
 local Round = GameEvent:subclass("GameEvent.Round")
 
 function Round:action()
-  -- local data = table.unpack(self.data)
+  local data = table.unpack(self.data)
   local room = self.room
   -- local currentPlayer
 
@@ -139,6 +139,7 @@ end
 function Round:main()
   local room = self.room
   local logic = room.logic
+  local data = table.unpack(self.data)
 
   local isFirstRound = room:getTag("FirstRound")
   if isFirstRound then
@@ -159,13 +160,13 @@ function Round:main()
   end
 
   if isFirstRound then
-    logic:trigger(fk.GameStart, room.current)
+    logic:trigger(fk.GameStart, room.current, data)
   end
 
-  logic:trigger(fk.RoundStart, room.current)
+  logic:trigger(fk.RoundStart, room.current, data)
   self:action()
-  logic:trigger(fk.RoundEnd, room.current)
-  logic:trigger(fk.AfterRoundEnd, room.current)
+  logic:trigger(fk.RoundEnd, room.current, data)
+  logic:trigger(fk.AfterRoundEnd, room.current, data)
 end
 
 function Round:clear()
@@ -196,14 +197,13 @@ function Round:clear()
 end
 
 ---@class GameEvent.Turn : GameEvent
----@field public data [ServerPlayer, TurnData]
+---@field public data [TurnData]
 local Turn = GameEvent:subclass("GameEvent.Turn")
 function Turn:prepare()
   local room = self.room
   local logic = room.logic
-  local player = self.data[1]
-  if self.data[2] == nil then self.data[2] = {} end
-  local data = self.data[2]
+  local data = table.unpack(self.data)
+  local player = data.who
   data.reason = data.reason or "game_rule"
 
   if player.rest > 0 and player.rest < 999 then
@@ -233,8 +233,8 @@ end
 
 function Turn:main()
   local room = self.room
-  local player = self.data[1]
-  local data = self.data[2]
+  local data = table.unpack(self.data)
+  local player = data.who
   player.phase = Player.PhaseNone
   room.logic:trigger(fk.TurnStart, player, data)
   player.phase = Player.NotActive
@@ -243,8 +243,8 @@ end
 
 function Turn:clear()
   local room = self.room
-  local current = self.data[1]
-  local data = self.data[2]
+  local data = table.unpack(self.data)
+  local current = data.who
 
   local logic = room.logic
   if self.interrupted then
@@ -252,10 +252,10 @@ function Turn:clear()
       local current_phase = current.phase
       current.phase = Player.PhaseNone
       logic:trigger(fk.EventPhaseChanging, current,
-        { from = current_phase, to = Player.NotActive }, true)
+        { from = current_phase, to = Player.NotActive }, true) -- FIXME: 等待规范化 
       current.phase = Player.NotActive
       room:broadcastProperty(current, "phase")
-      logic:trigger(fk.EventPhaseStart, current, nil, true)
+      logic:trigger(fk.EventPhaseStart, current, data, true)
     end
 
     current.skipped_phases = {}
@@ -293,13 +293,14 @@ function Turn:clear()
 end
 
 ---@class GameEvent.Phase : GameEvent
----@field public data [ServerPlayer, PhaseData]
+---@field public data [PhaseData]
 local Phase = GameEvent:subclass("GameEvent.Phase")
 function Phase:main()
   local room = self.room
   local logic = room.logic
+  local data = table.unpack(self.data)
+  local player = data.who
 
-  local player = self.data[1]
   if not logic:trigger(fk.EventPhaseStart, player) then
     if player.phase ~= Player.NotActive then
       logic:trigger(fk.EventPhaseProceeding, player)
@@ -341,9 +342,7 @@ function Phase:main()
       end,
       [Player.Draw] = function()
         if player._phase_end then return end
-        local data = {
-          n = 2
-        }
+        data.n = 2 -- FIXME: 等待阶段拆分
         room.logic:trigger(fk.DrawNCards, player, data)
         if data.n > 0 then
           room:drawCards(player, data.n, "phase_draw")
@@ -395,12 +394,13 @@ end
 
 function Phase:clear()
   local room = self.room
-  local player = self.data[1]
   local logic = room.logic
+  local data = table.unpack(self.data)
+  local player = data.who
 
   if player.phase ~= Player.NotActive then
-    logic:trigger(fk.EventPhaseEnd, player, nil, self.interrupted)
-    logic:trigger(fk.AfterPhaseEnd, player, nil, self.interrupted)
+    logic:trigger(fk.EventPhaseEnd, player, data, self.interrupted)
+    logic:trigger(fk.AfterPhaseEnd, player, data, self.interrupted)
   else
     player.skipped_phases = {}
   end
