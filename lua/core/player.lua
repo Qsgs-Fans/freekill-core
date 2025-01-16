@@ -438,6 +438,7 @@ function Player:getEquipments(cardSubtype)
 end
 
 --- 获取玩家手牌上限。
+---@return integer
 function Player:getMaxCards()
   local baseValue = math.max(self.hp, 0)
 
@@ -461,13 +462,18 @@ function Player:getMaxCards()
 end
 
 --- 获取玩家攻击范围。
+---@return integer
 function Player:getAttackRange()
   local baseValue = 1
-  local weapons = self:getEquipments(Card.SubtypeWeapon)
+
+  local weapons = table.filter(self:getEquipments(Card.SubtypeWeapon), function (id)
+    local weapon = Fk:getCardById(id)---@class Weapon
+    return weapon:AvailableAttackRange(self)
+  end)
   if #weapons > 0 then
     baseValue = 0
     for _, id in ipairs(weapons) do
-      local weapon = Fk:getCardById(id)
+      local weapon = Fk:getCardById(id)---@class Weapon
       baseValue = math.max(baseValue, weapon:getAttackRange(self) or 1)
     end
   end
@@ -575,7 +581,7 @@ function Player:distanceTo(other, mode, ignore_dead)
   return math.max(ret, 1)
 end
 
---- 比较距离
+--- 比较距离（排除移出游戏（-1），故一般仅当<与<=时使用此函数有价值）
 ---@param other Player @ 终点角色
 ---@param num integer @ 比较基准
 ---@param operator "<"|">"|"<="|">="|"=="|"~=" @ 运算符

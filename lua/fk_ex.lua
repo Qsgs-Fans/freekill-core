@@ -100,7 +100,7 @@ function fk.readStatusSpecToSkill(skill, spec)
 end
 
 ---@class SkillSpec
----@field public name string @ 技能名
+---@field public name? string @ 技能名
 ---@field public frequency? Frequency @ 技能发动的频繁程度，通常compulsory（锁定技）及limited（限定技）用的多。
 ---@field public mute? boolean @ 决定是否关闭技能配音
 ---@field public no_indicate? boolean @ 决定是否关闭技能指示线
@@ -115,6 +115,16 @@ end
 
 ---@class SkillSkeleton : Object, SkillSpec
 ---@field public effect_list ([any, any, any])[]
+---@field public ai_list ([string, string, any])[]
+---@field public tests fun()[]
+---@field public addEffect fun(self: SkillSkeleton, key: 'distance', attribute: nil, data: DistanceSpec)
+---@field public addEffect fun(self: SkillSkeleton, key: 'prohibit', attribute: nil, data: ProhibitSpec)
+---@field public addEffect fun(self: SkillSkeleton, key: 'atkrange', attribute: nil, data: AttackRangeSpec)
+---@field public addEffect fun(self: SkillSkeleton, key: 'maxcards', attribute: nil, data: MaxCardsSpec)
+---@field public addEffect fun(self: SkillSkeleton, key: 'targetmod', attribute: nil, data: TargetModSpec)
+---@field public addEffect fun(self: SkillSkeleton, key: 'filter', attribute: nil, data: FilterSpec)
+---@field public addEffect fun(self: SkillSkeleton, key: 'invalidity', attribute: nil, data: InvaliditySpec)
+---@field public addEffect fun(self: SkillSkeleton, key: 'visibility', attribute: nil, data: VisibilitySpec)
 local SkillSkeleton = class("SkillSkeleton")
 
 ---@param spec SkillSpec
@@ -123,10 +133,17 @@ function SkillSkeleton:initialize(spec)
   self.frequency = spec.frequency or Skill.NotFrequent
   fk.readCommonSpecToSkill(self, spec)
   self.effect_list = {}
+  self.tests = {}
 end
 
 function SkillSkeleton:addEffect(key, attribute, data)
   table.insert(self.effect_list, { key, attribute, data })
+  return self
+end
+
+---@param fn fun()
+function SkillSkeleton:addTest(fn)
+  table.insert(self.tests, fn)
   return self
 end
 
@@ -139,7 +156,23 @@ function SkillSkeleton:createSkill()
     local k, attr, data = table.unpack(effect)
     attr = attr or Util.DummyTable
     local sk
-    if k == 'foo' then
+    if k == 'distance' then
+      sk = self:createDistanceSkill(skill, i, k, attr, data)
+    elseif k == 'prohibit' then
+      sk = self:createProhibitSkill(skill, i, k, attr, data)
+    elseif k == 'atkrange' then
+      sk = self:createAttackRangeSkill(skill, i, k, attr, data)
+    elseif k == 'maxcards' then
+      sk = self:createMaxCardsSkill(skill, i, k, attr, data)
+    elseif k == 'targetmod' then
+      sk = self:createTargetModSkill(skill, i, k, attr, data)
+    elseif k == 'filter' then
+      sk = self:createFilterSkill(skill, i, k, attr, data)
+    elseif k == 'invalidity' then
+      sk = self:createInvaliditySkill(skill, i, k, attr, data)
+    elseif k == 'visibility' then
+      sk = self:createVisibilitySkill(skill, i, k, attr, data)
+    elseif k == 'foo' then
     elseif k == 'bar' then
     else
       sk = self:createTriggerSkill(skill, i, k, attr, data)
@@ -177,7 +210,7 @@ end
 ---@param idx integer
 ---@param key TriggerEvent
 ---@param attr TrigSkelAttribute
----@param spec TrigSkelSpec
+---@param spec TrigSkelSpec<TrigFunc>
 ---@return TriggerSkill
 function SkillSkeleton:createTriggerSkill(skill, idx, key, attr, spec)
   local new_name = string.format("#%s_%d_trig", skill.name, idx)
@@ -223,6 +256,163 @@ function SkillSkeleton:createTriggerSkill(skill, idx, key, attr, spec)
   return sk
 end
 
+---@param key 'distance'
+---@param spec DistanceSpec
+---@return DistanceSkill
+function SkillSkeleton:createDistanceSkill(skill, idx, key, attr, spec)
+  assert(type(spec.correct_func) == "function" or type(spec.fixed_func) == "function")
+  local new_name = string.format("#%s_%d_distance", skill.name, idx)
+  Fk:loadTranslationTable({ [new_name] = Fk:translate(skill.name) }, Config.language)
+
+  local sk = DistanceSkill:new(new_name)
+  fk.readStatusSpecToSkill(sk, spec)
+  sk.getCorrect = spec.correct_func
+  sk.getFixed = spec.fixed_func
+
+  return sk
+end
+
+---@param spec ProhibitSpec
+---@return ProhibitSkill
+function SkillSkeleton:createProhibitSkill(skill, idx, key, attr, spec)
+  local new_name = string.format("#%s_%d_prohibit", skill.name, idx)
+  Fk:loadTranslationTable({ [new_name] = Fk:translate(skill.name) }, Config.language)
+
+  local sk = ProhibitSkill:new(new_name)
+  fk.readStatusSpecToSkill(sk, spec)
+  sk.isProhibited = spec.is_prohibited or sk.isProhibited
+  sk.prohibitUse = spec.prohibit_use or sk.prohibitUse
+  sk.prohibitResponse = spec.prohibit_response or sk.prohibitResponse
+  sk.prohibitDiscard = spec.prohibit_discard or sk.prohibitDiscard
+  sk.prohibitPindian = spec.prohibit_pindian or sk.prohibitPindian
+
+  return sk
+end
+
+---@param spec AttackRangeSpec
+---@return AttackRangeSkill
+function SkillSkeleton:createAttackRangeSkill(_skill, idx, key, attr, spec)
+  assert(type(spec.correct_func) == "function" or type(spec.fixed_func) == "function" or
+    type(spec.within_func) == "function" or type(spec.without_func) == "function")
+  local new_name = string.format("#%s_%d_atkrange", _skill.name, idx)
+  Fk:loadTranslationTable({ [new_name] = Fk:translate(_skill.name) }, Config.language)
+
+  local skill = AttackRangeSkill:new(new_name)
+  fk.readStatusSpecToSkill(skill, spec)
+  if spec.correct_func then
+    skill.getCorrect = spec.correct_func
+  end
+  if spec.fixed_func then
+    skill.getFixed = spec.fixed_func
+  end
+  if spec.within_func then
+    skill.withinAttackRange = spec.within_func
+  end
+  if spec.without_func then
+    skill.withoutAttackRange = spec.without_func
+  end
+
+  return skill
+end
+
+---@param spec MaxCardsSpec
+---@return MaxCardsSkill
+function SkillSkeleton:createMaxCardsSkill(_skill, idx, key, attr, spec)
+  assert(type(spec.correct_func) == "function" or type(spec.fixed_func) == "function" or type(spec.exclude_from) == "function")
+  local new_name = string.format("#%s_%d_maxcards", _skill.name, idx)
+  Fk:loadTranslationTable({ [new_name] = Fk:translate(_skill.name) }, Config.language)
+
+  local skill = MaxCardsSkill:new(new_name)
+  fk.readStatusSpecToSkill(skill, spec)
+  if spec.correct_func then
+    skill.getCorrect = spec.correct_func
+  end
+  if spec.fixed_func then
+    skill.getFixed = spec.fixed_func
+  end
+  skill.excludeFrom = spec.exclude_from or skill.excludeFrom
+
+  return skill
+end
+
+---@param spec TargetModSpec
+---@return TargetModSkill
+function SkillSkeleton:createTargetModSkill(_skill, idx, key, attr, spec)
+  local new_name = string.format("#%s_%d_targetmod", _skill.name, idx)
+  Fk:loadTranslationTable({ [new_name] = Fk:translate(_skill.name) }, Config.language)
+
+  local skill = TargetModSkill:new(new_name)
+  fk.readStatusSpecToSkill(skill, spec)
+  if spec.bypass_times then
+    skill.bypassTimesCheck = spec.bypass_times
+  end
+  if spec.residue_func then
+    skill.getResidueNum = spec.residue_func
+  end
+  if spec.bypass_distances then
+    skill.bypassDistancesCheck = spec.bypass_distances
+  end
+  if spec.distance_limit_func then
+    skill.getDistanceLimit = spec.distance_limit_func
+  end
+  if spec.extra_target_func then
+    skill.getExtraTargetNum = spec.extra_target_func
+  end
+  if spec.target_tip_func then
+    skill.getTargetTip = spec.target_tip_func
+  end
+
+  return skill
+end
+
+---@param spec FilterSpec
+---@return FilterSkill
+function SkillSkeleton:createFilterSkill(_skill, idx, key, attr, spec)
+  local new_name = string.format("#%s_%d_filter", _skill.name, idx)
+  Fk:loadTranslationTable({ [new_name] = Fk:translate(_skill.name) }, Config.language)
+
+  local skill = FilterSkill:new(new_name)
+  fk.readStatusSpecToSkill(skill, spec)
+  skill.cardFilter = spec.card_filter
+  skill.viewAs = spec.view_as
+  skill.equipSkillFilter = spec.equip_skill_filter
+
+  return skill
+end
+
+---@param spec InvaliditySpec
+---@return InvaliditySkill
+function SkillSkeleton:createInvaliditySkill(_skill, idx, key, attr, spec)
+  local new_name = string.format("#%s_%d_invalidity", _skill.name, idx)
+  Fk:loadTranslationTable({ [new_name] = Fk:translate(_skill.name) }, Config.language)
+
+  local skill = InvaliditySkill:new(new_name)
+  fk.readStatusSpecToSkill(skill, spec)
+
+  if spec.invalidity_func then
+    skill.getInvalidity = spec.invalidity_func
+  end
+  if spec.invalidity_attackrange then
+    skill.getInvalidityAttackRange = spec.invalidity_attackrange
+  end
+
+  return skill
+end
+
+---@param spec VisibilitySpec
+---@return VisibilitySkill
+function SkillSkeleton:createVisibilitySkill(_skill, idx, key, attr, spec)
+  local new_name = string.format("#%s_%d_visibility", _skill.name, idx)
+  Fk:loadTranslationTable({ [new_name] = Fk:translate(_skill.name) }, Config.language)
+
+  local skill = VisibilitySkill:new(new_name)
+  fk.readStatusSpecToSkill(skill, spec)
+  if spec.card_visible then skill.cardVisible = spec.card_visible end
+  if spec.role_visible then skill.roleVisible = spec.role_visible end
+
+  return skill
+end
+
 ---@param spec SkillSpec
 ---@return SkillSkeleton
 function fk.CreateSkill(spec)
@@ -265,47 +455,6 @@ end
 ---@field public interaction? any
 ---@field public target_tip? fun(self: ActiveSkill, to_select: integer, selected: integer[], selected_cards: integer[], card?: Card, selectable: boolean, extra_data: any): string|TargetTipDataSpec?
 
----@param spec ActiveSkillSpec
----@return ActiveSkill
-function fk.CreateActiveSkill(spec)
-  assert(type(spec.name) == "string")
-  local skill = ActiveSkill:new(spec.name, spec.frequency or Skill.NotFrequent)
-  fk.readUsableSpecToSkill(skill, spec)
-
-  if spec.can_use then
-    skill.canUse = function(curSkill, player, card, extra_data)
-      return spec.can_use(curSkill, player, card, extra_data) and curSkill:isEffectable(player)
-    end
-  end
-  if spec.card_filter then skill.cardFilter = spec.card_filter end
-  if spec.target_filter then skill.targetFilter = spec.target_filter end
-  if spec.mod_target_filter then skill.modTargetFilter = spec.mod_target_filter end
-  if spec.feasible then
-    -- print(spec.name .. ": feasible is deprecated. Use target_num and card_num instead.")
-    skill.feasible = spec.feasible
-  end
-  if spec.on_use then skill.onUse = spec.on_use end
-  if spec.on_action then skill.onAction = spec.on_action end
-  if spec.about_to_effect then skill.aboutToEffect = spec.about_to_effect end
-  if spec.on_effect then skill.onEffect = spec.on_effect end
-  if spec.on_nullified then skill.onNullified = spec.on_nullified end
-  if spec.prompt then skill.prompt = spec.prompt end
-  if spec.target_tip then skill.targetTip = spec.target_tip end
-
-  if spec.interaction then
-    skill.interaction = setmetatable({}, {
-      __call = function()
-        if type(spec.interaction) == "function" then
-          return spec.interaction(skill)
-        else
-          return spec.interaction
-        end
-      end,
-    })
-  end
-  return skill
-end
-
 ---@class ViewAsSkillSpec: UsableSkillSpec
 ---@field public card_filter? fun(self: ViewAsSkill, to_select: integer, selected: integer[]): any
 ---@field public view_as fun(self: ViewAsSkill, cards: integer[]): Card?
@@ -317,74 +466,9 @@ end
 ---@field public prompt? string|fun(self: ActiveSkill, selected_cards: integer[], selected: integer[]): string
 ---@field public interaction? any
 
----@param spec ViewAsSkillSpec
----@return ViewAsSkill
-function fk.CreateViewAsSkill(spec)
-  assert(type(spec.name) == "string")
-  assert(type(spec.view_as) == "function")
-
-  local skill = ViewAsSkill:new(spec.name, spec.frequency or Skill.NotFrequent)
-  fk.readUsableSpecToSkill(skill, spec)
-
-  skill.viewAs = spec.view_as
-  if spec.card_filter then
-    skill.cardFilter = spec.card_filter
-  end
-  if type(spec.pattern) == "string" then
-    skill.pattern = spec.pattern
-  end
-  if type(spec.enabled_at_play) == "function" then
-    skill.enabledAtPlay = function(curSkill, player)
-      return spec.enabled_at_play(curSkill, player) and curSkill:isEffectable(player)
-    end
-  end
-  if type(spec.enabled_at_response) == "function" then
-    skill.enabledAtResponse = function(curSkill, player, cardResponsing)
-      return spec.enabled_at_response(curSkill, player, cardResponsing) and curSkill:isEffectable(player)
-    end
-  end
-  if spec.prompt then skill.prompt = spec.prompt end
-
-  if spec.interaction then
-    skill.interaction = setmetatable({}, {
-      __call = function()
-        if type(spec.interaction) == "function" then
-          return spec.interaction(skill)
-        else
-          return spec.interaction
-        end
-      end,
-    })
-  end
-
-  if spec.before_use and type(spec.before_use) == "function" then
-    skill.beforeUse = spec.before_use
-  end
-
-  if spec.after_use and type(spec.after_use) == "function" then
-    skill.afterUse = spec.after_use
-  end
-
-  return skill
-end
-
 ---@class DistanceSpec: StatusSkillSpec
 ---@field public correct_func? fun(self: DistanceSkill, from: Player, to: Player): integer?
 ---@field public fixed_func? fun(self: DistanceSkill, from: Player, to: Player): integer?
-
----@param spec DistanceSpec
----@return DistanceSkill
-function fk.CreateDistanceSkill(spec)
-  assert(type(spec.name) == "string")
-  assert(type(spec.correct_func) == "function" or type(spec.fixed_func) == "function")
-
-  local skill = DistanceSkill:new(spec.name)
-  fk.readStatusSpecToSkill(skill, spec)
-  skill.getCorrect = spec.correct_func
-  skill.getFixed = spec.fixed_func
-
-  return skill
-end
 
 ---@class ProhibitSpec: StatusSkillSpec
 ---@field public is_prohibited? fun(self: ProhibitSkill, from: Player, to: Player, card: Card): any
@@ -393,76 +477,16 @@ end
 ---@field public prohibit_discard? fun(self: ProhibitSkill, player: Player, card: Card): any
 ---@field public prohibit_pindian? fun(self: ProhibitSkill, from: Player, to: Player): any
 
----@param spec ProhibitSpec
----@return ProhibitSkill
-function fk.CreateProhibitSkill(spec)
-  assert(type(spec.name) == "string")
-
-  local skill = ProhibitSkill:new(spec.name)
-  fk.readStatusSpecToSkill(skill, spec)
-  skill.isProhibited = spec.is_prohibited or skill.isProhibited
-  skill.prohibitUse = spec.prohibit_use or skill.prohibitUse
-  skill.prohibitResponse = spec.prohibit_response or skill.prohibitResponse
-  skill.prohibitDiscard = spec.prohibit_discard or skill.prohibitDiscard
-  skill.prohibitPindian = spec.prohibit_pindian or skill.prohibitPindian
-
-  return skill
-end
-
 ---@class AttackRangeSpec: StatusSkillSpec
 ---@field public correct_func? fun(self: AttackRangeSkill, from: Player, to: Player): number?
----@field public fixed_func? fun(self: AttackRangeSkill, player: Player): number?
----@field public within_func? fun(self: AttackRangeSkill, from: Player, to: Player): any
----@field public without_func? fun(self: AttackRangeSkill, from: Player, to: Player): any
-
----@param spec AttackRangeSpec
----@return AttackRangeSkill
-function fk.CreateAttackRangeSkill(spec)
-  assert(type(spec.name) == "string")
-  assert(type(spec.correct_func) == "function" or type(spec.fixed_func) == "function" or
-    type(spec.within_func) == "function" or type(spec.without_func) == "function")
-
-  local skill = AttackRangeSkill:new(spec.name)
-  fk.readStatusSpecToSkill(skill, spec)
-  if spec.correct_func then
-    skill.getCorrect = spec.correct_func
-  end
-  if spec.fixed_func then
-    skill.getFixed = spec.fixed_func
-  end
-  if spec.within_func then
-    skill.withinAttackRange = spec.within_func
-  end
-  if spec.without_func then
-    skill.withoutAttackRange = spec.without_func
-  end
-
-  return skill
-end
+---@field public fixed_func? fun(self: AttackRangeSkill, player: Player): number?  @ 判定角色的锁定攻击范围初值
+---@field public within_func? fun(self: AttackRangeSkill, from: Player, to: Player): any @ 判定to角色是否锁定在角色from攻击范围内
+---@field public without_func? fun(self: AttackRangeSkill, from: Player, to: Player): any @ 判定to角色是否锁定在角色from攻击范围外
 
 ---@class MaxCardsSpec: StatusSkillSpec
 ---@field public correct_func? fun(self: MaxCardsSkill, player: Player): number?
 ---@field public fixed_func? fun(self: MaxCardsSkill, player: Player): number?
 ---@field public exclude_from? fun(self: MaxCardsSkill, player: Player, card: Card): any
-
----@param spec MaxCardsSpec
----@return MaxCardsSkill
-function fk.CreateMaxCardsSkill(spec)
-  assert(type(spec.name) == "string")
-  assert(type(spec.correct_func) == "function" or type(spec.fixed_func) == "function" or type(spec.exclude_from) == "function")
-
-  local skill = MaxCardsSkill:new(spec.name)
-  fk.readStatusSpecToSkill(skill, spec)
-  if spec.correct_func then
-    skill.getCorrect = spec.correct_func
-  end
-  if spec.fixed_func then
-    skill.getFixed = spec.fixed_func
-  end
-  skill.excludeFrom = spec.exclude_from or skill.excludeFrom
-
-  return skill
-end
 
 ---@class TargetModSpec: StatusSkillSpec
 ---@field public bypass_times? fun(self: TargetModSkill, player: Player, skill: ActiveSkill, scope: integer, card?: Card, to?: Player): any
@@ -472,84 +496,18 @@ end
 ---@field public extra_target_func? fun(self: TargetModSkill, player: Player, skill: ActiveSkill, card?: Card): number?
 ---@field public target_tip_func? fun(self: TargetModSkill, player: Player, to_select: integer, selected: integer[], selected_cards: integer[], card?: Card, selectable: boolean, extra_data: any): string|TargetTipDataSpec?
 
----@param spec TargetModSpec
----@return TargetModSkill
-function fk.CreateTargetModSkill(spec)
-  assert(type(spec.name) == "string")
-
-  local skill = TargetModSkill:new(spec.name)
-  fk.readStatusSpecToSkill(skill, spec)
-  if spec.bypass_times then
-    skill.bypassTimesCheck = spec.bypass_times
-  end
-  if spec.residue_func then
-    skill.getResidueNum = spec.residue_func
-  end
-  if spec.bypass_distances then
-    skill.bypassDistancesCheck = spec.bypass_distances
-  end
-  if spec.distance_limit_func then
-    skill.getDistanceLimit = spec.distance_limit_func
-  end
-  if spec.extra_target_func then
-    skill.getExtraTargetNum = spec.extra_target_func
-  end
-  if spec.target_tip_func then
-    skill.getTargetTip = spec.target_tip_func
-  end
-
-  return skill
-end
-
 ---@class FilterSpec: StatusSkillSpec
 ---@field public card_filter? fun(self: FilterSkill, card: Card, player: Player, isJudgeEvent: boolean): any
 ---@field public view_as? fun(self: FilterSkill, card: Card, player: Player): Card?
 ---@field public equip_skill_filter? fun(self: FilterSkill, skill: Skill, player: Player): string?
 
----@param spec FilterSpec
----@return FilterSkill
-function fk.CreateFilterSkill(spec)
-  assert(type(spec.name) == "string")
-
-  local skill = FilterSkill:new(spec.name)
-  fk.readStatusSpecToSkill(skill, spec)
-  skill.cardFilter = spec.card_filter
-  skill.viewAs = spec.view_as
-  skill.equipSkillFilter = spec.equip_skill_filter
-
-  return skill
-end
-
 ---@class InvaliditySpec: StatusSkillSpec
----@field public invalidity_func? fun(self: InvaliditySkill, from: Player, skill: Skill): any
-
----@param spec InvaliditySpec
----@return InvaliditySkill
-function fk.CreateInvaliditySkill(spec)
-  assert(type(spec.name) == "string")
-
-  local skill = InvaliditySkill:new(spec.name)
-  fk.readStatusSpecToSkill(skill, spec)
-  skill.getInvalidity = spec.invalidity_func
-
-  return skill
-end
+---@field public invalidity_func? fun(self: InvaliditySkill, from: Player, skill: Skill): any @ 判定角色的技能是否无效
+---@field public invalidity_attackrange? fun(self: InvaliditySkill, player: Player, card: Weapon): any @ 判定武器的攻击范围是否无效
 
 ---@class VisibilitySpec: StatusSkillSpec
 ---@field public card_visible? fun(self: VisibilitySkill, player: Player, card: Card): any
 ---@field public role_visible? fun(self: VisibilitySkill, player: Player, target: Player): any
-
----@param spec VisibilitySpec
-function fk.CreateVisibilitySkill(spec)
-  assert(type(spec.name) == "string")
-
-  local skill = VisibilitySkill:new(spec.name)
-  fk.readStatusSpecToSkill(skill, spec)
-  if spec.card_visible then skill.cardVisible = spec.card_visible end
-  if spec.role_visible then skill.roleVisible = spec.role_visible end
-
-  return skill
-end
 
 ---@class CardSpec
 ---@field public name string @ 卡牌的名字
@@ -660,7 +618,7 @@ end
 
 ---@class WeaponSpec: EquipCardSpec
 ---@field public attack_range? integer
----@field public dynamic_attack_range? fun(player: Player): int
+---@field public dynamic_attack_range? fun(player: Player): integer
 
 ---@param spec WeaponSpec
 ---@return Weapon
@@ -721,7 +679,16 @@ function fk.CreateTreasure(spec)
   return card
 end
 
----@class GameModeSpec: GameMode
+---@class GameModeSpec
+---@field public name string @ 游戏模式名
+---@field public minPlayer integer @ 最小玩家数
+---@field public maxPlayer integer @ 最大玩家数
+---@field public rule? TriggerSkill @ 规则（通过技能完成，通常用来为特定角色及特定时机提供触发事件）
+---@field public logic? fun(): GameLogic @ 逻辑（通过function完成，通常用来初始化、分配身份及座次）
+---@field public whitelist? string[] | fun(self: GameMode, pkg: Package): boolean? @ 白名单
+---@field public blacklist? string[] | fun(self: GameMode, pkg: Package): boolean? @ 黑名单
+---@field public config_template? GameModeConfigEntry[] 游戏模式的配置页面，如此一个数组
+---@field public main_mode? string @ 主模式名（用于判断此模式是否为某模式的衍生）
 ---@field public winner_getter? fun(self: GameMode, victim: ServerPlayer): string
 ---@field public surrender_func? fun(self: GameMode, playedTime: number): table
 ---@field public is_counted? fun(self: GameMode, room: Room): boolean

@@ -142,6 +142,16 @@ function Client:getPlayerById(id)
   return nil
 end
 
+---@param seat integer
+---@return ClientPlayer
+function Client:getPlayerBySeat(seat)
+  if seat == Self.seat then return Self end
+  for _, p in ipairs(self.players) do
+    if p.seat == seat then return p end
+  end
+  return nil
+end
+
 ---@param moves CardsMoveStruct[]
 function Client:moveCards(moves)
   for _, data in ipairs(moves) do
@@ -454,7 +464,8 @@ fk.client_callback["AskForCardChosen"] = function(self, data)
   -- jsonData: [ int target_id, string flag, int reason ]
   local id, flag, reason, prompt = data[1], data[2], data[3], data[4]
   local target = self:getPlayerById(id)
-  local hand = target.player_cards[Player.Hand]
+  local hand = table.simpleClone(target.player_cards[Player.Hand])
+  table.shuffle(hand)
   local equip = target.player_cards[Player.Equip]
   local judge = target.player_cards[Player.Judge]
 
@@ -499,7 +510,8 @@ fk.client_callback["AskForCardsChosen"] = function(self, data)
   local id, min, max, flag, reason, prompt = table.unpack(data)
     --data[1], data[2], data[3], data[4], data[5], data[6]
   local target = self:getPlayerById(id)
-  local hand = target.player_cards[Player.Hand]
+  local hand = table.simpleClone(target.player_cards[Player.Hand])
+  table.shuffle(hand)
   local equip = target.player_cards[Player.Equip]
   local judge = target.player_cards[Player.Judge]
 

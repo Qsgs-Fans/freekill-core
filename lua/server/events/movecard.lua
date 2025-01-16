@@ -10,108 +10,30 @@ local function exec(tp, ...)
   return ret
 end
 
+---@param info MoveCardsData | CardsMoveInfo
+local function infoCheck(info)
+  assert(table.contains({ Card.PlayerHand, Card.PlayerEquip, Card.PlayerJudge, Card.PlayerSpecial, Card.Processing, Card.DrawPile, Card.DiscardPile, Card.Void }, info.toArea))
+  assert(info.toArea ~= Card.PlayerSpecial or type(info.specialName) == "string")
+  assert(type(info.moveReason) == "number")
+end
+
 ---@class GameEvent.MoveCards : GameEvent
----@field public data CardsMoveInfo[]
+---@field public data MoveCardsData[]
 local MoveCards = GameEvent:subclass("GameEvent.MoveCards")
 function MoveCards:main()
-  local args = self.data
   local room = self.room
-  ---@type MoveCardsDataSpec[]
-  local moveCardsSpecs = {}
-  local moveCardsData = MoveCardsData:new(moveCardsSpecs)
-  local infoCheck = function(info)
-    assert(table.contains({ Card.PlayerHand, Card.PlayerEquip, Card.PlayerJudge, Card.PlayerSpecial, Card.Processing, Card.DrawPile, Card.DiscardPile, Card.Void }, info.toArea))
-    assert(info.toArea ~= Card.PlayerSpecial or type(info.specialName) == "string")
-    assert(type(info.moveReason) == "number")
-  end
-  for _, cardsMoveInfo in ipairs(args) do
-    if #cardsMoveInfo.ids > 0 then
-      infoCheck(cardsMoveInfo)
-
-      ---@type MoveInfo[]
-      local infos = {}
-      local abortMoveInfos = {}
-      for _, id in ipairs(cardsMoveInfo.ids) do
-        local toAbortDrop = false
-        if cardsMoveInfo.toArea == Card.PlayerEquip and cardsMoveInfo.to then
-          local moveToPlayer = room:getPlayerById(cardsMoveInfo.to)
-          local card = moveToPlayer:getVirualEquip(id) or Fk:getCardById(id)
-          if card.type == Card.TypeEquip and #moveToPlayer:getAvailableEquipSlots(card.sub_type) == 0 then
-            table.insert(abortMoveInfos, {
-              cardId = id,
-              fromArea = room:getCardArea(id),
-              fromSpecialName = cardsMoveInfo.from and room:getPlayerById(cardsMoveInfo.from):getPileNameOfId(id),
-            })
-            toAbortDrop = true
-          end
-        end
-
-        if not toAbortDrop then
-          table.insert(infos, {
-            cardId = id,
-            fromArea = room:getCardArea(id),
-            fromSpecialName = cardsMoveInfo.from and room:getPlayerById(cardsMoveInfo.from):getPileNameOfId(id),
-          })
-        end
-      end
-
-      if #infos > 0 then
-        ---@type MoveCardsDataSpec
-        local moveCardsSpec = {
-          moveInfo = infos,
-          from = cardsMoveInfo.from,
-          to = cardsMoveInfo.to,
-          toArea = cardsMoveInfo.toArea,
-          moveReason = cardsMoveInfo.moveReason,
-          proposer = cardsMoveInfo.proposer,
-          skillName = cardsMoveInfo.skillName,
-          moveVisible = cardsMoveInfo.moveVisible,
-          specialName = cardsMoveInfo.specialName,
-          specialVisible = cardsMoveInfo.specialVisible,
-          drawPilePosition = cardsMoveInfo.drawPilePosition,
-          moveMark = cardsMoveInfo.moveMark,
-          visiblePlayers = cardsMoveInfo.visiblePlayers,
-        }
-
-        table.insert(moveCardsSpecs, moveCardsSpec)
-      end
-
-      if #abortMoveInfos > 0 then
-        ---@type MoveCardsDataSpec
-        local moveCardsSpec = {
-          moveInfo = abortMoveInfos,
-          from = cardsMoveInfo.from,
-          toArea = Card.DiscardPile,
-          moveReason = fk.ReasonPutIntoDiscardPile,
-          moveVisible = true,
-          --specialName = cardsMoveInfo.specialName,
-          --specialVisible = cardsMoveInfo.specialVisible,
-          --drawPilePosition = cardsMoveInfo.drawPilePosition,
-          --moveMark = cardsMoveInfo.moveMark,
-        }
-
-        table.insert(moveCardsSpecs, moveCardsSpec)
-      end
-    end
-  end
-
-  self.data = moveCardsData
-
-  if #moveCardsSpecs < 1 then
-    return false
-  end
+  local moveCardsData = self.data
 
   if room.logic:trigger(fk.BeforeCardsMove, nil, moveCardsData) then
     room.logic:breakEvent(false)
   end
 
-  room:notifyMoveCards(nil, moveCardsSpecs) --- FIXME: 小心table.clone
+  room:notifyMoveCards(nil, moveCardsData) --- FIXME: 小心table.clone
 
-  for _, data in ipairs(moveCardsSpecs) do
+  for _, data in ipairs(moveCardsData) do
     if #data.moveInfo > 0 then
       infoCheck(data)
 
-      ---@param info MoveInfo
       for _, info in ipairs(data.moveInfo) do
         local realFromArea = room:getCardArea(info.cardId)
         room:applyMoveInfo(data, info)
@@ -171,11 +93,95 @@ function MoveCards:main()
   return true
 end
 
+--- 将一系列移牌信息转化为实际移动牌的数据
+---@param room Room
+---@param ... CardsMoveInfo
+---@return MoveCardsData[]
+local function moveInfoTranslate(room, ...)
+  ---@type MoveCardsData[]
+  local moveCardsSpecs = {}
+  for _, cardsMoveInfo in ipairs({...}) do
+    if #cardsMoveInfo.ids > 0 then
+      infoCheck(cardsMoveInfo)
+
+      ---@type MoveInfo[]
+      local infos = {}
+      local abortMoveInfos = {}
+      for _, id in ipairs(cardsMoveInfo.ids) do
+        local toAbortDrop = false
+        if cardsMoveInfo.toArea == Card.PlayerEquip and cardsMoveInfo.to then
+          local moveToPlayer = room:getPlayerById(cardsMoveInfo.to)
+          local card = moveToPlayer:getVirualEquip(id) or Fk:getCardById(id)
+          if card.type == Card.TypeEquip and #moveToPlayer:getAvailableEquipSlots(card.sub_type) == 0 then
+            table.insert(abortMoveInfos, {
+              cardId = id,
+              fromArea = room:getCardArea(id),
+              fromSpecialName = cardsMoveInfo.from and room:getPlayerById(cardsMoveInfo.from):getPileNameOfId(id),
+            })
+            toAbortDrop = true
+          end
+        end
+
+        if not toAbortDrop then
+          table.insert(infos, {
+            cardId = id,
+            fromArea = room:getCardArea(id),
+            fromSpecialName = cardsMoveInfo.from and room:getPlayerById(cardsMoveInfo.from):getPileNameOfId(id),
+          })
+        end
+      end
+
+      if #infos > 0 then
+        ---@type MoveCardsDataSpec
+        local moveCardsSpec = {
+          moveInfo = infos,
+          from = cardsMoveInfo.from,
+          to = cardsMoveInfo.to,
+          toArea = cardsMoveInfo.toArea,
+          moveReason = cardsMoveInfo.moveReason,
+          proposer = cardsMoveInfo.proposer,
+          skillName = cardsMoveInfo.skillName,
+          moveVisible = cardsMoveInfo.moveVisible,
+          specialName = cardsMoveInfo.specialName,
+          specialVisible = cardsMoveInfo.specialVisible,
+          drawPilePosition = cardsMoveInfo.drawPilePosition,
+          moveMark = cardsMoveInfo.moveMark,
+          visiblePlayers = cardsMoveInfo.visiblePlayers,
+        }
+
+        table.insert(moveCardsSpecs, MoveCardsData:new(moveCardsSpec))
+      end
+
+      if #abortMoveInfos > 0 then
+        ---@type MoveCardsDataSpec
+        local moveCardsSpec = {
+          moveInfo = abortMoveInfos,
+          from = cardsMoveInfo.from,
+          toArea = Card.DiscardPile,
+          moveReason = fk.ReasonPutIntoDiscardPile,
+          moveVisible = true,
+          --specialName = cardsMoveInfo.specialName,
+          --specialVisible = cardsMoveInfo.specialVisible,
+          --drawPilePosition = cardsMoveInfo.drawPilePosition,
+          --moveMark = cardsMoveInfo.moveMark,
+        }
+
+        table.insert(moveCardsSpecs, MoveCardsData:new(moveCardsSpec))
+      end
+    end
+  end
+  return moveCardsSpecs
+end
+
 --- 传入一系列移牌信息，去实际移动这些牌
 ---@vararg CardsMoveInfo
 ---@return boolean?
 function MoveEventWrappers:moveCards(...)
-  return exec(MoveCards, ...)
+  local datas = moveInfoTranslate(self, ...)
+  if #datas < 1 then
+    return false
+  end
+  return exec(MoveCards, table.unpack(datas))
 end
 
 --- 让一名玩家获得一张牌
@@ -196,7 +202,7 @@ end
 ---@param player ServerPlayer @ 摸牌的玩家
 ---@param num integer @ 摸牌数
 ---@param skillName? string @ 技能名
----@param fromPlace? DrawPilePos @ 摸牌的位置
+---@param fromPlace? DrawPilePos @ 摸牌的位置，默认牌堆顶
 ---@param moveMark? table|string @ 移动后自动赋予标记，格式：{标记名(支持-inarea后缀，移出值代表区域后清除), 值}
 ---@return integer[] @ 摸到的牌
 function MoveEventWrappers:drawCards(player, num, skillName, fromPlace, moveMark)
@@ -204,7 +210,7 @@ function MoveEventWrappers:drawCards(player, num, skillName, fromPlace, moveMark
     who = player,
     num = num,
     skillName = skillName,
-    fromPlace = fromPlace,
+    fromPlace = fromPlace or "top",
   }
   if self.logic:trigger(fk.BeforeDrawCard, player, drawData) then
     return {}

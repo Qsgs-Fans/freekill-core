@@ -891,9 +891,15 @@ function UseCardEventWrappers:handleCardEffect(event, cardEffectData)
     Fk.currentResponsePattern = nil
   elseif event == fk.CardEffecting then
     if cardEffectData.card.skill then
-      exec(GameEvent.SkillEffect, function ()
-        cardEffectData.card.skill:onEffect(self, cardEffectData)
-      end, self:getPlayerById(cardEffectData.from), cardEffectData.card.skill)
+      local data = { ---@type SkillEffectDataSpec
+        who = self:getPlayerById(cardEffectData.from),
+        skill = cardEffectData.card.skill,
+        skill_cb = function ()
+          cardEffectData.card.skill:onEffect(self, cardEffectData)
+        end,
+        skill_data = Util.DummyTable
+      }
+      exec(GameEvent.SkillEffect, SkillEffectData:new(data))
     end
   end
 end
@@ -904,6 +910,7 @@ function UseCardEventWrappers:responseCard(responseCardData)
   return exec(RespondCard, RespondCardData:new(responseCardData))
 end
 
+--- 令角色对某些目标使用虚拟卡牌，会检测使用和目标合法性。不合法则返回nil
 ---@param card_name string @ 想要视为使用的牌名
 ---@param subcards? integer[] @ 子卡，可以留空或者直接nil
 ---@param from ServerPlayer @ 使用来源
@@ -913,18 +920,19 @@ end
 ---@return UseCardDataSpec | false
 function UseCardEventWrappers:useVirtualCard(card_name, subcards, from, tos, skillName, extra)
   local card = Fk:cloneCard(card_name)
-  card.skillName = skillName
+  if skillName then card.skillName = skillName end
 
-  if from:prohibitUse(card) then return false end
+  if from:prohibitUse(card) then return nil end
 
   if tos.class then tos = { tos } end
-  for i, p in ipairs(tos) do
+  for i = #tos, 1, -1 do
+    local p = tos[i]
     if from:isProhibited(p, card) then
       table.remove(tos, i)
     end
   end
 
-  if #tos == 0 then return false end
+  if #tos == 0 then return nil end
 
   if subcards then card:addSubcards(Card:getIdList(subcards)) end
 

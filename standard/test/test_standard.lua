@@ -1,32 +1,25 @@
-TestStandard = { setup = InitRoom, tearDown = ClearRoom }
+TestStandard = { setup = FkTest.initRoom, tearDown = FkTest.clearRoom }
 
-function TestStandard:testJianxiong()
-  local room = LRoom
-  local me, comp2 = room.players[1], room.players[2]
-  RunInRoom(function() room:handleAddLoseSkills(me, "jianxiong") end)
-
-  local slash = Fk:getCardById(1)
-  SetNextReplies(me, { "__cancel", "1" })
-  RunInRoom(function()
-    room:useCard{
-      from = comp2.id,
-      tos = { { me.id } },
-      card = slash,
-    }
-  end)
-  -- p(me:toJsonObject())
-  lu.assertEquals(me:getCardIds("h")[1], 1)
+-- 暂且在这里读取SkillSkel中包含的测试函数，命名规则另说
+-- 后面再好好改改测试代码的实现规则
+for _, pname in ipairs(Fk.package_names) do
+  local pack = Fk.packages[pname]
+  for _, skel in ipairs(pack.skill_skels) do
+    for i, fn in ipairs(skel.tests) do
+      TestStandard[string.format('test%s%d', skel.name, i)] = fn
+    end
+  end
 end
 
 function TestStandard:testFanKui()
-  local room = LRoom
-  local me, comp2 = room.players[1], room.players[2]
-  RunInRoom(function() room:handleAddLoseSkills(me, "fankui") end)
+  local room = FkTest.room
+  local me, comp2 = room.players[1], room.players[2] ---@type ServerPlayer, ServerPlayer
+  FkTest.runInRoom(function() room:handleAddLoseSkills(me, "fankui") end)
 
   -- 空牌的情况
   local slash = Fk:getCardById(1)
-  SetNextReplies(me, { "__cancel" })
-  RunInRoom(function()
+  FkTest.setNextReplies(me, { "__cancel" })
+  FkTest.runInRoom(function()
     room:useCard{
       from = comp2.id,
       tos = { { me.id } },
@@ -36,8 +29,8 @@ function TestStandard:testFanKui()
   lu.assertEquals(#me:getCardIds("h"), 0)
 
   -- 有牌的情况
-  SetNextReplies(me, { "__cancel", "1", "3" })
-  RunInRoom(function()
+  FkTest.setNextReplies(me, { "__cancel", "1", "3" })
+  FkTest.runInRoom(function()
     room:obtainCard(comp2, { 3 })
     room:useCard{
       from = comp2.id,
@@ -49,18 +42,18 @@ function TestStandard:testFanKui()
 end
 
 function TestStandard:testGangLie()
-  local room = LRoom ---@type Room
-  local me, comp2 = room.players[1], room.players[2]
-  RunInRoom(function()
+  local room = FkTest.room ---@type Room
+  local me, comp2 = room.players[1], room.players[2] ---@type ServerPlayer, ServerPlayer
+  FkTest.runInRoom(function()
     room:handleAddLoseSkills(me, "ganglie")
   end)
 
   -- 第一段：测试我发动刚烈，AI点取消
   local slash = Fk:getCardById(1)
-  SetNextReplies(me, { "__cancel", "1" })
-  SetNextReplies(comp2, { "__cancel" })
+  FkTest.setNextReplies(me, { "__cancel", "1" })
+  FkTest.setNextReplies(comp2, { "__cancel" })
   local origin_hp = comp2.hp
-  RunInRoom(function()
+  FkTest.runInRoom(function()
     room:obtainCard(comp2, { 3, 4 })
 
     room:moveCardTo(2, Card.DrawPile) -- 控顶
@@ -75,12 +68,12 @@ function TestStandard:testGangLie()
 
   -- 第二段：测试我发动刚烈，AI丢二
   origin_hp = comp2.hp
-  SetNextReplies(me, { "__cancel", "1" })
-  SetNextReplies(comp2, { json.encode {
+  FkTest.setNextReplies(me, { "__cancel", "1" })
+  FkTest.setNextReplies(comp2, { json.encode {
     card = { skill = "discard_skill", subcards = { 3, 4 } },
     targets = {}
   } })
-  RunInRoom(function()
+  FkTest.runInRoom(function()
     room:moveCardTo(2, Card.DrawPile) -- 再控顶
     room:useCard{
       from = comp2.id,
@@ -93,9 +86,9 @@ function TestStandard:testGangLie()
 
   -- 第三段：测试我发动刚烈，判定判红桃
   origin_hp = comp2.hp
-  SetNextReplies(me, { "__cancel", "1" })
-  SetNextReplies(comp2, { "__cancel" })
-  RunInRoom(function()
+  FkTest.setNextReplies(me, { "__cancel", "1" })
+  FkTest.setNextReplies(comp2, { "__cancel" })
+  FkTest.runInRoom(function()
     room:obtainCard(comp2, { 3, 4 })
 
     room:moveCardTo(24, Card.DrawPile) -- 控顶
@@ -110,22 +103,26 @@ function TestStandard:testGangLie()
 end
 
 function TestStandard:testLuoYi()
-  local room = LRoom ---@type Room
-  local me, comp2 = room.players[1], room.players[2]
-  RunInRoom(function()
+  local room = FkTest.room ---@type Room
+  local me, comp2 = room.players[1], room.players[2] ---@type ServerPlayer, ServerPlayer
+  FkTest.runInRoom(function()
     room:handleAddLoseSkills(me, "luoyi")
   end)
   local slash = Fk:getCardById(1)
-  SetNextReplies(me, { "1", json.encode {
+  FkTest.setNextReplies(me, { "1", json.encode {
     card = 1,
     targets = { comp2.id }
   } })
-  SetNextReplies(comp2, { "__cancel" })
+  FkTest.setNextReplies(comp2, { "__cancel" })
 
   local origin_hp = comp2.hp
-  RunInRoom(function()
+  FkTest.runInRoom(function()
     room:obtainCard(me, 1)
-    GameEvent.Turn:create(me):exec()
+    local data = { ---@type TurnDataSpec
+      who = me,
+      reason = "game_rule",
+    }
+    GameEvent.Turn:create(TurnData:new(data)):exec()
   end)
   -- p(me:getCardIds("h"))
   lu.assertEquals(#me:getCardIds("h"), 1)
@@ -133,7 +130,7 @@ function TestStandard:testLuoYi()
 
   -- 测标记持续时间
   origin_hp = comp2.hp
-  RunInRoom(function()
+  FkTest.runInRoom(function()
     room:useCard{
       from = me.id,
       tos = { { comp2.id } },
@@ -144,14 +141,14 @@ function TestStandard:testLuoYi()
 end
 
 function TestStandard:testTianDu()
-  local room = LRoom ---@type Room
+  local room = FkTest.room ---@type Room
   local me = room.players[1]
 
-  RunInRoom(function()
+  FkTest.runInRoom(function()
     room:handleAddLoseSkills(me, "tiandu")
   end)
-  SetNextReplies(me, { "1", "1", "1", "1", "1", "1", "1", "1" }) -- 试图领取所有人的判定牌
-  RunInRoom(function()
+  FkTest.setNextReplies(me, { "1", "1", "1", "1", "1", "1", "1", "1" }) -- 试图领取所有人的判定牌
+  FkTest.runInRoom(function()
     for _, p in ipairs(room.players) do
       room:judge{
         who = p,
@@ -164,10 +161,10 @@ function TestStandard:testTianDu()
 end
 
 function TestStandard:testLuoShen()
-  local room = LRoom ---@type Room
+  local room = FkTest.room ---@type Room
   local me = room.players[1]
 
-  RunInRoom(function()
+  FkTest.runInRoom(function()
     room:handleAddLoseSkills(me, "luoshen")
   end)
   local red = table.find(room.draw_pile, function(cid)
@@ -177,31 +174,36 @@ function TestStandard:testLuoShen()
     return Fk:getCardById(cid).color == Card.Black
   end)
   local rnd = 5
-  SetNextReplies(me, { "1", "1", "1", "1", "1", "1" }) -- 除了第一个1以外后面全是潜在的“重复流程”
+  FkTest.setNextReplies(me, { "1", "1", "1", "1", "1", "1" }) -- 除了第一个1以外后面全是潜在的“重复流程”
   -- 每次往红牌顶上塞若干个黑牌
-  RunInRoom(function()
+  FkTest.runInRoom(function()
     room:throwCard(me:getCardIds("h"), nil, me, me)
     -- 控顶
     room:moveCardTo(red, Card.DrawPile)
     if rnd > 0 then room:moveCardTo(table.slice(blacks, 1, rnd + 1), Card.DrawPile) end
 
-    GameEvent.Turn:create(me, { phase_table = { Player.Start } }):exec()
+    local data = { ---@type TurnDataSpec
+      who = me,
+      reason = "game_rule",
+      phase_table = { Player.Start }
+    }
+    GameEvent.Turn:create(TurnData:new(data)):exec()
   end)
   lu.assertEquals(#me:getCardIds("h"), rnd)
 end
 
 function TestStandard:testKongCheng()
-  local room = LRoom ---@type Room
+  local room = FkTest.room ---@type Room
   local me, comp2 = room.players[1], room.players[2]
 
-  RunInRoom(function()
+  FkTest.runInRoom(function()
     room:handleAddLoseSkills(me, "kongcheng")
   end)
   local slash = Fk:cloneCard("slash")
   local duel = Fk:cloneCard("duel")
   lu.assertFalse(comp2:canUseTo(slash, me))
   lu.assertFalse(comp2:canUseTo(duel, me))
-  RunInRoom(function()
+  FkTest.runInRoom(function()
     me:drawCards(1)
   end)
   lu.assertTrue(comp2:canUseTo(slash, me))
@@ -209,12 +211,12 @@ function TestStandard:testKongCheng()
 end
 
 function TestStandard:testMashu()
-  local room = LRoom ---@type Room
-  local me = room.players[1]
+  local room = FkTest.room ---@type Room
+  local me = room.players[1] ---@type ServerPlayer
 
   local origin = table.map(room:getOtherPlayers(me), function(other) return me:distanceTo(other) end)
 
-  RunInRoom(function()
+  FkTest.runInRoom(function()
     room:handleAddLoseSkills(me, "mashu")
   end)
 
@@ -224,10 +226,10 @@ function TestStandard:testMashu()
 end
 
 function TestStandard:testJiZhi()
-  local room = LRoom ---@type Room
+  local room = FkTest.room ---@type Room
   local me, comp2 = room.players[1], room.players[2]
 
-  RunInRoom(function()
+  FkTest.runInRoom(function()
     room:handleAddLoseSkills(me, "jizhi")
   end)
 
@@ -236,8 +238,8 @@ function TestStandard:testJiZhi()
     return Fk:getCardById(cid).trueName == "god_salvation"
   end))
 
-  SetNextReplies(me, { "1", "1" })
-  RunInRoom(function()
+  FkTest.setNextReplies(me, { "1", "1" })
+  FkTest.runInRoom(function()
     room:moveCardTo({2, 3, 4, 5}, Card.DrawPile) -- 都是杀……吧？
     room:useCard{
       from = me.id,
@@ -246,7 +248,7 @@ function TestStandard:testJiZhi()
     }
   end)
   lu.assertEquals(#me:getCardIds("h"), 0)
-  RunInRoom(function()
+  FkTest.runInRoom(function()
     room:useCard{
       from = me.id,
       tos = { { comp2.id } },
@@ -257,12 +259,12 @@ function TestStandard:testJiZhi()
 end
 
 function TestStandard:testQiCai()
-  local room = LRoom ---@type Room
+  local room = FkTest.room ---@type Room
   local me = room.players[1]
 
   local faraway = table.filter(room:getOtherPlayers(me), function(other) return me:distanceTo(other) > 1 end)
 
-  RunInRoom(function()
+  FkTest.runInRoom(function()
     room:handleAddLoseSkills(me, "qicai")
     -- 让顺手牵羊可以用一下
     for _, other in ipairs(room:getOtherPlayers(me, false)) do
@@ -278,38 +280,48 @@ function TestStandard:testQiCai()
 end
 
 function TestStandard:testKeJi()
-  local room = LRoom ---@type Room
+  local room = FkTest.room ---@type Room
   local me = room.players[1]
-  RunInRoom(function()
+  FkTest.runInRoom(function()
     room:handleAddLoseSkills(me, "keji")
   end)
 
-  SetNextReplies(me, { "1" })
-  RunInRoom(function()
+  FkTest.setNextReplies(me, { "1" })
+  FkTest.runInRoom(function()
     me:drawCards(10)
-    GameEvent.Turn:create(me, { phase_table = { Player.Discard } }):exec()
+    local data = { ---@type TurnDataSpec
+      who = me,
+      reason = "game_rule",
+      phase_table = { Player.Discard }
+    }
+    GameEvent.Turn:create(TurnData:new(data)):exec()
   end)
 
   lu.assertEquals(#me:getCardIds("h"), 10)
 end
 
 function TestStandard:testYingzi()
-  local room = LRoom ---@type Room
+  local room = FkTest.room ---@type Room
   local me = room.players[1]
-  RunInRoom(function()
+  FkTest.runInRoom(function()
     room:handleAddLoseSkills(me, "yingzi")
   end)
 
-  SetNextReplies(me, { "1" })
-  RunInRoom(function()
-    GameEvent.Turn:create(me, { phase_table = { Player.Draw } }):exec()
+  FkTest.setNextReplies(me, { "1" })
+  FkTest.runInRoom(function()
+    local data = { ---@type TurnDataSpec
+      who = me,
+      reason = "game_rule",
+      phase_table = { Player.Draw }
+    }
+    GameEvent.Turn:create(TurnData:new(data)):exec()
   end)
 
   lu.assertEquals(#me:getCardIds("h"), 3)
 end
 
 function TestStandard:testQianXun()
-  local room = LRoom ---@type Room
+  local room = FkTest.room ---@type Room
   local me, comp2 = room.players[1], room.players[2]
 
   local snatch = Fk:getCardById(table.find(room.draw_pile, function(cid)
@@ -319,7 +331,7 @@ function TestStandard:testQianXun()
     return Fk:getCardById(cid).trueName == "indulgence"
   end))
 
-  RunInRoom(function()
+  FkTest.runInRoom(function()
     -- 让顺手牵羊可以用一下
     me:drawCards(1)
   end)
@@ -327,7 +339,7 @@ function TestStandard:testQianXun()
   lu.assertTrue(comp2:canUseTo(snatch, me))
   lu.assertTrue(comp2:canUseTo(indulgence, me))
 
-  RunInRoom(function()
+  FkTest.runInRoom(function()
     room:handleAddLoseSkills(me, "qianxun")
   end)
 
@@ -336,14 +348,14 @@ function TestStandard:testQianXun()
 end
 
 function TestStandard:testLianYing()
-  local room = LRoom ---@type Room
+  local room = FkTest.room ---@type Room
   local me = room.players[1]
 
-  RunInRoom(function()
+  FkTest.runInRoom(function()
     room:handleAddLoseSkills(me, "lianying")
   end)
-  SetNextReplies(me, { "1", "1", "1", "1", "1", "1", "1", "1" })
-  RunInRoom(function()
+  FkTest.setNextReplies(me, { "1", "1", "1", "1", "1", "1", "1", "1" })
+  FkTest.runInRoom(function()
     me:drawCards(3)
     room:throwCard(me:getCardIds("h"), nil, me, me)
   end)
@@ -351,13 +363,13 @@ function TestStandard:testLianYing()
 end
 
 function TestStandard:testXiaoJi()
-  local room = LRoom ---@type Room
+  local room = FkTest.room ---@type Room
   local me = room.players[1]
 
-  RunInRoom(function()
+  FkTest.runInRoom(function()
     room:handleAddLoseSkills(me, "xiaoji")
   end)
-  SetNextReplies(me, { "1", "1", "1", "1", "1", "1", "1", "1" })
+  FkTest.setNextReplies(me, { "1", "1", "1", "1", "1", "1", "1", "1" })
 
   local nioh = Fk:getCardById(table.find(room.draw_pile, function(cid)
     return Fk:getCardById(cid).trueName == "nioh_shield"
@@ -367,7 +379,7 @@ function TestStandard:testXiaoJi()
     return Fk:getCardById(cid).trueName == "spear"
   end))
 
-  RunInRoom(function()
+  FkTest.runInRoom(function()
     room:useCard{
       from = me.id,
       tos = {{me.id}},
@@ -384,15 +396,20 @@ function TestStandard:testXiaoJi()
 end
 
 function TestStandard:testBiYue()
-  local room = LRoom ---@type Room
+  local room = FkTest.room ---@type Room
   local me = room.players[1]
-  RunInRoom(function()
+  FkTest.runInRoom(function()
     room:handleAddLoseSkills(me, "biyue")
   end)
 
-  SetNextReplies(me, { "1" })
-  RunInRoom(function()
-    GameEvent.Turn:create(me, { phase_table = { Player.Finish } }):exec()
+  FkTest.setNextReplies(me, { "1" })
+  FkTest.runInRoom(function()
+    local data = { ---@type TurnDataSpec
+      who = me,
+      reason = "game_rule",
+      phase_table = { Player.Finish }
+    }
+    GameEvent.Turn:create(TurnData:new(data)):exec()
   end)
 
   lu.assertEquals(#me:getCardIds("h"), 1)

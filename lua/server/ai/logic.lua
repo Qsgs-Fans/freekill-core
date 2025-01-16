@@ -308,7 +308,13 @@ function SkillEffect:exec()
 end
 
 function AIGameLogic:useSkill(player, skill, effect_cb, skill_data)
-  return not SkillEffect:new(self, effect_cb, player, skill, skill_data or Util.DummyTable):getBenefit()
+  local data = { ---@type SkillEffectDataSpec
+    who = player,
+    skill = skill,
+    skill_cb = effect_cb,
+    skill_data = skill_data or Util.DummyTable
+  }
+  return not SkillEffect:new(self, SkillEffectData:new(data)):getBenefit()
 end
 
 -- movecard.lua
@@ -450,13 +456,19 @@ function AIGameLogic:handleCardEffect(event, cardEffectEvent)
   -- 闪和无懈早该重构重构了
   if event == fk.CardEffecting then
     if cardEffectEvent.card.skill then
-      SkillEffect:new(self, function()
-        local skill = cardEffectEvent.card.skill
-        local ai = fk.ai_skills[skill.name]
-        if ai then
-          ai:onEffect(self, cardEffectEvent)
-        end
-      end, self:getPlayerById(cardEffectEvent.from), cardEffectEvent.card.skill):getBenefit()
+      local data = { ---@type SkillEffectDataSpec
+        who = self:getPlayerById(cardEffectEvent.from),
+        skill = cardEffectEvent.card.skill,
+        skill_cb = function()
+          local skill = cardEffectEvent.card.skill
+          local ai = fk.ai_skills[skill.name]
+          if ai then
+            ai:onEffect(self, cardEffectEvent)
+          end
+        end,
+        skill_data = Util.DummyTable
+      }
+      SkillEffect:new(self, SkillEffectData:new(data)):getBenefit()
     end
   end
 end
@@ -470,7 +482,7 @@ function Judge:exec()
   local logic = self.logic
   local who = data.who
 
-  data.isJudgeEvent = true
+  -- data.isJudgeEvent = true
   logic:trigger(fk.StartJudge, who, data)
   data.card = data.card or Fk:getCardById(self.ai.room.draw_pile[1] or 1)
 

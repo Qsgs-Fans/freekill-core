@@ -301,6 +301,7 @@ function GameLogic:action()
   end
 end
 
+--- 将一个触发技和它的关联触发技添加到房间（触发技必须添加到房间才能正常触发）
 ---@param skill TriggerSkill|LegacyTriggerSkill
 function GameLogic:addTriggerSkill(skill)
   if not skill then return end
@@ -336,7 +337,13 @@ function GameLogic:addTriggerSkill(skill)
     end
   end
 
-  -- 没有related_skills了。
+  if skill.visible then
+    for _, s in ipairs(skill.related_skills) do
+      if (s.class == TriggerSkill) then
+        self:addTriggerSkill(s)
+      end
+    end
+  end
 end
 
 ---@param event TriggerEvent|integer|string

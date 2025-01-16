@@ -63,7 +63,9 @@ function HpLostData:lethal()
 end
 --- MaxHpChangedData 描述跟体力上限变化有关的数据
 ---@class MaxHpChangedDataSpec
----@field public who ServerPlayer @ 体力上限变化的角色
+
+---@field public who ServerPlayer @ 改变体力上限的角色
+
 ---@field public num integer @ 体力上限变化量，可能是正数或者负数
 
 --- 描述跟体力上限变化有关的数据

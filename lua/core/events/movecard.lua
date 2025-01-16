@@ -43,7 +43,7 @@
 MoveCardsData = TriggerData:subclass("MoveCardsData")
 
 ---@class MoveCardsEvent: TriggerEvent
----@field data MoveCardsData
+---@field data MoveCardsData[]
 local MoveCardsEvent = TriggerEvent:subclass("MoveCardsEvent")
 
 --- DrawData 关于摸牌的数据
@@ -74,7 +74,7 @@ fk.BeforeDrawCard = DrawEvent:subclass("fk.BeforeDrawCard")
 -- 注释
 
 ---@alias MoveCardsFunc fun(self: TriggerSkill, event: MoveCardsEvent,
----  target: ServerPlayer, player: ServerPlayer, data: MoveCardsData): any
+---  target: ServerPlayer, player: ServerPlayer, data: MoveCardsData[]): any
 
 ---@class SkillSkeleton
 ---@field public addEffect fun(self: SkillSkeleton, key: MoveCardsEvent,

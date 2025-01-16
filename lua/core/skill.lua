@@ -92,6 +92,8 @@ end
 ---@param skill Skill @ 技能
 function Skill:addRelatedSkill(skill)
   table.insert(self.related_skills, skill)
+  Fk.related_skills[self.name] = Fk.related_skills[self.name] or {}
+  table.insert(Fk.related_skills[self.name], skill)
 end
 
 --- 确认本技能是否为装备技能。

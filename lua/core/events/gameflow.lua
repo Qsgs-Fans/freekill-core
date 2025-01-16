@@ -44,7 +44,8 @@ fk.AfterRoundEnd = RoundEvent:subclass("fk.AfterRoundEnd")
 
 --- TurnData 回合的数据
 ---@class TurnDataSpec -- TODO: 发挥想象力，填写这个Spec吧
----@field reason? string @ 当前额外回合的原因，不为额外回合则为game_rule
+---@field who ServerPlayer @ 本回合的执行者
+---@field reason string @ 当前额外回合的原因，不为额外回合则为game_rule
 ---@field phase_table? Phase[] @ 额定阶段表，填空则为正常流程
 
 --- 回合的数据
@@ -68,7 +69,8 @@ fk.AfterTurnEnd = TurnEvent:subclass("fk.AfterTurnEnd")
 
 --- PhaseData 阶段的数据
 ---@class PhaseDataSpec -- TODO: 发挥想象力，填写这个Spec吧
----@field reason? string @ 额外阶段的指示物
+---@field who ServerPlayer @ 本阶段的执行者
+---@field reason string @ 当前额外阶段的原因，不为额外阶段则为game_rule
 ---@field phase_end? boolean @ 该阶段是否即将结束
 
 --- 阶段的数据

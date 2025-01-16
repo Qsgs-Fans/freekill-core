@@ -690,13 +690,14 @@ end
 
 function RefreshStatusSkills()
   local self = ClientInstance
-  if not self.recording then return end -- 在回放录像就别刷了
-  -- 刷所有人手牌上限及可见标记
+  -- if not self.recording then return end -- 在回放录像就别刷了
+  -- 刷所有人手牌上限及可见标记；以及身份可见性
   for _, p in ipairs(self.alive_players) do
     self:notifyUI("MaxCard", {
       pcardMax = p:getMaxCards(),
       id = p.id,
     })
+
     for k, v in pairs(p.mark) do
       if k and k:startsWith("@") and v and v ~= 0 then
         if k:startsWith("@[") and k:find(']') then
@@ -711,6 +712,10 @@ function RefreshStatusSkills()
         self:notifyUI("SetPlayerMark", { p.id, k, v })
       end
     end
+
+    self:notifyUI("PropertyUpdate", {
+      p.id, "role_shown", not not RoleVisibility(p.id)
+    })
   end
   -- 刷自己的手牌
   for _, cid in ipairs(Self:getCardIds("h")) do

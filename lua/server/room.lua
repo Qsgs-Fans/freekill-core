@@ -214,8 +214,24 @@ function Room:getPlayerById(id)
   return nil
 end
 
+--- 根据角色座位号，获得那名角色本人
+---@param seat integer @ 角色的座位号
+---@return ServerPlayer @ 这个座位号对应的ServerPlayer实例
+function Room:getPlayerBySeat(seat)
+  if not seat then return nil end
+
+  assert(type(seat) == "number")
+  for _, p in ipairs(self.players) do
+    if p.seat == seat then
+      return p
+    end
+  end
+
+  return nil
+end
+
 --- 将房间中的角色按照行动顺序重新排序。
----@param playerIds integer[] @ 角色id列表，这个数组会被这个函数排序
+---@param playerIds integer[] @ 玩家id列表，这个数组会被这个函数排序
 function Room:sortPlayersByAction(playerIds, isTargetGroup)
   table.sort(playerIds, function(prev, next)
     local prevSeat = self:getPlayerById(isTargetGroup and prev[1] or prev).seat
@@ -446,7 +462,9 @@ function Room:removeCardMark(card, mark, count)
   self:setCardMark(card, mark, math.max(num - count, 0))
 end
 
+--- 设置角色的某个属性，并广播给所有人
 ---@param player ServerPlayer
+---@param property string @ 属性名称
 function Room:setPlayerProperty(player, property, value)
   player[property] = value
   self:broadcastProperty(player, property)
@@ -676,16 +694,25 @@ end
 
 --- 向多名玩家告知一次移牌行为。
 ---@param players? ServerPlayer[] @ 要被告知的玩家列表，默认为全员
----@param moveData MoveCardsData @ 要告知的移牌信息列表
----@param forceVisible? boolean @ 是否让所有牌对告知目标可见
-function Room:notifyMoveCards(players, moveData, forceVisible)
+---@param moveDatas MoveCardsData[] @ 要告知的移牌信息列表
+function Room:notifyMoveCards(players, moveDatas)
   if players == nil or players == {} then players = self.players end
   local card_moves = {}
-  for _, move in ipairs(moveData) do
-    table.insert(card_moves, move)
+  for _, move in ipairs(moveDatas) do
+    local ret = {}
+    for k, v in pairs(move._data) do
+      if k ~= "_data" then
+        if type(v) == "table" then
+          ret[k] = table.simpleClone(v)
+        else
+          ret[k] = v
+        end
+      end
+    end
+    table.insert(card_moves, ret)
   end
   for _, p in ipairs(players) do
-    local arg = table.clone(card_moves)
+    local arg = table.simpleClone(card_moves)
     for _, move in ipairs(arg) do
       -- local to = self:getPlayerById(move.to)
 
@@ -1053,7 +1080,7 @@ end
 ---@param maxNum integer @ 最大值
 ---@param prompt? string @ 提示信息
 ---@param skillName? string @ 技能名
----@param cancelable? boolean @ 能否点取消
+---@param cancelable? boolean @ 能否点取消，默认可以
 ---@param no_indicate? boolean @ 是否不显示指示线
 ---@param targetTipName? string @ 引用的选择目标提示的函数名
 ---@param extra_data? table @额外信息
@@ -2612,6 +2639,7 @@ function Room:shuffleDrawPile()
 
   -- self:doBroadcastNotify("UpdateDrawPile", #self.draw_pile)
   self:doBroadcastNotify("ShuffleDrawPile", seed)
+  self:doBroadcastNotify("UpdateDrawPile", tostring(#self.draw_pile))
 
   self.logic:trigger(fk.AfterDrawPileShuffle, nil, {})
 end
@@ -2983,5 +3011,26 @@ function Room:validateSkill(player, skill_name, temp)
   temp = temp and temp or ""
   self:removeTableMark(player, MarkEnum.InvalidSkills .. temp, skill_name)
 end
+
+
+--- 将触发技或状态技添加到房间
+---@param skill Skill|string
+function Room:addSkill(skill)
+  if type(skill) == "string" then
+    skill = Fk.skills[skill]
+  end
+  if skill == nil then return end
+  if skill:isInstanceOf(StatusSkill) then
+    self.status_skills[skill.class] = self.status_skills[skill.class] or {}
+    table.insertIfNeed(self.status_skills[skill.class], skill)
+    -- add status_skill to cilent room
+    for _, p in ipairs(self.players) do
+      p:doNotify("AddSkill", json.encode{p.id, skill.name})
+    end
+  elseif skill:isInstanceOf(TriggerSkill) then
+    self.logic:addTriggerSkill(skill)
+  end
+end
+
 
 return Room
