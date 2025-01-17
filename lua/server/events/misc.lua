@@ -156,7 +156,7 @@ function MiscEventWrappers:changeHero(player, new_general, full, isDeputy, sendL
     end
   end
 
-  ChangeProperty:create({
+  ChangeProperty:create(PropertyChangeData:new{
     from = player,
     general = not isDeputy and new_general or nil,
     deputyGeneral = isDeputy and new_general or nil,
@@ -182,7 +182,7 @@ function MiscEventWrappers:changeKingdom(player, kingdom, sendLog)
   if kingdom == player.kingdom then return end
   sendLog = sendLog or false
 
-  ChangeProperty:create({
+  ChangeProperty:create(PropertyChangeData:new{
     from = player,
     kingdom = kingdom,
     sendLog = sendLog,
