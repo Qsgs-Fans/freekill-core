@@ -62,20 +62,20 @@ function Pindian:main()
     })
   end
   for _, to in ipairs(pindianData.tos) do
-    if pindianData.results[to.id] and pindianData.results[to.id].toCard then
-      if not pindianData.results[to.id]._toCard then
-        local _pindianCard = pindianData.results[to.id].toCard
+    if pindianData.results[to] and pindianData.results[to].toCard then
+      if not pindianData.results[to]._toCard then
+        local _pindianCard = pindianData.results[to].toCard
         local pindianCard = _pindianCard:clone(_pindianCard.suit, _pindianCard.number)
         pindianCard:addSubcard(_pindianCard.id)
 
-        pindianData.results[to.id].toCard = pindianCard
-        pindianData.results[to.id]._toCard = _pindianCard
+        pindianData.results[to].toCard = pindianCard
+        pindianData.results[to]._toCard = _pindianCard
       end
 
       table.insert(moveInfos, {
-        ids = { pindianData.results[to.id]._toCard.id },
-        from = room.owner_map[pindianData.results[to.id]._toCard.id],
-        fromArea = room:getCardArea(pindianData.results[to.id]._toCard.id),
+        ids = { pindianData.results[to]._toCard.id },
+        from = room.owner_map[pindianData.results[to]._toCard.id],
+        fromArea = room:getCardArea(pindianData.results[to]._toCard.id),
         toArea = Card.Processing,
         moveReason = fk.ReasonPut,
         skillName = pindianData.reason,
@@ -139,7 +139,7 @@ function Pindian:main()
     from = pindianData.from.id,
   })
   for _, to in ipairs(pindianData.tos) do
-    room:sendFootnote({ pindianData.results[to.id]._toCard.id }, {
+    room:sendFootnote({ pindianData.results[to]._toCard.id }, {
       type = "##PindianCard",
       from = to.id,
     })
@@ -148,7 +148,7 @@ function Pindian:main()
   logic:trigger(fk.PindianCardsDisplayed, nil, pindianData)
 
   for _, to in ipairs(pindianData.tos) do
-    local result = pindianData.results[to.id]
+    local result = pindianData.results[to]
     if pindianData.fromCard.number > result.toCard.number then
       result.winner = pindianData.from
     elseif pindianData.fromCard.number < result.toCard.number then

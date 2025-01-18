@@ -46,12 +46,12 @@ function MoveCards:main()
           realFromArea == Player.Equip and
           beforeCard.type == Card.TypeEquip and
           data.from ~= nil and
-          #beforeCard:getEquipSkills(room:getPlayerById(data.from)) > 0
+          #beforeCard:getEquipSkills(data.from) > 0
         then
-          beforeCard:onUninstall(room, room:getPlayerById(data.from))
+          beforeCard:onUninstall(room, data.from)
         end
 
-        Fk:filterCard(info.cardId, room:getPlayerById(data.to))
+        Fk:filterCard(info.cardId, data.to)
 
         local currentCard = Fk:getCardById(info.cardId)
         for name, value in pairs(currentCard.mark) do
@@ -80,10 +80,10 @@ function MoveCards:main()
           data.toArea == Player.Equip and
           currentCard.type == Card.TypeEquip and
           data.to ~= nil and
-          room:getPlayerById(data.to):isAlive() and
-          #currentCard:getEquipSkills(room:getPlayerById(data.to)) > 0
+          data.to:isAlive() and
+          #currentCard:getEquipSkills(data.to) > 0
         then
-          currentCard:onInstall(room, room:getPlayerById(data.to))
+          currentCard:onInstall(room, data.to)
         end
       end
     end
@@ -135,11 +135,11 @@ local function moveInfoTranslate(room, ...)
         ---@type MoveCardsDataSpec
         local moveCardsSpec = {
           moveInfo = infos,
-          from = cardsMoveInfo.from,
-          to = cardsMoveInfo.to,
+          from = room:getPlayerById(cardsMoveInfo.from),
+          to = room:getPlayerById(cardsMoveInfo.to),
           toArea = cardsMoveInfo.toArea,
           moveReason = cardsMoveInfo.moveReason,
-          proposer = cardsMoveInfo.proposer,
+          proposer = room:getPlayerById(cardsMoveInfo.proposer),
           skillName = cardsMoveInfo.skillName,
           moveVisible = cardsMoveInfo.moveVisible,
           specialName = cardsMoveInfo.specialName,
@@ -156,7 +156,7 @@ local function moveInfoTranslate(room, ...)
         ---@type MoveCardsDataSpec
         local moveCardsSpec = {
           moveInfo = abortMoveInfos,
-          from = cardsMoveInfo.from,
+          from = room:getPlayerById(cardsMoveInfo.from),
           toArea = Card.DiscardPile,
           moveReason = fk.ReasonPutIntoDiscardPile,
           moveVisible = true,

@@ -67,7 +67,7 @@ local sendCardEmotionAndLog = function(room, useCardData)
   useCardData.card = card
   --]]
 
-  playCardEmotionAndSound(room, room:getPlayerById(from), card)
+  playCardEmotionAndSound(room, from, card)
 
   if not useCardData.noIndicate then
     room:doAnimate("Indicate", {
@@ -191,7 +191,7 @@ function UseCard:main()
         Fk.skills[attachedSkillAndUser.skillName] and
         Fk.skills[attachedSkillAndUser.skillName].afterUse
       then
-        Fk.skills[attachedSkillAndUser.skillName]:afterUse(room:getPlayerById(attachedSkillAndUser.user), useCardData)
+        Fk.skills[attachedSkillAndUser.skillName]:afterUse(attachedSkillAndUser.user, useCardData)
       end
     end)
     useCardData.attachedSkillAndUser = nil
@@ -222,7 +222,7 @@ function UseCard:main()
     end
   end
 
-  if logic:trigger(fk.PreCardUse, room:getPlayerById(useCardData.from), useCardData) then
+  if logic:trigger(fk.PreCardUse, useCardData.from, useCardData) then
     logic:breakEvent()
   end
 
@@ -255,7 +255,7 @@ function UseCard:main()
   end
 
   if not useCardData.extraUse then
-    room:getPlayerById(useCardData.from):addCardUseHistory(useCardData.card.trueName, 1)
+    useCardData.from:addCardUseHistory(useCardData.card.trueName, 1)
   end
 
   if useCardData.responseToEvent then
@@ -268,7 +268,7 @@ function UseCard:main()
       break
     end
 
-    logic:trigger(event, room:getPlayerById(useCardData.from), useCardData)
+    logic:trigger(event, useCardData.from, useCardData)
     if event == fk.CardUsing then
       room:doCardUseEffect(useCardData)
     end
@@ -279,7 +279,7 @@ function UseCard:clear()
   local useCardData = table.unpack(self.data)
   local room = self.room
 
-  room.logic:trigger(fk.CardUseFinished, room:getPlayerById(useCardData.from), useCardData)
+  room.logic:trigger(fk.CardUseFinished, useCardData.from, useCardData)
 
   local leftRealCardIds = room:getSubcardsByRule(useCardData.card, { Card.Processing })
   if #leftRealCardIds > 0 then
@@ -299,7 +299,7 @@ function RespondCard:main()
   local room = self.room
   local logic = room.logic
 
-  if logic:trigger(fk.PreCardRespond, room:getPlayerById(respondCardData.from), respondCardData) then
+  if logic:trigger(fk.PreCardRespond, respondCardData.from, respondCardData) then
     logic:breakEvent()
   end
 
@@ -330,7 +330,7 @@ function RespondCard:main()
     }
   end
 
-  playCardEmotionAndSound(room, room:getPlayerById(from), card)
+  playCardEmotionAndSound(room, from, card)
 
   room:moveCardTo(card, Card.Processing, nil, fk.ReasonResonpse)
   if #cardIds > 0 then
@@ -343,14 +343,14 @@ function RespondCard:main()
     end
   end
 
-  logic:trigger(fk.CardResponding, room:getPlayerById(respondCardData.from), respondCardData)
+  logic:trigger(fk.CardResponding, respondCardData.from, respondCardData)
 end
 
 function RespondCard:clear()
   local respondCardData = table.unpack(self.data)
   local room = self.room
 
-  room.logic:trigger(fk.CardRespondFinished, room:getPlayerById(respondCardData.from), respondCardData)
+  room.logic:trigger(fk.CardRespondFinished, respondCardData.from, respondCardData)
 
   local realCardIds = room:getSubcardsByRule(respondCardData.card, { Card.Processing })
   if #realCardIds > 0 and not respondCardData.skipDrop then
@@ -375,7 +375,7 @@ function CardEffect:main()
   end
   for _, event in ipairs({ fk.PreCardEffect, fk.BeforeCardEffect, fk.CardEffecting }) do
     if cardEffectData.isCancellOut then
-      if logic:trigger(fk.CardEffectCancelledOut, room:getPlayerById(cardEffectData.from), cardEffectData) then
+      if logic:trigger(fk.CardEffectCancelledOut, cardEffectData.from, cardEffectData) then
         cardEffectData.isCancellOut = false
       else
         logic:breakEvent()
@@ -385,7 +385,7 @@ function CardEffect:main()
     if
       not cardEffectData.toCard and
       (
-        not (room:getPlayerById(cardEffectData.to):isAlive() and cardEffectData.to)
+        not (cardEffectData.to:isAlive() and cardEffectData.to)
         or #room:deadPlayerFilter(TargetGroup:getRealTargets(cardEffectData.tos)) == 0
       )
     then
@@ -397,14 +397,14 @@ function CardEffect:main()
     end
 
     if event == fk.PreCardEffect then
-      if logic:trigger(event, room:getPlayerById(cardEffectData.from), cardEffectData) then
+      if logic:trigger(event, cardEffectData.from, cardEffectData) then
         if cardEffectData.to then
           cardEffectData.nullifiedTargets = cardEffectData.nullifiedTargets or {}
           table.insert(cardEffectData.nullifiedTargets, cardEffectData.to)
         end
         logic:breakEvent()
       end
-    elseif logic:trigger(event, room:getPlayerById(cardEffectData.to), cardEffectData) then
+    elseif logic:trigger(event, cardEffectData.to, cardEffectData) then
       if cardEffectData.to then
         cardEffectData.nullifiedTargets = cardEffectData.nullifiedTargets or {}
         table.insert(cardEffectData.nullifiedTargets, cardEffectData.to)
@@ -420,7 +420,7 @@ function CardEffect:clear()
   local cardEffectData = table.unpack(self.data)
   if cardEffectData.to then
     local room = self.room
-    room.logic:trigger(fk.CardEffectFinished, room:getPlayerById(cardEffectData.to), cardEffectData)
+    room.logic:trigger(fk.CardEffectFinished, cardEffectData.to, cardEffectData)
   end
 end
 

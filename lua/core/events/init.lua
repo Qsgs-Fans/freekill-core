@@ -27,3 +27,6 @@ require "core.events.skill"
 require "core.events.judge"
 require "core.events.gameflow"
 require "core.events.pindian"
+
+-- 要兼容的嘛
+require "compat.events.init"

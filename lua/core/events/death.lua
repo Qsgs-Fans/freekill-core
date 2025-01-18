@@ -56,7 +56,6 @@ fk.BuryVictim = DeathEvent:subclass("fk.BuryVictim")
 
 --- 描述和复活事件有关的数据
 ---@class ReviveData: ReviveDataSpec, TriggerData
----@overload fun(spec: ReviveDataSpec): ReviveData
 ReviveData = TriggerData:subclass("ReviveData")
 
 ---@class ReviveEvent: TriggerEvent
