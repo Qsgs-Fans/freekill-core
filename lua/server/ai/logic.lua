@@ -401,7 +401,7 @@ function UseCard:exec()
     if skill_ai then skill_ai:onUse(logic, cardUseEvent) end
   end
 
-  if logic:trigger(fk.PreCardUse, room:getPlayerById(cardUseEvent.from), cardUseEvent) then
+  if logic:trigger(fk.PreCardUse, cardUseEvent.from, cardUseEvent) then
     return true
   end
   logic:moveCardTo(cardUseEvent.card, Card.Processing, nil, fk.ReasonUse)
@@ -411,13 +411,13 @@ function UseCard:exec()
       break
     end
 
-    logic:trigger(event, room:getPlayerById(cardUseEvent.from), cardUseEvent)
+    logic:trigger(event, cardUseEvent.from, cardUseEvent)
     if event == fk.CardUsing then
       logic:doCardUseEffect(cardUseEvent)
     end
   end
 
-  logic:trigger(fk.CardUseFinished, room:getPlayerById(cardUseEvent.from), cardUseEvent)
+  logic:trigger(fk.CardUseFinished, cardUseEvent.from, cardUseEvent)
   logic:moveCards{
     fromArea = Card.Processing,
     toArea = Card.DiscardPile,

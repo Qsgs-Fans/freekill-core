@@ -191,7 +191,10 @@ function MoveEventWrappers:notifyMoveCards(players, moveDatas)
   if players == nil or players == {} then players = self.players end
   local card_moves = {}
   for _, move in ipairs(moveDatas) do
-    local ret = move:toLegacy()
+    local ret = move
+    if move.toLegacy then
+      ret = move:toLegacy()
+    end
     table.insert(card_moves, ret)
   end
   for _, p in ipairs(players) do
