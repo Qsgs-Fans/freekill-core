@@ -27,4 +27,23 @@ return fk.CreateSkill({
     end
   end,
   on_use = Util.TrueFunc,
-})
+}):addTest(function()
+  local room = FkTest.room ---@type Room
+  local me = room.players[1]
+  FkTest.runInRoom(function()
+    room:handleAddLoseSkills(me, "keji")
+  end)
+
+  FkTest.setNextReplies(me, { "1" })
+  FkTest.runInRoom(function()
+    me:drawCards(10)
+    local data = { ---@type TurnDataSpec
+      who = me,
+      reason = "game_rule",
+      phase_table = { Player.Discard }
+    }
+    GameEvent.Turn:create(TurnData:new(data)):exec()
+  end)
+
+  lu.assertEquals(#me:getCardIds("h"), 10)
+end)

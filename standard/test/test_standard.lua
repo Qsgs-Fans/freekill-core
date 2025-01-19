@@ -102,44 +102,6 @@ function TestStandard:testGangLie()
   lu.assertEquals(#comp2:getCardIds("h"), 2)
 end
 
-function TestStandard:testLuoYi()
-  local room = FkTest.room ---@type Room
-  local me, comp2 = room.players[1], room.players[2] ---@type ServerPlayer, ServerPlayer
-  FkTest.runInRoom(function()
-    room:handleAddLoseSkills(me, "luoyi")
-  end)
-  local slash = Fk:getCardById(1)
-  FkTest.setNextReplies(me, { "1", json.encode {
-    card = 1,
-    targets = { comp2.id }
-  } })
-  FkTest.setNextReplies(comp2, { "__cancel" })
-
-  local origin_hp = comp2.hp
-  FkTest.runInRoom(function()
-    room:obtainCard(me, 1)
-    local data = { ---@type TurnDataSpec
-      who = me,
-      reason = "game_rule",
-    }
-    GameEvent.Turn:create(TurnData:new(data)):exec()
-  end)
-  -- p(me:getCardIds("h"))
-  lu.assertEquals(#me:getCardIds("h"), 1)
-  lu.assertEquals(comp2.hp, origin_hp - 2)
-
-  -- 测标记持续时间
-  origin_hp = comp2.hp
-  FkTest.runInRoom(function()
-    room:useCard{
-      from = me,
-      tos = { { comp2.id } },
-      card = slash,
-    }
-  end)
-  lu.assertEquals(comp2.hp, origin_hp - 1)
-end
-
 function TestStandard:testTianDu()
   local room = FkTest.room ---@type Room
   local me = room.players[1]
@@ -279,27 +241,6 @@ function TestStandard:testQiCai()
   end
 end
 
-function TestStandard:testKeJi()
-  local room = FkTest.room ---@type Room
-  local me = room.players[1]
-  FkTest.runInRoom(function()
-    room:handleAddLoseSkills(me, "keji")
-  end)
-
-  FkTest.setNextReplies(me, { "1" })
-  FkTest.runInRoom(function()
-    me:drawCards(10)
-    local data = { ---@type TurnDataSpec
-      who = me,
-      reason = "game_rule",
-      phase_table = { Player.Discard }
-    }
-    GameEvent.Turn:create(TurnData:new(data)):exec()
-  end)
-
-  lu.assertEquals(#me:getCardIds("h"), 10)
-end
-
 function TestStandard:testYingzi()
   local room = FkTest.room ---@type Room
   local me = room.players[1]
@@ -345,54 +286,6 @@ function TestStandard:testQianXun()
 
   lu.assertFalse(comp2:canUseTo(snatch, me))
   lu.assertFalse(comp2:canUseTo(indulgence, me))
-end
-
-function TestStandard:testLianYing()
-  local room = FkTest.room ---@type Room
-  local me = room.players[1]
-
-  FkTest.runInRoom(function()
-    room:handleAddLoseSkills(me, "lianying")
-  end)
-  FkTest.setNextReplies(me, { "1", "1", "1", "1", "1", "1", "1", "1" })
-  FkTest.runInRoom(function()
-    me:drawCards(3)
-    room:throwCard(me:getCardIds("h"), nil, me, me)
-  end)
-  lu.assertEquals(#me:getCardIds("h"), 1)
-end
-
-function TestStandard:testXiaoJi()
-  local room = FkTest.room ---@type Room
-  local me = room.players[1]
-
-  FkTest.runInRoom(function()
-    room:handleAddLoseSkills(me, "xiaoji")
-  end)
-  FkTest.setNextReplies(me, { "1", "1", "1", "1", "1", "1", "1", "1" })
-
-  local nioh = Fk:getCardById(table.find(room.draw_pile, function(cid)
-    return Fk:getCardById(cid).trueName == "nioh_shield"
-  end))
-
-  local spear = Fk:getCardById(table.find(room.draw_pile, function(cid)
-    return Fk:getCardById(cid).trueName == "spear"
-  end))
-
-  FkTest.runInRoom(function()
-    room:useCard{
-      from = me,
-      tos = {{me.id}},
-      card = nioh
-    }
-    room:useCard{
-      from = me,
-      tos = {{me.id}},
-      card = spear
-    }
-    room:throwCard(me:getCardIds("he"), nil, me, me)
-  end)
-  lu.assertEquals(#me:getCardIds("h"), 4)
 end
 
 function TestStandard:testBiYue()

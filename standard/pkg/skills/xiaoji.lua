@@ -4,7 +4,7 @@ return fk.CreateSkill({
 }):addEffect(fk.AfterCardsMove, nil, {
   can_trigger = function(self, event, target, player, data)
     for _, move in ipairs(data) do
-      if move.from == player.id then
+      if move.from == player then
         for _, info in ipairs(move.moveInfo) do
           if info.fromArea == Card.PlayerEquip then
             return true
@@ -16,7 +16,7 @@ return fk.CreateSkill({
   on_trigger = function(self, event, target, player, data)
     local i = 0
     for _, move in ipairs(data) do
-      if move.from == player.id then
+      if move.from == player then
         for _, info in ipairs(move.moveInfo) do
           if info.fromArea == Card.PlayerEquip then
             i = i + 1
@@ -39,4 +39,35 @@ return fk.CreateSkill({
   on_use = function(self, event, target, player, data)
     player:drawCards(2, self.name)
   end,
-})
+}):addTest(function()
+  local room = FkTest.room ---@type Room
+  local me = room.players[1]
+
+  FkTest.runInRoom(function()
+    room:handleAddLoseSkills(me, "xiaoji")
+  end)
+  FkTest.setNextReplies(me, { "1", "1", "1", "1", "1", "1", "1", "1" })
+
+  local nioh = Fk:getCardById(table.find(room.draw_pile, function(cid)
+    return Fk:getCardById(cid).trueName == "nioh_shield"
+  end))
+
+  local spear = Fk:getCardById(table.find(room.draw_pile, function(cid)
+    return Fk:getCardById(cid).trueName == "spear"
+  end))
+
+  FkTest.runInRoom(function()
+    room:useCard{
+      from = me,
+      tos = {{me.id}},
+      card = nioh
+    }
+    room:useCard{
+      from = me,
+      tos = {{me.id}},
+      card = spear
+    }
+    room:throwCard(me:getCardIds("he"), nil, me, me)
+  end)
+  lu.assertEquals(#me:getCardIds("h"), 4)
+end)

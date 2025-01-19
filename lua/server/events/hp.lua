@@ -162,7 +162,7 @@ function Damage:main()
     if cardEffectData then
       local cardEffectEvent = cardEffectData.data[1]
       damageData.damage = damageData.damage + (cardEffectEvent.additionalDamage or 0)
-      if damageData.from and cardEffectEvent.from == damageData.from.id then
+      if damageData.from and cardEffectEvent.from == damageData.from then
         damageData.by_user = true
       end
     end

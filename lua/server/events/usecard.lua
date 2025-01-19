@@ -429,6 +429,11 @@ end
 ---@param useCardData UseCardDataSpec @ 使用数据
 ---@return boolean
 function UseCardEventWrappers:useCard(useCardData)
+  if useCardData.from then
+    if type(useCardData.from) == "number" then
+      useCardData.from = self:getPlayerById(useCardData.from)
+    end
+  end
   return exec(UseCard, UseCardData:new(useCardData))
 end
 

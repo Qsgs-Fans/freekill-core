@@ -209,6 +209,11 @@ function Turn:prepare()
   local data = table.unpack(self.data)
   local player = data.who
   data.reason = data.reason or "game_rule"
+  data.phase_table = data.phase_table or {
+    Player.RoundStart, Player.Start,
+    Player.Judge, Player.Draw, Player.Play, Player.Discard,
+    Player.Finish, Player.NotActive,
+  }
 
   if player.rest > 0 and player.rest < 999 then
     room:setPlayerRest(player, player.rest - 1)
