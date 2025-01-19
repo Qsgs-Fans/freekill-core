@@ -21,7 +21,7 @@ function TestStandard:testFanKui()
   FkTest.setNextReplies(me, { "__cancel" })
   FkTest.runInRoom(function()
     room:useCard{
-      from = comp2.id,
+      from = comp2,
       tos = { { me.id } },
       card = slash,
     }
@@ -33,7 +33,7 @@ function TestStandard:testFanKui()
   FkTest.runInRoom(function()
     room:obtainCard(comp2, { 3 })
     room:useCard{
-      from = comp2.id,
+      from = comp2,
       tos = { { me.id } },
       card = slash,
     }
@@ -58,7 +58,7 @@ function TestStandard:testGangLie()
 
     room:moveCardTo(2, Card.DrawPile) -- 控顶
     room:useCard{
-      from = comp2.id,
+      from = comp2,
       tos = { { me.id } },
       card = slash,
     }
@@ -76,7 +76,7 @@ function TestStandard:testGangLie()
   FkTest.runInRoom(function()
     room:moveCardTo(2, Card.DrawPile) -- 再控顶
     room:useCard{
-      from = comp2.id,
+      from = comp2,
       tos = { { me.id } },
       card = slash,
     }
@@ -93,7 +93,7 @@ function TestStandard:testGangLie()
 
     room:moveCardTo(24, Card.DrawPile) -- 控顶
     room:useCard{
-      from = comp2.id,
+      from = comp2,
       tos = { { me.id } },
       card = slash,
     }
@@ -132,7 +132,7 @@ function TestStandard:testLuoYi()
   origin_hp = comp2.hp
   FkTest.runInRoom(function()
     room:useCard{
-      from = me.id,
+      from = me,
       tos = { { comp2.id } },
       card = slash,
     }
@@ -242,7 +242,7 @@ function TestStandard:testJiZhi()
   FkTest.runInRoom(function()
     room:moveCardTo({2, 3, 4, 5}, Card.DrawPile) -- 都是杀……吧？
     room:useCard{
-      from = me.id,
+      from = me,
       tos = { { comp2.id } },
       card = slash,
     }
@@ -250,7 +250,7 @@ function TestStandard:testJiZhi()
   lu.assertEquals(#me:getCardIds("h"), 0)
   FkTest.runInRoom(function()
     room:useCard{
-      from = me.id,
+      from = me,
       tos = { { comp2.id } },
       card = god_salvation,
     }
@@ -381,12 +381,12 @@ function TestStandard:testXiaoJi()
 
   FkTest.runInRoom(function()
     room:useCard{
-      from = me.id,
+      from = me,
       tos = {{me.id}},
       card = nioh
     }
     room:useCard{
-      from = me.id,
+      from = me,
       tos = {{me.id}},
       card = spear
     }

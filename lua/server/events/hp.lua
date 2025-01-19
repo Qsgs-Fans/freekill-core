@@ -210,7 +210,7 @@ function Damage:main()
     if parentUseData then
       local cardUseEvent = parentUseData.data[1]
       cardUseEvent.damageDealt = cardUseEvent.damageDealt or {}
-      cardUseEvent.damageDealt[damageData.to.id] = (cardUseEvent.damageDealt[damageData.to.id] or 0) + damageData.damage
+      cardUseEvent.damageDealt[damageData.to] = (cardUseEvent.damageDealt[damageData.to] or 0) + damageData.damage
     end
   end
 

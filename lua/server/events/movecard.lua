@@ -184,6 +184,39 @@ function MoveEventWrappers:moveCards(...)
   return exec(MoveCards, table.unpack(datas))
 end
 
+--- 向多名玩家告知一次移牌行为。
+---@param players? ServerPlayer[] @ 要被告知的玩家列表，默认为全员
+---@param moveDatas MoveCardsData[] @ 要告知的移牌信息列表
+function MoveEventWrappers:notifyMoveCards(players, moveDatas)
+  if players == nil or players == {} then players = self.players end
+  local card_moves = {}
+  for _, move in ipairs(moveDatas) do
+    local ret = move:toLegacy()
+    table.insert(card_moves, ret)
+  end
+  for _, p in ipairs(players) do
+    local arg = table.simpleClone(card_moves)
+    for _, move in ipairs(arg) do
+      -- local to = self:getPlayerById(move.to)
+
+      for _, info in ipairs(move.moveInfo) do
+        local realFromArea = self:getCardArea(info.cardId)
+        local playerAreas = { Player.Hand, Player.Equip, Player.Judge, Player.Special }
+        local virtualEquip
+
+        if table.contains(playerAreas, realFromArea) and move.from then
+          virtualEquip = self:getPlayerById(move.from):getVirualEquip(info.cardId)
+        end
+
+        if table.contains(playerAreas, move.toArea) and move.to and virtualEquip then
+          self:getPlayerById(move.to):addVirtualEquip(virtualEquip)
+        end
+      end
+    end
+    p:doNotify("MoveCards", json.encode(arg))
+  end
+end
+
 --- 让一名玩家获得一张牌
 ---@param player integer|ServerPlayer @ 要拿牌的玩家
 ---@param card integer|integer[]|Card|Card[] @ 要拿到的卡牌

@@ -71,7 +71,7 @@ local sendCardEmotionAndLog = function(room, useCardData)
 
   if not useCardData.noIndicate then
     room:doAnimate("Indicate", {
-      from = from,
+      from = from.id,
       to = useCardData.tos or Util.DummyTable,
     })
   end
@@ -87,14 +87,14 @@ local sendCardEmotionAndLog = function(room, useCardData)
       if #useCardIds == 0 then
         room:sendLog{
           type = "#UseV0CardToTargets",
-          from = from,
+          from = from.id,
           to = to,
           arg = card:toLogString(),
         }
       else
         room:sendLog{
           type = "#UseVCardToTargets",
-          from = from,
+          from = from.id,
           to = to,
           card = useCardIds,
           arg = card:toLogString(),
@@ -103,7 +103,7 @@ local sendCardEmotionAndLog = function(room, useCardData)
     else
       room:sendLog{
         type = "#UseCardToTargets",
-        from = from,
+        from = from.id,
         to = to,
         card = useCardIds
       }
@@ -126,14 +126,14 @@ local sendCardEmotionAndLog = function(room, useCardData)
       if #useCardIds == 0 then
         room:sendLog{
           type = "#UseV0CardToCard",
-          from = from,
+          from = from.id,
           arg = useCardData.toCard.name,
           arg2 = card:toLogString(),
         }
       else
         room:sendLog{
           type = "#UseVCardToCard",
-          from = from,
+          from = from.id,
           card = useCardIds,
           arg = useCardData.toCard.name,
           arg2 = card:toLogString(),
@@ -142,7 +142,7 @@ local sendCardEmotionAndLog = function(room, useCardData)
     else
       room:sendLog{
         type = "#UseCardToCard",
-        from = from,
+        from = from.id,
         card = useCardIds,
         arg = useCardData.toCard.name,
       }
@@ -152,13 +152,13 @@ local sendCardEmotionAndLog = function(room, useCardData)
       if #useCardIds == 0 then
         room:sendLog{
           type = "#UseV0Card",
-          from = from,
+          from = from.id,
           arg = card:toLogString(),
         }
       else
         room:sendLog{
           type = "#UseVCard",
-          from = from,
+          from = from.id,
           card = useCardIds,
           arg = card:toLogString(),
         }
@@ -166,7 +166,7 @@ local sendCardEmotionAndLog = function(room, useCardData)
     else
       room:sendLog{
         type = "#UseCard",
-        from = from,
+        from = from.id,
         card = useCardIds,
       }
     end
@@ -237,7 +237,7 @@ function UseCard:main()
       local tos = table.map(useCardData.tos, function(e) return e[1] end)
       room:sendFootnote(useCardIds, {
         type = "##UseCardTo",
-        from = useCardData.from,
+        from = useCardData.from.id,
         to = tos,
       })
       if card:isVirtual() or card ~= _card then
@@ -246,7 +246,7 @@ function UseCard:main()
     else
       room:sendFootnote(useCardIds, {
         type = "##UseCard",
-        from = useCardData.from,
+        from = useCardData.from.id,
       })
       if card:isVirtual() or card ~= _card then
         room:sendCardVirtName(useCardIds, card.name)
@@ -311,13 +311,13 @@ function RespondCard:main()
     if #cardIds == 0 then
       room:sendLog{
         type = "#ResponsePlayV0Card",
-        from = from,
+        from = from.id,
         arg = card:toLogString(),
       }
     else
       room:sendLog{
         type = "#ResponsePlayVCard",
-        from = from,
+        from = from.id,
         card = cardIds,
         arg = card:toLogString(),
       }
@@ -325,7 +325,7 @@ function RespondCard:main()
   else
     room:sendLog{
       type = "#ResponsePlayCard",
-      from = from,
+      from = from.id,
       card = cardIds,
     }
   end
@@ -336,14 +336,14 @@ function RespondCard:main()
   if #cardIds > 0 then
     room:sendFootnote(cardIds, {
       type = "##ResponsePlayCard",
-      from = from,
+      from = from.id,
     })
     if card:isVirtual() then
       room:sendCardVirtName(cardIds, card.name)
     end
   end
 
-  logic:trigger(fk.CardResponding, respondCardData.from, respondCardData)
+  logic:trigger(fk.CardResponding, from, respondCardData)
 end
 
 function RespondCard:clear()
@@ -385,7 +385,7 @@ function CardEffect:main()
     if
       not cardEffectData.toCard and
       (
-        not (cardEffectData.to:isAlive() and cardEffectData.to)
+        not (cardEffectData.to and cardEffectData.to:isAlive())
         or #room:deadPlayerFilter(TargetGroup:getRealTargets(cardEffectData.tos)) == 0
       )
     then
@@ -457,7 +457,7 @@ local onAim = function(room, useCardData, aimEventCollaborators)
 
       if not aimEventCollaborators[toId] or collaboratorsIndex[toId] > #aimEventCollaborators[toId] then
         aimStruct = {
-          from = useCardData.from,
+          from = useCardData.from.id,
           card = useCardData.card,
           to = toId,
           targetGroup = useCardData.tos,
@@ -488,7 +488,7 @@ local onAim = function(room, useCardData, aimEventCollaborators)
         initialEvent = true
       else
         aimStruct = aimEventCollaborators[toId][collaboratorsIndex[toId]]
-        aimStruct.from = useCardData.from
+        aimStruct.from = useCardData.from.id
         aimStruct.card = useCardData.card
         aimStruct.tos = aimGroup
         aimStruct.targetGroup = useCardData.tos
@@ -509,7 +509,7 @@ local onAim = function(room, useCardData, aimEventCollaborators)
         room:sortPlayersByAction(aimEventTargetGroup, true)
       end
 
-      useCardData.from = aimStruct.from
+      useCardData.from = room:getPlayerById(aimStruct.from)
       useCardData.tos = aimEventTargetGroup
       useCardData.nullifiedTargets = aimStruct.nullifiedTargets
       useCardData.additionalEffect = aimStruct.additionalEffect
@@ -558,7 +558,7 @@ function UseCardEventWrappers:doCardUseEffect(useCardData)
 
   local realCardIds = self:getSubcardsByRule(useCardData.card, { Card.Processing })
 
-  self.logic:trigger(fk.BeforeCardUseEffect, self:getPlayerById(useCardData.from), useCardData)
+  self.logic:trigger(fk.BeforeCardUseEffect, useCardData.from, useCardData)
   -- If using Equip or Delayed trick, move them to the area and return
   if useCardData.card.type == Card.TypeEquip then
     if #realCardIds == 0 then
@@ -701,7 +701,7 @@ function UseCardEventWrappers:doCardUseEffect(useCardData)
         }
 
         if aimEventCollaborators[toId] then
-          cardEffectData.to = toId
+          cardEffectData.to = self:getPlayerById(toId)
           collaboratorsIndex[toId] = collaboratorsIndex[toId] or 1
           local curAimEvent = aimEventCollaborators[toId][collaboratorsIndex[toId]]
 
@@ -790,13 +790,13 @@ function UseCardEventWrappers:handleCardEffect(event, cardEffectData)
       Fk.currentResponsePattern = "jink"
 
       for i = 1, loopTimes do
-        local to = self:getPlayerById(cardEffectData.to)
+        local to = cardEffectData.to
         local prompt = ""
         if cardEffectData.from then
           if loopTimes == 1 then
-            prompt = "#slash-jink:" .. cardEffectData.from
+            prompt = "#slash-jink:" .. cardEffectData.from.id
           else
-            prompt = "#slash-jink-multi:" .. cardEffectData.from .. "::" .. i .. ":" .. loopTimes
+            prompt = "#slash-jink-multi:" .. cardEffectData.from.id .. "::" .. i .. ":" .. loopTimes
           end
         end
 
@@ -866,9 +866,9 @@ function UseCardEventWrappers:handleCardEffect(event, cardEffectData)
 
       local prompt = ""
       if cardEffectData.to then
-        prompt = "#AskForNullification::" .. cardEffectData.to .. ":" .. cardEffectData.card.name
+        prompt = "#AskForNullification::" .. cardEffectData.to.id .. ":" .. cardEffectData.card.name
       elseif cardEffectData.from then
-        prompt = "#AskForNullificationWithoutTo:" .. cardEffectData.from .. "::" .. cardEffectData.card.name
+        prompt = "#AskForNullificationWithoutTo:" .. cardEffectData.from.id .. "::" .. cardEffectData.card.name
       end
 
       local extra_data
@@ -892,7 +892,7 @@ function UseCardEventWrappers:handleCardEffect(event, cardEffectData)
   elseif event == fk.CardEffecting then
     if cardEffectData.card.skill then
       local data = { ---@type SkillEffectDataSpec
-        who = self:getPlayerById(cardEffectData.from),
+        who = cardEffectData.from,
         skill = cardEffectData.card.skill,
         skill_cb = function ()
           cardEffectData.card.skill:onEffect(self, cardEffectData)
@@ -937,7 +937,7 @@ function UseCardEventWrappers:useVirtualCard(card_name, subcards, from, tos, ski
   if subcards then card:addSubcards(Card:getIdList(subcards)) end
 
   local use = { ---@type UseCardDataSpec
-    from = from.id,
+    from = from,
     tos = table.map(tos, function(p) return { p.id } end),
     card = card,
     extraUse = extra

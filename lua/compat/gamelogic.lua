@@ -146,7 +146,15 @@ function M.triggerForLegacy(self, event, target, data, refresh_only)
 
         table.insert(invoked_skills, skill)
         broken = skill:trigger(event, target, player, data)
-        if data_converted then orig_data:loadLegacy(data) end
+        if data_converted then
+          if orig_data.loadLegacy then
+            orig_data:loadLegacy(data)
+          elseif orig_data[1] and orig_data[1].loadLegacy then
+            for i, single_data in ipairs(data) do
+              orig_data[i]:loadLegacy(single_data)
+            end
+          end
+        end
         skill_names = table.map(table.filter(legacy_skills, filter_func), Util.NameMapper)
 
         broken = broken or (event == fk.AskForPeaches

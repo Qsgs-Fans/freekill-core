@@ -235,25 +235,25 @@ function ActiveSkill:prompt(selected_cards, selected_targets) return "" end
 ------- }
 
 ---@param room Room
----@param cardUseEvent CardUseStruct | SkillEffectEvent
+---@param cardUseEvent UseCardData | SkillEffectEvent
 function ActiveSkill:onUse(room, cardUseEvent) end
 
 ---@param room Room
----@param cardUseEvent CardUseStruct | SkillEffectEvent
+---@param cardUseEvent UseCardData | SkillEffectEvent
 ---@param finished? boolean?
 function ActiveSkill:onAction(room, cardUseEvent, finished) end
 
 ---@param room Room
----@param cardEffectEvent CardEffectEvent | SkillEffectEvent
+---@param cardEffectEvent CardEffectData | SkillEffectData
 function ActiveSkill:aboutToEffect(room, cardEffectEvent) end
 
 ---@param room Room
----@param cardEffectEvent CardEffectEvent | SkillEffectEvent
+---@param cardEffectEvent CardEffectData | SkillEffectData
 function ActiveSkill:onEffect(room, cardEffectEvent) end
 
 -- Delayed Trick Only
 ---@param room Room
----@param cardEffectEvent CardEffectEvent | SkillEffectEvent
+---@param cardEffectEvent CardEffectData | SkillEffectData
 function ActiveSkill:onNullified(room, cardEffectEvent) end
 
 ---@param to_select integer @ id of the target

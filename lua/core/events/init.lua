@@ -13,8 +13,8 @@ function TriggerData:__index(k)
 end
 
 function TriggerData:__newindex(k, v)
-  if k == "_data" then rawset(self, k, v) end
-  if not self._data then rawset(self, k, v) end
+  if k == "_data" then return rawset(self, k, v) end
+  if not self._data then return rawset(self, k, v) end
   self._data[k] = v
 end
 

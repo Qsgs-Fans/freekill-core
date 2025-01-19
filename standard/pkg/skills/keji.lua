@@ -20,7 +20,7 @@ return fk.CreateSkill({
             break
           end
         end
-        return in_play and e.data[1].from == player.id and e.data[1].card.trueName == "slash"
+        return in_play and e.data[1].from == player and e.data[1].card.trueName == "slash"
       end
       return #player.room.logic:getEventsOfScope(GameEvent.UseCard, 1, PlayCheck, Player.HistoryTurn) == 0
       and #player.room.logic:getEventsOfScope(GameEvent.RespondCard, 1, PlayCheck, Player.HistoryTurn) == 0

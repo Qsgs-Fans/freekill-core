@@ -21,7 +21,7 @@ skill:addTest(function()
   FkTest.setNextReplies(me, { "__cancel", "1" })
   FkTest.runInRoom(function()
     room:useCard{
-      from = comp2.id,
+      from = comp2,
       tos = { { me.id } },
       card = slash,
     }
