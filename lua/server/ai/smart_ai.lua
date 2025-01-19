@@ -138,7 +138,7 @@ SmartAI:setSkillAI("__card_skill", {
     local val_func = function(targets)
       logic.benefit = 0
       logic:useCard({
-        from = ai.player.id,
+        from = ai.player,
         tos = table.map(targets, function(p) return { p.id } end),
         card = ai:getSelectedCard(),
       })

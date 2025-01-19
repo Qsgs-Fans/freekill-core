@@ -912,6 +912,11 @@ end
 --- 对“打出牌”进行处理
 ---@param responseCardData RespondCardDataSpec
 function UseCardEventWrappers:responseCard(responseCardData)
+  if responseCardData.from then
+    if type(responseCardData.from) == "number" then
+      responseCardData.from = self:getPlayerById(responseCardData.from)
+    end
+  end
   return exec(RespondCard, RespondCardData:new(responseCardData))
 end
 
