@@ -1,23 +1,25 @@
 --- 将新数据改为牢数据
 function SkillEffectData:toLegacy()
   local ret = table.simpleClone(rawget(self, "_data"))
-  if ret.from then
-    ret.from = ret.from.id
+  if not ret.skill_data then return end
+  if ret.skill_data.from then
+    ret.skill_data.from = ret.skill_data.from.id
   end
 
-  if ret.tos then
+  if ret.skill_data.tos then
     local new_v = {}
-    for _, p in ipairs(ret.tos) do
+    for _, p in ipairs(ret.skill_data.tos) do
       table.insert(new_v, p.id)
     end
-    ret.tos = new_v
+    ret.skill_data.tos = new_v
   end
   return ret
 end
 
 --- 将牢数据改为新数据
 function SkillEffectData:loadLegacy(data)
-  for k, v in pairs(data) do
+  if not data.skill_data then return end
+  for k, v in pairs(data.skill_data) do
     if table.contains({"from"}, k) then
       self[k] = Fk:currentRoom():getPlayerById(v)
     elseif table.contains({"tos"}, k) then

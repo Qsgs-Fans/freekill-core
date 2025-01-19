@@ -107,7 +107,20 @@ function fk.CreateActiveSkill(spec)
     -- print(spec.name .. ": feasible is deprecated. Use target_num and card_num instead.")
     skill.feasible = spec.feasible
   end
-  if spec.on_use then skill.onUse = spec.on_use end
+  if spec.on_use then skill.onUse = function(self, room, effect)
+    if type(effect.from) == "table" then
+      effect.from = effect.from.id
+    end
+
+    if effect.tos and type(effect.tos[1]) == "table" then
+      local new_v = {}
+      for _, p in ipairs(effect.tos) do
+        table.insert(new_v, p.id)
+      end
+      effect.tos = new_v
+    end
+    spec.on_use(self, room, effect)
+  end end
   if spec.on_action then skill.onAction = spec.on_action end
   if spec.about_to_effect then skill.aboutToEffect = spec.about_to_effect end
   if spec.on_effect then skill.onEffect = spec.on_effect end

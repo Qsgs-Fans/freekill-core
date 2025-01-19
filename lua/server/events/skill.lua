@@ -90,6 +90,21 @@ end
 ---@param effect_cb fun() @ 实际要调用的函数
 ---@param skill_data? table @ 技能的信息
 function SkillEventWrappers:useSkill(player, skill, effect_cb, skill_data)
+  if skill_data then
+    for k, v in pairs(skill_data) do
+      if table.contains({"from"}, k) and type(v) == "number" then
+        skill_data[k] = self:getPlayerById(v)
+      elseif table.contains({"tos"}, k) and type(v[1]) == "number" then
+        local new_v = {}
+        for _, pid in ipairs(v) do
+          table.insert(new_v, self:getPlayerById(pid))
+        end
+        skill_data[k] = new_v
+      else
+        skill_data[k] = v
+      end
+    end
+  end
   local data = SkillEffectData:new{
     who = player,
     skill = skill,

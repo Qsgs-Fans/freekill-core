@@ -519,7 +519,7 @@ function GameLogic:getCurrentSkillName()
   local skillEvent = self:getCurrentEvent()
   local ret = nil
   if skillEvent.event == GameEvent.SkillEffect then
-    local _, _, _skill = table.unpack(skillEvent.data)
+    local _skill = skillEvent.data[1].skill
     local skill = _skill.main_skill and _skill.main_skill or _skill
     ret = skill.name
   end

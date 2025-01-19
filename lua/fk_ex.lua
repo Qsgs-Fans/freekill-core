@@ -445,8 +445,8 @@ end
 ---@field public card_filter? fun(self: ActiveSkill, to_select: integer, selected: integer[], selected_targets: integer[]): any
 ---@field public target_filter? fun(self: ActiveSkill, to_select: integer, selected: integer[], selected_cards: integer[], card?: Card, extra_data: any): any
 ---@field public feasible? fun(self: ActiveSkill, selected: integer[], selected_cards: integer[]): any
----@field public on_use? fun(self: ActiveSkill, room: Room, cardUseEvent: UseCardData | SkillEffectEvent): any
----@field public on_action? fun(self: ActiveSkill, room: Room, cardUseEvent: UseCardData | SkillEffectEvent, finished: boolean): any
+---@field public on_use? fun(self: ActiveSkill, room: Room, cardUseEvent: UseCardData | SkillEffectData): any
+---@field public on_action? fun(self: ActiveSkill, room: Room, cardUseEvent: UseCardData | SkillEffectData, finished: boolean): any
 ---@field public about_to_effect? fun(self: ActiveSkill, room: Room, cardEffectEvent: CardEffectData | SkillEffectData): any
 ---@field public on_effect? fun(self: ActiveSkill, room: Room, cardEffectEvent: CardEffectData | SkillEffectData): any
 ---@field public on_nullified? fun(self: ActiveSkill, room: Room, cardEffectEvent: CardEffectData | SkillEffectData): any

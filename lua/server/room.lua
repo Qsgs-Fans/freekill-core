@@ -936,7 +936,7 @@ function Room:askForUseActiveSkill(player, skill_name, prompt, cancelable, extra
     skill:onUse(self, {
       from = player.id,
       cards = selected_cards,
-      tos = targets,
+      tos = table.map(targets, Util.Id2PlayerMapper),
     })
   end
 

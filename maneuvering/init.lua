@@ -32,8 +32,8 @@ local thunderSlashSkill = fk.CreateActiveSkill{
     local from = effect.from
 
     room:damage({
-      from = room:getPlayerById(from),
-      to = room:getPlayerById(to),
+      from = from,
+      to = to,
       card = effect.card,
       damage = 1,
       damageType = fk.ThunderDamage,
@@ -84,8 +84,8 @@ local fireSlashSkill = fk.CreateActiveSkill{
     local from = effect.from
 
     room:damage({
-      from = room:getPlayerById(from),
-      to = room:getPlayerById(to),
+      from = from,
+      to = to,
       card = effect.card,
       damage = 1,
       damageType = fk.FireDamage,
@@ -122,7 +122,7 @@ local analepticSkill = fk.CreateActiveSkill{
   end,
   on_use = function(_, _, use)
     if not use.tos or #TargetGroup:getRealTargets(use.tos) == 0 then
-      use.tos = { { use.from } }
+      use.tos = { { use.from.id } }
     end
 
     if use.extra_data and use.extra_data.analepticRecover then
@@ -130,12 +130,12 @@ local analepticSkill = fk.CreateActiveSkill{
     end
   end,
   on_effect = function(_, room, effect)
-    local to = room:getPlayerById(effect.to)
+    local to = effect.to
     if effect.extra_data and effect.extra_data.analepticRecover then
       room:recover({
         who = to,
         num = 1,
-        recoverBy = room:getPlayerById(effect.from),
+        recoverBy = effect.from,
         card = effect.card,
       })
     else
@@ -219,7 +219,7 @@ local ironChainCardSkill = fk.CreateActiveSkill{
       self:modTargetFilter(to_select, selected, Self.id, card)
   end,
   on_effect = function(_, room, cardEffectEvent)
-    local to = room:getPlayerById(cardEffectEvent.to)
+    local to = cardEffectEvent.to
     to:setChainState(not to.chained)
   end,
 }
@@ -253,8 +253,8 @@ local fireAttackSkill = fk.CreateActiveSkill{
       self:modTargetFilter(to_select, selected, Self.id, card)
   end,
   on_effect = function(self, room, cardEffectEvent)
-    local from = room:getPlayerById(cardEffectEvent.from)
-    local to = room:getPlayerById(cardEffectEvent.to)
+    local from = cardEffectEvent.from
+    local to = cardEffectEvent.to
     if to:isKongcheng() then return end
 
     local showCard = room:askForCard(to, 1, 1, false, self.name, false, ".|.|.|hand", "#fire_attack-show:" .. from.id)[1]
@@ -303,7 +303,7 @@ local supplyShortageSkill = fk.CreateActiveSkill{
   end,
   target_num = 1,
   on_effect = function(self, room, effect)
-    local to = room:getPlayerById(effect.to)
+    local to = effect.to
     local judge = {
       who = to,
       reason = "supply_shortage",

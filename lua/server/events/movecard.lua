@@ -139,7 +139,7 @@ local function moveInfoTranslate(room, ...)
           to = room:getPlayerById(cardsMoveInfo.to),
           toArea = cardsMoveInfo.toArea,
           moveReason = cardsMoveInfo.moveReason,
-          proposer = room:getPlayerById(cardsMoveInfo.proposer),
+          proposer = type(cardsMoveInfo.proposer) == "number" and room:getPlayerById(cardsMoveInfo.proposer) or cardsMoveInfo.proposer,
           skillName = cardsMoveInfo.skillName,
           moveVisible = cardsMoveInfo.moveVisible,
           specialName = cardsMoveInfo.specialName,
