@@ -153,7 +153,7 @@ local peachSkill = fk.CreateActiveSkill{
   end,
   on_use = function(self, room, use)
     if not use.tos or #TargetGroup:getRealTargets(use.tos) == 0 then
-      use.tos = { { use.from.id } }
+      use.tos = { { use.from } }
     end
   end,
   on_effect = function(self, room, effect)
@@ -438,7 +438,7 @@ local exNihiloSkill = fk.CreateActiveSkill{
   end,
   on_use = function(self, room, cardUseEvent)
     if not cardUseEvent.tos or #TargetGroup:getRealTargets(cardUseEvent.tos) == 0 then
-      cardUseEvent.tos = { { cardUseEvent.from.id } }
+      cardUseEvent.tos = { { cardUseEvent.from } }
     end
   end,
   on_effect = function(self, room, effect)
@@ -691,7 +691,7 @@ local lightningSkill = fk.CreateActiveSkill{
   end,
   on_use = function(self, room, use)
     if not use.tos or #TargetGroup:getRealTargets(use.tos) == 0 then
-      use.tos = { { use.from.id } }
+      use.tos = { { use.from } }
     end
   end,
   on_effect = function(self, room, effect)
@@ -892,7 +892,7 @@ local armorInvalidity = fk.CreateInvaliditySkill {
           elseif event.event == GameEvent.UseCard then
             local use = event.data[1]
             if not table.contains(TargetGroup:getRealTargets(use.tos), player.id) then return false end
-            from = use.from
+            from = RoomInstance:getPlayerById(use.from)
             break
           end
           event = event.parent
@@ -1087,7 +1087,7 @@ local bladeSkill = fk.CreateTriggerSkill{
   attached_equip = "blade",
   events = {fk.CardEffectCancelledOut},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self) and data.from == player and data.card.trueName == "slash" and not data.to.dead
+    return player:hasSkill(self) and data.from == player.id and data.card.trueName == "slash" and not player.room:getPlayerById(data.to).dead
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
@@ -1153,7 +1153,7 @@ local axeSkill = fk.CreateTriggerSkill{
   attached_equip = "axe",
   events = {fk.CardEffectCancelledOut},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self) and data.from == player and data.card.trueName == "slash" and
+    return player:hasSkill(self) and data.from == player.id and data.card.trueName == "slash" and
       not player.room:getPlayerById(data.to).dead
   end,
   on_cost = function(self, event, target, player, data)
