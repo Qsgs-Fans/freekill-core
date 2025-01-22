@@ -45,8 +45,8 @@ local slashSkill = fk.CreateActiveSkill{
     )
   end,
   on_effect = function(self, room, effect)
-    local from = effect.from
-    local to = effect.to
+    local from = room:getPlayerById(effect.from)
+    local to = room:getPlayerById(effect.to)
     if not to.dead then
       room:damage({
         from = from,
@@ -157,8 +157,8 @@ local peachSkill = fk.CreateActiveSkill{
     end
   end,
   on_effect = function(self, room, effect)
-    local player = effect.from
-    local target = effect.to
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.to)
     if target:isWounded() and not target.dead then
       room:recover({
         who = target,
@@ -202,8 +202,8 @@ local dismantlementSkill = fk.CreateActiveSkill{
       self:modTargetFilter(to_select, selected, Self.id, card)
   end,
   on_effect = function(self, room, effect)
-    local from = effect.from
-    local to = effect.to
+    local from = room:getPlayerById(effect.from)
+    local to = room:getPlayerById(effect.to)
     if from.dead or to.dead or to:isAllNude() then return end
     local cid = room:askForCardChosen(from, to, "hej", self.name)
     room:throwCard({cid}, self.name, to, from)
@@ -244,8 +244,8 @@ local snatchSkill = fk.CreateActiveSkill{
   end,
   target_num = 1,
   on_effect = function(self, room, effect)
-    local from = effect.from
-    local to = effect.to
+    local from = room:getPlayerById(effect.from)
+    local to = room:getPlayerById(effect.to)
     if from.dead or to.dead or to:isAllNude() then return end
     local cid = room:askForCardChosen(from, to, "hej", self.name)
     room:obtainCard(from, cid, false, fk.ReasonPrey)
@@ -280,8 +280,8 @@ local duelSkill = fk.CreateActiveSkill{
   end,
   target_num = 1,
   on_effect = function(self, room, effect)
-    local to = effect.to
-    local from = effect.from
+    local to = room:getPlayerById(effect.to)
+    local from = room:getPlayerById(effect.from)
     local responsers = { to, from }
     local currentTurn = 1
     local currentResponser = to
@@ -393,7 +393,7 @@ local collateralSkill = fk.CreateActiveSkill{
     cardUseEvent.tos = tos
   end,
   on_effect = function(self, room, effect)
-    local to = effect.to
+    local to = room:getPlayerById(effect.to)
     if to.dead then return end
     local prompt = "#collateral-slash:"..effect.from..":"..effect.subTargets[1]
     if #effect.subTargets > 1 then
@@ -408,7 +408,7 @@ local collateralSkill = fk.CreateActiveSkill{
       use.extraUse = true
       room:useCard(use)
     else
-      local from = effect.from
+      local from = room:getPlayerById(effect.from)
       if from.dead then return end
       local weapons = to:getEquipments(Card.SubtypeWeapon)
       if #weapons > 0 then
@@ -442,7 +442,7 @@ local exNihiloSkill = fk.CreateActiveSkill{
     end
   end,
   on_effect = function(self, room, effect)
-    local target = effect.to
+    local target = room:getPlayerById(effect.to)
     if target.dead then return end
     target:drawCards(2, "ex_nihilo")
   end
@@ -496,7 +496,7 @@ local savageAssaultSkill = fk.CreateActiveSkill{
     return user ~= to_select
   end,
   on_effect = function(self, room, effect)
-    local cardResponded = room:askForResponse(effect.to, 'slash', nil, nil, true, nil, effect)
+    local cardResponded = room:askForResponse(room:getPlayerById(effect.to), 'slash', nil, nil, true, nil, effect)
 
     if cardResponded then
       room:responseCard({
@@ -506,8 +506,8 @@ local savageAssaultSkill = fk.CreateActiveSkill{
       })
     else
       room:damage({
-        from = effect.from,
-        to = effect.to,
+        from = room:getPlayerById(effect.from),
+        to = room:getPlayerById(effect.to),
         card = effect.card,
         damage = 1,
         damageType = fk.NormalDamage,
@@ -540,7 +540,7 @@ local archeryAttackSkill = fk.CreateActiveSkill{
     return user ~= to_select
   end,
   on_effect = function(self, room, effect)
-    local cardResponded = room:askForResponse(effect.to, 'jink', nil, nil, true, nil, effect)
+    local cardResponded = room:askForResponse(room:getPlayerById(effect.to), 'jink', nil, nil, true, nil, effect)
 
     if cardResponded then
       room:responseCard({
@@ -550,8 +550,8 @@ local archeryAttackSkill = fk.CreateActiveSkill{
       })
     else
       room:damage({
-        from = effect.from,
-        to = effect.to,
+        from = room:getPlayerById(effect.from),
+        to = room:getPlayerById(effect.to),
         card = effect.card,
         damage = 1,
         damageType = fk.NormalDamage,
@@ -580,13 +580,13 @@ local godSalvationSkill = fk.CreateActiveSkill{
   on_use = Util.GlobalOnUse,
   mod_target_filter = Util.TrueFunc,
   about_to_effect = function(self, room, effect)
-    if not effect.to:isWounded() then
+    if not room:getPlayerById(effect.to):isWounded() then
       return true
     end
   end,
   on_effect = function(self, room, effect)
-    local player = effect.from
-    local target = effect.to
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.to)
     if target:isWounded() and not target.dead then
       room:recover({
         who = target,
@@ -656,7 +656,7 @@ local amazingGraceSkill = fk.CreateActiveSkill{
     end
   end,
   on_effect = function(self, room, effect)
-    local to = effect.to
+    local to = room:getPlayerById(effect.to)
     if not (effect.extra_data and effect.extra_data.AGFilled) then
       return
     end
@@ -695,7 +695,7 @@ local lightningSkill = fk.CreateActiveSkill{
     end
   end,
   on_effect = function(self, room, effect)
-    local to = effect.to
+    local to = room:getPlayerById(effect.to)
     local judge = {
       who = to,
       reason = "lightning",
@@ -723,7 +723,7 @@ local lightningSkill = fk.CreateActiveSkill{
     end
   end,
   on_nullified = function(self, room, effect)
-    local to = effect.to
+    local to = room:getPlayerById(effect.to)
     local nextp = to
     repeat
       nextp = nextp:getNextAlive(true)
@@ -778,7 +778,7 @@ local indulgenceSkill = fk.CreateActiveSkill{
   end,
   target_num = 1,
   on_effect = function(self, room, effect)
-    local to = effect.to
+    local to = room:getPlayerById(effect.to)
     local judge = {
       who = to,
       reason = "indulgence",

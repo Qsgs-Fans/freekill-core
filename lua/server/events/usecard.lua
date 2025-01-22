@@ -429,12 +429,11 @@ end
 ---@param useCardData UseCardDataSpec @ 使用数据
 ---@return boolean
 function UseCardEventWrappers:useCard(useCardData)
-  if useCardData.from then
-    if type(useCardData.from) == "number" then
-      useCardData.from = self:getPlayerById(useCardData.from)
-    end
+  local new_data = UseCardData:new(useCardData)
+  if type(useCardData.from) == "number" then
+    new_data:loadLegacy(useCardData)
   end
-  return exec(UseCard, UseCardData:new(useCardData))
+  return exec(UseCard, new_data)
 end
 
 ---@param room Room
@@ -912,12 +911,11 @@ end
 --- 对“打出牌”进行处理
 ---@param responseCardData RespondCardDataSpec
 function UseCardEventWrappers:responseCard(responseCardData)
-  if responseCardData.from then
-    if type(responseCardData.from) == "number" then
-      responseCardData.from = self:getPlayerById(responseCardData.from)
-    end
+  local new_data = RespondCardData:new(responseCardData)
+  if type(new_data.from) == "number" then
+    new_data:loadLegacy(responseCardData)
   end
-  return exec(RespondCard, RespondCardData:new(responseCardData))
+  return exec(RespondCard, new_data)
 end
 
 --- 令角色对某些目标使用虚拟卡牌，会检测使用和目标合法性。不合法则返回nil

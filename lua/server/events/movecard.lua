@@ -135,11 +135,11 @@ local function moveInfoTranslate(room, ...)
         ---@type MoveCardsDataSpec
         local moveCardsSpec = {
           moveInfo = infos,
-          from = room:getPlayerById(cardsMoveInfo.from),
-          to = room:getPlayerById(cardsMoveInfo.to),
+          from = cardsMoveInfo.from,
+          to = cardsMoveInfo.to,
           toArea = cardsMoveInfo.toArea,
           moveReason = cardsMoveInfo.moveReason,
-          proposer = type(cardsMoveInfo.proposer) == "number" and room:getPlayerById(cardsMoveInfo.proposer) or cardsMoveInfo.proposer,
+          proposer = cardsMoveInfo.proposer,
           skillName = cardsMoveInfo.skillName,
           moveVisible = cardsMoveInfo.moveVisible,
           specialName = cardsMoveInfo.specialName,
@@ -148,15 +148,16 @@ local function moveInfoTranslate(room, ...)
           moveMark = cardsMoveInfo.moveMark,
           visiblePlayers = cardsMoveInfo.visiblePlayers,
         }
-
-        table.insert(moveCardsSpecs, MoveCardsData:new(moveCardsSpec))
+        local new_data = MoveCardsData:new({})
+        new_data:loadLegacy(moveCardsSpec)
+        table.insert(moveCardsSpecs, new_data)
       end
 
       if #abortMoveInfos > 0 then
         ---@type MoveCardsDataSpec
         local moveCardsSpec = {
           moveInfo = abortMoveInfos,
-          from = room:getPlayerById(cardsMoveInfo.from),
+          from = cardsMoveInfo.from,
           toArea = Card.DiscardPile,
           moveReason = fk.ReasonPutIntoDiscardPile,
           moveVisible = true,
@@ -165,8 +166,10 @@ local function moveInfoTranslate(room, ...)
           --drawPilePosition = cardsMoveInfo.drawPilePosition,
           --moveMark = cardsMoveInfo.moveMark,
         }
+        local new_data = MoveCardsData:new({})
+        new_data:loadLegacy(moveCardsSpec)
 
-        table.insert(moveCardsSpecs, MoveCardsData:new(moveCardsSpec))
+        table.insert(moveCardsSpecs, new_data)
       end
     end
   end

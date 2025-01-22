@@ -108,36 +108,95 @@ function fk.CreateActiveSkill(spec)
     skill.feasible = spec.feasible
   end
   if spec.on_use then skill.onUse = function(self, room, effect)
-    if type(effect.from) == "table" then
-      effect.from = effect.from.id
-    end
-
-    if effect.tos and type(effect.tos[1]) == "table" then
-      local new_v = {}
-      for _, p in ipairs(effect.tos) do
-        table.insert(new_v, p.id)
-      end
-      effect.tos = new_v
+    local converted = false
+    if effect.toLegacy then
+      converted = true
+      effect = effect:toLegacy()
+    elseif type(effect.from) == "table" or (((effect.tos or {})[1]).class or {}).name == "ServerPlayer" then
+      converted = true
+      effect = SkillEffectData:_toLegacySkillData(effect)
     end
     spec.on_use(self, room, effect)
-  end end
-  if spec.on_action then skill.onAction = spec.on_action end
-  if spec.about_to_effect then skill.aboutToEffect = spec.about_to_effect end
-  if spec.on_effect then skill.onEffect = function(self, room, effect)
-    if type(effect.from) == "table" then
-      effect.from = effect.from.id
-    end
-
-    if effect.tos and type(effect.tos[1]) == "table" then
-      local new_v = {}
-      for _, p in ipairs(effect.tos) do
-        table.insert(new_v, p.id)
+    if converted then
+      if effect.loadLegacy then
+        effect = effect:loadLegacy()
+      else
+        effect = SkillEffectData:_loadLegacySkillData(effect)
       end
-      effect.tos = new_v
+    end
+  end end
+  if spec.on_action then skill.onAction = function(self, room, effect, finished)
+    local converted = false
+    if effect.toLegacy then
+      converted = true
+      effect = effect:toLegacy()
+    elseif type(effect.from) == "table" or (((effect.tos or {})[1]).class or {}).name == "ServerPlayer" then
+      converted = true
+      effect = SkillEffectData:_toLegacySkillData(effect)
+    end
+    spec.about_to_effect(self, room, effect, finished)
+    if converted then
+      if effect.loadLegacy then
+        effect = effect:loadLegacy()
+      else
+        effect = SkillEffectData:_loadLegacySkillData(effect)
+      end
+    end
+  end end
+  if spec.about_to_effect then skill.aboutToEffect = function(self, room, effect)
+    local converted = false
+    if effect.toLegacy then
+      converted = true
+      effect = effect:toLegacy()
+    elseif type(effect.from) == "table" or (((effect.tos or {})[1]).class or {}).name == "ServerPlayer" then
+      converted = true
+      effect = SkillEffectData:_toLegacySkillData(effect)
+    end
+    spec.about_to_effect(self, room, effect)
+    if converted then
+      if effect.loadLegacy then
+        effect = effect:loadLegacy()
+      else
+        effect = SkillEffectData:_loadLegacySkillData(effect)
+      end
+    end
+  end end
+  if spec.on_effect then skill.onEffect = function(self, room, effect)
+    local converted = false
+    if effect.toLegacy then
+      converted = true
+      effect = effect:toLegacy()
+    elseif type(effect.from) == "table" or (((effect.tos or {})[1]).class or {}).name == "ServerPlayer" then
+      converted = true
+      effect = SkillEffectData:_toLegacySkillData(effect)
     end
     spec.on_effect(self, room, effect)
+    if converted then
+      if effect.loadLegacy then
+        effect = effect:loadLegacy()
+      else
+        effect = SkillEffectData:_loadLegacySkillData(effect)
+      end
+    end
   end end
-  if spec.on_nullified then skill.onNullified = spec.on_nullified end
+  if spec.on_nullified then skill.onNullified = function(self, room, effect)
+    local converted = false
+    if effect.toLegacy then
+      converted = true
+      effect = effect:toLegacy()
+    elseif type(effect.from) == "table" or (((effect.tos or {})[1]).class or {}).name == "ServerPlayer" then
+      converted = true
+      effect = SkillEffectData:_toLegacySkillData(effect)
+    end
+    spec.on_nullified(self, room, effect)
+    if converted then
+      if effect.loadLegacy then
+        effect = effect:loadLegacy()
+      else
+        effect = SkillEffectData:_loadLegacySkillData(effect)
+      end
+    end
+  end end
   if spec.prompt then skill.prompt = spec.prompt end
   if spec.target_tip then skill.targetTip = spec.target_tip end
 

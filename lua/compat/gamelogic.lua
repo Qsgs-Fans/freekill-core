@@ -88,11 +88,9 @@ function M.triggerForLegacy(self, event, target, data, refresh_only)
       data = data:toLegacy()
     elseif data[1] and data[1].toLegacy then
       data_converted = true
-      local new_data = {}
       for _, single_data in ipairs(data) do
-        table.insert(new_data, single_data:toLegacy())
+        single_data:toLegacy()
       end
-      data = new_data
     end
   end
 
