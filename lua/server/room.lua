@@ -934,7 +934,7 @@ function Room:askForUseActiveSkill(player, skill_name, prompt, cancelable, extra
 
   if skill:isInstanceOf(ActiveSkill) and not extra_data.skipUse then
     skill:onUse(self, {
-      from = player.id,
+      from = player,
       cards = selected_cards,
       tos = table.map(targets, Util.Id2PlayerMapper),
     })
@@ -1937,9 +1937,9 @@ function Room:handleUseCardReply(player, data)
         skill:onUse(self, {
           from = player,
           cards = selected_cards,
-          tos = targets,
+          tos = table.map(targets, Util.Id2PlayerMapper),
         })
-      end, {tos = targets, cards = selected_cards, cost_data = {}})
+      end, {tos = table.map(targets, Util.Id2PlayerMapper), cards = selected_cards, cost_data = {}})
       return nil
     elseif skill:isInstanceOf(ViewAsSkill) then
       Self = player
@@ -1974,7 +1974,7 @@ function Room:handleUseCardReply(player, data)
       skill:onUse(self, {
         from = player,
         cards = { card },
-        tos = targets,
+        tos = table.map(targets, Util.Id2PlayerMapper),
       })
       return nil
     end

@@ -108,92 +108,77 @@ function fk.CreateActiveSkill(spec)
     skill.feasible = spec.feasible
   end
   if spec.on_use then skill.onUse = function(self, room, effect)
+    local new_effect = effect
     local converted = false
     if effect.toLegacy then
       converted = true
-      effect = effect:toLegacy()
+      new_effect = effect:toLegacy()
     elseif type(effect.from) == "table" or (((effect.tos or {})[1]).class or {}).name == "ServerPlayer" then
       converted = true
-      effect = SkillEffectData:_toLegacySkillData(effect)
+      new_effect = SkillEffectData:_toLegacySkillData(effect)
     end
-    spec.on_use(self, room, effect)
+    spec.on_use(self, room, new_effect)
     if converted then
       if effect.loadLegacy then
-        effect = effect:loadLegacy()
+        effect:loadLegacy(new_effect)
       else
-        effect = SkillEffectData:_loadLegacySkillData(effect)
+        table.assign(effect, SkillEffectData:_loadLegacySkillData(new_effect))
       end
     end
   end end
   if spec.on_action then skill.onAction = function(self, room, effect, finished)
+    local new_effect = effect
     local converted = false
     if effect.toLegacy then
       converted = true
-      effect = effect:toLegacy()
-    elseif type(effect.from) == "table" or (((effect.tos or {})[1]).class or {}).name == "ServerPlayer" then
-      converted = true
-      effect = SkillEffectData:_toLegacySkillData(effect)
+      new_effect = effect:toLegacy()
     end
-    spec.about_to_effect(self, room, effect, finished)
+    spec.on_action(self, room, new_effect, finished)
     if converted then
       if effect.loadLegacy then
-        effect = effect:loadLegacy()
-      else
-        effect = SkillEffectData:_loadLegacySkillData(effect)
+        effect:loadLegacy(new_effect)
       end
     end
   end end
   if spec.about_to_effect then skill.aboutToEffect = function(self, room, effect)
+    local new_effect = effect
     local converted = false
     if effect.toLegacy then
       converted = true
-      effect = effect:toLegacy()
-    elseif type(effect.from) == "table" or (((effect.tos or {})[1]).class or {}).name == "ServerPlayer" then
-      converted = true
-      effect = SkillEffectData:_toLegacySkillData(effect)
+      new_effect = effect:toLegacy()
     end
-    spec.about_to_effect(self, room, effect)
+    spec.about_to_effect(self, room, new_effect)
     if converted then
       if effect.loadLegacy then
-        effect = effect:loadLegacy()
-      else
-        effect = SkillEffectData:_loadLegacySkillData(effect)
+        effect:loadLegacy(new_effect)
       end
     end
   end end
   if spec.on_effect then skill.onEffect = function(self, room, effect)
+    local new_effect = effect
     local converted = false
     if effect.toLegacy then
       converted = true
-      effect = effect:toLegacy()
-    elseif type(effect.from) == "table" or (((effect.tos or {})[1]).class or {}).name == "ServerPlayer" then
-      converted = true
-      effect = SkillEffectData:_toLegacySkillData(effect)
+      new_effect = effect:toLegacy()
     end
-    spec.on_effect(self, room, effect)
+    spec.on_effect(self, room, new_effect)
     if converted then
       if effect.loadLegacy then
-        effect = effect:loadLegacy()
-      else
-        effect = SkillEffectData:_loadLegacySkillData(effect)
+        effect:loadLegacy(new_effect)
       end
     end
   end end
   if spec.on_nullified then skill.onNullified = function(self, room, effect)
+    local new_effect = effect
     local converted = false
     if effect.toLegacy then
       converted = true
-      effect = effect:toLegacy()
-    elseif type(effect.from) == "table" or (((effect.tos or {})[1]).class or {}).name == "ServerPlayer" then
-      converted = true
-      effect = SkillEffectData:_toLegacySkillData(effect)
+      new_effect = effect:toLegacy()
     end
-    spec.on_nullified(self, room, effect)
+    spec.on_nullified(self, room, new_effect)
     if converted then
       if effect.loadLegacy then
-        effect = effect:loadLegacy()
-      else
-        effect = SkillEffectData:_loadLegacySkillData(effect)
+        effect:loadLegacy(new_effect)
       end
     end
   end end

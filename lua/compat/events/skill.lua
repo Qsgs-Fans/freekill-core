@@ -33,18 +33,18 @@ end
 function SkillEffectData.static:_toLegacySkillData(data)
   local ret = table.simpleClone(data)
   if data.from then
-    data.from = data.from.id
+    ret.from = ret.from.id
   end
   if data.to then
-    data.to = data.to.id
+    ret.to = ret.to.id
   end
 
-  if data.tos and type(data.tos[1]) ~= "table" then
+  if data.tos and ((data.tos or {})[1] or {}).id then
     local new_v = {}
     for _, p in ipairs(data.tos) do
       table.insert(new_v, p.id)
     end
-    data.tos = new_v
+    ret.tos = new_v
   end
   return ret
 end
@@ -61,7 +61,7 @@ function SkillEffectData.static:_loadLegacySkillData(data)
         table.insert(new_v, Fk:currentRoom():getPlayerById(pid))
       end
       ret[k] = new_v
-    elseif k == "tos" and type(v[1]) ~= "table" then
+    elseif k == "tos" and type(v[1]) == "number" then
       local new_v = {}
       for _, pid in ipairs(v) do
         table.insert(new_v, Fk:currentRoom():getPlayerById(pid))

@@ -95,7 +95,7 @@ end
 --- 将牢数据改为新数据
 function CardEffectData:loadLegacy(data)
   for k, v in pairs(data) do
-    if table.contains({"from", "customFrom"}, k) then
+    if table.contains({"from", "to", "customFrom"}, k) then
       self[k] = Fk:currentRoom():getPlayerById(v)
     elseif table.contains({"nullifiedTargets", "disresponsiveList", "unoffsetableList"}, k) then
       local new_v = {}
