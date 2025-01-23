@@ -34,6 +34,7 @@ Fk:loadTranslationTable({
   ["Set as Avatar"] = "Đặt làm Avatar",
   ["Search"] = "Tìm kiếm",
   ["Back"] = "Quay lại",
+  ["Click to back"] = "Quay lại", -- TODO
 
   ["Refresh Room List"] = "Tải lại danh sách phòng (%1 phòng)",
 
@@ -116,10 +117,30 @@ Fk:loadTranslationTable({
   ["Equip Use Audio"] = "Âm thanh trang bị",
   ["Modes Overview"] = "Chế độ chơi",
   ["Replay"] = "Xem lại",
+
+  --[[ TODO
+  ["Game Data Overview"] = "战绩一览",
+  ["Statistics Overview"] = "数据统计",
+  ["Favorite Replay"] = "已收藏录像",
+
+  ["Replay Recording"] = "重放录像",
+  ["Replay Expired"] = "录像已过期",
+  ["View Endgame"] = "查看终盘战况",
+  ["Endgame Expired"] = "终盘已过期",
+  ["Bookmark Replay"] = "收藏录像",
+  ["Already Bookmarked"] = "已收藏",
+
+  ["Total"] = "总数",
+  ["Win Rate"] = "胜率",
+  ["Merge Modes"] = "检索时不区分游戏模式",
+  ["Merge Roles"] = "检索时不区分身份",
+  --]]
+
   ["Replay Manager"] = "Quản lý xem lại",
   ["Replay from File"] = "Mở từ File",
   ["Game Win"] = "Thắng",
   ["Game Lose"] = "Thua",
+  ["Game Draw"] = "Hòa",
   ["Play the Replay"] = "Xem lại",
   ["Delete Replay"] = "Xóa",
   ["About"] = "Thông tin",

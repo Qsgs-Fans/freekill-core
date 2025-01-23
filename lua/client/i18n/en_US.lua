@@ -30,6 +30,7 @@ Fk:loadTranslationTable({
   ["Ban General Settings"] = "Ban character settings",
   -- ["Search"] = "搜索",
   -- ["Back"] = "返回",
+  -- ["Click to back"] = "点击返回",
 
   -- ["Refresh Room List"] = "刷新房间列表",
 
@@ -107,10 +108,27 @@ Fk:loadTranslationTable({
   -- ["Equip Use Audio"] = "使用音效",
   ["Modes Overview"] = "Game modes",
   -- ["Replay"] = "录像",
+  ["Game Data Overview"] = "Game Records",
+  ["Statistics Overview"] = "Statistics",
+  -- ["Favorite Replay"] = "已收藏录像",
+
+  -- ["Replay Recording"] = "重放录像",
+  -- ["Replay Expired"] = "录像已过期",
+  -- ["View Endgame"] = "查看终盘战况",
+  -- ["Endgame Expired"] = "终盘已过期",
+  -- ["Bookmark Replay"] = "收藏录像",
+  -- ["Already Bookmarked"] = "已收藏",
+
+  -- ["Total"] = "总数",
+  -- ["Win Rate"] = "胜率",
+  ["Merge Modes"] = "Do Not Distinguish Between Game Modes",
+  ["Merge Roles"] = "Do Not Distinguish Between Roles",
+
   -- ["Replay Manager"] = "来欣赏潇洒的录像吧！",
   -- ["Replay from File"] = "从文件打开",
   ["Game Win"] = "Win",
   ["Game Lose"] = "Lose",
+  ["Game Draw"] = "Draw",
   ["Play the Replay"] = "Play",
   ["Delete Replay"] = "Delete",
   -- ["About"] = "关于",

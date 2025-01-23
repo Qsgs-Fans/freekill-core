@@ -37,6 +37,7 @@ Fk:loadTranslationTable{
   ["Remove from Favorite"] = "移除特别关注",
   ["Search"] = "搜索",
   ["Back"] = "返回",
+  ["Click to back"] = "点击返回",
 
   ["Refresh Room List"] = "刷新房间列表 (%1个房间)",
 
@@ -122,10 +123,28 @@ Fk:loadTranslationTable{
   ["Equip Use Audio"] = "使用音效",
   ["Modes Overview"] = "玩法一览",
   ["Replay"] = "录像",
+
+  ["Game Data Overview"] = "战绩一览",
+  ["Statistics Overview"] = "数据统计",
+  ["Favorite Replay"] = "已收藏录像",
+
+  ["Replay Recording"] = "重放录像",
+  ["Replay Expired"] = "录像已过期",
+  ["View Endgame"] = "查看终盘战况",
+  ["Endgame Expired"] = "终盘已过期",
+  ["Bookmark Replay"] = "收藏录像",
+  ["Already Bookmarked"] = "已收藏",
+
+  ["Total"] = "总数",
+  ["Win Rate"] = "胜率",
+  ["Merge Modes"] = "检索时不区分游戏模式",
+  ["Merge Roles"] = "检索时不区分身份",
+
   ["Replay Manager"] = "来欣赏潇洒的录像吧！",
   ["Replay from File"] = "从文件打开",
   ["Game Win"] = "胜利",
   ["Game Lose"] = "失败",
+  ["Game Draw"] = "平局",
   ["Play the Replay"] = "重放",
   ["Delete Replay"] = "删除",
   ["About"] = "关于",
@@ -311,6 +330,7 @@ FreeKill使用的是libgit2的C API，与此同时使用Git完成拓展包的下
   ["#RevealGeneral"] = "%from 亮出 %arg %arg2",
   ["mainGeneral"] = "主将",
   ["deputyGeneral"] = "副将",
+  ["role"] = "身份",
   ["seat#1"] = "一号位",
   ["seat#2"] = "二号位",
   ["seat#3"] = "三号位",
