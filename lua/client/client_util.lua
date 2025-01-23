@@ -240,11 +240,18 @@ function GetAllPiles(id)
   return ClientInstance:getPlayerById(id).special_cards or Util.DummyTable
 end
 
+function GetMySkills()
+  return table.map(Self.player_skills, function(s)
+    return s.visible and s.name or nil
+  end)
+end
+
+-- TODO: 动态技能名
 function GetPlayerSkills(id)
   local p = ClientInstance:getPlayerById(id)
   return table.map(p.player_skills, function(s)
-    return s.visible and {
-      name = s.name,
+    return s.visible and not s.attached_equip and (not s.name:endsWith("&") or p == Self) and {
+      name = Fk:translate(s.name) .. (s:isEffectable(p) and "" or Fk:translate("skill_invalidity")),
       description = Fk:getDescription(s.name),
     } or nil
   end)
@@ -691,10 +698,11 @@ end
 function RefreshStatusSkills()
   local self = ClientInstance
   -- if not self.recording then return end -- 在回放录像就别刷了
-  -- 刷所有人手牌上限及可见标记；以及身份可见性
+  -- 刷所有人手牌上限，体力值及可见标记；以及身份可见性
   for _, p in ipairs(self.alive_players) do
     self:notifyUI("MaxCard", {
       pcardMax = p:getMaxCards(),
+      php = p.hp,
       id = p.id,
     })
 

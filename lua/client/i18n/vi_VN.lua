@@ -463,6 +463,7 @@ Fk:loadTranslationTable({
   ["JudgeSlot"] = "Vùng phán xét",
 
   ["skill"] = "Kỹ năng",
+  ["skill_invalidity"] = "<font color='red'> (có hiệu quả)</font>",
 }, "vi_VN")
 
 -- related to sendLog

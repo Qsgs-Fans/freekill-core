@@ -381,6 +381,9 @@ Fk:loadTranslationTable({
   ["DefensiveRideSlot"] = "+1 horse slot",
   ["TreasureSlot"] = "Treasure slot",
   ["JudgeSlot"] = "Judge area",
+
+  -- ["skill"] = "技能",
+  ["skill_invalidity"] = "<font color='red'> (invalid)</font>",
 }, "en_US")
 
 -- related to sendLog

@@ -471,6 +471,7 @@ Fk:loadTranslationTable{
   ["JudgeSlot"] = "判定区",
 
   ["skill"] = "技能",
+  ["skill_invalidity"] = "<font color='red'>（失效）</font>",
 
   --utility
   ["draw1"] = "摸一张牌",
