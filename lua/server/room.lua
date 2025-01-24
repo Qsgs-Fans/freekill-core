@@ -2663,9 +2663,13 @@ function Room:gameOver(winner)
   self.game_started = false
   self.game_finished = true
 
+  self:setBanner("GameSummary", self:getGameSummary())
   for _, p in ipairs(self.players) do
     -- self:broadcastProperty(p, "role")
     self:setPlayerProperty(p, "role_shown", true)
+    for _, _p in ipairs(self.players) do -- 偷懒！
+      if _p ~= p then p:addBuddy(_p) end
+    end
   end
   self:doBroadcastNotify("GameOver", winner)
   fk.qInfo(string.format("[GameOver] %d, %s, %s, in %ds", self.id, self.settings.gameMode, winner, os.time() - self.start_time))
@@ -2706,6 +2710,43 @@ function Room:gameOver(winner)
     coroutine.close(self.main_co)
     self.main_co = nil
   end
+end
+
+--- 获取一局游戏的总结，包括每个玩家的回合数、回血、伤害、受伤、击杀
+---@return table<integer, integer[]> @ 玩家id到总结的映射
+function Room:getGameSummary()
+  local summary = {}
+  for _, p in ipairs(self.players) do
+    summary[p.seat] = { turn = 0, recover = 0, damage = 0, damaged = 0, kill = 0,
+        general = p.general, deputy = p.deputyGeneral, role = p.role, scname = p._splayer:getScreenName()} -- 回合，回血，伤害，受伤，击杀
+  end
+
+  self.logic:getEventsOfScope(GameEvent.Turn, 1, function (e)
+    if e.data[1] then
+      summary[e.data[1].seat].turn = summary[e.data[1].seat].turn + 1 -- 回合
+    end
+    return false
+  end, Player.HistoryGame)
+  self.logic:getEventsOfScope(GameEvent.Recover, 1, function (e)
+    local recover = e.data[1].who
+    summary[recover.seat].recover = summary[recover.seat].recover + e.data[1].num -- 回血
+    return false
+  end, Player.HistoryGame)
+  self.logic:getEventsOfScope(GameEvent.Death, 1, function (e)
+    local damage = e.data[1].damage
+    if damage and damage.from then
+      summary[damage.from.seat].kill = summary[damage.from.seat].kill + 1 -- 击杀
+    end
+    return false
+  end, Player.HistoryGame)
+  self.logic:getActualDamageEvents(1, function (e)
+    local damage = e.data[1]
+    local from, to = damage.from, damage.to
+    if from then summary[from.seat].damage = summary[from.seat].damage + damage.damage end -- 伤害
+    summary[to.seat].damaged = summary[to.seat].damaged + damage.damage -- 受伤
+    return false
+  end, nil, 1)
+  return summary
 end
 
 --- 获取可以移动场上牌的第一对目标。用于判断场上是否可以移动的牌

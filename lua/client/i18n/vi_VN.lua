@@ -369,6 +369,15 @@ Trang chủ: https://libgit2.org
   ["$GameOver"] = "Trò chơi kết thúc",
   ["$Winner"] = "Người chiến thắng là %1",
   ["$NoWinner"] = "Hòa!",
+  --[[ -- TODO
+  ["Name"] = "名称",
+  ["Role"] = "身份",
+  ["Turn"] = "回合",
+  ["Recover"] = "回血",
+  -- ["Damage"] = "伤害",
+  ["Damaged"] = "受伤",
+  ["Kill"] = "击杀",
+  ]]
   ["Back To Room"] = "Trở về phòng chơi",
   ["Back To Lobby"] = "Quay lại sảnh chờ",
   ["Save Replay"] = "Lưu Replay",
