@@ -2717,8 +2717,7 @@ end
 function Room:getGameSummary()
   local summary = {}
   for _, p in ipairs(self.players) do
-    summary[p.seat] = { turn = 0, recover = 0, damage = 0, damaged = 0, kill = 0,
-        general = p.general, deputy = p.deputyGeneral, role = p.role, scname = p._splayer:getScreenName()} -- 回合，回血，伤害，受伤，击杀
+    summary[p.seat] = { turn = 0, recover = 0, damage = 0, damaged = 0, kill = 0, scname = p._splayer:getScreenName()} -- 回合，回血，伤害，受伤，击杀
   end
 
   self.logic:getEventsOfScope(GameEvent.Turn, 1, function (e)
