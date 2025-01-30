@@ -541,7 +541,7 @@ function Entitle(data, seat, winner)
   if data.turn <= 1 and result == 1 then addHonor("Rapid Victory") end -- 旗开得胜：一回合内胜利
   if mostDamage and mostDamaged then addHonor("Burning Soul") end -- 血战：最多伤害，最多受伤
   if mostDamage and data.kill == 0 and result == 2 then addHonor("Regretful Lose") end-- 含恨而终：伤害最多，没有击杀并失败
-  if data.kill >= #ClientInstance.players - 2 and result == 2 then addHonor("Close But No Cigar") end -- 功亏一篑：杀死X-2个角色（X为玩家数）但失败
+  if data.kill >= #ClientInstance.players - 2 and data.kill > 0 and result == 2 then addHonor("Close But No Cigar") end -- 功亏一篑：杀死X-2个角色（X为玩家数）但失败
   if leastDamage and mostKill then addHonor("Wicked Kill") end -- 直刺咽喉：最少伤害，最多击杀
   if data.damage == 0 and leastDamaged and data.recover > 0 then addHonor("Peaceful Watcher") end -- 和平主义者：没有伤害，最少受伤，有回血
   if mostKill and mostDamage and mostRecover and data.damage >= 10 and data.recover >= 10 and player:isAlive() and result == 1 then addHonor("MVP") end -- MVP：最多击杀，最多伤害，最多回血，伤害和回血都大于10,存活且获胜
