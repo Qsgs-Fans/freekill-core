@@ -121,3 +121,15 @@ end
 function FQRandomGenerator:random(low, high) end
 
 fk.FK_VER = '0.0.0'
+
+---@return string[]
+function fk.GetDisabledPacks() end
+
+---@param addr string
+---@return string
+function fk.FetchFileFromHttp(addr) end
+
+---@param apiEndpoint string
+---@param body any
+---@return { response: string }
+function fk.AskOllama(apiEndpoint, body) end

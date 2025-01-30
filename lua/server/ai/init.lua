@@ -5,6 +5,7 @@ TrustAI = require "server.ai.trust_ai"
 -- RandomAI = require "server.ai.random_ai"
 
 SmartAI = require "server.ai.smart_ai"
+LLMAI = require "server.ai.llm_ai"
 
 -- load ai module from packages
 local directories = {}
