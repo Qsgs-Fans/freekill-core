@@ -74,7 +74,7 @@ local sendCardEmotionAndLog = function(room, useCardData)
     if useCardData.tos then
       tosData = {}
       for i, p in ipairs(useCardData.tos) do
-        local sub = table.map(useCardData.subTos[i], Util.IdMapper)
+        local sub = table.map(useCardData.subTos[i] or {}, Util.IdMapper)
         table.insert(tosData, { p.id, table.unpack(sub) })
       end
     end
@@ -510,7 +510,7 @@ local onAim = function(room, useCardData, aimEventCollaborators)
             break
           end
 
-          if #useCardData.subTos[i1] > 0 then
+          if #(useCardData.subTos[i1] or {}) > 0 then
             aimStruct.subTargets = table.simpleClone(useCardData.subTos[i1])
           else
             aimStruct.subTargets = {}
