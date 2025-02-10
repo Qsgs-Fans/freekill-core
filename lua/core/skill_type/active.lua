@@ -61,10 +61,9 @@ end
 ---@param to_select Player @ 待选目标
 ---@param selected Player[] @ 已选目标
 ---@param card? Card @ 牌
----@param distance_limited? boolean @ 是否受距离限制
 ---@param extra_data? any @ 额外数据
 ---@return boolean?
-function ActiveSkill:modTargetFilter(player, to_select, selected, card, distance_limited, extra_data)
+function ActiveSkill:modTargetFilter(player, to_select, selected, card, extra_data)
   return false
 end
 

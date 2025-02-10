@@ -129,8 +129,8 @@ function fk.CreateActiveSkill(spec)
     end
   end
   if spec.mod_target_filter then
-    skill.modTargetFilter = function(self, player, to_select, selected, card, distance_limited, extra_data)
-      return spec.mod_target_filter(self, to_select.id, table.map(selected, Util.IdMapper), player, card, distance_limited, extra_data)
+    skill.modTargetFilter = function(self, player, to_select, selected, card, extra_data)
+      return spec.mod_target_filter(self, to_select.id, table.map(selected, Util.IdMapper), player, card, extra_data and extra_data.bypass_distances, extra_data)
     end
   end
   if spec.feasible then
