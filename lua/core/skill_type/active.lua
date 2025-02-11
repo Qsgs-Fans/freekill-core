@@ -64,6 +64,7 @@ end
 ---@param extra_data? any @ 额外数据
 ---@return boolean?
 function ActiveSkill:modTargetFilter(player, to_select, selected, card, extra_data)
+  --FIXME: 删除了distance_limit牢参数，看看如何适配牢代码
   return false
 end
 

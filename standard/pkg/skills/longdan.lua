@@ -20,7 +20,7 @@ skill:addEffect("viewas", {
     return (Fk.currentResponsePattern == nil and player:canUse(c)) or
       (Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(c))
   end,
-  view_as = function(self, cards)
+  view_as = function(self, player, cards)
     if #cards ~= 1 then return end
     local _c = Fk:getCardById(cards[1])
     local c

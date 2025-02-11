@@ -1,20 +1,21 @@
 local skill = fk.CreateSkill {
-  name = "wusheng",
+  name = "spear_skill",
+  attached_equip = "spear",
 }
 
 skill:addEffect("viewas", {
-  anim_type = "offensive",
+  prompt = "#spear_skill",
   pattern = "slash",
-  prompt = "#wusheng",
   handly_pile = true,
   card_filter = function(self, player, to_select, selected)
-    return #selected == 0 and Fk:getCardById(to_select).color == Card.Red
+    if #selected == 2 then return end
+    return table.contains(player:getHandlyIds(true), to_select)
   end,
   view_as = function(self, player, cards)
-    if #cards ~= 1 then return end
+    if #cards ~= 2 then return nil end
     local c = Fk:cloneCard("slash")
-    c.skillName = skill.name
-    c:addSubcard(cards[1])
+    c.skillName = "spear"
+    c:addSubcards(cards)
     return c
   end,
 })

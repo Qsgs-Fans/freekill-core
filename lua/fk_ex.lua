@@ -604,10 +604,10 @@ end
 ---@field public feasible? fun(self: ActiveSkill, player: Player, selected: Player[], selected_cards: integer[]): any @ 判断卡牌和目标是否符合技能限制
 ---@field public on_use? fun(self: ActiveSkill, room: Room, cardUseEvent: UseCardData | SkillUseData): any
 ---@field public on_action? fun(self: ActiveSkill, room: Room, cardUseEvent: UseCardData | SkillUseData, finished: boolean): any
----@field public about_to_effect? fun(self: ActiveSkill, room: Room, cardEffectEvent: UseCardData | SkillUseData): any
----@field public on_effect? fun(self: ActiveSkill, room: Room, cardEffectEvent: UseCardData | SkillUseData): any
----@field public on_nullified? fun(self: ActiveSkill, room: Room, cardEffectEvent: UseCardData | SkillUseData): any
----@field public mod_target_filter? fun(self: ActiveSkill, player: Player, to_select: Player, selected: Player[], card?: Card, distance_limited: boolean, extra_data: any): any
+---@field public about_to_effect? fun(self: ActiveSkill, room: Room, cardEffectEvent: CardEffectData): any
+---@field public on_effect? fun(self: ActiveSkill, room: Room, cardEffectEvent: CardEffectData): any
+---@field public on_nullified? fun(self: ActiveSkill, room: Room, cardEffectEvent: CardEffectData): any
+---@field public mod_target_filter? fun(self: ActiveSkill, player: Player, to_select: Player, selected: Player[], card?: Card, extra_data: any): any
 ---@field public prompt? string|fun(self: ActiveSkill, player: Player, selected_cards: integer[], selected_targets: Player[]): string @ 提示信息
 ---@field public interaction? any
 ---@field public target_tip? fun(self: ActiveSkill, player: Player, to_select: Player, selected: Player[], selected_cards: integer[], card?: Card, selectable: boolean, extra_data: any): string|TargetTipDataSpec?

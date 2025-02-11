@@ -6,10 +6,8 @@ skill:addEffect("viewas", {
   anim_type = "offensive",
   pattern = "slash",
   card_filter = Util.FalseFunc,
-  view_as = function(self, cards)
-    if #cards ~= 0 then
-      return nil
-    end
+  view_as = function(self, player, cards)
+    if #cards ~= 0 then return end
     local c = Fk:cloneCard("slash")
     c.skillName = skill.name
     return c

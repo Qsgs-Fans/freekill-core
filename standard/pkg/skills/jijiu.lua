@@ -10,7 +10,7 @@ skill:addEffect("viewas", {
   card_filter = function(self, player, to_select, selected)
     return #selected == 0 and Fk:getCardById(to_select).color == Card.Red
   end,
-  view_as = function(self, cards)
+  view_as = function(self, player, cards)
     if #cards ~= 1 then return end
     local c = Fk:cloneCard("peach")
     c.skillName = skill.name
