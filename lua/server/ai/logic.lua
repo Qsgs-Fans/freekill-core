@@ -90,7 +90,7 @@ end
 
 --- 牌差收益论（瞎jb乱填版）：
 --- 根据moveInfo判断玩家是拿牌还是掉牌进而暴力算收益
----@param data CardsMoveStruct
+---@param data MoveCardsData
 ---@param info MoveInfo
 function AIGameLogic:applyMoveInfo(data, info)
   local benefit = 0
@@ -123,7 +123,7 @@ function AIGameLogic:applyMoveInfo(data, info)
       benefit = 60
     end
 
-    local to = data.to and self:getPlayerById(data.to)
+    local to = data.to
     if to and self.ai:isEnemy(to) then benefit = -benefit end
     self.benefit = self.benefit + benefit
   end
@@ -152,6 +152,7 @@ function AIGameEvent:initialize(ai_logic, ...)
   self.ai = ai_logic.ai
   self.player = self.ai.player
   self.data = { ... }
+  if #self.data == 1 then self.data = self.data[1] end
 end
 
 -- 真正的收益计算函数：子类重写这个
@@ -172,19 +173,14 @@ function AIGameEvent:getBenefit()
 end
 
 -- hp.lua
-
+---@class AIGameEvent.ChangeHp : AIGameEvent
+---@field public data HpChangedData
 local ChangeHp = AIGameEvent:subclass("AIGameEvent.ChangeHp")
 fk.ai_events.ChangeHp = ChangeHp
 function ChangeHp:exec()
   local logic = self.logic
-  local player, num, reason, skillName, damageData = table.unpack(self.data)
-
-  local data = HpChangedData:new{
-    num = num,
-    reason = reason,
-    skillName = skillName,
-    damageEvent = damageData,
-  }
+  local data = self.data
+  local player = data.who
 
   if logic:trigger(fk.BeforeHpChanged, player, data) then
     return true
@@ -195,14 +191,21 @@ function ChangeHp:exec()
 end
 
 function AIGameLogic:changeHp(player, num, reason, skillName, damageData)
-  return not ChangeHp:new(self, player, num, reason, skillName, damageData):getBenefit()
+  local data = HpChangedData:new{
+    who = player,
+    num = num,
+    reason = reason,
+    skillName = skillName,
+    damageEvent = damageData
+  }
+  return not ChangeHp:new(self, data):getBenefit()
 end
 
 local Damage = AIGameEvent:subclass("AIGameEvent.Damage")
 fk.ai_events.Damage = Damage
 function Damage:exec()
   local logic = self.logic
-  local damageData = table.unpack(self.data)
+  local damageData = self.data
   if (not damageData.chain) and (not damageData.chain_table) and Fk:canChain(damageData.damageType) then
     damageData.chain_table = table.filter(self.ai.room:getOtherPlayers(damageData.to), function(p)
       return p.chained
@@ -227,8 +230,8 @@ function Damage:exec()
   end
 
   if not damageData.isVirtualDMG then
-    ChangeHp:new(logic, damageData.to, -damageData.damage,
-      "damage", damageData.skillName, damageData):getBenefit()
+    logic:changeHp(damageData.to, -damageData.damage,
+      "damage", damageData.skillName, damageData)
   end
 
   logic:trigger(fk.Damage, damageData.from, damageData)
@@ -237,7 +240,7 @@ function Damage:exec()
 
   if damageData.chain_table and #damageData.chain_table > 0 then
     for _, p in ipairs(damageData.chain_table) do
-      local dmg = {
+      local dmg = DamageData:new{
         from = damageData.from,
         to = p,
         damage = damageData.damage,
@@ -255,7 +258,8 @@ end
 ---@param damageData DamageData
 ---@return boolean
 function AIGameLogic:damage(damageData)
-  return not Damage:new(self, damageData):getBenefit()
+  local data = DamageData:new(damageData)
+  return not Damage:new(self, data):getBenefit()
 end
 
 local LoseHp = AIGameEvent:subclass("AIGameEvent.LoseHp")
@@ -267,36 +271,44 @@ LoseHp.exec = AIParser.parseEventFunc(GameEvent.LoseHp.main)
 ---@param skillName string
 ---@return boolean
 function AIGameLogic:loseHp(player, num, skillName)
-  return not LoseHp:new(self, player, num, skillName):getBenefit()
+  local data = HpLostData:new{
+    who = player,
+    num = num,
+    skillName = skillName,
+  }
+  return not LoseHp:new(self, data):getBenefit()
 end
 
+---@class AIGameEvent.Recover : AIGameEvent
+---@field public data RecoverData
 local Recover = AIGameEvent:subclass("AIGameEvent.Recover")
 fk.ai_events.Recover = Recover
 function Recover:exec()
-  local recoverStruct = table.unpack(self.data) ---@type RecoverData
+  local RecoverData = self.data
   local logic = self.logic
 
-  local who = recoverStruct.who
+  local who = RecoverData.who
 
-  if logic:trigger(fk.PreHpRecover, who, recoverStruct) then
+  if logic:trigger(fk.PreHpRecover, who, RecoverData) then
     return true
   end
 
-  recoverStruct.num = math.min(recoverStruct.num, who.maxHp - who.hp)
+  RecoverData.num = math.min(RecoverData.num, who.maxHp - who.hp)
 
-  if recoverStruct.num < 1 then
+  if RecoverData.num < 1 then
     return true
   end
 
-  if not logic:changeHp(who, recoverStruct.num, "recover", recoverStruct.skillName) then
+  if not logic:changeHp(who, RecoverData.num, "recover", RecoverData.skillName) then
     return true
   end
 
-  logic:trigger(fk.HpRecover, who, recoverStruct)
+  logic:trigger(fk.HpRecover, who, RecoverData)
 end
 
-function AIGameLogic:recover(recoverStruct)
-  return not Recover:new(self, recoverStruct):getBenefit()
+function AIGameLogic:recover(recoverDataSpec)
+  local recoverData = RecoverData:new(recoverDataSpec)
+  return not Recover:new(self, recoverData):getBenefit()
 end
 
 -- skill.lua
@@ -305,7 +317,8 @@ local SkillEffect = AIGameEvent:subclass("AIGameEvent.SkillEffect")
 fk.ai_events.SkillEffect = SkillEffect
 function SkillEffect:exec()
   local logic = self.logic
-  local effect_cb, player, skill, skill_data = table.unpack(self.data)
+  local data = self.data
+  local effect_cb, player, skill, skill_data = data.skill_cb, data.who, data.skill, data.skill_data
   local main_skill = skill.main_skill and skill.main_skill or skill
 
   logic:trigger(fk.SkillEffect, player, main_skill)
@@ -327,38 +340,20 @@ end
 local MoveCards = AIGameEvent:subclass("AIGameEvent.MoveCards")
 fk.ai_events.MoveCards = MoveCards
 function MoveCards:exec()
-  local args = self.data
   local logic = self.logic
-  local cardsMoveStructs = {}
+  local moveCardsData = self.data
 
-  for _, cardsMoveInfo in ipairs(args) do
-    if #cardsMoveInfo.ids > 0 then
-      ---@type MoveInfo[]
-      local infos = {}
-      for _, id in ipairs(cardsMoveInfo.ids) do
-        table.insert(infos, {
-          cardId = id,
-          fromArea = cardsMoveInfo.fromArea or self.ai.room:getCardArea(id),
-          fromSpecialName = cardsMoveInfo.from and logic:getPlayerById(cardsMoveInfo.from):getPileNameOfId(id),
-        })
-      end
-
-      cardsMoveInfo.moveInfo = infos
-      table.insert(cardsMoveStructs, cardsMoveInfo)
-    end
-  end
-
-  if logic:trigger(fk.BeforeCardsMove, nil, cardsMoveStructs) then
+  if logic:trigger(fk.BeforeCardsMove, nil, moveCardsData) then
     return true
   end
 
-  for _, data in ipairs(cardsMoveStructs) do
-    for _, info in ipairs(data.moveInfo) do
+  for _, data in ipairs(moveCardsData) do
+    for _, info in ipairs(data.moveInfo or {}) do
       logic:applyMoveInfo(data, info)
     end
   end
 
-  logic:trigger(fk.AfterCardsMove, nil, cardsMoveStructs)
+  logic:trigger(fk.AfterCardsMove, nil, moveCardsData)
 end
 
 function AIGameLogic:getNCards(num, from)
@@ -369,8 +364,52 @@ function AIGameLogic:getNCards(num, from)
   return cardIds
 end
 
+--- 将填入room:moveCards的参数，根据情况转为正确的data（防止非法移动）
+---@param self AIGameLogic
+---@param ... CardsMoveInfo
+---@return MoveCardsData[]
+local function moveInfoTranslate(self, ...)
+  local logic = self.logic
+  local ret = {}
+  for _, cardsMoveInfo in ipairs{ ... } do
+    if #cardsMoveInfo.ids > 0 then
+      ---@type MoveInfo[]
+      local infos = {}
+      for _, id in ipairs(cardsMoveInfo.ids) do
+        table.insert(infos, {
+          cardId = id,
+          fromArea = self.ai.room:getCardArea(id),
+          fromSpecialName = cardsMoveInfo.from and logic:getPlayerById(cardsMoveInfo.from):getPileNameOfId(id),
+        })
+      end
+      if #infos > 0 then
+        table.insert(ret, MoveCardsData:new {
+          moveInfo = infos,
+          from = cardsMoveInfo.from,
+          to = cardsMoveInfo.to,
+          toArea = cardsMoveInfo.toArea,
+          moveReason = cardsMoveInfo.moveReason,
+          proposer = cardsMoveInfo.proposer,
+          skillName = cardsMoveInfo.skillName,
+          moveVisible = cardsMoveInfo.moveVisible,
+          specialName = cardsMoveInfo.specialName,
+          specialVisible = cardsMoveInfo.specialVisible,
+          drawPilePosition = cardsMoveInfo.drawPilePosition,
+          moveMark = cardsMoveInfo.moveMark,
+          visiblePlayers = cardsMoveInfo.visiblePlayers,
+        })
+      end
+    end
+  end
+  return ret
+end
+
 function AIGameLogic:moveCards(...)
-  return not MoveCards:new(self, ...):getBenefit()
+  local datas = moveInfoTranslate(self, ...)
+  if #datas == 0 then
+    return false
+  end
+  return not MoveCards:new(self, datas):getBenefit()
 end
 AIGameLogic.moveCardTo = GameEventWrappers.moveCardTo
 AIGameLogic.obtainCard = GameEventWrappers.obtainCard
@@ -397,54 +436,63 @@ end
 local UseCard = AIGameEvent:subclass("AIGameEvent.UseCard")
 fk.ai_events.UseCard = UseCard
 function UseCard:exec()
-  local ai = self.ai
-  local room = ai.room
   local logic = self.logic
-  local cardUseEvent = table.unpack(self.data)
+  local useCardData = self.data
 
-  if cardUseEvent.card.skill then
-    local skill_ai = fk.ai_skills[cardUseEvent.card.skill.name]
-    if skill_ai then skill_ai:onUse(logic, cardUseEvent) end
+  if useCardData.card.skill then
+    local skill_ai = fk.ai_skills[useCardData.card.skill.name]
+    if skill_ai then skill_ai:onUse(logic, useCardData) end
   end
 
-  if logic:trigger(fk.PreCardUse, cardUseEvent.from, cardUseEvent) then
+  if logic:trigger(fk.PreCardUse, useCardData.from, useCardData) then
     return true
   end
-  logic:moveCardTo(cardUseEvent.card, Card.Processing, nil, fk.ReasonUse)
+  logic:moveCardTo(useCardData.card, Card.Processing, nil, fk.ReasonUse)
 
   for _, event in ipairs({ fk.AfterCardUseDeclared, fk.AfterCardTargetDeclared, fk.CardUsing }) do
-    if not cardUseEvent.toCard and #TargetGroup:getRealTargets(cardUseEvent.tos) == 0 then
+    if not useCardData.toCard and #useCardData.tos == 0 then
       break
     end
 
-    logic:trigger(event, cardUseEvent.from, cardUseEvent)
+    logic:trigger(event, useCardData.from, useCardData)
     if event == fk.CardUsing then
-      logic:doCardUseEffect(cardUseEvent)
+      logic:doCardUseEffect(useCardData)
     end
   end
 
-  logic:trigger(fk.CardUseFinished, cardUseEvent.from, cardUseEvent)
+  logic:trigger(fk.CardUseFinished, useCardData.from, useCardData)
   logic:moveCards{
     fromArea = Card.Processing,
     toArea = Card.DiscardPile,
-    ids = Card:getIdList(cardUseEvent.card),
+    ids = Card:getIdList(useCardData.card),
     moveReason = fk.ReasonUse,
   }
 end
 
-function AIGameLogic:useCard(cardUseEvent)
-  return not UseCard:new(self, cardUseEvent):getBenefit()
+function AIGameLogic:useCard(useCardData)
+  local new_data
+  if type(useCardData.from) == "number" or (useCardData.tos and useCardData.tos[1]
+    and type(useCardData.tos[1][1]) == "number") then
+    new_data = UseCardData:new({})
+    new_data:loadLegacy(useCardData)
+  else
+    new_data = UseCardData:new(useCardData)
+  end
+  new_data.subTos = new_data.subTos or (new_data.tos and table.map(new_data.tos, function() return {} end) or {})
+  return not UseCard:new(self, new_data):getBenefit()
 end
 
-function AIGameLogic:deadPlayerFilter(playerIds)
-  local newPlayerIds = {}
-  for _, playerId in ipairs(playerIds) do
-    if self:getPlayerById(playerId):isAlive() then
-      table.insert(newPlayerIds, playerId)
+---@param players ServerPlayer[]
+---@return ServerPlayer[]
+function AIGameLogic:deadPlayerFilter(players)
+  local newPlayers = {}
+  for _, player in ipairs(players) do
+    if player:isAlive() then
+      table.insert(newPlayers, player)
     end
   end
 
-  return newPlayerIds
+  return newPlayers
 end
 
 AIGameLogic.doCardUseEffect = GameEventWrappers.doCardUseEffect
@@ -453,8 +501,8 @@ local CardEffect = AIGameEvent:subclass("AIGameEvent.CardEffect")
 fk.ai_events.CardEffect = CardEffect
 CardEffect.exec = AIParser.parseEventFunc(GameEvent.CardEffect.main)
 
-function AIGameLogic:doCardEffect(cardEffectEvent)
-  return not CardEffect:new(self, cardEffectEvent):getBenefit()
+function AIGameLogic:doCardEffect(CardEffectData)
+  return not CardEffect:new(self, CardEffectData):getBenefit()
 end
 
 function AIGameLogic:handleCardEffect(event, cardEffectEvent)
@@ -463,7 +511,7 @@ function AIGameLogic:handleCardEffect(event, cardEffectEvent)
   if event == fk.CardEffecting then
     if cardEffectEvent.card.skill then
       local data = { ---@type SkillEffectDataSpec
-        who = self:getPlayerById(cardEffectEvent.from),
+        who = cardEffectEvent.from,
         skill = cardEffectEvent.card.skill,
         skill_cb = function()
           local skill = cardEffectEvent.card.skill
@@ -484,7 +532,7 @@ end
 local Judge = AIGameEvent:subclass("AIGameEvent.Judge")
 fk.ai_events.Judge = Judge
 function Judge:exec()
-  local data = table.unpack(self.data)
+  local data = self.data
   local logic = self.logic
   local who = data.who
 
@@ -504,9 +552,9 @@ function Judge:exec()
   logic:moveCardTo(data.card, Card.DiscardPile, nil, fk.ReasonJudge)
 end
 
----@param data JudgeStruct
+---@param data JudgeDataSpec
 function AIGameLogic:judge(data)
-  return Judge:new(self, data):getBenefit()
+  return Judge:new(self, JudgeData:new(data)):getBenefit()
 end
 
 -- 暂时不模拟改判。

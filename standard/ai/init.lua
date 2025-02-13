@@ -235,6 +235,7 @@ SmartAI:setSkillAI("fanjian", {
   think = function(self, ai)
     local cards = ai:getEnabledCards()
     local players = ai:getEnabledTargets()
+    if #cards == 0 then return {}, -1000 end
 
     --- 获取手牌中权重偏大的牌
     local good_cards = ai:getChoiceCardsByKeepValue(cards, #cards, function(value) return value >= 45 end)
