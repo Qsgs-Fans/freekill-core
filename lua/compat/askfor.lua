@@ -70,4 +70,86 @@ end
 ---@deprecated
 CompatAskFor.askForUseViewAsSkill = CompatAskFor.askForUseActiveSkill
 
+--- 询问一名角色弃牌。
+---
+--- 在这个函数里面牌已经被弃掉了（除非skipDiscard为true）。
+---@param player ServerPlayer @ 弃牌角色
+---@param minNum integer @ 最小值
+---@param maxNum integer @ 最大值
+---@param includeEquip? boolean @ 能不能弃装备区？
+---@param skillName? string @ 引发弃牌的技能名
+---@param cancelable? boolean @ 能不能点取消？
+---@param pattern? string @ 弃牌需要符合的规则
+---@param prompt? string @ 提示信息
+---@param skipDiscard? boolean @ 是否跳过弃牌（即只询问选择可以弃置的牌）
+---@param no_indicate? boolean @ 是否不显示指示线
+---@return integer[] @ 弃掉的牌的id列表，可能是空的
+---@deprecated
+function CompatAskFor:askForDiscard(player, minNum, maxNum, includeEquip, skillName, cancelable, pattern, prompt, skipDiscard, no_indicate)
+  cancelable = (cancelable == nil) and true or cancelable
+  no_indicate = no_indicate or false
+  pattern = pattern or "."
+
+  local canDiscards = table.filter(
+    player:getCardIds{ Player.Hand, includeEquip and Player.Equip or nil }, function(id)
+      local checkpoint = true
+      local card = Fk:getCardById(id)
+
+      local status_skills = Fk:currentRoom().status_skills[ProhibitSkill] or Util.DummyTable
+      for _, skill in ipairs(status_skills) do
+        if skill:prohibitDiscard(player, card) then
+          return false
+        end
+      end
+      if skillName == "phase_discard" then
+        status_skills = Fk:currentRoom().status_skills[MaxCardsSkill] or Util.DummyTable
+        for _, skill in ipairs(status_skills) do
+          if skill:excludeFrom(player, card) then
+            return false
+          end
+        end
+      end
+
+      if pattern ~= "" then
+        checkpoint = checkpoint and (Exppattern:Parse(pattern):match(card))
+      end
+      return checkpoint
+    end
+  )
+
+  -- maxNum = math.min(#canDiscards, maxNum)
+  -- minNum = math.min(#canDiscards, minNum)
+
+  if minNum >= #canDiscards and not cancelable then
+    if not skipDiscard then
+      self:throwCard(canDiscards, skillName, player, player)
+    end
+    return canDiscards
+  end
+
+  local toDiscard = {}
+  local data = {
+    num = maxNum,
+    min_num = minNum,
+    include_equip = includeEquip,
+    skillName = skillName,
+    pattern = pattern,
+  }
+  local prompt = prompt or ("#AskForDiscard:::" .. maxNum .. ":" .. minNum)
+  local _, ret = self:askToUseActiveSkill(player, {skill_name = "discard_skill", prompt = prompt, cancelable = cancelable, extra_data = data, no_indicate = no_indicate})
+
+  if ret then
+    toDiscard = ret.cards
+  else
+    if cancelable then return {} end
+    toDiscard = table.random(canDiscards, minNum) ---@type integer[]
+  end
+
+  if not skipDiscard then
+    self:throwCard(toDiscard, skillName, player, player)
+  end
+
+  return toDiscard
+end
+
 return CompatAskFor

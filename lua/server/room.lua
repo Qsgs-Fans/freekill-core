@@ -975,27 +975,27 @@ end
 
 Room.askForUseViewAsSkill = Room.askToUseActiveSkill
 
+---@class askToDiscardParams: AskToUseActiveSkillParams
+---@field min_num integer @ 最小值
+---@field max_num integer @ 最大值
+---@field include_equip? boolean @ 能不能弃装备区？
+---@field pattern? string @ 弃牌需要符合的规则
+---@field skip? boolean @ 是否跳过弃牌（即只询问选择可以弃置的牌）
+
 --- 询问一名角色弃牌。
 ---
 --- 在这个函数里面牌已经被弃掉了（除非skipDiscard为true）。
 ---@param player ServerPlayer @ 弃牌角色
----@param minNum integer @ 最小值
----@param maxNum integer @ 最大值
----@param includeEquip? boolean @ 能不能弃装备区？
----@param skillName? string @ 引发弃牌的技能名
----@param cancelable? boolean @ 能不能点取消？
----@param pattern? string @ 弃牌需要符合的规则
----@param prompt? string @ 提示信息
----@param skipDiscard? boolean @ 是否跳过弃牌（即只询问选择可以弃置的牌）
----@param no_indicate? boolean @ 是否不显示指示线
+---@param params askToDiscardParams @ 各种变量
 ---@return integer[] @ 弃掉的牌的id列表，可能是空的
-function Room:askForDiscard(player, minNum, maxNum, includeEquip, skillName, cancelable, pattern, prompt, skipDiscard, no_indicate)
-  cancelable = (cancelable == nil) and true or cancelable
-  no_indicate = no_indicate or false
-  pattern = pattern or "."
+function Room:askToDiscard(player, params)
+  params.cancelable = (params.cancelable == nil) and true or params.cancelable
+  params.no_indicate = params.no_indicate or false
+  params.pattern = params.pattern or "."
+  local skillName = params.skill_name
 
   local canDiscards = table.filter(
-    player:getCardIds{ Player.Hand, includeEquip and Player.Equip or nil }, function(id)
+    player:getCardIds{ Player.Hand, params.include_equip and Player.Equip or nil }, function(id)
       local checkpoint = true
       local card = Fk:getCardById(id)
 
@@ -1014,18 +1014,17 @@ function Room:askForDiscard(player, minNum, maxNum, includeEquip, skillName, can
         end
       end
 
-      if pattern ~= "" then
-        checkpoint = checkpoint and (Exppattern:Parse(pattern):match(card))
+      if params.pattern ~= "" then
+        checkpoint = checkpoint and (Exppattern:Parse(params.pattern):match(card))
       end
       return checkpoint
     end
   )
 
-  -- maxNum = math.min(#canDiscards, maxNum)
-  -- minNum = math.min(#canDiscards, minNum)
+  local maxNum, minNum = params.max_num, params.min_num
 
-  if minNum >= #canDiscards and not cancelable then
-    if not skipDiscard then
+  if minNum >= #canDiscards and not params.cancelable then
+    if not params.skip then
       self:throwCard(canDiscards, skillName, player, player)
     end
     return canDiscards
@@ -1033,23 +1032,23 @@ function Room:askForDiscard(player, minNum, maxNum, includeEquip, skillName, can
 
   local toDiscard = {}
   local data = {
-    num = maxNum,
-    min_num = minNum,
-    include_equip = includeEquip,
-    skillName = skillName,
-    pattern = pattern,
+    num = params.max_num,
+    min_num = params.min_num,
+    include_equip = params.include_equip,
+    skillName = params.skill_name,
+    pattern = params.pattern,
   }
-  local prompt = prompt or ("#AskForDiscard:::" .. maxNum .. ":" .. minNum)
-  local _, ret = self:askForUseActiveSkill(player, "discard_skill", prompt, cancelable, data, no_indicate)
+  params.prompt = params.prompt or ("#AskForDiscard:::" .. maxNum .. ":" .. minNum)
+  local _, ret = self:askToUseActiveSkill(player, {skill_name = "discard_skill", prompt = params.prompt, cancelable = params.cancelable, extra_data = data, no_indicate = params.no_indicate})
 
   if ret then
     toDiscard = ret.cards
   else
-    if cancelable then return {} end
+    if params.cancelable then return {} end
     toDiscard = table.random(canDiscards, minNum) ---@type integer[]
   end
 
-  if not skipDiscard then
+  if not params.skip then
     self:throwCard(toDiscard, skillName, player, player)
   end
 
