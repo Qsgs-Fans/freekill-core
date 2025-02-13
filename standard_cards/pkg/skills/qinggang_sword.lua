@@ -24,7 +24,7 @@ skill:addEffect(fk.CardUseFinished, {
   on_refresh = function(self, event, target, player, data)
     local room = player.room
     while table.removeOne(data.extra_data.qinggang_tag, player.id) do
-      room:removePlayerMark(player, fk.MarkArmorNullified)
+      room:removePlayerMark(player, MarkEnum.MarkArmorNullified)
     end
   end,
 })
@@ -59,7 +59,7 @@ skill:addEffect(fk.BeforeHpChanged, {
     local effect = cardEffectEvent.data
     effect.qinggang_clean = true
     table.removeOne(effect.extra_data.qinggang_tag, player.id)
-    room:removePlayerMark(player, fk.MarkArmorNullified)
+    room:removePlayerMark(player, MarkEnum.MarkArmorNullified)
   end,
 })
 skill:addEffect(fk.DamageFinished, {
@@ -88,7 +88,7 @@ skill:addEffect(fk.DamageFinished, {
     local effect = cardEffectEvent.data
     effect.qinggang_clean = true
     table.removeOne(effect.extra_data.qinggang_tag, player.id)
-    room:removePlayerMark(player, fk.MarkArmorNullified)
+    room:removePlayerMark(player, MarkEnum.MarkArmorNullified)
   end,
 })
 skill:addEffect(fk.CardEffectFinished, {
@@ -114,7 +114,7 @@ skill:addEffect(fk.CardEffectFinished, {
     local effect = cardEffectEvent.data
     effect.qinggang_clean = true
     table.removeOne(effect.extra_data.qinggang_tag, player.id)
-    room:removePlayerMark(player, fk.MarkArmorNullified)
+    room:removePlayerMark(player, MarkEnum.MarkArmorNullified)
   end,
 })
 skill:addEffect(fk.CardEffectCancelledOut, {
@@ -140,7 +140,7 @@ skill:addEffect(fk.CardEffectCancelledOut, {
     local effect = cardEffectEvent.data
     effect.qinggang_clean = true
     table.removeOne(effect.extra_data.qinggang_tag, player.id)
-    room:removePlayerMark(player, fk.MarkArmorNullified)
+    room:removePlayerMark(player, MarkEnum.MarkArmorNullified)
   end,
 })
 

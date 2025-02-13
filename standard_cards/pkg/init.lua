@@ -8,16 +8,14 @@ if UsingNewCore then prefix = "packages.freekill-core." end
 extension:loadSkillSkels(require(prefix .. "standard_cards.pkg.skills"))
 
 local slash = fk.CreateCard{
-  type = Card.TypeBasic,
   name = "slash",
+  type = Card.TypeBasic,
   is_damage_card = true,
   skill = "slash_skill",
 }
-
 extension:loadCardSkels {
   slash,
 }
-
 extension:addCardSpec("slash", Card.Spade, 7)
 extension:addCardSpec("slash", Card.Spade, 8)
 extension:addCardSpec("slash", Card.Spade, 8)
@@ -52,747 +50,221 @@ extension:addCardSpec("slash", Card.Diamond, 9)
 extension:addCardSpec("slash", Card.Diamond, 10)
 extension:addCardSpec("slash", Card.Diamond, 13)
 
-local jinkSkill = fk.CreateActiveSkill{
-  name = "jink_skill",
-  can_use = Util.FalseFunc,
-  on_effect = function(self, room, effect)
-    if effect.responseToEvent then
-      effect.responseToEvent.isCancellOut = true
-    end
-  end
-}
-local jink = fk.CreateBasicCard{
+local jink = fk.CreateCard{
+  type = Card.TypeBasic,
   name = "jink",
-  suit = Card.Heart,
-  number = 2,
-  skill = jinkSkill,
+  skill = "jink_skill",
   is_passive = true,
 }
-
-extension:addCards({
+extension:loadCardSkels {
   jink,
-  jink:clone(Card.Heart, 2),
-  jink:clone(Card.Heart, 13),
-
-  jink:clone(Card.Diamond, 2),
-  jink:clone(Card.Diamond, 2),
-  jink:clone(Card.Diamond, 3),
-  jink:clone(Card.Diamond, 4),
-  jink:clone(Card.Diamond, 5),
-  jink:clone(Card.Diamond, 6),
-  jink:clone(Card.Diamond, 7),
-  jink:clone(Card.Diamond, 8),
-  jink:clone(Card.Diamond, 9),
-  jink:clone(Card.Diamond, 10),
-  jink:clone(Card.Diamond, 11),
-  jink:clone(Card.Diamond, 11),
-})
-
-local peachSkill = fk.CreateActiveSkill{
-  name = "peach_skill",
-  prompt = "#peach_skill",
-  mod_target_filter = function(self, to_select)
-    return Fk:currentRoom():getPlayerById(to_select):isWounded()
-  end,
-  can_use = Util.SelfCanUse,
-  on_use = function(self, room, use)
-    if not use.tos or #TargetGroup:getRealTargets(use.tos) == 0 then
-      use.tos = { { use.from } }
-    end
-  end,
-  on_effect = function(self, room, effect)
-    local player = room:getPlayerById(effect.from)
-    local target = room:getPlayerById(effect.to)
-    if target:isWounded() and not target.dead then
-      room:recover({
-        who = target,
-        num = 1,
-        card = effect.card,
-        recoverBy = player,
-        skillName = self.name
-      })
-    end
-  end
 }
-local peach = fk.CreateBasicCard{
+extension:addCardSpec("jink", Card.Heart, 2)
+extension:addCardSpec("jink", Card.Heart, 2)
+extension:addCardSpec("jink", Card.Heart, 13)
+extension:addCardSpec("jink", Card.Diamond, 2)
+extension:addCardSpec("jink", Card.Diamond, 2)
+extension:addCardSpec("jink", Card.Diamond, 3)
+extension:addCardSpec("jink", Card.Diamond, 4)
+extension:addCardSpec("jink", Card.Diamond, 5)
+extension:addCardSpec("jink", Card.Diamond, 6)
+extension:addCardSpec("jink", Card.Diamond, 7)
+extension:addCardSpec("jink", Card.Diamond, 8)
+extension:addCardSpec("jink", Card.Diamond, 9)
+extension:addCardSpec("jink", Card.Diamond, 10)
+extension:addCardSpec("jink", Card.Diamond, 11)
+extension:addCardSpec("jink", Card.Diamond, 11)
+
+local peach = fk.CreateCard{
   name = "peach",
-  suit = Card.Heart,
-  number = 3,
-  skill = peachSkill,
+  type = Card.TypeBasic,
+  skill = "peach_skill",
 }
-
-extension:addCards({
+extension:loadCardSkels {
   peach,
-  peach:clone(Card.Heart, 4),
-  peach:clone(Card.Heart, 6),
-  peach:clone(Card.Heart, 7),
-  peach:clone(Card.Heart, 8),
-  peach:clone(Card.Heart, 9),
-  peach:clone(Card.Heart, 12),
-  peach:clone(Card.Heart, 12),
-})
-
-local dismantlementSkill = fk.CreateActiveSkill{
-  name = "dismantlement_skill",
-  prompt = "#dismantlement_skill",
-  can_use = Util.CanUse,
-  target_num = 1,
-  mod_target_filter = function(self, to_select, selected, player, card)
-    return to_select ~= player.id and not Fk:currentRoom():getPlayerById(to_select):isAllNude()
-  end,
-  target_filter = Util.TargetFilter,
-  on_effect = function(self, room, effect)
-    local from = room:getPlayerById(effect.from)
-    local to = room:getPlayerById(effect.to)
-    if from.dead or to.dead or to:isAllNude() then return end
-    local cid = room:askForCardChosen(from, to, "hej", self.name)
-    room:throwCard({cid}, self.name, to, from)
-  end
 }
-local dismantlement = fk.CreateTrickCard{
+extension:addCardSpec("peach", Card.Heart, 3)
+extension:addCardSpec("peach", Card.Heart, 4)
+extension:addCardSpec("peach", Card.Heart, 6)
+extension:addCardSpec("peach", Card.Heart, 7)
+extension:addCardSpec("peach", Card.Heart, 8)
+extension:addCardSpec("peach", Card.Heart, 9)
+extension:addCardSpec("peach", Card.Heart, 12)
+extension:addCardSpec("peach", Card.Heart, 12)
+
+local dismantlement = fk.CreateCard{
   name = "dismantlement",
-  suit = Card.Spade,
-  number = 3,
-  skill = dismantlementSkill,
+  type = Card.TypeTrick,
+  skill = "dismantlement_skill",
 }
-
-extension:addCards({
+extension:loadCardSkels {
   dismantlement,
-  dismantlement:clone(Card.Spade, 4),
-  dismantlement:clone(Card.Spade, 12),
-
-  dismantlement:clone(Card.Club, 3),
-  dismantlement:clone(Card.Club, 4),
-
-  dismantlement:clone(Card.Heart, 12),
-})
-
-local snatchSkill = fk.CreateActiveSkill{
-  name = "snatch_skill",
-  prompt = "#snatch_skill",
-  can_use = Util.CanUse,
-  distance_limit = 1,
-  mod_target_filter = function(self, to_select, selected, player, card, distance_limited)
-    local target = Fk:currentRoom():getPlayerById(to_select)
-    return target ~= player and not (target:isAllNude() or (distance_limited and not self:withinDistanceLimit(player, false, card, target)))
-  end,
-  target_filter = Util.TargetFilter,
-  target_num = 1,
-  on_effect = function(self, room, effect)
-    local from = room:getPlayerById(effect.from)
-    local to = room:getPlayerById(effect.to)
-    if from.dead or to.dead or to:isAllNude() then return end
-    local cid = room:askForCardChosen(from, to, "hej", self.name)
-    room:obtainCard(from, cid, false, fk.ReasonPrey)
-  end
 }
-local snatch = fk.CreateTrickCard{
+extension:addCardSpec("dismantlement", Card.Spade, 3)
+extension:addCardSpec("dismantlement", Card.Spade, 4)
+extension:addCardSpec("dismantlement", Card.Spade, 12)
+extension:addCardSpec("dismantlement", Card.Club, 3)
+extension:addCardSpec("dismantlement", Card.Club, 4)
+extension:addCardSpec("dismantlement", Card.Heart, 12)
+
+local snatch = fk.CreateCard{
   name = "snatch",
-  suit = Card.Spade,
-  number = 3,
-  skill = snatchSkill,
+  type = Card.TypeTrick,
+  skill = "snatch_skill",
 }
-
-extension:addCards({
+extension:loadCardSkels {
   snatch,
-  snatch:clone(Card.Spade, 4),
-  snatch:clone(Card.Spade, 11),
-
-  snatch:clone(Card.Diamond, 3),
-  snatch:clone(Card.Diamond, 4),
-})
-
-local duelSkill = fk.CreateActiveSkill{
-  name = "duel_skill",
-  prompt = "#duel_skill",
-  can_use = Util.CanUse,
-  mod_target_filter = function(self, to_select, selected, player, card)
-    return to_select ~= player.id
-  end,
-  target_filter = Util.TargetFilter,
-  target_num = 1,
-  on_effect = function(self, room, effect)
-    local to = room:getPlayerById(effect.to)
-    local from = room:getPlayerById(effect.from)
-    local responsers = { to, from }
-    local currentTurn = 1
-    local currentResponser = to
-
-    while currentResponser:isAlive() do
-      local loopTimes = 1
-      if effect.fixedResponseTimes then
-        local canFix = currentResponser == to
-        if effect.fixedAddTimesResponsors then
-          canFix = table.contains(effect.fixedAddTimesResponsors, currentResponser.id)
-        end
-
-        if canFix then
-          if type(effect.fixedResponseTimes) == 'table' then
-            loopTimes = effect.fixedResponseTimes["slash"] or 1
-          elseif type(effect.fixedResponseTimes) == 'number' then
-            loopTimes = effect.fixedResponseTimes
-          end
-        end
-      end
-
-      local cardResponded
-      for i = 1, loopTimes do
-        cardResponded = room:askForResponse(currentResponser, 'slash', nil, nil, true, nil, effect)
-        if cardResponded then
-          room:responseCard({
-            from = currentResponser.id,
-            card = cardResponded,
-            responseToEvent = effect,
-          })
-        else
-          break
-        end
-      end
-
-      if not cardResponded then
-        break
-      end
-
-      currentTurn = currentTurn % 2 + 1
-      currentResponser = responsers[currentTurn]
-    end
-
-    if currentResponser:isAlive() then
-      room:damage({
-        from = responsers[currentTurn % 2 + 1],
-        to = currentResponser,
-        card = effect.card,
-        damage = 1,
-        damageType = fk.NormalDamage,
-        skillName = self.name,
-      })
-    end
-  end
 }
-local duel = fk.CreateTrickCard{
+extension:addCardSpec("snatch", Card.Spade, 3)
+extension:addCardSpec("snatch", Card.Spade, 4)
+extension:addCardSpec("snatch", Card.Spade, 11)
+extension:addCardSpec("snatch", Card.Diamond, 3)
+extension:addCardSpec("snatch", Card.Diamond, 4)
+
+local duel = fk.CreateCard{
   name = "duel",
-  suit = Card.Spade,
-  number = 1,
+  type = Card.TypeTrick,
+  skill = "duel_skill",
   is_damage_card = true,
-  skill = duelSkill,
 }
-
-extension:addCards({
+extension:loadCardSkels {
   duel,
-
-  duel:clone(Card.Club, 1),
-
-  duel:clone(Card.Diamond, 1),
-})
-
-local collateralSkill = fk.CreateActiveSkill{
-  name = "collateral_skill",
-  prompt = "#collateral_skill",
-  can_use = Util.CanUse,
-  mod_target_filter = function(self, to_select, selected, player, card, distance_limited)
-    local target = Fk:currentRoom():getPlayerById(to_select)
-    return target ~= player and #target:getEquipments(Card.SubtypeWeapon) > 0 and not target:prohibitUse(Fk:cloneCard("slash"))
-  end,
-  target_filter = function(self, to_select, selected, _, card, extra_data, player)
-    if #selected >= 2 then
-      return false
-    elseif #selected == 0 then
-      return Util.TargetFilter(self, to_select, selected, _, card, extra_data, player)
-    else
-      local target = Fk:currentRoom():getPlayerById(to_select)
-      local from = Fk:currentRoom():getPlayerById(selected[1])
-      return from:inMyAttackRange(target) and not from:isProhibited(target, Fk:cloneCard("slash"))
-    end
-  end,
-  target_num = 2,
-  on_use = function(self, room, cardUseEvent)
-    local tos = {}
-    local exclusive = {}
-    for i, pid in ipairs(TargetGroup:getRealTargets(cardUseEvent.tos)) do
-      if i % 2 == 1 then
-        exclusive = { pid }
-      else
-        table.insert(exclusive, pid)
-        table.insert(tos, exclusive)
-      end
-    end
-    cardUseEvent.tos = tos
-  end,
-  on_effect = function(self, room, effect)
-    local to = room:getPlayerById(effect.to)
-    if to.dead then return end
-    local prompt = "#collateral-slash:"..effect.from..":"..effect.subTargets[1]
-    if #effect.subTargets > 1 then
-      prompt = nil
-    end
-    local extra_data = {
-      must_targets = effect.subTargets,
-      bypass_times = true,
-    }
-    local use = room:askForUseCard(to, "slash", nil, prompt, nil, extra_data, effect)
-    if use then
-      use.extraUse = true
-      room:useCard(use)
-    else
-      local from = room:getPlayerById(effect.from)
-      if from.dead then return end
-      local weapons = to:getEquipments(Card.SubtypeWeapon)
-      if #weapons > 0 then
-        room:moveCardTo(weapons, Card.PlayerHand, from, fk.ReasonGive, "collateral", nil, true, to.id)
-      end
-    end
-  end
 }
-local collateral = fk.CreateTrickCard{
+extension:addCardSpec("duel", Card.Spade, 1)
+extension:addCardSpec("duel", Card.Club, 1)
+extension:addCardSpec("duel", Card.Diamond, 1)
+
+local collateral = fk.CreateCard{
   name = "collateral",
-  suit = Card.Club,
-  number = 12,
-  skill = collateralSkill,
+  type = Card.TypeTrick,
+  skill = "collateral_skill",
 }
-
-extension:addCards({
+extension:loadCardSkels {
   collateral,
-  collateral:clone(Card.Club, 13),
-})
-
-local exNihiloSkill = fk.CreateActiveSkill{
-  name = "ex_nihilo_skill",
-  prompt = "#ex_nihilo_skill",
-  mod_target_filter = Util.TrueFunc,
-  can_use = function(self, player, card)
-    return not player:isProhibited(player, card)
-  end,
-  on_use = function(self, room, cardUseEvent)
-    if not cardUseEvent.tos or #TargetGroup:getRealTargets(cardUseEvent.tos) == 0 then
-      cardUseEvent.tos = { { cardUseEvent.from } }
-    end
-  end,
-  on_effect = function(self, room, effect)
-    local target = room:getPlayerById(effect.to)
-    if target.dead then return end
-    target:drawCards(2, "ex_nihilo")
-  end
 }
-local exNihilo = fk.CreateTrickCard{
+extension:addCardSpec("collateral", Card.Club, 12)
+extension:addCardSpec("collateral", Card.Club, 13)
+
+local ex_nihilo = fk.CreateCard{
   name = "ex_nihilo",
-  suit = Card.Heart,
-  number = 7,
-  skill = exNihiloSkill,
+  type = Card.TypeTrick,
+  skill = "ex_nihilo_skill",
 }
-
-extension:addCards({
-  exNihilo,
-  exNihilo:clone(Card.Heart, 8),
-  exNihilo:clone(Card.Heart, 9),
-  exNihilo:clone(Card.Heart, 11),
-})
-
-local nullificationSkill = fk.CreateActiveSkill{
-  name = "nullification_skill",
-  can_use = Util.FalseFunc,
-  on_effect = function(self, room, effect)
-    if effect.responseToEvent then
-      effect.responseToEvent.isCancellOut = true
-    end
-  end
+extension:loadCardSkels {
+  ex_nihilo,
 }
-local nullification = fk.CreateTrickCard{
+extension:addCardSpec("ex_nihilo", Card.Heart, 7)
+extension:addCardSpec("ex_nihilo", Card.Heart, 8)
+extension:addCardSpec("ex_nihilo", Card.Heart, 9)
+extension:addCardSpec("ex_nihilo", Card.Heart, 11)
+
+local nullification = fk.CreateCard{
   name = "nullification",
-  suit = Card.Spade,
-  number = 11,
-  skill = nullificationSkill,
+  type = Card.TypeTrick,
+  skill = "nullification_skill",
   is_passive = true,
 }
-
-extension:addCards({
+extension:loadCardSkels {
   nullification,
-
-  nullification:clone(Card.Club, 12),
-  nullification:clone(Card.Club, 13),
-
-  nullification:clone(Card.Diamond, 12),
-})
-
-local savageAssaultSkill = fk.CreateActiveSkill{
-  name = "savage_assault_skill",
-  prompt = "#savage_assault_skill",
-  can_use = Util.AoeCanUse,
-  on_use = Util.AoeOnUse,
-  mod_target_filter = function(self, to_select, selected, player, card, distance_limited)
-    return to_select ~= player.id
-  end,
-  on_effect = function(self, room, effect)
-    local cardResponded = room:askForResponse(room:getPlayerById(effect.to), 'slash', nil, nil, true, nil, effect)
-
-    if cardResponded then
-      room:responseCard({
-        from = effect.to,
-        card = cardResponded,
-        responseToEvent = effect,
-      })
-    else
-      room:damage({
-        from = room:getPlayerById(effect.from),
-        to = room:getPlayerById(effect.to),
-        card = effect.card,
-        damage = 1,
-        damageType = fk.NormalDamage,
-        skillName = self.name,
-      })
-    end
-  end
 }
-local savageAssault = fk.CreateTrickCard{
+extension:addCardSpec("nullification", Card.Spade, 11)
+extension:addCardSpec("nullification", Card.Club, 12)
+extension:addCardSpec("nullification", Card.Club, 13)
+extension:addCardSpec("nullification", Card.Diamond, 12)
+
+local savage_assault = fk.CreateCard{
   name = "savage_assault",
-  suit = Card.Spade,
-  number = 7,
+  type = Card.TypeTrick,
+  skill = "savage_assault_skill",
   is_damage_card = true,
   multiple_targets = true,
-  skill = savageAssaultSkill,
 }
-
-extension:addCards({
-  savageAssault,
-  savageAssault:clone(Card.Spade, 13),
-  savageAssault:clone(Card.Club, 7),
-})
-
-local archeryAttackSkill = fk.CreateActiveSkill{
-  name = "archery_attack_skill",
-  prompt = "#archery_attack_skill",
-  can_use = Util.AoeCanUse,
-  on_use = Util.AoeOnUse,
-  mod_target_filter = function(self, to_select, selected, player, card, distance_limited)
-    return to_select ~= player.id
-  end,
-  on_effect = function(self, room, effect)
-    local cardResponded = room:askForResponse(room:getPlayerById(effect.to), 'jink', nil, nil, true, nil, effect)
-
-    if cardResponded then
-      room:responseCard({
-        from = effect.to,
-        card = cardResponded,
-        responseToEvent = effect,
-      })
-    else
-      room:damage({
-        from = room:getPlayerById(effect.from),
-        to = room:getPlayerById(effect.to),
-        card = effect.card,
-        damage = 1,
-        damageType = fk.NormalDamage,
-        skillName = self.name,
-      })
-    end
-  end
+extension:loadCardSkels {
+  savage_assault,
 }
-local archeryAttack = fk.CreateTrickCard{
+extension:addCardSpec("savage_assault", Card.Spade, 7)
+extension:addCardSpec("savage_assault", Card.Spade, 13)
+extension:addCardSpec("savage_assault", Card.Club, 7)
+
+local archery_attack = fk.CreateCard{
   name = "archery_attack",
-  suit = Card.Heart,
-  number = 1,
+  type = Card.TypeTrick,
+  skill = "archery_attack_skill",
   is_damage_card = true,
   multiple_targets = true,
-  skill = archeryAttackSkill,
 }
-
-extension:addCards({
-  archeryAttack,
-})
-
-local godSalvationSkill = fk.CreateActiveSkill{
-  name = "god_salvation_skill",
-  prompt = "#god_salvation_skill",
-  can_use = Util.GlobalCanUse,
-  on_use = Util.GlobalOnUse,
-  mod_target_filter = Util.TrueFunc,
-  about_to_effect = function(self, room, effect)
-    if not room:getPlayerById(effect.to):isWounded() then
-      return true
-    end
-  end,
-  on_effect = function(self, room, effect)
-    local player = room:getPlayerById(effect.from)
-    local target = room:getPlayerById(effect.to)
-    if target:isWounded() and not target.dead then
-      room:recover({
-        who = target,
-        num = 1,
-        recoverBy = player,
-        card = effect.card,
-        skillName = self.name,
-      })
-    end
-  end
+extension:loadCardSkels {
+  archery_attack,
 }
-local godSalvation = fk.CreateTrickCard{
+extension:addCardSpec("archery_attack", Card.Heart, 1)
+
+local god_salvation = fk.CreateCard{
   name = "god_salvation",
-  suit = Card.Heart,
-  number = 1,
+  type = Card.TypeTrick,
+  skill = "god_salvation_skill",
   multiple_targets = true,
-  skill = godSalvationSkill,
 }
-
-extension:addCards({
-  godSalvation,
-})
-
-local amazingGraceSkill = fk.CreateActiveSkill{
-  name = "amazing_grace_skill",
-  prompt = "#amazing_grace_skill",
-  can_use = Util.GlobalCanUse,
-  on_use = Util.GlobalOnUse,
-  mod_target_filter = Util.TrueFunc,
-  on_action = function(self, room, use, finished)
-    if not finished then
-      local toDisplay = room:getNCards(#TargetGroup:getRealTargets(use.tos))
-      room:moveCards({
-        ids = toDisplay,
-        toArea = Card.Processing,
-        moveReason = fk.ReasonPut,
-        proposer = use.from,
-      })
-
-      table.forEach(room.players, function(p)
-        room:fillAG(p, toDisplay)
-      end)
-
-      use.extra_data = use.extra_data or {}
-      use.extra_data.AGFilled = toDisplay
-      use.extra_data.AGResult = {}
-    else
-      if use.extra_data and use.extra_data.AGFilled then
-        table.forEach(room.players, function(p)
-          room:closeAG(p)
-        end)
-
-        local toDiscard = table.filter(use.extra_data.AGFilled, function(id)
-          return room:getCardArea(id) == Card.Processing
-        end)
-
-        if #toDiscard > 0 then
-          room:moveCards({
-            ids = toDiscard,
-            toArea = Card.DiscardPile,
-            moveReason = fk.ReasonPutIntoDiscardPile,
-          })
-        end
-      end
-
-      use.extra_data.AGFilled = nil
-    end
-  end,
-  on_effect = function(self, room, effect)
-    local to = room:getPlayerById(effect.to)
-    if not (effect.extra_data and effect.extra_data.AGFilled) then
-      return
-    end
-
-    local chosen = room:askForAG(to, effect.extra_data.AGFilled, false, self.name)
-    room:takeAG(to, chosen, room.players)
-    table.insert(effect.extra_data.AGResult, {effect.to, chosen})
-    room:moveCardTo(chosen, Card.PlayerHand, effect.to, fk.ReasonPrey, self.name, nil, true, effect.to)
-    table.removeOne(effect.extra_data.AGFilled, chosen)
-  end
+extension:loadCardSkels {
+  god_salvation,
 }
+extension:addCardSpec("god_salvation", Card.Heart, 1)
 
-local amazingGrace = fk.CreateTrickCard{
+local amazing_grace = fk.CreateCard{
   name = "amazing_grace",
-  suit = Card.Heart,
-  number = 3,
+  type = Card.TypeTrick,
+  skill = "amazing_grace_skill",
   multiple_targets = true,
-  skill = amazingGraceSkill,
 }
-
-extension:addCards({
-  amazingGrace,
-  amazingGrace:clone(Card.Heart, 4),
-})
-
-local lightningSkill = fk.CreateActiveSkill{
-  name = "lightning_skill",
-  prompt = "#lightning_skill",
-  mod_target_filter = Util.TrueFunc,
-  can_use = Util.SelfCanUse,
-  on_use = function(self, room, use)
-    if not use.tos or #TargetGroup:getRealTargets(use.tos) == 0 then
-      use.tos = { { use.from } }
-    end
-  end,
-  on_effect = function(self, room, effect)
-    local to = room:getPlayerById(effect.to)
-    local judge = {
-      who = to,
-      reason = "lightning",
-      pattern = ".|2~9|spade",
-    }
-    room:judge(judge)
-    local result = judge.card
-    if result.suit == Card.Spade and result.number >= 2 and result.number <= 9 then
-      room:damage{
-        to = to,
-        damage = 3,
-        card = effect.card,
-        -- damageType = fk.ThunderDamage,
-        damageType = Fk:getDamageNature(fk.ThunderDamage) and fk.ThunderDamage or fk.NormalDamage,
-        skillName = self.name,
-      }
-
-      room:moveCards{
-        ids = room:getSubcardsByRule(effect.card, { Card.Processing }),
-        toArea = Card.DiscardPile,
-        moveReason = fk.ReasonUse
-      }
-    else
-      self:onNullified(room, effect)
-    end
-  end,
-  on_nullified = function(self, room, effect)
-    local to = room:getPlayerById(effect.to)
-    local nextp = to
-    repeat
-      nextp = nextp:getNextAlive(true)
-      if nextp == to then
-        if nextp:isProhibited(nextp, effect.card) then
-          room:moveCards{
-            ids = room:getSubcardsByRule(effect.card, { Card.Processing }),
-            toArea = Card.DiscardPile,
-            moveReason = fk.ReasonPut
-          }
-          return
-        end
-        break
-      end
-    until not nextp:hasDelayedTrick("lightning") and not nextp:isProhibited(nextp, effect.card)
-
-
-    if effect.card:isVirtual() then
-      nextp:addVirtualEquip(effect.card)
-    end
-
-    room:moveCards{
-      ids = room:getSubcardsByRule(effect.card, { Card.Processing }),
-      to = nextp.id,
-      toArea = Card.PlayerJudge,
-      moveReason = fk.ReasonPut
-    }
-  end,
+extension:loadCardSkels {
+  amazing_grace,
 }
-local lightning = fk.CreateDelayedTrickCard{
+extension:addCardSpec("amazing_grace", Card.Heart, 3)
+extension:addCardSpec("amazing_grace", Card.Heart, 4)
+
+local lightning = fk.CreateCard{
   name = "lightning",
-  suit = Card.Spade,
-  number = 1,
-  skill = lightningSkill,
+  type = Card.TypeTrick,
+  sub_type = Card.SubtypeDelayedTrick,
+  skill = "lightning_skill",
 }
-
-extension:addCards({
+extension:loadCardSkels {
   lightning,
-  lightning:clone(Card.Heart, 12),
-})
-
-local indulgenceSkill = fk.CreateActiveSkill{
-  name = "indulgence_skill",
-  prompt = "#indulgence_skill",
-  can_use = Util.CanUse,
-  mod_target_filter = function(self, to_select, selected, player, card, distance_limited)
-    return to_select ~= player.id
-  end,
-  target_filter = Util.TargetFilter,
-  target_num = 1,
-  on_effect = function(self, room, effect)
-    local to = room:getPlayerById(effect.to)
-    local judge = {
-      who = to,
-      reason = "indulgence",
-      pattern = ".|.|spade,club,diamond",
-    }
-    room:judge(judge)
-    local result = judge.card
-    if result.suit ~= Card.Heart then
-      to:skip(Player.Play)
-    end
-    self:onNullified(room, effect)
-  end,
-  on_nullified = function(self, room, effect)
-    room:moveCards{
-      ids = room:getSubcardsByRule(effect.card, { Card.Processing }),
-      toArea = Card.DiscardPile,
-      moveReason = fk.ReasonUse
-    }
-  end,
 }
-local indulgence = fk.CreateDelayedTrickCard{
+extension:addCardSpec("lightning", Card.Spade, 1)
+extension:addCardSpec("lightning", Card.Heart, 12)
+
+local indulgence = fk.CreateCard{
   name = "indulgence",
-  suit = Card.Spade,
-  number = 6,
-  skill = indulgenceSkill,
+  type = Card.TypeTrick,
+  sub_type = Card.SubtypeDelayedTrick,
+  skill = "indulgence_skill",
 }
-
-extension:addCards({
+extension:loadCardSkels {
   indulgence,
-  indulgence:clone(Card.Club, 6),
-  indulgence:clone(Card.Heart, 6),
-})
-
-local crossbowAudio = fk.CreateTriggerSkill{
-  name = "#crossbowAudio",
-  refresh_events = {fk.CardUsing},
-  can_refresh = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and player.phase == Player.Play and
-      data.card.trueName == "slash" and player:usedCardTimes("slash", Player.HistoryPhase) > 1
-  end,
-  on_refresh = function(self, event, target, player, data)
-    local room = player.room
-    room:broadcastPlaySound("./packages/standard_cards/audio/card/crossbow")
-    room:setEmotion(player, "./packages/standard_cards/image/anim/crossbow")
-    room:sendLog{
-      type = "#InvokeSkill",
-      from = player.id,
-      arg = "crossbow",
-    }
-  end,
 }
-local crossbowSkill = fk.CreateTargetModSkill{
-  name = "#crossbow_skill",
-  attached_equip = "crossbow",
-  bypass_times = function(self, player, skill, scope, card)
-    if player:hasSkill(self) and skill.trueName == "slash_skill" and scope == Player.HistoryPhase then
-      --FIXME: 无法检测到非转化的cost选牌的情况，如活墨等
-      local cardIds = Card:getIdList(card)
-      local crossbows = table.filter(player:getEquipments(Card.SubtypeWeapon), function(id)
-        return Fk:getCardById(id).equip_skill == self
-      end)
-      return #crossbows == 0 or not table.every(crossbows, function(id)
-        return table.contains(cardIds, id)
-      end)
-    end
-  end,
-}
-crossbowSkill:addRelatedSkill(crossbowAudio)
-Fk:addSkill(crossbowSkill)
+extension:addCardSpec("indulgence", Card.Spade, 6)
+extension:addCardSpec("indulgence", Card.Club, 6)
+extension:addCardSpec("indulgence", Card.Heart, 6)
 
-local crossbow = fk.CreateWeapon{
+local crossbow = fk.CreateCard{
   name = "crossbow",
-  suit = Card.Club,
-  number = 1,
+  type = Card.TypeEquip,
+  sub_type = Card.SubtypeWeapon,
   attack_range = 1,
-  equip_skill = crossbowSkill,
+  skill = "#crossbow_skill",
 }
-
-extension:addCards({
+extension:loadCardSkels {
   crossbow,
-  crossbow:clone(Card.Diamond, 1),
-})
-
-fk.MarkArmorNullified = "mark__armor_nullified"
-fk.MarkArmorInvalidFrom = "mark__armor_invalid_from"
-fk.MarkArmorInvalidTo = "mark__armor_invalid_to"
+}
+extension:addCardSpec("crossbow", Card.Club, 1)
+extension:addCardSpec("crossbow", Card.Diamond, 1)
 
 local armorInvalidity = fk.CreateInvaliditySkill {
   name = "armor_invalidity",
   global = true,
   invalidity_func = function(self, player, skill)
     if skill.attached_equip and Fk:cloneCard(skill.attached_equip).sub_type == Card.SubtypeArmor then
-      if player:getMark(fk.MarkArmorNullified) > 0 then return true end
+      if player:getMark(MarkEnum.MarkArmorNullified) > 0 then return true end
 
       --无视防具（规则集版）！
       if not RoomInstance then return end
@@ -822,8 +294,8 @@ local armorInvalidity = fk.CreateInvaliditySkill {
         local suffixes = {""}
         table.insertTable(suffixes, MarkEnum.TempMarkSuffix)
         for _, suffix in ipairs(suffixes) do
-          if table.contains(from:getTableMark(fk.MarkArmorInvalidTo .. suffix), player.id) or
-            table.contains(player:getTableMark(fk.MarkArmorInvalidFrom .. suffix), from.id) then
+          if table.contains(from:getTableMark(MarkEnum.MarkArmorInvalidTo .. suffix), player.id) or
+            table.contains(player:getTableMark(MarkEnum.MarkArmorInvalidFrom .. suffix), from.id) then
             return true
           end
         end
@@ -833,575 +305,190 @@ local armorInvalidity = fk.CreateInvaliditySkill {
 }
 Fk:addSkill(armorInvalidity)
 
-local qingGangSkill = fk.CreateTriggerSkill{
-  name = "#qinggang_sword_skill",
-  attached_equip = "qinggang_sword",
-  frequency = Skill.Compulsory,
-  events = { fk.TargetSpecified },
-  can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and data.card and data.card.trueName == "slash" and
-    not player.room:getPlayerById(data.to).dead
-  end,
-  on_cost = function(self, event, target, player, data)
-    self.cost_data = { tos = {data.to} }
-    player.room:doIndicate(player.id, {data.to})
-    return true
-  end,
-  on_use = function(self, event, target, player, data)
-    player.room:getPlayerById(data.to):addQinggangTag(data)
-  end,
-}
-Fk:addSkill(qingGangSkill)
-
-local qingGangEffect = fk.CreateTriggerSkill{
-  name = "qinggang_effect",
-  global = true,
-
-  --[[
-    1.对此目标的使用流程结束（FIXME：无法区分重复目标）
-    2.被此目标抵消
-    3.防止对此目标的效果伤害（FIXME：无法实现，取消此时点，与1合并清理）
-    4.确定对此目标的效果伤害的最终伤害值（FIXME：意义不明，改为因此伤害而扣减体力前）
-  ]]
-
-  refresh_events = {
-    fk.CardEffectFinished,
-    fk.CardEffectCancelledOut,
-    fk.DamageFinished,
-    fk.BeforeHpChanged,
-    fk.CardUseFinished
-  },
-  can_refresh = function(self, event, target, player, data)
-    local room = player.room
-    if event == fk.CardUseFinished then
-      return data.extra_data and data.extra_data.qinggang_tag and table.contains(data.extra_data.qinggang_tag, player.id)
-    end
-    local logic = room.logic
-    local game_event = logic:getCurrentEvent()
-    if event == fk.BeforeHpChanged then
-      if game_event.event ~= GameEvent.ChangeHp then return false end
-      local hpChangedData = game_event.data
-      if hpChangedData[1] ~= player or hpChangedData[3] ~= "damage" then return false end
-      game_event = game_event.parent
-      if game_event.event ~= GameEvent.Damage then return false end
-      game_event = game_event.parent
-      if game_event.event ~= GameEvent.SkillEffect or game_event.data[3].trueName ~= "slash_skill" then return false end
-      game_event = game_event.parent
-    elseif event == fk.DamageFinished then
-      if data.card == nil or data.to ~= player then return false end
-      if game_event.event ~= GameEvent.SkillEffect or game_event.data[3].trueName ~= "slash_skill" then return false end
-      game_event = game_event.parent
-    end
-    if game_event.event ~= GameEvent.CardEffect then return false end
-    local effect = game_event.data
-    if player.id ~= effect.to or effect.qinggang_clean then return false end
-    game_event = game_event.parent
-    if game_event.event ~= GameEvent.UseCard then return false end
-    local use = game_event.data
-
-    return use.additionalEffect == 0 and
-      use.extra_data and use.extra_data.qinggang_tag and table.contains(use.extra_data.qinggang_tag, player.id)
-  end,
-  on_refresh = function(self, event, target, player, data)
-    local room = player.room
-    if event == fk.CardUseFinished then
-      while table.removeOne(data.extra_data.qinggang_tag, player.id) do
-        room:removePlayerMark(player, fk.MarkArmorNullified)
-      end
-    else
-      local logic = room.logic
-      local cardEffectEvent = logic:getCurrentEvent():findParent(GameEvent.CardEffect, true)
-      local effect = cardEffectEvent.data
-      effect.qinggang_clean = true
-      table.removeOne(effect.extra_data.qinggang_tag, player.id)
-      room:removePlayerMark(player, fk.MarkArmorNullified)
-    end
-  end,
-}
-Fk:addSkill(qingGangEffect)
-
-local qingGang = fk.CreateWeapon{
+local qinggang_sword = fk.CreateCard{
   name = "qinggang_sword",
-  suit = Card.Spade,
-  number = 6,
+  type = Card.TypeEquip,
+  sub_type = Card.SubtypeWeapon,
   attack_range = 2,
-  equip_skill = qingGangSkill,
+  skill = "#qinggang_sword_skill",
 }
-
-extension:addCards({
-  qingGang,
-})
-
-local iceSwordSkill = fk.CreateTriggerSkill{
-  name = "#ice_sword_skill",
-  attached_equip = "ice_sword",
-  events = {fk.DamageCaused},
-  can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and (not data.chain) and
-      data.card and data.card.trueName == "slash" and not data.to:isNude()
-  end,
-  on_use = function(self, event, target, player, data)
-    local room = player.room
-    local to = data.to
-    for i = 1, 2 do
-      if player.dead or to.dead or to:isNude() then break end
-      local card = room:askForCardChosen(player, to, "he", self.name)
-      room:throwCard({card}, self.name, to, player)
-    end
-    return true
-  end
+extension:loadCardSkels {
+  qinggang_sword,
 }
-Fk:addSkill(iceSwordSkill)
+extension:addCardSpec("qinggang_sword", Card.Spade, 6)
 
-local iceSword = fk.CreateWeapon{
+local ice_sword = fk.CreateCard{
   name = "ice_sword",
-  suit = Card.Spade,
-  number = 2,
+  type = Card.TypeEquip,
+  sub_type = Card.SubtypeWeapon,
   attack_range = 2,
-  equip_skill = iceSwordSkill,
+  skill = "#ice_sword_skill",
 }
-
-extension:addCards({
-  iceSword,
-})
-
-local doubleSwordsSkill = fk.CreateTriggerSkill{
-  name = "#double_swords_skill",
-  attached_equip = "double_swords",
-  events = {fk.TargetSpecified},
-  can_trigger = function(self, event, target, player, data)
-    if target == player and player:hasSkill(self) and
-      data.card and data.card.trueName == "slash" then
-      local target = player.room:getPlayerById(data.to)
-      return player:compareGenderWith(target, true)
-    end
-  end,
-  on_use = function(self, event, target, player, data)
-    local room = player.room
-    local to = player.room:getPlayerById(data.to)
-    if to:isKongcheng() then
-      player:drawCards(1, self.name)
-    else
-      local result = room:askForDiscard(to, 1, 1, false, self.name, true, ".", "#double_swords-invoke:"..player.id)
-      if #result == 0 then
-        player:drawCards(1, self.name)
-      end
-    end
-  end,
+extension:loadCardSkels {
+  ice_sword,
 }
-Fk:addSkill(doubleSwordsSkill)
-local doubleSwords = fk.CreateWeapon{
+extension:addCardSpec("ice_sword", Card.Spade, 2)
+
+local double_swords = fk.CreateCard{
   name = "double_swords",
-  suit = Card.Spade,
-  number = 2,
+  type = Card.TypeEquip,
+  sub_type = Card.SubtypeWeapon,
   attack_range = 2,
-  equip_skill = doubleSwordsSkill,
+  skill = "#double_swords_skill",
 }
-
-extension:addCards({
-  doubleSwords,
-})
-
-local bladeSkill = fk.CreateTriggerSkill{
-  name = "#blade_skill",
-  attached_equip = "blade",
-  events = {fk.CardEffectCancelledOut},
-  can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self) and data.from == player.id and data.card.trueName == "slash" and not player.room:getPlayerById(data.to).dead
-  end,
-  on_cost = function(self, event, target, player, data)
-    local room = player.room
-    local use = room:askForUseCard(player, "slash", nil, "#blade_slash:" .. data.to,
-      true, { must_targets = {data.to}, exclusive_targets = {data.to}, bypass_distances = true, bypass_times = true })
-    if use then
-      use.extraUse = true
-      self.cost_data = use
-      return true
-    end
-  end,
-  on_use = function(self, event, target, player, data)
-    player.room:useCard(self.cost_data)
-  end,
+extension:loadCardSkels {
+  double_swords,
 }
-Fk:addSkill(bladeSkill)
-local blade = fk.CreateWeapon{
+extension:addCardSpec("double_swords", Card.Spade, 2)
+
+local blade = fk.CreateCard{
   name = "blade",
-  suit = Card.Spade,
-  number = 5,
+  type = Card.TypeEquip,
+  sub_type = Card.SubtypeWeapon,
   attack_range = 3,
-  equip_skill = bladeSkill,
+  skill = "#blade_skill",
 }
-
-extension:addCards({
+extension:loadCardSkels {
   blade,
-})
-
-local spearSkill = fk.CreateViewAsSkill{
-  name = "spear_skill",
-  prompt = "#spear_skill",
-  attached_equip = "spear",
-  pattern = "slash",
-  handly_pile = true,
-  card_filter = function(self, to_select, selected)
-    if #selected == 2 then return false end
-    return table.contains(Self:getHandlyIds(true), to_select)
-  end,
-  view_as = function(self, cards)
-    if #cards ~= 2 then
-      return nil
-    end
-    local c = Fk:cloneCard("slash")
-    c.skillName = "spear"
-    c:addSubcards(cards)
-    return c
-  end,
 }
-Fk:addSkill(spearSkill)
-local spear = fk.CreateWeapon{
+extension:addCardSpec("blade", Card.Spade, 5)
+
+local spear = fk.CreateCard{
   name = "spear",
-  suit = Card.Spade,
-  number = 12,
+  type = Card.TypeEquip,
+  sub_type = Card.SubtypeWeapon,
   attack_range = 3,
-  equip_skill = spearSkill,
+  skill = "spear_skill",
 }
-
-extension:addCards({
+extension:loadCardSkels {
   spear,
-})
-
-local axeSkill = fk.CreateTriggerSkill{
-  name = "#axe_skill",
-  attached_equip = "axe",
-  events = {fk.CardEffectCancelledOut},
-  can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self) and data.from == player.id and data.card.trueName == "slash" and
-      not player.room:getPlayerById(data.to).dead
-  end,
-  on_cost = function(self, event, target, player, data)
-    local room = player.room
-    local cards = {}
-    for _, id in ipairs(player:getCardIds("he")) do
-      if not player:prohibitDiscard(id) and
-        not (table.contains(player:getEquipments(Card.SubtypeWeapon), id) and Fk:getCardById(id).name == "axe") then
-        table.insert(cards, id)
-      end
-    end
-    cards = room:askForDiscard(player, 2, 2, true, self.name, true, ".|.|.|.|.|.|"..table.concat(cards, ","),
-      "#axe-invoke::"..data.to, true)
-    if #cards > 0 then
-      self.cost_data = cards
-      return true
-    end
-  end,
-  on_use = function(self, event, target, player, data)
-    local room = player.room
-    room:throwCard(self.cost_data, "axe", player, player)
-    return true
-  end,
 }
-Fk:addSkill(axeSkill)
-local axe = fk.CreateWeapon{
+extension:addCardSpec("spear", Card.Spade, 12)
+
+local axe = fk.CreateCard{
   name = "axe",
-  suit = Card.Diamond,
-  number = 5,
+  type = Card.TypeEquip,
+  sub_type = Card.SubtypeWeapon,
   attack_range = 3,
-  equip_skill = axeSkill,
+  skill = "axe_skill",
 }
-
-extension:addCards({
+extension:loadCardSkels {
   axe,
-})
+}
+extension:addCardSpec("axe", Card.Diamond, 5)
 
-local halberdAudio = fk.CreateTriggerSkill{
-  name = "#halberdAudio",
-  refresh_events = {fk.CardUsing},
-  can_refresh = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and
-      data.card.trueName == "slash" and #TargetGroup:getRealTargets(data.tos) > 1
-  end,
-  on_refresh = function(self, event, target, player, data)
-    local room = player.room
-    room:broadcastPlaySound("./packages/standard_cards/audio/card/halberd")
-    room:setEmotion(player, "./packages/standard_cards/image/anim/halberd")
-  end,
-}
-local halberdSkill = fk.CreateTargetModSkill{
-  name = "#halberd_skill",
-  attached_equip = "halberd",
-  extra_target_func = function(self, player, skill, card)
-    if player:hasSkill(self) and skill.trueName == "slash_skill" then
-      local cards = card:isVirtual() and card.subcards or {card.id}
-      local handcards = player:getCardIds(Player.Hand)
-      if #handcards > 0 and #cards == #handcards and table.every(cards, function(id) return table.contains(handcards, id) end) then
-        return 2
-      end
-    end
-  end,
-}
-halberdSkill:addRelatedSkill(halberdAudio)
-Fk:addSkill(halberdSkill)
-local halberd = fk.CreateWeapon{
+local halberd = fk.CreateCard{
   name = "halberd",
-  suit = Card.Diamond,
-  number = 12,
+  type = Card.TypeEquip,
+  sub_type = Card.SubtypeWeapon,
   attack_range = 4,
-  equip_skill = halberdSkill,
+  skill = "#halberd_skill",
 }
-
-extension:addCards({
+extension:loadCardSkels {
   halberd,
-})
-
-local kylinBowSkill = fk.CreateTriggerSkill{
-  name = "#kylin_bow_skill",
-  attached_equip = "kylin_bow",
-  events = {fk.DamageCaused},
-  can_trigger = function(self, event, target, player, data)
-    local ret = target == player and player:hasSkill(self) and
-      data.card and data.card.trueName == "slash" and (not data.chain)
-    if ret then
-      ---@type ServerPlayer
-      local to = data.to
-      return table.find(to:getCardIds(Player.Equip), function (id)
-        local card = Fk:getCardById(id)
-        return card.sub_type == Card.SubtypeDefensiveRide or card.sub_type == Card.SubtypeOffensiveRide
-      end)
-    end
-  end,
-  on_use = function(self, event, target, player, data)
-    local room = player.room
-    local to = data.to
-    local ride_tab = table.filter(to:getCardIds(Player.Equip), function (id)
-      local card = Fk:getCardById(id)
-      return card.sub_type == Card.SubtypeDefensiveRide or card.sub_type == Card.SubtypeOffensiveRide
-    end)
-    if #ride_tab == 0 then return end
-    local id = room:askForCardChosen(player, to, {
-      card_data = {
-        { "equip_horse", ride_tab }
-      }
-    }, self.name)
-    room:throwCard({id}, self.name, to, player)
-  end
 }
-Fk:addSkill(kylinBowSkill)
-local kylinBow = fk.CreateWeapon{
+extension:addCardSpec("halberd", Card.Diamond, 12)
+
+local kylin_bow = fk.CreateCard{
   name = "kylin_bow",
-  suit = Card.Heart,
-  number = 5,
+  type = Card.TypeEquip,
+  sub_type = Card.SubtypeWeapon,
   attack_range = 5,
-  equip_skill = kylinBowSkill,
+  skill = "#kylin_bow_skill",
 }
-
-extension:addCards({
-  kylinBow,
-})
-
-local eightDiagramSkill = fk.CreateTriggerSkill{
-  name = "#eight_diagram_skill",
-  attached_equip = "eight_diagram",
-  events = {fk.AskForCardUse, fk.AskForCardResponse},
-  can_trigger = function(self, event, target, player, data)
-    if not (target == player and player:hasSkill(self) and
-      (data.cardName == "jink" or (data.pattern and Exppattern:Parse(data.pattern):matchExp("jink|0|nosuit|none")))) then return end
-    if event == fk.AskForCardUse then
-      return not player:prohibitUse(Fk:cloneCard("jink"))
-    else
-      return not player:prohibitResponse(Fk:cloneCard("jink"))
-    end
-  end,
-  on_use = function(self, event, target, player, data)
-    local room = player.room
-    local judgeData = {
-      who = player,
-      reason = self.name,
-      pattern = ".|.|heart,diamond",
-    }
-    room:judge(judgeData)
-
-    if judgeData.card.color == Card.Red then
-      if event == fk.AskForCardUse then
-        data.result = {
-          from = player.id,
-          card = Fk:cloneCard('jink'),
-        }
-        data.result.card.skillName = "eight_diagram"
-
-        if data.eventData then
-          data.result.toCard = data.eventData.toCard
-          data.result.responseToEvent = data.eventData.responseToEvent
-        end
-      else
-        data.result = Fk:cloneCard('jink')
-        data.result.skillName = "eight_diagram"
-      end
-
-      return true
-    end
-  end
+extension:loadCardSkels {
+  kylin_bow,
 }
-Fk:addSkill(eightDiagramSkill)
-local eightDiagram = fk.CreateArmor{
+extension:addCardSpec("kylin_bow", Card.Heart, 5)
+
+local eight_diagram = fk.CreateCard{
   name = "eight_diagram",
-  suit = Card.Spade,
-  number = 2,
-  equip_skill = eightDiagramSkill,
+  type = Card.TypeEquip,
+  sub_type = Card.SubtypeArmor,
+  skill = "#eight_diagram_skill",
 }
-
-extension:addCards({
-  eightDiagram,
-  eightDiagram:clone(Card.Club, 2),
-})
-
-local niohShieldSkill = fk.CreateTriggerSkill{
-  name = "#nioh_shield_skill",
-  attached_equip = "nioh_shield",
-  frequency = Skill.Compulsory,
-  events = {fk.PreCardEffect},
-  can_trigger = function(self, event, target, player, data)
-    local effect = data ---@type CardEffectEvent
-    return player.id == effect.to and player:hasSkill(self) and
-      effect.card.trueName == "slash" and effect.card.color == Card.Black
-  end,
-  on_use = Util.TrueFunc,
+extension:loadCardSkels {
+  eight_diagram,
 }
-Fk:addSkill(niohShieldSkill)
-local niohShield = fk.CreateArmor{
+extension:addCardSpec("eight_diagram", Card.Spade, 2)
+extension:addCardSpec("eight_diagram", Card.Club, 2)
+
+local nioh_shield = fk.CreateCard{
   name = "nioh_shield",
-  suit = Card.Club,
-  number = 2,
-  equip_skill = niohShieldSkill,
+  type = Card.TypeEquip,
+  sub_type = Card.SubtypeArmor,
+  skill = "#nioh_shield_skill",
 }
-
-extension:addCards({
-  niohShield,
-})
-
-local diluSkill = fk.CreateDistanceSkill{
-  name = "#dilu_skill",
-  attached_equip = "dilu",
-  correct_func = function(self, from, to)
-    if to:hasSkill(self) then
-      return 1
-    end
-  end,
+extension:loadCardSkels {
+  nioh_shield,
 }
-Fk:addSkill(diluSkill)
-local diLu = fk.CreateDefensiveRide{
+extension:addCardSpec("nioh_shield", Card.Club, 2)
+
+local dilu = fk.CreateCard{
   name = "dilu",
-  suit = Card.Club,
-  number = 5,
-  equip_skill = diluSkill,
+  type = Card.TypeEquip,
+  sub_type = Card.SubtypeDefensiveRide,
+  skill = "#dilu_skill",
 }
-
-extension:addCards({
-  diLu,
-})
-
-local jueyingSkill = fk.CreateDistanceSkill{
-  name = "#jueying_skill",
-  attached_equip = "jueying",
-  correct_func = function(self, from, to)
-    if to:hasSkill(self) then
-      return 1
-    end
-  end,
+extension:loadCardSkels {
+  dilu,
 }
-Fk:addSkill(jueyingSkill)
-local jueYing = fk.CreateDefensiveRide{
+extension:addCardSpec("dilu", Card.Club, 5)
+
+local jueying = fk.CreateCard{
   name = "jueying",
-  suit = Card.Spade,
-  number = 5,
-  equip_skill = jueyingSkill,
+  type = Card.TypeEquip,
+  sub_type = Card.SubtypeDefensiveRide,
+  skill = "#jueying_skill",
 }
-
-extension:addCards({
-  jueYing,
-})
-
-local zhuahuangfeidianSkill = fk.CreateDistanceSkill{
-  name = "#zhuahuangfeidian_skill",
-  attached_equip = "zhuahuangfeidian",
-  correct_func = function(self, from, to)
-    if to:hasSkill(self) then
-      return 1
-    end
-  end,
+extension:loadCardSkels {
+  jueying,
 }
-Fk:addSkill(zhuahuangfeidianSkill)
-local zhuaHuangFeiDian = fk.CreateDefensiveRide{
+extension:addCardSpec("jueying", Card.Spade, 5)
+
+local zhuahuangfeidian = fk.CreateCard{
   name = "zhuahuangfeidian",
-  suit = Card.Heart,
-  number = 13,
-  equip_skill = zhuahuangfeidianSkill,
+  type = Card.TypeEquip,
+  sub_type = Card.SubtypeDefensiveRide,
+  skill = "#zhuahuangfeidian_skill",
 }
-
-extension:addCards({
-  zhuaHuangFeiDian,
-})
-
-local chituSkill = fk.CreateDistanceSkill{
-  name = "#chitu_skill",
-  attached_equip = "chitu",
-  correct_func = function(self, from, to)
-    if from:hasSkill(self) then
-      return -1
-    end
-  end,
+extension:loadCardSkels {
+  zhuahuangfeidian,
 }
-Fk:addSkill(chituSkill)
-local chiTu = fk.CreateOffensiveRide{
+extension:addCardSpec("zhuahuangfeidian", Card.Heart, 13)
+
+local chitu = fk.CreateCard{
   name = "chitu",
-  suit = Card.Heart,
-  number = 5,
-  equip_skill = chituSkill,
+  type = Card.TypeEquip,
+  sub_type = Card.SubtypeOffensiveRide,
+  skill = "#chitu_skill",
 }
-
-extension:addCards({
-  chiTu,
-})
-
-local dayuanSkill = fk.CreateDistanceSkill{
-  name = "#dayuan_skill",
-  attached_equip = "dayuan",
-  correct_func = function(self, from, to)
-    if from:hasSkill(self) then
-      return -1
-    end
-  end,
+extension:loadCardSkels {
+  chitu,
 }
-Fk:addSkill(dayuanSkill)
-local daYuan = fk.CreateOffensiveRide{
+extension:addCardSpec("chitu", Card.Heart, 5)
+
+local dayuan = fk.CreateCard{
   name = "dayuan",
-  suit = Card.Spade,
-  number = 13,
-  equip_skill = dayuanSkill,
+  type = Card.TypeEquip,
+  sub_type = Card.SubtypeOffensiveRide,
+  skill = "#dayuan_skill",
 }
-
-extension:addCards({
-  daYuan,
-})
-
-local zixingSkill = fk.CreateDistanceSkill{
-  name = "#zixing_skill",
-  attached_equip = "zixing",
-  correct_func = function(self, from, to)
-    if from:hasSkill(self) then
-      return -1
-    end
-  end,
+extension:loadCardSkels {
+  dayuan,
 }
-Fk:addSkill(zixingSkill)
-local ziXing = fk.CreateOffensiveRide{
+extension:addCardSpec("dayuan", Card.Spade, 13)
+
+local zixing = fk.CreateCard{
   name = "zixing",
-  suit = Card.Diamond,
-  number = 13,
-  equip_skill = zixingSkill,
+  type = Card.TypeEquip,
+  sub_type = Card.SubtypeOffensiveRide,
+  skill = "#zixing_skill",
 }
-
-extension:addCards({
-  ziXing,
-})
+extension:loadCardSkels {
+  zixing,
+}
+extension:addCardSpec("zixing", Card.Diamond, 13)
 
 local pkgprefix = "packages/"
 if UsingNewCore then pkgprefix = "packages/freekill-core/" end

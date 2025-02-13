@@ -917,7 +917,7 @@ end
 function ServerPlayer:addQinggangTag(data)
   if not data.qinggang_used then
     data.qinggang_used = true
-    self.room:addPlayerMark(self, fk.MarkArmorNullified)
+    self.room:addPlayerMark(self, MarkEnum.MarkArmorNullified)
     data.extra_data = data.extra_data or {}
     data.extra_data.qinggang_tag = data.extra_data.qinggang_tag or {}
     table.insert(data.extra_data.qinggang_tag, data.to)
