@@ -989,10 +989,13 @@ Room.askForUseViewAsSkill = Room.askToUseActiveSkill
 ---@param params askToDiscardParams @ 各种变量
 ---@return integer[] @ 弃掉的牌的id列表，可能是空的
 function Room:askToDiscard(player, params)
+  local skillName = params.skill_name
+  local maxNum, minNum = params.max_num, params.min_num
+
   params.cancelable = (params.cancelable == nil) and true or params.cancelable
   params.no_indicate = params.no_indicate or false
   params.pattern = params.pattern or "."
-  local skillName = params.skill_name
+  params.prompt = params.prompt or ("#AskForDiscard:::" .. maxNum .. ":" .. minNum)
 
   local canDiscards = table.filter(
     player:getCardIds{ Player.Hand, params.include_equip and Player.Equip or nil }, function(id)
@@ -1021,8 +1024,6 @@ function Room:askToDiscard(player, params)
     end
   )
 
-  local maxNum, minNum = params.max_num, params.min_num
-
   if minNum >= #canDiscards and not params.cancelable then
     if not params.skip then
       self:throwCard(canDiscards, skillName, player, player)
@@ -1038,7 +1039,6 @@ function Room:askToDiscard(player, params)
     skillName = params.skill_name,
     pattern = params.pattern,
   }
-  params.prompt = params.prompt or ("#AskForDiscard:::" .. maxNum .. ":" .. minNum)
   local _, ret = self:askToUseActiveSkill(player, {skill_name = "discard_skill", prompt = params.prompt, cancelable = params.cancelable, extra_data = data, no_indicate = params.no_indicate})
 
   if ret then
