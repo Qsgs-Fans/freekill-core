@@ -21,8 +21,8 @@ SmartAI:setCardSkillAI("peach_skill", nil, "default_card_skill")
 fk.ai_card_keep_value["dismantlement"] = 45
 SmartAI:setCardSkillAI("dismantlement_skill", {
   on_effect = function(self, logic, effect)
-    local from = logic:getPlayerById(effect.from)
-    local to = logic:getPlayerById(effect.to)
+    local from = effect.from
+    local to = effect.to
     if from.dead or to.dead or to:isAllNude() then return end
     local _, val = self:thinkForCardChosen(from.ai, to, "hej")
     logic.benefit = logic.benefit + val
