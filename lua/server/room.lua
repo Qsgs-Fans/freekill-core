@@ -3,7 +3,7 @@
 --- Room是fk游戏逻辑运行的主要场所，同时也提供了许多API函数供编写技能使用。
 ---
 --- 一个房间中只有一个Room实例，保存在RoomInstance全局变量中。
----@class Room : AbstractRoom, GameEventWrappers
+---@class Room : AbstractRoom, GameEventWrappers, CompatAskFor
 ---@field public room fk.Room @ C++层面的Room类实例，别管他就是了，用不着
 ---@field public id integer @ 房间的id
 ---@field private main_co any @ 本房间的主协程
@@ -32,6 +32,9 @@ GameEventWrappers = require "lua.server.events"
 Room:include(GameEventWrappers)
 GameLogic = require "server.gamelogic"
 ServerPlayer = require "server.serverplayer"
+
+CompactAskFor = require "compat.askfor"
+Room:include(CompactAskFor)
 
 -- 唉，兼容牢函数
 GameLogic:include(dofile "lua/compat/gamelogic.lua")
@@ -899,34 +902,40 @@ end
 -- 交互方法
 ------------------------------------------------------------------------
 
+---@class AskToUseActiveSkillParams
+---@field skill_name string @ 所调用的主动技的技能名
+---@field prompt? string @ 烧条上面显示的提示文本内容
+---@field cancelable? boolean @ 是否可以点取消
+---@field no_indicate? boolean @ 是否不显示指示线
+---@field extra_data? table @ 额外信息，因技能而异了
+---@field skip? boolean @ 是否跳过实际执行流程
+
 --- 询问player是否要发动一个主动技。
 ---
 --- 如果发动的话，那么会执行一下技能的onUse函数，然后返回选择的牌和目标等。
 ---@param player ServerPlayer @ 询问目标
----@param skill_name string @ 主动技的技能名
----@param prompt? string @ 烧条上面显示的提示文本内容
----@param cancelable? boolean @ 是否可以点取消
----@param extra_data? table @ 额外信息，因技能而异了
----@param no_indicate? boolean @ 是否不显示指示线
+---@param params AskToUseActiveSkillParams @ 各种变量
 ---@return boolean, table? @ 返回第一个值为是否成功发动，第二值为技能选牌、目标等数据
-function Room:askForUseActiveSkill(player, skill_name, prompt, cancelable, extra_data, no_indicate)
-  prompt = prompt or ""
-  cancelable = (cancelable == nil) and true or cancelable
-  no_indicate = (no_indicate == nil) and true or no_indicate
-  extra_data = extra_data or Util.DummyTable
-  local skill = Fk.skills[skill_name]
+function Room:askToUseActiveSkill(player, params)
+  params.prompt = params.prompt or ""
+  params.cancelable = (params.cancelable == nil) and true or params.cancelable
+  params.no_indicate = (params.no_indicate == nil) and true or params.no_indicate
+  params.extra_data = params.extra_data or Util.DummyTable
+  params.skip = params.skip or params.extra_data.skipUse
+  ---@diagnostic disable-next-line assign-type-mismatch
+  local skill = Fk.skills[params.skill_name] ---@type ActiveSkill | ViewAsSkill
   if not (skill and (skill:isInstanceOf(ActiveSkill) or skill:isInstanceOf(ViewAsSkill))) then
-    print("Attempt ask for use non-active skill: " .. skill_name)
+    print("Attempt ask for use non-active skill: " .. params.skill_name)
     return false
   end
 
   local command = "AskForUseActiveSkill"
-  local data = {skill_name, prompt, cancelable, extra_data}
+  local data = {params.skill_name, params.prompt, params.cancelable, params.extra_data}
 
-  Fk.currentResponseReason = extra_data.skillName
+  Fk.currentResponseReason = params.extra_data.skillName
   local req = Request:new(player, command)
   req:setData(player, data)
-  req.focus_text = extra_data.skillName or skill_name
+  req.focus_text = params.extra_data.skillName or params.skill_name
   local result = req:getResult(player)
   Fk.currentResponseReason = nil
 
@@ -940,7 +949,7 @@ function Room:askForUseActiveSkill(player, skill_name, prompt, cancelable, extra
   local card_data = card
   local selected_cards = card_data.subcards
   local interaction
-  if not no_indicate then
+  if not params.no_indicate then
     self:doIndicate(player.id, targets)
   end
 
@@ -949,7 +958,7 @@ function Room:askForUseActiveSkill(player, skill_name, prompt, cancelable, extra
     skill.interaction.data = interaction
   end
 
-  if skill:isInstanceOf(ActiveSkill) and not extra_data.skipUse then
+  if skill:isInstanceOf(ActiveSkill) and not params.skip then
     skill:onUse(self, SkillUseData:new {
       from = player,
       cards = selected_cards,
@@ -964,7 +973,7 @@ function Room:askForUseActiveSkill(player, skill_name, prompt, cancelable, extra
   }
 end
 
-Room.askForUseViewAsSkill = Room.askForUseActiveSkill
+Room.askForUseViewAsSkill = Room.askToUseActiveSkill
 
 --- 询问一名角色弃牌。
 ---
