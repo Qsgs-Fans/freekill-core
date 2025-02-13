@@ -317,6 +317,7 @@ Trang chủ: https://libgit2.org
   ["#StartPindianReason"] = "%from bắt đầu đấu điểm (%arg)",
   ["#ShowPindianCard"] = "Lá đấu điểm của %from là %arg",
   ["#ShowPindianResult"] = "%from %arg đấu điểm giữa %from và %to",
+  -- ["#ChangePindianNumber"] = "由于 %arg，%to 的拼点牌点数从 %arg2 变为 %arg3",
   ["pindianwin"] = "thắng",
   ["pindiannotwin"] = "thua",
 

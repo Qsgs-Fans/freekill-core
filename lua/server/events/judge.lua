@@ -11,14 +11,15 @@ local function exec(tp, ...)
 end
 
 ---@class GameEvent.Judge : GameEvent
+---@field public data JudgeData
 local Judge = GameEvent:subclass("GameEvent.Judge")
 function Judge:main()
-  local data = table.unpack(self.data)
+  local data = self.data
   local room = self.room
   local logic = room.logic
   local who = data.who
 
-  data.isJudgeEvent = true
+  -- data.isJudgeEvent = true
   logic:trigger(fk.StartJudge, who, data)
   data.card = data.card or Fk:getCardById(room:getNCards(1)[1])
 
@@ -66,9 +67,9 @@ function Judge:main()
 end
 
 function Judge:clear()
-  local data = table.unpack(self.data)
+  local data = self.data
   local room = self.room
-  if (self.interrupted or not data.skipDrop) and room:getCardArea(data.card.id) == Card.Processing then
+  if (self.interrupted or not data.skipDrop) and data.card and room:getCardArea(data.card.id) == Card.Processing then
     room:moveCardTo(data.card, Card.DiscardPile, nil, fk.ReasonJudge)
   end
   if not self.interrupted then return end
@@ -87,15 +88,16 @@ end
 -- 判定
 
 --- 根据判定数据进行判定。判定的结果直接保存在这个数据中。
----@param data JudgeStruct
+---@param data JudgeDataSpec
 function JudgeEventWrappers:judge(data)
+  data = JudgeData:new(data)
   return exec(Judge, data)
 end
 
 --- 改判。
 ---@param card Card @ 改判的牌
 ---@param player ServerPlayer @ 改判的玩家
----@param judge JudgeStruct @ 要被改判的判定数据
+---@param judge JudgeData @ 要被改判的判定数据
 ---@param skillName? string @ 技能名
 ---@param exchange? boolean @ 是否要替换原有判定牌（即类似鬼道那样）
 function JudgeEventWrappers:retrial(card, player, judge, skillName, exchange)

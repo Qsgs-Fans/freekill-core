@@ -51,10 +51,10 @@ GameRule = fk.CreateTriggerSkill{
           table.concat(cardNames, ","),
           prompt,
           true,
-          {analepticRecover = true, must_targets = { dyingPlayer.id }}
+          {analepticRecover = true, must_targets = { dyingPlayer.id }, fix_targets = { dyingPlayer.id }}
         )
         if not peach_use then break end
-        peach_use.tos = { {dyingPlayer.id} }
+        peach_use.tos = { dyingPlayer }
         if peach_use.card.trueName == "analeptic" then
           peach_use.extra_data = peach_use.extra_data or {}
           peach_use.extra_data.analepticRecover = true
@@ -64,7 +64,7 @@ GameRule = fk.CreateTriggerSkill{
     end,
     [fk.AskForPeachesDone] = function()
       if player.hp < 1 and not data.ignoreDeath then
-        ---@type DeathStruct
+        ---@type DeathDataSpec
         local deathData = {
           who = player.id,
           damage = data.damage,

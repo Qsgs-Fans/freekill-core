@@ -312,6 +312,7 @@ FreeKill使用的是libgit2的C API，与此同时使用Git完成拓展包的下
   ["#AskForNullificationWithoutTo"] = "是否对 %src 使用的【%arg】使用【无懈可击】？",
   ["#AskForPeaches"] = "%src 生命危急，需要 %arg 个【桃】",
   ["#AskForPeachesSelf"] = "你生命危急，需要 %arg 个【桃】或【酒】",
+  ["#AskForUseOneCard"] = "%arg：请使用一张牌",
 
   ["#AskForDiscard"] = "请弃置 %arg 张牌，最少 %arg2 张",
   ["#AskForCard"] = "请选择 %arg 张牌，最少 %arg2 张",
@@ -322,6 +323,7 @@ FreeKill使用的是libgit2的C API，与此同时使用Git完成拓展包的下
   ["#StartPindianReason"] = "%from 由于 %arg 而发起拼点",
   ["#ShowPindianCard"] = "%from 的拼点牌是 %arg",
   ["#ShowPindianResult"] = "%from 在 %from 和 %to 之间的拼点中 %arg",
+  ["#ChangePindianNumber"] = "由于 %arg，%to 的拼点牌点数从 %arg2 变为 %arg3",
   ["pindianwin"] = "赢",
   ["pindiannotwin"] = "没赢",
 

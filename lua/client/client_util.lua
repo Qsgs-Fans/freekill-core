@@ -249,12 +249,22 @@ end
 -- TODO: 动态技能名
 function GetPlayerSkills(id)
   local p = ClientInstance:getPlayerById(id)
-  return table.map(p.player_skills, function(s)
-    return s.visible and not s.attached_equip and (not s.name:endsWith("&") or p == Self) and {
-      name = Fk:translate(s.name) .. (s:isEffectable(p) and "" or Fk:translate("skill_invalidity")),
-      description = Fk:getDescription(s.name),
-    } or nil
-  end)
+  --FIXME:本体更新时记得优化此处
+  if p == Self then
+    return table.map(p.player_skills, function(s)
+      return s.visible and {
+        name = s.name,
+        description = Fk:getDescription(s.name, nil, p),
+      } or nil
+    end)
+  else
+    return table.map(p.player_skills, function(s)
+      return s.visible and not (s.attached_equip or s.name:endsWith("&")) and {
+        name = Fk:translate(s.name) .. (s:isEffectable(p) and "" or Fk:translate("skill_invalidity")),
+        description = Fk:getDescription(s.name, nil, p),
+      } or nil
+    end)
+  end
 end
 
 -- Handle skills
@@ -290,7 +300,7 @@ function GetSkillStatus(skill_name)
   local skill = Fk.skills[skill_name]
   return {
     locked = not skill:isEffectable(player),
-    times = skill:getTimes()
+    times = skill:getTimes(Self)
   }
 end
 
@@ -307,7 +317,7 @@ function CardFitPattern(card_name, pattern)
     local skill = Fk.skills[data.skill]
     local selected_cards = data.subcards
     if skill:isInstanceOf(ViewAsSkill) then
-      c = skill:viewAs(selected_cards)
+      c = skill:viewAs(Self, selected_cards)
       if c then
         ret = exp:match(c)
       end
@@ -663,14 +673,17 @@ function GetTargetTip(pid)
 
   if skill then
     if skill:isInstanceOf(ActiveSkill) then
-      local tip = skill:targetTip(to_select, selected, selected_cards, nil, selectable, extra_data)
+      ---@cast skill ActiveSkill
+      local tip = skill:targetTip(Self, ClientInstance:getPlayerById(to_select),
+        table.map(selected, Util.Id2PlayerMapper), selected_cards, nil, selectable, extra_data)
       if type(tip) == "string" then
         table.insert(ret, { content = tip, type = "normal" })
       elseif type(tip) == "table" then
         table.insertTable(ret, tip)
       end
     elseif skill:isInstanceOf(ViewAsSkill) then
-      card = skill:viewAs(selected_cards)
+      ---@cast skill ViewAsSkill
+      card = skill:viewAs(Self, selected_cards)
     end
   end
 
@@ -682,7 +695,8 @@ function GetTargetTip(pid)
         return ret
       end
 
-      local tip = sk:getTargetTip(Self, to_select, selected, selected_cards, card, selectable, extra_data)
+      local tip = sk:getTargetTip(Self, ClientInstance:getPlayerById(to_select),
+        table.map(selected, Util.Id2PlayerMapper), selected_cards, card, selectable, extra_data)
       if type(tip) == "string" then
         table.insert(ret, { content = tip, type = "normal" })
       elseif type(tip) == "table" then
@@ -691,7 +705,8 @@ function GetTargetTip(pid)
     end
 
     ret = ret or {}
-    local tip = card.skill:targetTip(to_select, selected, selected_cards, card, selectable, extra_data)
+    local tip = card.skill:targetTip(Self, ClientInstance:getPlayerById(to_select),
+      table.map(selected, Util.Id2PlayerMapper), selected_cards, card, selectable, extra_data)
     if type(tip) == "string" then
       table.insert(ret, { content = tip, type = "normal" })
     elseif type(tip) == "table" then
@@ -888,6 +903,7 @@ function RefreshStatusSkills()
   for _, cid in ipairs(Self:getCardIds("h")) do
     self:notifyUI("UpdateCard", cid)
   end
+  Self:filterHandcards()
   -- 刷技能状态
   self:notifyUI("UpdateSkill", nil)
 end

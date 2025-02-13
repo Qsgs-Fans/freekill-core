@@ -1,88 +1,5 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 
-local discardSkill = fk.CreateActiveSkill{
-  name = "discard_skill",
-  card_filter = function(self, to_select, selected)
-    if #selected >= self.num then
-      return false
-    end
-
-    if Fk:currentRoom():getCardArea(to_select) == Card.PlayerSpecial then
-      local pile = ""
-      for p, t in pairs(Self.special_cards) do
-        if table.contains(t, to_select) then
-          pile = p
-          break
-        end
-      end
-      if not string.find(self.pattern or "", pile) then return false end
-    end
-
-    local checkpoint = true
-    local card = Fk:getCardById(to_select)
-
-    local status_skills = Fk:currentRoom().status_skills[ProhibitSkill] or Util.DummyTable
-    for _, skill in ipairs(status_skills) do
-      if skill:prohibitDiscard(Self, card) then
-        return false
-      end
-    end
-    if Fk.currentResponseReason == "phase_discard" then
-      status_skills = Fk:currentRoom().status_skills[MaxCardsSkill] or Util.DummyTable
-      for _, skill in ipairs(status_skills) do
-        if skill:excludeFrom(Self, card) then
-          return false
-        end
-      end
-    end
-
-    if not self.include_equip then
-      checkpoint = checkpoint and (Fk:currentRoom():getCardArea(to_select) ~= Player.Equip)
-    end
-
-    if self.pattern and self.pattern ~= "" then
-      checkpoint = checkpoint and (Exppattern:Parse(self.pattern):match(card))
-    end
-    return checkpoint
-  end,
-  min_card_num = function(self) return self.min_num end,
-  max_card_num = function(self) return self.num end,
-}
-
-local chooseCardsSkill = fk.CreateActiveSkill{
-  name = "choose_cards_skill",
-  card_filter = function(self, to_select, selected)
-    if #selected >= self.num then
-      return false
-    end
-
-    if Fk:currentRoom():getCardArea(to_select) == Card.PlayerSpecial then
-      local pile = self.expand_pile
-      if not pile then return false end
-      if type(pile) == "string" then
-        local area = string.split(self.pattern or "", "|")[4]
-        if not (area and string.find(area, pile)) then return false end
-      elseif type(pile) == "table" then
-        if not table.contains(pile, to_select) then return false end
-      end
-    end
-
-    local checkpoint = true
-    local card = Fk:getCardById(to_select)
-
-    if not self.include_equip then
-      checkpoint = checkpoint and (Fk:currentRoom():getCardArea(to_select) ~= Player.Equip)
-    end
-
-    if self.pattern and self.pattern ~= "" then
-      checkpoint = checkpoint and (Exppattern:Parse(self.pattern):match(card))
-    end
-    return checkpoint
-  end,
-  min_card_num = function(self) return self.min_num end,
-  max_card_num = function(self) return self.num end,
-}
-
 local choosePlayersSkill = fk.CreateActiveSkill{
   name = "choose_players_skill",
   card_filter = function(self, to_select, selected)
@@ -108,18 +25,12 @@ local choosePlayersSkill = fk.CreateActiveSkill{
 
 local exChooseSkill = fk.CreateActiveSkill{
   name = "ex__choose_skill",
-  card_filter = function(self, to_select, selected)
+  card_filter = function(self, to_select, selected, player)
     if #selected >= self.max_c_num then return false end
 
-    if Fk:currentRoom():getCardArea(to_select) == Card.PlayerSpecial then
-      local pile = self.expand_pile
-      if not pile then return false end
-      if type(pile) == "string" then
-        local area = string.split(self.pattern or "", "|")[4]
-        if not (area and string.find(area, pile)) then return false end
-      elseif type(pile) == "table" then
-        if not table.contains(pile, to_select) then return false end
-      end
+    if not table.contains(player:getCardIds("he"), to_select) then
+      local pile = self:getPile(player)
+      if not table.contains(pile, to_select) then return false end
     end
 
     local checkpoint = true
@@ -148,6 +59,18 @@ local exChooseSkill = fk.CreateActiveSkill{
   max_target_num = function(self) return self.max_t_num end,
   min_card_num = function(self) return self.min_c_num end,
   max_card_num = function(self) return self.max_c_num end,
+}
+
+local useRealCardSkill = fk.CreateViewAsSkill{
+  name = "userealcard_skill",
+  card_filter = function (self, to_select, selected)
+    return #selected == 0 and table.contains(self.cardIds or {}, to_select)
+  end,
+  view_as = function(self, cards)
+    if #cards == 1 then
+      return Fk:getCardById(cards[1])
+    end
+  end,
 }
 
 local maxCardsSkill = fk.CreateMaxCardsSkill{
@@ -181,7 +104,11 @@ local distributionSelectSkill = fk.CreateActiveSkill{
   mute = true,
   min_card_num = 1,
   card_filter = function(self, to_select, selected)
-    return #selected < self.max_num and table.contains(self.cards, to_select)
+    local maxNum = 0
+    for _, v in pairs(self.residued_list) do
+      maxNum = math.max(maxNum, v)
+    end
+    return #selected < self.max_num and #selected < maxNum and table.contains(self.cards, to_select)
   end,
   target_num = 1,
   target_filter = function(self, to_select, selected, selected_cards)
@@ -194,9 +121,7 @@ local distributionSelectSkill = fk.CreateActiveSkill{
 local choosePlayersToMoveCardInBoardSkill = fk.CreateActiveSkill{
   name = "choose_players_to_move_card_in_board",
   target_num = 2,
-  card_filter = function(self, to_select)
-    return false
-  end,
+  card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected, cards)
     local target = Fk:currentRoom():getPlayerById(to_select)
     if #selected > 0 then
@@ -354,17 +279,4 @@ local revealSkill = fk.CreateActiveSkill{
     end
     return false
   end
-}
-
-AuxSkills = {
-  discardSkill,
-  chooseCardsSkill,
-  choosePlayersSkill,
-  exChooseSkill,
-  distributionSelectSkill,
-  maxCardsSkill,
-  choosePlayersToMoveCardInBoardSkill,
-  uncompulsoryInvalidity,
-  revealProhibited,
-  revealSkill
 }
