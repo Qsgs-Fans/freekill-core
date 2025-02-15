@@ -693,5 +693,93 @@ function CompatAskFor:askForAG(player, id_list, cancelable, reason)
   return self:askToAG(player, params)
 end
 
+-- TODO: 重构request机制，不然这个还得手动拿client_reply
+---@param players ServerPlayer[]
+---@param focus string
+---@param game_type string
+---@param data_table table<integer, any> @ 对应每个player
+---@deprecated
+function CompatAskFor:askForMiniGame(players, focus, game_type, data_table)
+  local params = { ---@type AskToMiniGameParams
+    skill_name = focus,
+    game_type = game_type,
+    data_table = data_table,
+  }
+
+  return self:askToMiniGame(players, params)
+end
+
+-- Show a qml dialog and return qml's ClientInstance.replyToServer
+-- Do anything you like through this function
+
+-- 调用一个自定义对话框，须自备loadData方法
+---@param player ServerPlayer
+---@param focustxt string
+---@param qmlPath string
+---@param extra_data any
+---@return string
+---@deprecated
+function CompatAskFor:askForCustomDialog(player, focustxt, qmlPath, extra_data)
+  local params = { ---@type AskToCustomDialogParams
+    skill_name = focustxt,
+    qml_path = qmlPath,
+    extra_data = extra_data,
+  }
+
+  return self:askToCustomDialog(player, params)
+end
+
+--- 询问移动场上的一张牌。不可取消
+---@param player ServerPlayer @ 移动的操作
+---@param targetOne ServerPlayer @ 移动的目标1玩家
+---@param targetTwo ServerPlayer @ 移动的目标2玩家
+---@param skillName string @ 技能名
+---@param flag? string @ 限定可移动的区域，值为nil（装备区和判定区）、‘e’或‘j’
+---@param moveFrom? ServerPlayer @ 是否只是目标1移动给目标2
+---@param excludeIds? integer[] @ 本次不可移动的卡牌id
+---@return table<"card"|"from"|"to">? @ 选择的卡牌、起点玩家id和终点玩家id列表
+---@deprecated
+function CompatAskFor:askForMoveCardInBoard(player, targetOne, targetTwo, skillName, flag, moveFrom, excludeIds)
+  excludeIds = type(excludeIds) == "table" and excludeIds or {}
+
+  local params = { ---@type AskToMoveCardInBoardParams
+    target_one = targetOne,
+    target_two = targetTwo,
+    skill_name = skillName,
+    flag = flag,
+    move_from = moveFrom,
+    exclude_ids = excludeIds
+  }
+  return self:askToMoveCardInBoard(player, params)
+end
+
+--- 询问一名玩家从targets中选择出若干名玩家来移动场上的牌。
+---@param player ServerPlayer @ 要做选择的玩家
+---@param prompt string @ 提示信息
+---@param skillName string @ 技能名
+---@param cancelable? boolean @ 是否可以取消选择
+---@param flag? string @ 限定可移动的区域，值为nil（装备区和判定区）、‘e’或‘j’
+---@param no_indicate? boolean @ 是否不显示指示线
+---@return integer[] @ 选择的玩家id列表，可能为空
+---@deprecated
+function CompatAskFor:askForChooseToMoveCardInBoard(player, prompt, skillName, cancelable, flag, no_indicate, excludeIds)
+  if flag then
+    assert(flag == "e" or flag == "j")
+  end
+  cancelable = (cancelable == nil) and true or cancelable
+  no_indicate = (no_indicate == nil) and true or no_indicate
+  excludeIds = type(excludeIds) == "table" and excludeIds or {}
+
+  local params = { ---@type AskToChooseToMoveCardInBoardParams
+    skill_name = skillName,
+    prompt = prompt,
+    cancelable = cancelable,
+    flag = flag,
+    exclude_ids = excludeIds,
+    no_indicate = no_indicate
+  }
+  return self:askToChooseToMoveCardInBoard(player, params)
+end
+
 
 return CompatAskFor

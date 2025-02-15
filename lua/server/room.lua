@@ -1367,7 +1367,7 @@ end
 ---@class AskToChooseGeneralParams
 ---@field generals string[] @ 可选武将
 ---@field n integer @ 可选数量，默认为1
----@field no_convert? boolean @ 可否变更，默认可
+---@field no_convert? boolean @ 可否同名替换，默认可
 
 --- 询问玩家选择一名武将。
 ---@param player ServerPlayer @ 询问目标
@@ -2328,8 +2328,6 @@ end
 ---@param params AskToUseCardParams @ 各种变量
 ---@return UseCardDataSpec? @ 最终决胜出的卡牌使用信息
 function Room:askToNullification(players, params)
-  params.skill_name = params.skill_name or "nullification"
-  params.pattern = params.pattern or "nullification"
   params.cancelable = (params.cancelable == nil) and true or params.cancelable
   local extra_data = params.extra_data and table.simpleClone(params.extra_data) or {}
   params.prompt = params.prompt or ""
@@ -2503,23 +2501,26 @@ function Room:closeAG(player)
   end
 end
 
+---@class AskToMiniGameParams
+---@field skill_name string @ 烧条时显示的技能名
+---@field game_type string @ 小游戏框关键词
+---@field data_table table<integer, any> @ 以每个playerID为键的数据数组
+
 -- TODO: 重构request机制，不然这个还得手动拿client_reply
----@param players ServerPlayer[]
----@param focus string
----@param game_type string
----@param data_table table<integer, any> @ 对应每个player
-function Room:askForMiniGame(players, focus, game_type, data_table)
+---@param players ServerPlayer[] @ 需要参与这个框的角色
+---@param params AskToMiniGameParams @ 各种变量
+function Room:askToMiniGame(players, params)
   local command = "MiniGame"
-  local game = Fk.mini_games[game_type]
+  local game = Fk.mini_games[params.game_type]
   if #players == 0 or not game then return end
 
   local req = Request:new(players, command)
-  req.focus_text = focus
+  req.focus_text = params.skill_name
   req.receive_decode = false -- 和customDialog同理
 
   for _, p in ipairs(players) do
-    local data = data_table[p.id]
-    p.mini_game_data = { type = game_type, data = data }
+    local data = params.data_table[p.id]
+    p.mini_game_data = { type = params.game_type, data = data }
     req:setData(p, p.mini_game_data)
     req:setDefaultReply(p, game.default_choice and json.encode(game.default_choice(p, data)))
   end
@@ -2531,42 +2532,52 @@ function Room:askForMiniGame(players, focus, game_type, data_table)
   end
 end
 
+---@class AskToCustomDialogParams
+---@field skill_name string @ 烧条时显示的技能名
+---@field qml_path string @ 小游戏框关键词
+---@field extra_data any @ 额外信息，因技能而异了
+
 -- Show a qml dialog and return qml's ClientInstance.replyToServer
 -- Do anything you like through this function
 
 -- 调用一个自定义对话框，须自备loadData方法
----@param player ServerPlayer
----@param focustxt string
----@param qmlPath string
----@param extra_data any
----@return string
-function Room:askForCustomDialog(player, focustxt, qmlPath, extra_data)
+---@param player ServerPlayer @ 询问的角色
+---@param params AskToCustomDialogParams @ 各种变量
+---@return string @ 格式化字符串，可能需要json.decode
+function Room:askToCustomDialog(player, params)
   local command = "CustomDialog"
   local req = Request:new(player, command)
-  req.focus_text = focustxt
+  req.focus_text = params.skill_name
   req.receive_decode = false -- 没法知道要不要decode，所以我写false (json.decode该杀啊)
   req:setData(player, {
-    path = qmlPath,
-    data = extra_data,
+    path = params.qml_path,
+    data = params.extra_data,
   })
   return req:getResult(player)
 end
 
+---@class AskToMoveCardInBoardParams
+---@field target_one ServerPlayer @ 移动的目标1玩家
+---@field target_two ServerPlayer @ 移动的目标2玩家
+---@field skill_name string @ 技能名
+---@field flag? "e" | "j" @ 限定可移动的区域，值为nil（装备区和判定区）、‘e’或‘j’
+---@field move_from? ServerPlayer @ 移动来源是否只能是某角色
+---@field exclude_ids? integer[] @ 本次不可移动的卡牌id
+
 --- 询问移动场上的一张牌。不可取消
----@param player ServerPlayer @ 移动的操作
----@param targetOne ServerPlayer @ 移动的目标1玩家
----@param targetTwo ServerPlayer @ 移动的目标2玩家
----@param skillName string @ 技能名
----@param flag? string @ 限定可移动的区域，值为nil（装备区和判定区）、‘e’或‘j’
----@param moveFrom? ServerPlayer @ 是否只是目标1移动给目标2
----@param excludeIds? integer[] @ 本次不可移动的卡牌id
+---@param player ServerPlayer @ 移动的操作者
+---@param params AskToMoveCardInBoardParams @ 各种变量
 ---@return table<"card"|"from"|"to">? @ 选择的卡牌、起点玩家id和终点玩家id列表
-function Room:askForMoveCardInBoard(player, targetOne, targetTwo, skillName, flag, moveFrom, excludeIds)
+function Room:askToMoveCardInBoard(player, params)
+  params.exclude_ids = type(params.exclude_ids) == "table" and params.exclude_ids or {}
+
+  local targetOne, targetTwo, skillName, flag, moveFrom, excludeIds =
+    params.target_one, params.target_two, params.skill_name,
+    params.flag, params.move_from, params.exclude_ids
+
   if flag then
     assert(flag == "e" or flag == "j")
   end
-
-  excludeIds = type(excludeIds) == "table" and excludeIds or {}
 
   local cards = {}
   local cardsPosition = {}
@@ -2664,45 +2675,46 @@ function Room:askForMoveCardInBoard(player, targetOne, targetTwo, skillName, fla
   return { card = cardToMove, from = from.id, to = to.id }
 end
 
+---@class AskToChooseToMoveCardInBoardParams: AskToUseActiveSkillParams
+---@field flag? "e" | "j" @ 限定可移动的区域，值为nil（装备区和判定区）、‘e’或‘j’
+---@field exclude_ids? integer[] @ 本次不可移动的卡牌id
+
 --- 询问一名玩家从targets中选择出若干名玩家来移动场上的牌。
 ---@param player ServerPlayer @ 要做选择的玩家
----@param prompt string @ 提示信息
----@param skillName string @ 技能名
----@param cancelable? boolean @ 是否可以取消选择
----@param flag? string @ 限定可移动的区域，值为nil（装备区和判定区）、‘e’或‘j’
----@param no_indicate? boolean @ 是否不显示指示线
+---@param params AskToChooseToMoveCardInBoardParams @ 各种变量
 ---@return integer[] @ 选择的玩家id列表，可能为空
-function Room:askForChooseToMoveCardInBoard(player, prompt, skillName, cancelable, flag, no_indicate, excludeIds)
-  if flag then
-    assert(flag == "e" or flag == "j")
+function Room:askToChooseToMoveCardInBoard(player, params)
+  if params.flag then
+    assert(params.flag == "e" or params.flag == "j")
   end
-  cancelable = (cancelable == nil) and true or cancelable
-  no_indicate = (no_indicate == nil) and true or no_indicate
-  excludeIds = type(excludeIds) == "table" and excludeIds or {}
+  params.cancelable = (params.cancelable == nil) and true or params.cancelable
+  params.no_indicate = (params.no_indicate == nil) and true or params.no_indicate
+  params.exclude_ids = type(params.exclude_ids) == "table" and params.exclude_ids or {}
+  params.prompt = params.prompt or ""
 
-  if #self:canMoveCardInBoard(flag, nil, excludeIds) == 0 and not cancelable then return {} end
+  if #self:canMoveCardInBoard(params.flag, nil, params.exclude_ids) == 0 and not params.cancelable then return {} end
 
   local data = {
-    flag = flag,
-    skillName = skillName,
-    excludeIds = excludeIds,
+    flag = params.flag,
+    skillName = params.skill_name,
+    excludeIds = params.exclude_ids,
   }
-  local _, ret = self:askForUseActiveSkill(
-    player,
-    "choose_players_to_move_card_in_board",
-    prompt or "",
-    cancelable,
-    data,
-    no_indicate
-  )
+  local activeParams = { ---@type AskToUseActiveSkillParams
+    skill_name = "choose_players_to_move_card_in_board",
+    prompt = params.prompt,
+    cancelable = params.cancelable,
+    extra_data = data,
+    no_indicate = params.no_indicate
+  }
+  local _, ret = self:askToUseActiveSkill(player, activeParams)
 
   if ret then
     return ret.targets
   else
-    if cancelable then
+    if params.cancelable then
       return {}
     else
-      return self:canMoveCardInBoard(flag, excludeIds)
+      return self:canMoveCardInBoard(params.flag, params.exclude_ids)
     end
   end
 end

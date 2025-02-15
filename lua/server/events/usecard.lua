@@ -842,15 +842,14 @@ function UseCardEventWrappers:handleCardEffect(event, cardEffectData)
           end
         end
 
-        local use = self:askForUseCard(
-          to,
-          "jink",
-          nil,
-          prompt,
-          true,
-          nil,
-          cardEffectData
-        )
+        local params = { ---@type AskToUseCardParams
+          pattern = "jink",
+          skill_name = "jink",
+          prompt = prompt,
+          cancelable = true,
+          event_data = evcardEffectData
+        }
+        local use = self:askToUseCard(to, params)
         if use then
           use.toCard = cardEffectData.card
           use.responseToEvent = cardEffectData
@@ -923,7 +922,15 @@ function UseCardEventWrappers:handleCardEffect(event, cardEffectData)
       if #players > 0 and cardEffectData.card.trueName == "nullification" then
         self:animDelay(2)
       end
-      local use = self:askForNullification(players, nil, nil, prompt, true, extra_data, cardEffectData)
+      local params = { ---@type AskToUseCardParams
+        skill_name = "nullification",
+        pattern = "nullification",
+        prompt = prompt,
+        cancelable = true,
+        extra_data = extra_data,
+        event_data = cardEffectData
+      }
+      local use = self:askToNullification(players, params)
       if use then
         use.toCard = cardEffectData.card
         use.responseToEvent = cardEffectData

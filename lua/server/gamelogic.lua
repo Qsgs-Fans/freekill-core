@@ -138,7 +138,7 @@ function GameLogic:chooseGenerals()
   if lord ~= nil then
     room:setCurrent(lord)
     local generals = room:getNGenerals(generalNum)
-    lord_generals = room:askForGeneral(lord, generals, n)
+    lord_generals = room:askToChooseGeneral(lord, { generals = generals, n = n })
     local lord_general, deputy
     if type(lord_generals) == "table" then
       deputy = lord_generals[2]
@@ -153,7 +153,7 @@ function GameLogic:chooseGenerals()
 
     room:prepareGeneral(lord, lord_general, deputy, true)
 
-    room:askForChooseKingdom({lord})
+    room:askToChooseKingdom({lord})
   end
 
   local nonlord = room:getOtherPlayers(lord, true)
@@ -172,7 +172,7 @@ function GameLogic:chooseGenerals()
     room:prepareGeneral(p, general, deputy)
   end
 
-  room:askForChooseKingdom(nonlord)
+  room:askToChooseKingdom(nonlord)
 end
 
 function GameLogic:buildPlayerCircle()
