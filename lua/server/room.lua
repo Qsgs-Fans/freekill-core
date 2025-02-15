@@ -1101,7 +1101,7 @@ function Room:askToChoosePlayers(player, params)
   end
 end
 
----@class askToChooseCardParams: AskToUseActiveSkillParams
+---@class askToCardsParams: AskToUseActiveSkillParams
 ---@field min_num integer @ 最小值
 ---@field max_num integer @ 最大值
 ---@field include_equip? boolean @ 能不能选装备
@@ -1112,9 +1112,9 @@ end
 ---
 --- 与askForDiscard类似，但是不对选择的牌进行操作就是了。
 ---@param player ServerPlayer @ 要询问的玩家
----@param params askToChooseCardParams @ 各种变量
+---@param params askToCardsParams @ 各种变量
 ---@return integer[] @ 选择的牌的id列表，可能是空的
-function Room:askToChooseCards(player, params)
+function Room:askToCards(player, params)
   local maxNum, minNum, expand_pile = params.max_num, params.min_num, params.expand_pile
   if maxNum < 1 then
     return {}
@@ -1394,7 +1394,7 @@ end
 
 --- 询问玩家若为神将、双势力需选择一个势力。
 ---@param players? ServerPlayer[] @ 询问目标
-function Room:askForChooseKingdom(players)
+function Room:askToChooseKingdom(players)
   players = players or self.alive_players
   local specialKingdomPlayers = table.filter(players, function(p)
     return Fk.generals[p.general].subkingdom or #Fk:getKingdomMap(p.kingdom) > 0
@@ -1425,20 +1425,23 @@ function Room:askForChooseKingdom(players)
   end
 end
 
---- 询问chooser，选择target的一张牌。
----@param chooser ServerPlayer @ 要被询问的人
----@param target ServerPlayer @ 被选牌的人
----@param flag any @ 用"hej"三个字母的组合表示能选择哪些区域, h 手牌区, e - 装备区, j - 判定区
----@param reason string @ 原因，一般是技能名
----@param prompt? string @ 提示信息
+---@class askToChooseCardParams: AskToUseActiveSkillParams
+---@field target ServerPlayer @ 被选牌的人
+---@field flag string | table @ 用"hej"三个字母的组合表示能选择哪些区域, h 手牌区, e - 装备区, j - 判定区
+---@field skill_name string @ 原因，一般是技能名
+
+--- 询问player，选择target的一张牌。
+---@param player ServerPlayer @ 要被询问的人
+---@param params askToChooseCardParams @ 各种变量
 ---@return integer @ 选择的卡牌id
-function Room:askForCardChosen(chooser, target, flag, reason, prompt)
+function Room:askToChooseCard(player, params)
   local command = "AskForCardChosen"
-  prompt = prompt or ""
+  params.prompt = params.prompt or ""
+  local target, flag, reason, prompt = params.target, params.flag, params.skill_name, params.prompt
   local data = {target.id, flag, reason, prompt}
-  local req = Request:new(chooser, command)
-  req:setData(chooser, data)
-  local result = req:getResult(chooser)
+  local req = Request:new(player, command)
+  req:setData(player, data)
+  local result = req:getResult(player)
 
   if result == "" then
     local areas = {}
@@ -1467,36 +1470,40 @@ function Room:askForCardChosen(chooser, target, flag, reason, prompt)
   return result
 end
 
+---@class askToPoxiParams
+---@field poxi_type string @ poxi关键词
+---@field data any @ 牌堆信息
+---@field extra_data any @ 额外信息
+---@field cancelable? boolean @ 是否可取消
+
 --- 谋askForCardsChosen，需使用Fk:addPoxiMethod定义好方法
 ---
 --- 选卡规则和返回值啥的全部自己想办法解决，data填入所有卡的列表（类似ui.card_data）
 ---
 --- 注意一定要返回一个表，毕竟本质上是选卡函数
----@param player ServerPlayer
----@param poxi_type string
----@param data any
----@param extra_data any
----@param cancelable? boolean
----@return integer[]
-function Room:askForPoxi(player, poxi_type, data, extra_data, cancelable)
-  local poxi = Fk.poxi_methods[poxi_type]
+---@param player ServerPlayer @ 要被询问的人
+---@param params askToPoxiParams @ 各种变量
+---@return integer[] @ 选择的牌ID数组
+function Room:askToPoxi(player, params)
+  params.cancelable = (params.cancelable == nil) and true or params.cancelable
+  local poxi = Fk.poxi_methods[params.poxi_type]
   if not poxi then return {} end
 
   local command = "AskForPoxi"
   local req = Request:new(player, command)
-  req.focus_text = poxi_type
+  req.focus_text = params.poxi_type
   req:setData(player, {
-    type = poxi_type,
-    data = data,
-    extra_data = extra_data,
-    cancelable = (cancelable == nil) and true or cancelable
+    type = params.poxi_type,
+    data = params.data,
+    extra_data = params.extra_data,
+    cancelable = params.cancelable
   })
   local result = req:getResult(player)
 
   if result == "" then
-    return poxi.default_choice(data, extra_data)
+    return poxi.default_choice(params.data, params.extra_data)
   else
-    return poxi.post_select(result, data, extra_data)
+    return poxi.post_select(result, params.data, params.extra_data)
   end
 end
 

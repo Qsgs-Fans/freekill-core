@@ -127,7 +127,7 @@ function CompatAskFor:askForCard(player, minNum, maxNum, includeEquip, skillName
   pattern = pattern or (includeEquip and "." or ".|.|.|hand")
   prompt = prompt or ("#AskForCard:::" .. maxNum .. ":" .. minNum)
 
-  local params = { ---@type askToDiscardParams
+  local params = { ---@type askToCardsParams
     min_num = minNum,
     max_num = maxNum,
     include_equip = includeEquip,
@@ -138,7 +138,7 @@ function CompatAskFor:askForCard(player, minNum, maxNum, includeEquip, skillName
     expand_pile = expand_pile,
     no_indicate = no_indicate
   }
-  return self:askToChooseCards(player, params)
+  return self:askToCards(player, params)
 end
 
 --- 询问玩家选择1张牌和若干名角色。
@@ -275,6 +275,59 @@ function CompatAskFor:askForGeneral(player, generals, n, noConvert)
     no_convert = noConvert
   }
   return self:askToChooseGeneral(player, params)
+end
+
+--- 询问玩家若为神将、双势力需选择一个势力。
+---@param players? ServerPlayer[] @ 询问目标
+---@deprecated
+function CompatAskFor:askForChooseKingdom(players)
+  return self:askToChooseKingdom(players)
+end
+
+--- 询问chooser，选择target的一张牌。
+---@param chooser ServerPlayer @ 要被询问的人
+---@param target ServerPlayer @ 被选牌的人
+---@param flag any @ 用"hej"三个字母的组合表示能选择哪些区域, h 手牌区, e - 装备区, j - 判定区
+---@param reason string @ 原因，一般是技能名
+---@param prompt? string @ 提示信息
+---@return integer @ 选择的卡牌id
+---@deprecated
+function CompatAskFor:askForCardChosen(chooser, target, flag, reason, prompt)
+  prompt = prompt or ""
+
+  local params = { ---@type askToChooseCardParams
+    target = target,
+    flag = flag,
+    skill_name = reason,
+    prompt = prompt
+  }
+
+  return self:askToChooseCard(chooser, params)
+end
+
+--- 谋askForCardsChosen，需使用Fk:addPoxiMethod定义好方法
+---
+--- 选卡规则和返回值啥的全部自己想办法解决，data填入所有卡的列表（类似ui.card_data）
+---
+--- 注意一定要返回一个表，毕竟本质上是选卡函数
+---@param player ServerPlayer @ 要被询问的人
+---@param poxi_type string @ poxi关键词
+---@param data any @ 牌堆信息
+---@param extra_data any @ 额外信息
+---@param cancelable? boolean @ 是否可取消
+---@return integer[] @ 选择的牌ID数组
+---@deprecated
+function Room:askForPoxi(player, poxi_type, data, extra_data, cancelable)
+  cancelable = (cancelable == nil) and true or cancelable
+
+  local params = { ---@type askToPoxiParams
+    poxi_type = poxi_type,
+    data = data,
+    extra_data = extra_data,
+    cancelable = cancelable
+  }
+
+  return self:askToPoxi(player, params)
 end
 
 return CompatAskFor
