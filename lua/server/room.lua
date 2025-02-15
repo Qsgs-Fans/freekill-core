@@ -907,7 +907,7 @@ end
 ---@field prompt? string @ 烧条上面显示的提示文本内容
 ---@field cancelable? boolean @ 是否可以点取消
 ---@field no_indicate? boolean @ 是否不显示指示线
----@field extra_data? table @ 额外信息，因技能而异了
+---@field extra_data? table @ 额外信息
 ---@field skip? boolean @ 是否跳过实际执行流程
 
 --- 询问player是否要发动一个主动技。
@@ -1055,42 +1055,48 @@ function Room:askToDiscard(player, params)
   return toDiscard
 end
 
+---@class askToChoosePlayersParams: AskToUseActiveSkillParams
+---@field targets ServerPlayer[] @ 可以选的目标范围
+---@field min_num integer @ 最小值
+---@field max_num integer @ 最大值
+---@field target_tip_name? string @ 引用的选择目标提示的函数名
+
 --- 询问一名玩家从targets中选择若干名玩家出来。
 ---@param player ServerPlayer @ 要做选择的玩家
----@param targets integer[] @ 可以选的目标范围，是玩家id数组
----@param minNum integer @ 最小值
----@param maxNum integer @ 最大值
----@param prompt? string @ 提示信息
----@param skillName? string @ 技能名
----@param cancelable? boolean @ 能否点取消，默认可以
----@param no_indicate? boolean @ 是否不显示指示线
----@param targetTipName? string @ 引用的选择目标提示的函数名
----@param extra_data? table @额外信息
+---@param params askToChoosePlayersParams @ 各种变量
 ---@return integer[] @ 选择的玩家id列表，可能为空
-function Room:askForChoosePlayers(player, targets, minNum, maxNum, prompt, skillName, cancelable, no_indicate, targetTipName, extra_data)
+function Room:askToChoosePlayers(player, params)
+  local maxNum, minNum = params.max_num, params.min_num
   if maxNum < 1 then
     return {}
   end
-  cancelable = (cancelable == nil) and true or cancelable
-  no_indicate = no_indicate or false
+  params.cancelable = (params.cancelable == nil) and true or params.cancelable
+  params.no_indicate = params.no_indicate or false
 
   local data = {
-    targets = targets,
+    targets = params.targets,
     num = maxNum,
     min_num = minNum,
     pattern = "",
-    skillName = skillName,
-    targetTipName = targetTipName,
-    extra_data = extra_data,
+    skillName = params.skill_name,
+    targetTipName = params.target_tip_name,
+    extra_data = params.extra_data,
   }
-  local _, ret = self:askForUseActiveSkill(player, "choose_players_skill", prompt or "", cancelable, data, no_indicate)
+  local activeParams = { ---@type AskToUseActiveSkillParams
+    skill_name = "choose_players_skill",
+    prompt = params.prompt or "",
+    cancelable = params.cancelable,
+    extra_data = data,
+    no_indicate = params.no_indicate
+  }
+  local _, ret = self:askToUseActiveSkill(player, activeParams)
   if ret then
     return ret.targets
   else
-    if cancelable then
+    if params.cancelable then
       return {}
     else
-      return table.random(targets, minNum)
+      return table.random(params.targets, minNum)
     end
   end
 end

@@ -17,54 +17,16 @@ function CompatAskFor:askForUseActiveSkill(player, skill_name, prompt, cancelabl
   cancelable = (cancelable == nil) and true or cancelable
   no_indicate = (no_indicate == nil) and true or no_indicate
   extra_data = extra_data or Util.DummyTable
-  local skill = Fk.skills[skill_name]
-  if not (skill and (skill:isInstanceOf(ActiveSkill) or skill:isInstanceOf(ViewAsSkill))) then
-    print("Attempt ask for use non-active skill: " .. skill_name)
-    return false
-  end
 
-  local command = "AskForUseActiveSkill"
-  local data = {skill_name, prompt, cancelable, extra_data}
-
-  Fk.currentResponseReason = extra_data.skillName
-  local req = Request:new(player, command)
-  req:setData(player, data)
-  req.focus_text = extra_data.skillName or skill_name
-  local result = req:getResult(player)
-  Fk.currentResponseReason = nil
-
-  if result == "" then
-    return false
-  end
-
-  data = result
-  local card = data.card
-  local targets = data.targets
-  local card_data = card
-  local selected_cards = card_data.subcards
-  local interaction
-  if not no_indicate then
-    self:doIndicate(player.id, targets)
-  end
-
-  if skill.interaction then
-    interaction = data.interaction_data
-    skill.interaction.data = interaction
-  end
-
-  if skill:isInstanceOf(ActiveSkill) and not extra_data.skipUse then
-    skill:onUse(self, SkillUseData:new {
-      from = player,
-      cards = selected_cards,
-      tos = table.map(targets, Util.Id2PlayerMapper),
-    })
-  end
-
-  return true, {
-    cards = selected_cards,
-    targets = targets,
-    interaction = interaction
+  local params = { ---@type AskToUseActiveSkillParams
+    skill_name = skill_name,
+    prompt = prompt,
+    cancelable = cancelable,
+    extra_data = extra_data,
+    no_indicate = no_indicate,
   }
+
+  return self:askToUseActiveSkill(player, params)
 end
 
 ---@deprecated
@@ -90,66 +52,51 @@ function CompatAskFor:askForDiscard(player, minNum, maxNum, includeEquip, skillN
   no_indicate = no_indicate or false
   pattern = pattern or "."
 
-  local canDiscards = table.filter(
-    player:getCardIds{ Player.Hand, includeEquip and Player.Equip or nil }, function(id)
-      local checkpoint = true
-      local card = Fk:getCardById(id)
-
-      local status_skills = Fk:currentRoom().status_skills[ProhibitSkill] or Util.DummyTable
-      for _, skill in ipairs(status_skills) do
-        if skill:prohibitDiscard(player, card) then
-          return false
-        end
-      end
-      if skillName == "phase_discard" then
-        status_skills = Fk:currentRoom().status_skills[MaxCardsSkill] or Util.DummyTable
-        for _, skill in ipairs(status_skills) do
-          if skill:excludeFrom(player, card) then
-            return false
-          end
-        end
-      end
-
-      if pattern ~= "" then
-        checkpoint = checkpoint and (Exppattern:Parse(pattern):match(card))
-      end
-      return checkpoint
-    end
-  )
-
-  -- maxNum = math.min(#canDiscards, maxNum)
-  -- minNum = math.min(#canDiscards, minNum)
-
-  if minNum >= #canDiscards and not cancelable then
-    if not skipDiscard then
-      self:throwCard(canDiscards, skillName, player, player)
-    end
-    return canDiscards
-  end
-
-  local toDiscard = {}
-  local data = {
-    num = maxNum,
+  local params = { ---@type askToDiscardParams
     min_num = minNum,
+    max_num = maxNum,
     include_equip = includeEquip,
-    skillName = skillName,
+    skill_name = skillName,
+    cancelable = cancelable,
     pattern = pattern,
+    prompt = prompt or ("#AskForDiscard:::" .. maxNum .. ":" .. minNum),
+    skip = skipDiscard,
+    no_indicate = no_indicate
   }
-  local prompt = prompt or ("#AskForDiscard:::" .. maxNum .. ":" .. minNum)
-  local _, ret = self:askToUseActiveSkill(player, {skill_name = "discard_skill", prompt = prompt, cancelable = cancelable, extra_data = data, no_indicate = no_indicate})
+  return self:askToDiscard(player, params)
+end
 
-  if ret then
-    toDiscard = ret.cards
-  else
-    if cancelable then return {} end
-    toDiscard = table.random(canDiscards, minNum) ---@type integer[]
+--- 询问一名玩家从targets中选择若干名玩家出来。
+---@param player ServerPlayer @ 要做选择的玩家
+---@param targets integer[] @ 可以选的目标范围，是玩家id数组
+---@param minNum integer @ 最小值
+---@param maxNum integer @ 最大值
+---@param prompt? string @ 提示信息
+---@param skillName? string @ 技能名
+---@param cancelable? boolean @ 能否点取消，默认可以
+---@param no_indicate? boolean @ 是否不显示指示线
+---@param targetTipName? string @ 引用的选择目标提示的函数名
+---@param extra_data? table @额外信息
+---@return integer[] @ 选择的玩家id列表，可能为空
+---@deprecated
+function CompatAskFor:askForChoosePlayers(player, targets, minNum, maxNum, prompt, skillName, cancelable, no_indicate, targetTipName, extra_data)
+  if maxNum < 1 then
+    return {}
   end
-
-  if not skipDiscard then
-    self:throwCard(toDiscard, skillName, player, player)
-  end
-
-  return toDiscard
+  cancelable = (cancelable == nil) and true or cancelable
+  no_indicate = no_indicate or false
+  local params = { ---@type askToChoosePlayersParams
+    targets = Util.Id2PlayerMapper(targets),
+    min_num = minNum,
+    max_num = maxNum,
+    prompt = prompt or "",
+    skill_name = skillName,
+    cancelable = cancelable,
+    extra_data = extra_data,
+    target_tip_name = targetTipName,
+    no_indicate = no_indicate
+  }
+  return self:askToChoosePlayers(player, params)
 end
 
 return CompatAskFor
