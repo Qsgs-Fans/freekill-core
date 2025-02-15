@@ -25,8 +25,11 @@ function CompatAskFor:askForUseActiveSkill(player, skill_name, prompt, cancelabl
     extra_data = extra_data,
     no_indicate = no_indicate,
   }
-
-  return self:askToUseActiveSkill(player, params)
+  local success, ret = self:askToUseActiveSkill(player, params)
+  if ret then
+    ret.targets = table.map(ret.targets, Util.IdMapper)
+  end
+  return success, ret
 end
 
 ---@deprecated
@@ -85,8 +88,9 @@ function CompatAskFor:askForChoosePlayers(player, targets, minNum, maxNum, promp
   end
   cancelable = (cancelable == nil) and true or cancelable
   no_indicate = no_indicate or false
+
   local params = { ---@type askToChoosePlayersParams
-    targets = Util.Id2PlayerMapper(targets),
+    targets = table.map(targets, Util.Id2PlayerMapper),
     min_num = minNum,
     max_num = maxNum,
     prompt = prompt or "",
@@ -96,7 +100,45 @@ function CompatAskFor:askForChoosePlayers(player, targets, minNum, maxNum, promp
     target_tip_name = targetTipName,
     no_indicate = no_indicate
   }
-  return self:askToChoosePlayers(player, params)
+  return table.map(self:askToChoosePlayers(player, params), Util.IdMapper)
+end
+
+--- 询问一名玩家选择自己的几张牌。
+---
+--- 与askForDiscard类似，但是不对选择的牌进行操作就是了。
+---@param player ServerPlayer @ 要询问的玩家
+---@param minNum integer @ 最小值
+---@param maxNum integer @ 最大值
+---@param includeEquip? boolean @ 能不能选装备
+---@param skillName? string @ 技能名
+---@param cancelable? boolean @ 能否点取消
+---@param pattern? string @ 选牌规则
+---@param prompt? string @ 提示信息
+---@param expand_pile? string|integer[] @ 可选私人牌堆名称，或额外可选牌
+---@param no_indicate? boolean @ 是否不显示指示线
+---@return integer[] @ 选择的牌的id列表，可能是空的
+---@deprecated
+function CompatAskFor:askForCard(player, minNum, maxNum, includeEquip, skillName, cancelable, pattern, prompt, expand_pile, no_indicate)
+  if maxNum < 1 then
+    return {}
+  end
+  cancelable = (cancelable == nil) and true or cancelable
+  no_indicate = no_indicate or false
+  pattern = pattern or (includeEquip and "." or ".|.|.|hand")
+  prompt = prompt or ("#AskForCard:::" .. maxNum .. ":" .. minNum)
+
+  local params = { ---@type askToDiscardParams
+    min_num = minNum,
+    max_num = maxNum,
+    include_equip = includeEquip,
+    skill_name = skillName,
+    cancelable = cancelable,
+    pattern = pattern,
+    prompt = prompt,
+    expand_pile = expand_pile,
+    no_indicate = no_indicate
+  }
+  return self:askToChooseCards(player, params)
 end
 
 return CompatAskFor

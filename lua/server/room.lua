@@ -968,7 +968,7 @@ function Room:askToUseActiveSkill(player, params)
 
   return true, {
     cards = selected_cards,
-    targets = targets,
+    targets = table.map(targets, Util.Id2PlayerMapper),
     interaction = interaction
   }
 end
@@ -1064,7 +1064,7 @@ end
 --- 询问一名玩家从targets中选择若干名玩家出来。
 ---@param player ServerPlayer @ 要做选择的玩家
 ---@param params askToChoosePlayersParams @ 各种变量
----@return integer[] @ 选择的玩家id列表，可能为空
+---@return ServerPlayer[] @ 选择的玩家列表，可能为空
 function Room:askToChoosePlayers(player, params)
   local maxNum, minNum = params.max_num, params.min_num
   if maxNum < 1 then
@@ -1101,50 +1101,57 @@ function Room:askToChoosePlayers(player, params)
   end
 end
 
+---@class askToChooseCardParams: AskToUseActiveSkillParams
+---@field min_num integer @ 最小值
+---@field max_num integer @ 最大值
+---@field include_equip? boolean @ 能不能选装备
+---@field pattern? string @ 选牌规则
+---@field expand_pile? string|integer[] @ 可选私人牌堆名称，或额外可选牌
+
 --- 询问一名玩家选择自己的几张牌。
 ---
 --- 与askForDiscard类似，但是不对选择的牌进行操作就是了。
 ---@param player ServerPlayer @ 要询问的玩家
----@param minNum integer @ 最小值
----@param maxNum integer @ 最大值
----@param includeEquip? boolean @ 能不能选装备
----@param skillName? string @ 技能名
----@param cancelable? boolean @ 能否点取消
----@param pattern? string @ 选牌规则
----@param prompt? string @ 提示信息
----@param expand_pile? string|integer[] @ 可选私人牌堆名称，或额外可选牌
----@param no_indicate? boolean @ 是否不显示指示线
+---@param params askToChooseCardParams @ 各种变量
 ---@return integer[] @ 选择的牌的id列表，可能是空的
-function Room:askForCard(player, minNum, maxNum, includeEquip, skillName, cancelable, pattern, prompt, expand_pile, no_indicate)
+function Room:askToChooseCards(player, params)
+  local maxNum, minNum, expand_pile = params.max_num, params.min_num, params.expand_pile
   if maxNum < 1 then
     return {}
   end
-  cancelable = (cancelable == nil) and true or cancelable
-  no_indicate = no_indicate or false
-  pattern = pattern or (includeEquip and "." or ".|.|.|hand")
+  params.cancelable = (params.cancelable == nil) and true or params.cancelable
+  params.no_indicate = params.no_indicate or false
+  params.pattern = params.pattern or (params.include_equip and "." or ".|.|.|hand")
+  params.prompt = params.prompt or ("#AskForCard:::" .. maxNum .. ":" .. minNum)
 
   local chosenCards = {}
   local data = {
     num = maxNum,
     min_num = minNum,
-    include_equip = includeEquip,
-    skillName = skillName,
-    pattern = pattern,
-    expand_pile = expand_pile,
+    include_equip = params.include_equip,
+    skillName = params.skill_name,
+    pattern = params.pattern,
+    expand_pile = params.expand_pile,
   }
-  prompt = prompt or ("#AskForCard:::" .. maxNum .. ":" .. minNum)
-  local _, ret = self:askForUseActiveSkill(player, "choose_cards_skill", prompt, cancelable, data, no_indicate)
+  local activeParams = { ---@type AskToUseActiveSkillParams
+    skill_name = "choose_cards_skill",
+    prompt = params.prompt,
+    cancelable = params.cancelable,
+    extra_data = data,
+    no_indicate = params.no_indicate
+  }
+  local _, ret = self:askToUseActiveSkill(player, activeParams)
   if ret then
     chosenCards = ret.cards
   else
-    if cancelable then return {} end
+    if params.cancelable then return {} end
     local cards = player:getCardIds("he")
     if type(expand_pile) == "string" then
       table.insertTable(cards, player:getPile(expand_pile))
     elseif type(expand_pile) == "table" then
       table.insertTable(cards, expand_pile)
     end
-    local exp = Exppattern:Parse(pattern)
+    local exp = Exppattern:Parse(params.pattern)
     cards = table.filter(cards, function(cid)
       return exp:match(Fk:getCardById(cid))
     end)
