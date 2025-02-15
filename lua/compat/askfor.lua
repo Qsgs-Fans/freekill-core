@@ -223,4 +223,37 @@ function CompatAskFor:askForChooseCardsAndPlayers(player, minCardNum, maxCardNum
   return selected, cards, bool
 end
 
+--- 询问将卡牌分配给任意角色。
+---@param player ServerPlayer @ 要询问的玩家
+---@param cards? integer[] @ 要分配的卡牌。默认拥有的所有牌
+---@param targets? ServerPlayer[] @ 可以获得卡牌的角色。默认所有存活角色
+---@param skillName? string @ 技能名，影响焦点信息。默认为“分配”
+---@param minNum? integer @ 最少交出的卡牌数，默认0
+---@param maxNum? integer @ 最多交出的卡牌数，默认所有牌
+---@param prompt? string @ 询问提示信息
+---@param expand_pile? string|integer[] @ 可选私人牌堆名称，如要分配你武将牌上的牌请填写
+---@param skipMove? boolean @ 是否跳过移动。默认不跳过
+---@param single_max? integer|table @ 限制每人能获得的最大牌数。输入整数或(以角色id为键以整数为值)的表
+---@return table<integer, integer[]> @ 返回一个表，键为角色id，值为分配给其的牌id数组
+function CompatAskFor:askToYiji(player, cards, targets, skillName, minNum, maxNum, prompt, expand_pile, skipMove, single_max)
+  targets = targets or self.alive_players
+  cards = cards or player:getCardIds("he")
+  skillName = skillName or "distribution_select_skill"
+  minNum = minNum or 0
+  maxNum = maxNum or #cards
+
+  local params = { ---@type askToYijiParams
+    targets = targets,
+    min_num = minNum,
+    max_num = maxNum,
+    prompt = prompt or "",
+    skill_name = skillName,
+    expand_pile = expand_pile,
+    skip = skipMove,
+    single_max = single_max
+  }
+
+  return self:askToYiji(player, params)
+end
+
 return CompatAskFor

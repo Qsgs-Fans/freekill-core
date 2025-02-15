@@ -1267,27 +1267,28 @@ function Room:askToChooseCardsAndPlayers(player, params)
   end
 end
 
+---@class askToYijiParams: askToChoosePlayersParams
+---@field cards? integer[] @ 要分配的卡牌。默认拥有的所有牌
+---@field expand_pile? string|integer[] @ 可选私人牌堆名称，如要分配你武将牌上的牌请填写
+---@field single_max? integer|table @ 限制每人能获得的最大牌数。输入整数或(以角色id为键以整数为值)的表
+---@field skip? boolean @ 是否跳过移动。默认不跳过
+
 --- 询问将卡牌分配给任意角色。
 ---@param player ServerPlayer @ 要询问的玩家
----@param cards? integer[] @ 要分配的卡牌。默认拥有的所有牌
----@param targets? ServerPlayer[] @ 可以获得卡牌的角色。默认所有存活角色
----@param skillName? string @ 技能名，影响焦点信息。默认为“分配”
----@param minNum? integer @ 最少交出的卡牌数，默认0
----@param maxNum? integer @ 最多交出的卡牌数，默认所有牌
----@param prompt? string @ 询问提示信息
----@param expand_pile? string|integer[] @ 可选私人牌堆名称，如要分配你武将牌上的牌请填写
----@param skipMove? boolean @ 是否跳过移动。默认不跳过
----@param single_max? integer|table @ 限制每人能获得的最大牌数。输入整数或(以角色id为键以整数为值)的表
+---@param params askToYijiParams @ 各种变量
 ---@return table<integer, integer[]> @ 返回一个表，键为角色id，值为分配给其的牌id数组
-function Room:askForYiji(player, cards, targets, skillName, minNum, maxNum, prompt, expand_pile, skipMove, single_max)
-  targets = targets or self.alive_players
-  cards = cards or player:getCardIds("he")
-  local _cards = table.simpleClone(cards)
+function Room:askToYiji(player, params)
+  local targets = params.targets or self.alive_players
+  self:sortByAction(targets)
   targets = table.map(targets, Util.IdMapper)
-  self:sortPlayersByAction(targets)
-  skillName = skillName or "distribution_select_skill"
-  minNum = minNum or 0
-  maxNum = maxNum or #cards
+  local cards = params.cards or player:getCardIds("he")
+  local _cards = table.simpleClone(cards)
+  params.skill_name = params.skill_name or "distribution_select_skill"
+  params.min_num = params.min_num or 0
+  params.max_num = params.max_num or #cards
+  local skillName, minNum, maxNum, single_max, expand_pile = params.skill_name,
+    params.min_num, params.max_num, params.single_max, params.expand_pile
+
   local list = {}
   for _, pid in ipairs(targets) do
     list[pid] = {}
@@ -1317,8 +1318,15 @@ function Room:askForYiji(player, cards, targets, skillName, minNum, maxNum, prom
 
   while maxNum > 0 and #_cards > 0 do
     data.max_num = maxNum
-    prompt = prompt or ("#AskForDistribution:::"..minNum..":"..maxNum)
-    local success, dat = self:askForUseActiveSkill(player, "distribution_select_skill", prompt, minNum == 0, data, true)
+    local prompt = params.prompt or ("#AskForDistribution:::"..minNum..":"..maxNum)
+    local activeParams = { ---@type AskToUseActiveSkillParams
+      skill_name = "distribution_select_skill",
+      prompt = prompt,
+      cancelable = minNum == 0,
+      extra_data = data,
+      no_indicate = true
+    }
+    local success, dat = self:askToUseActiveSkill(player, activeParams)
     if success and dat then
       local to = dat.targets[1]
       local give_cards = dat.cards
@@ -1351,93 +1359,11 @@ function Room:askForYiji(player, cards, targets, skillName, minNum, maxNum, prom
       end
     end
   end
-  if not skipMove then
+  if not params.skip then
     self:doYiji(list, player.id, skillName)
   end
 
   return list
-end
---- 抽个武将
----
---- 同getNCards，抽出来就没有了，所以记得放回去。
----@param n number @ 数量
----@param position? string @位置，top/bottom，默认top
----@return string[] @ 武将名数组
-function Room:getNGenerals(n, position)
-  position = position or "top"
-  assert(position == "top" or position == "bottom")
-
-  local generals = {}
-  while n > 0 do
-
-    local index = position == "top" and 1 or #self.general_pile
-    table.insert(generals, table.remove(self.general_pile, index))
-
-    n = n - 1
-  end
-
-  if #generals < 1 then
-    self:sendLog{
-      type = "#NoGeneralDraw",
-      toast = true,
-    }
-    self:gameOver("")
-  end
-  return generals
-end
-
---- 把武将牌塞回去（……）
----@param g string[] @ 武将名数组
----@param position? string @位置，top/bottom/random，默认random
----@return boolean @ 是否成功
-function Room:returnToGeneralPile(g, position)
-  position = position or "random"
-  assert(position == "top" or position == "bottom" or position == "random")
-  if position == "bottom" then
-    table.insertTable(self.general_pile, g)
-  elseif position == "top" then
-    while #g > 0 do
-      table.insert(self.general_pile, 1, table.remove(g))
-    end
-  elseif position == "random" then
-    while #g > 0 do
-      table.insert(self.general_pile, math.random(1, #self.general_pile),
-                   table.remove(g))
-    end
-  end
-
-  return true
-end
-
---- 抽特定名字的武将（抽了就没了）
----@param name string? @ 武将name，如找不到则查找truename，再找不到则返回nil
----@return string? @ 抽出的武将名
-function Room:findGeneral(name)
-  if not Fk.generals[name] then return nil end
-  for i, g in ipairs(self.general_pile) do
-    if g == name or Fk.generals[g].trueName == Fk.generals[name].trueName then
-      return table.remove(self.general_pile, i)
-    end
-  end
-  return nil
-end
-
---- 自上而下抽符合特定情况的N个武将（抽了就没了）
----@param func fun(name: string):any @ 武将筛选函数
----@param n? integer @ 抽取数量，数量不足则直接抽干净
----@return string[] @ 武将组合，可能为空
-function Room:findGenerals(func, n)
-  n = n or 1
-  local ret = {}
-  local index = 1
-  while #ret < n and index <= #self.general_pile do
-    if func(self.general_pile[index]) then
-      table.insert(ret, table.remove(self.general_pile, index))
-    else
-      index = index + 1
-    end
-  end
-  return ret
 end
 
 --- 询问玩家选择一名武将。
@@ -1728,26 +1654,6 @@ function Room:askForSkillInvoke(player, skill_name, data, prompt)
   return req:getResult(player) ~= ""
 end
 
--- 获取使用牌的合法额外目标（【借刀杀人】等带副目标的卡牌除外）
----@param data UseCardDataSpec @ 使用事件的data
----@param bypass_distances boolean? @ 是否无距离关系的限制
----@param use_AimGroup boolean? @ 某些场合需要使用AimGroup，by smart Ho-spair
----@return integer[] @ 返回满足条件的player的id列表
-function Room:getUseExtraTargets(data, bypass_distances, use_AimGroup)
-  if not (data.card.type == Card.TypeBasic or data.card:isCommonTrick()) then return {} end
-  if data.card.skill:getMinTargetNum() > 1 then return {} end --stupid collateral
-  local tos = {}
-  local current_targets = use_AimGroup and AimGroup:getAllTargets(data.tos) or TargetGroup:getRealTargets(data.tos)
-  for _, p in ipairs(self.alive_players) do
-    if not table.contains(current_targets, p.id) and not self:getPlayerById(data.from):isProhibited(p, data.card) then
-      if data.card.skill:modTargetFilter(self:getPlayerById(data.from), p, {}, data.card, not bypass_distances) then
-        table.insert(tos, p.id)
-      end
-    end
-  end
-  return tos
-end
-
 --- 询问玩家在自定义大小的框中排列卡牌（观星、交换、拖拽选牌）
 ---@param player ServerPlayer @ 要询问的玩家
 ---@param skillname string @ 烧条技能名
@@ -1968,6 +1874,109 @@ function Room:askForExchange(player, piles, piles_name, customNotify)
   end
 end
 
+
+-- 获取使用牌的合法额外目标（【借刀杀人】等带副目标的卡牌除外）
+---@param data UseCardDataSpec @ 使用事件的data
+---@param bypass_distances boolean? @ 是否无距离关系的限制
+---@param use_AimGroup boolean? @ 某些场合需要使用AimGroup，by smart Ho-spair
+---@return integer[] @ 返回满足条件的player的id列表
+function Room:getUseExtraTargets(data, bypass_distances, use_AimGroup)
+  if not (data.card.type == Card.TypeBasic or data.card:isCommonTrick()) then return {} end
+  if data.card.skill:getMinTargetNum() > 1 then return {} end --stupid collateral
+  local tos = {}
+  local current_targets = use_AimGroup and AimGroup:getAllTargets(data.tos) or TargetGroup:getRealTargets(data.tos)
+  for _, p in ipairs(self.alive_players) do
+    if not table.contains(current_targets, p.id) and not self:getPlayerById(data.from):isProhibited(p, data.card) then
+      if data.card.skill:modTargetFilter(self:getPlayerById(data.from), p, {}, data.card, not bypass_distances) then
+        table.insert(tos, p.id)
+      end
+    end
+  end
+  return tos
+end
+
+--- 抽个武将
+---
+--- 同getNCards，抽出来就没有了，所以记得放回去。
+---@param n number @ 数量
+---@param position? string @位置，top/bottom，默认top
+---@return string[] @ 武将名数组
+function Room:getNGenerals(n, position)
+  position = position or "top"
+  assert(position == "top" or position == "bottom")
+
+  local generals = {}
+  while n > 0 do
+
+    local index = position == "top" and 1 or #self.general_pile
+    table.insert(generals, table.remove(self.general_pile, index))
+
+    n = n - 1
+  end
+
+  if #generals < 1 then
+    self:sendLog{
+      type = "#NoGeneralDraw",
+      toast = true,
+    }
+    self:gameOver("")
+  end
+  return generals
+end
+
+--- 把武将牌塞回去（……）
+---@param g string[] @ 武将名数组
+---@param position? string @位置，top/bottom/random，默认random
+---@return boolean @ 是否成功
+function Room:returnToGeneralPile(g, position)
+  position = position or "random"
+  assert(position == "top" or position == "bottom" or position == "random")
+  if position == "bottom" then
+    table.insertTable(self.general_pile, g)
+  elseif position == "top" then
+    while #g > 0 do
+      table.insert(self.general_pile, 1, table.remove(g))
+    end
+  elseif position == "random" then
+    while #g > 0 do
+      table.insert(self.general_pile, math.random(1, #self.general_pile),
+                   table.remove(g))
+    end
+  end
+
+  return true
+end
+
+--- 抽特定名字的武将（抽了就没了）
+---@param name string? @ 武将name，如找不到则查找truename，再找不到则返回nil
+---@return string? @ 抽出的武将名
+function Room:findGeneral(name)
+  if not Fk.generals[name] then return nil end
+  for i, g in ipairs(self.general_pile) do
+    if g == name or Fk.generals[g].trueName == Fk.generals[name].trueName then
+      return table.remove(self.general_pile, i)
+    end
+  end
+  return nil
+end
+
+--- 自上而下抽符合特定情况的N个武将（抽了就没了）
+---@param func fun(name: string):any @ 武将筛选函数
+---@param n? integer @ 抽取数量，数量不足则直接抽干净
+---@return string[] @ 武将组合，可能为空
+function Room:findGenerals(func, n)
+  n = n or 1
+  local ret = {}
+  local index = 1
+  while #ret < n and index <= #self.general_pile do
+    if func(self.general_pile[index]) then
+      table.insert(ret, table.remove(self.general_pile, index))
+    else
+      index = index + 1
+    end
+  end
+  return ret
+end
 
 --- 将从Request获得的数据转化为UseCardData，或执行主动技的onUse部分
 --- 一般DIY用不到的内部函数
