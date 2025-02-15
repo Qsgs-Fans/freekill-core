@@ -182,4 +182,45 @@ function CompatAskFor:askForChooseCardAndPlayers(player, targets, minNum, maxNum
   return selected, cardid
 end
 
+--- 询问玩家选择X张牌和Y名角色。
+---
+--- 返回两个值，第一个是选择目标id列表，第二个是选择的牌id列表，第三个是否按了确定
+---@param player ServerPlayer @ 要询问的玩家
+---@param minCardNum integer @ 选卡牌最小值
+---@param maxCardNum integer @ 选卡牌最大值
+---@param targets integer[] @ 选择目标的id范围
+---@param minTargetNum integer @ 选目标最小值
+---@param maxTargetNum integer @ 选目标最大值
+---@param pattern? string @ 选牌规则
+---@param prompt? string @ 提示信息
+---@param cancelable? boolean @ 能否点取消
+---@param no_indicate? boolean @ 是否不显示指示线
+---@param extra_data? table @额外信息
+---@return integer[], integer[], boolean @ 第一个是选择目标id列表，第二个是选择的牌id列表，第三个是否按了确定
+function CompatAskFor:askForChooseCardsAndPlayers(player, minCardNum, maxCardNum, targets, minTargetNum, maxTargetNum, pattern, prompt, skillName, cancelable, no_indicate, targetTipName, extra_data)
+  cancelable = (cancelable == nil) and true or cancelable
+  no_indicate = no_indicate or false
+  pattern = pattern or "."
+
+  local params = { ---@type askToChooseCardsAndPlayersParams
+    targets = table.map(targets, Util.Id2PlayerMapper),
+    min_card_num = minCardNum,
+    max_card_num = maxCardNum,
+    min_num = minTargetNum,
+    max_num = maxTargetNum,
+    pattern = pattern,
+    prompt = prompt or "",
+    skill_name = skillName,
+    cancelable = cancelable,
+    extra_data = extra_data,
+    target_tip_name = targetTipName,
+    no_indicate = no_indicate
+  }
+  local selected, cards, bool = self:askToChooseCardsAndPlayers(player, params)
+  if #selected ~= 0 then
+    selected = table.map(selected, Util.IdMapper)
+  end
+  return selected, cards, bool
+end
+
 return CompatAskFor

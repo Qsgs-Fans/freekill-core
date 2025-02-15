@@ -1213,52 +1213,56 @@ function Room:askToChooseCardAndPlayers(player, params)
   end
 end
 
+---@class askToChooseCardsAndPlayersParams: askToChooseCardAndPlayersParams
+---@field min_card_num integer @ 选卡牌最小值
+---@field max_card_num integer @ 选卡牌最大值
+---@field expand_pile? string|integer[] @ 可选私人牌堆名称，或额外可选牌
+
 --- 询问玩家选择X张牌和Y名角色。
 ---
 --- 返回两个值，第一个是选择目标id列表，第二个是选择的牌id列表，第三个是否按了确定
 ---@param player ServerPlayer @ 要询问的玩家
----@param minCardNum integer @ 选卡牌最小值
----@param maxCardNum integer @ 选卡牌最大值
----@param targets integer[] @ 选择目标的id范围
----@param minTargetNum integer @ 选目标最小值
----@param maxTargetNum integer @ 选目标最大值
----@param pattern? string @ 选牌规则
----@param prompt? string @ 提示信息
----@param cancelable? boolean @ 能否点取消
----@param no_indicate? boolean @ 是否不显示指示线
----@param extra_data? table @额外信息
----@return integer[], integer[], boolean @ 第一个是选择目标id列表，第二个是选择的牌id列表，第三个是否按了确定
-function Room:askForChooseCardsAndPlayers(player, minCardNum, maxCardNum, targets, minTargetNum, maxTargetNum, pattern, prompt, skillName, cancelable, no_indicate, targetTipName, extra_data)
-  cancelable = (cancelable == nil) and true or cancelable
-  no_indicate = no_indicate or false
-  pattern = pattern or "."
+---@param params askToChooseCardsAndPlayersParams @ 各种变量
+---@return ServerPlayer[], integer[], boolean @ 第一个是选择目标id列表，第二个是选择的牌id列表，第三个是否按了确定
+function Room:askToChooseCardsAndPlayers(player, params)
+  local maxTargetNum, minTargetNum, maxCardNum, minCardNum = params.max_num, params.min_num, params.max_card_num, params.min_card_num
+  params.cancelable = (params.cancelable == nil) and true or params.cancelable
+  params.no_indicate = params.no_indicate or false
+  params.pattern = params.pattern or "."
 
   local pcards = table.filter(player:getCardIds({ Player.Hand, Player.Equip }), function(id)
     local c = Fk:getCardById(id)
-    return c:matchPattern(pattern)
+    return c:matchPattern(params.pattern)
   end)
-  if #pcards < minCardNum and not cancelable then return {}, {}, false end
+  if #pcards < minCardNum and not params.cancelable then return {}, {}, false end
 
   local data = {
-    targets = targets,
+    targets = params.targets,
     max_t_num = maxTargetNum,
     min_t_num = minTargetNum,
     max_c_num = maxCardNum,
     min_c_num = minCardNum,
-    pattern = pattern,
-    skillName = skillName,
-    targetTipName = targetTipName,
-    extra_data = extra_data,
-    expand_pile = extra_data and extra_data.expand_pile,
+    pattern = params.pattern,
+    skillName = params.skill_name,
+    targetTipName = params.target_tip_name,
+    extra_data = params.extra_data,
+    expand_pile = params.expand_pile or (params.extra_data and params.extra_data.expand_pile),
   }
-  local success, ret = self:askForUseActiveSkill(player, "ex__choose_skill", prompt or "", cancelable, data, no_indicate)
+  local activeParams = { ---@type AskToUseActiveSkillParams
+    skill_name = "ex__choose_skill",
+    prompt = params.prompt or "",
+    cancelable = params.cancelable,
+    extra_data = data,
+    no_indicate = params.no_indicate
+  }
+  local success, ret = self:askToUseActiveSkill(player, activeParams)
   if ret then
     return ret.targets, ret.cards, success
   else
-    if cancelable then
+    if params.cancelable then
       return {}, {}, false
     else
-      return table.random(targets, minTargetNum), table.random(pcards, minCardNum), false
+      return table.random(params.targets, minTargetNum), table.random(pcards, minCardNum), false
     end
   end
 end
