@@ -155,6 +155,7 @@ end
 ---@param targetTipName? string @ 引用的选择目标提示的函数名
 ---@param extra_data? table @额外信息
 ---@return integer[], integer?
+---@deprecated
 function CompatAskFor:askForChooseCardAndPlayers(player, targets, minNum, maxNum, pattern, prompt, skillName, cancelable, no_indicate, targetTipName, extra_data)
   if maxNum < 1 then
     return {}
@@ -197,6 +198,7 @@ end
 ---@param no_indicate? boolean @ 是否不显示指示线
 ---@param extra_data? table @额外信息
 ---@return integer[], integer[], boolean @ 第一个是选择目标id列表，第二个是选择的牌id列表，第三个是否按了确定
+---@deprecated
 function CompatAskFor:askForChooseCardsAndPlayers(player, minCardNum, maxCardNum, targets, minTargetNum, maxTargetNum, pattern, prompt, skillName, cancelable, no_indicate, targetTipName, extra_data)
   cancelable = (cancelable == nil) and true or cancelable
   no_indicate = no_indicate or false
@@ -235,7 +237,8 @@ end
 ---@param skipMove? boolean @ 是否跳过移动。默认不跳过
 ---@param single_max? integer|table @ 限制每人能获得的最大牌数。输入整数或(以角色id为键以整数为值)的表
 ---@return table<integer, integer[]> @ 返回一个表，键为角色id，值为分配给其的牌id数组
-function CompatAskFor:askToYiji(player, cards, targets, skillName, minNum, maxNum, prompt, expand_pile, skipMove, single_max)
+---@deprecated
+function CompatAskFor:askForYiji(player, cards, targets, skillName, minNum, maxNum, prompt, expand_pile, skipMove, single_max)
   targets = targets or self.alive_players
   cards = cards or player:getCardIds("he")
   skillName = skillName or "distribution_select_skill"
@@ -254,6 +257,24 @@ function CompatAskFor:askToYiji(player, cards, targets, skillName, minNum, maxNu
   }
 
   return self:askToYiji(player, params)
+end
+
+--- 询问玩家选择一名武将。
+---@param player ServerPlayer @ 询问目标
+---@param generals string[] @ 可选武将
+---@param n integer @ 可选数量，默认为1
+---@param noConvert? boolean @ 可否变更，默认可
+---@return string|string[] @ 选择的武将
+---@deprecated
+function CompatAskFor:askForGeneral(player, generals, n, noConvert)
+  n = n or 1
+
+  local params = { ---@type askToChooseGeneralParams
+    generals = generals,
+    n = n,
+    no_convert = noConvert
+  }
+  return self:askToChooseGeneral(player, params)
 end
 
 return CompatAskFor

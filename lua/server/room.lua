@@ -1366,21 +1366,25 @@ function Room:askToYiji(player, params)
   return list
 end
 
+---@class askToChooseGeneralParams
+---@field generals string[] @ 可选武将
+---@field n integer @ 可选数量，默认为1
+---@field no_convert? boolean @ 可否变更，默认可
+
 --- 询问玩家选择一名武将。
 ---@param player ServerPlayer @ 询问目标
----@param generals string[] @ 可选武将
----@param n integer @ 可选数量，默认为1
----@param noConvert? boolean @ 可否变更，默认可
+---@param params askToChooseGeneralParams @ 各种变量
 ---@return string|string[] @ 选择的武将
-function Room:askForGeneral(player, generals, n, noConvert)
+function Room:askToChooseGeneral(player, params)
   local command = "AskForGeneral"
 
-  n = n or 1
+  params.n = params.n or 1
+  local n, generals = params.n, params.generals
   if #generals == n then return n == 1 and generals[1] or generals end
   local defaultChoice = table.random(generals, n)
 
   local req = Request:new(player, command)
-  local data = { generals, n, noConvert }
+  local data = { generals, n, params.no_convert }
   req:setData(player, data)
   req:setDefaultReply(player, defaultChoice)
   local choices = req:getResult(player)
