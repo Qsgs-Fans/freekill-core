@@ -120,7 +120,7 @@ function TriggerEvent:exec()
 
         -- TODO: 这段开个方法，搬家到相关时机的某个方法内
         broken = broken or (event == fk.AskForPeaches
-          and room:getPlayerById(data.who).hp > 0) or
+          and data.who.hp > 0) or
           (table.contains({fk.PreDamage, fk.DamageCaused, fk.DamageInflicted}, event) and data.damage < 1) or
           cur_event.killed
 

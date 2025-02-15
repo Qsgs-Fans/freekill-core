@@ -1,18 +1,16 @@
-local skill_name = "yingzi"
-
-local skill = fk.CreateSkill {
-  name = skill_name,
+local yingzi = fk.CreateSkill {
+  name = "yingzi",
 }
 
-skill:addEffect(fk.DrawNCards, {
+yingzi:addEffect(fk.DrawNCards, {
   on_use = function(self, event, target, player, data)
     data.n = data.n + 1
   end,
 })
 
-skill:addTest(function(room, me)
+yingzi:addTest(function(room, me)
   FkTest.runInRoom(function()
-    room:handleAddLoseSkills(me, skill_name)
+    room:handleAddLoseSkills(me, "yingzi")
   end)
 
   FkTest.setNextReplies(me, { "1" })
@@ -28,4 +26,4 @@ skill:addTest(function(room, me)
   lu.assertEquals(#me:getCardIds("h"), 3)
 end)
 
-return skill
+return yingzi

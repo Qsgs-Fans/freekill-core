@@ -1,11 +1,11 @@
-local skill = fk.CreateSkill({
+local fankui = fk.CreateSkill({
   name = "fankui",
 })
 
-skill:addEffect(fk.Damaged, {
+fankui:addEffect(fk.Damaged, {
   anim_type = "masochism",
   can_trigger = function(self, event, target, player, data)
-    if not (target == player and player:hasSkill(skill.name)) then return end
+    if not (target == player and player:hasSkill(fankui.name)) then return end
     if data.from and not data.from.dead then
       if data.from == player then
         return #player:getCardIds("e") > 0
@@ -18,12 +18,12 @@ skill:addEffect(fk.Damaged, {
     local room = player.room
     local from = data.from
     local flag =  from == player and "e" or "he"
-    local card = room:askForCardChosen(player, from, flag, skill.name)
+    local card = room:askForCardChosen(player, from, flag, fankui.name)
     room:obtainCard(player.id, card, false, fk.ReasonPrey)
   end
 })
 
-skill:addTest(function(room, me)
+fankui:addTest(function(room, me)
   local comp2 = room.players[2] ---@type ServerPlayer, ServerPlayer
   FkTest.runInRoom(function() room:handleAddLoseSkills(me, "fankui") end)
 
@@ -52,4 +52,4 @@ skill:addTest(function(room, me)
   lu.assertEquals(me:getCardIds("h")[1], 3)
 end)
 
-return skill
+return fankui

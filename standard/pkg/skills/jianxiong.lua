@@ -1,11 +1,11 @@
-local skill = fk.CreateSkill{
+local jianxiong = fk.CreateSkill{
   name = "jianxiong",
 }
 
-skill:addEffect(fk.Damaged, {
+jianxiong:addEffect(fk.Damaged, {
   anim_type = "masochism",
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(skill.name) and
+    return target == player and player:hasSkill(jianxiong.name) and
       data.card and player.room:getCardArea(data.card) == Card.Processing
   end,
   on_use = function(self, event, target, player, data)
@@ -13,9 +13,9 @@ skill:addEffect(fk.Damaged, {
   end,
 })
 
-skill:addTest(function(room, me)
+jianxiong:addTest(function(room, me)
   local comp2 = room.players[2] ---@type ServerPlayer, ServerPlayer
-  FkTest.runInRoom(function() room:handleAddLoseSkills(me, skill.name) end)
+  FkTest.runInRoom(function() room:handleAddLoseSkills(me, jianxiong.name) end)
 
   local slash = Fk:getCardById(1)
   FkTest.setNextReplies(me, { "__cancel", "1" })
@@ -30,4 +30,4 @@ skill:addTest(function(room, me)
   lu.assertEquals(me:getCardIds("h")[1], 1)
 end)
 
-return skill
+return jianxiong

@@ -1,18 +1,18 @@
-local skill = fk.CreateSkill {
+local tiandu = fk.CreateSkill {
   name = "tiandu",
 }
 
-skill:addEffect(fk.FinishJudge, {
+tiandu:addEffect(fk.FinishJudge, {
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(skill.name) and
+    return target == player and player:hasSkill(tiandu.name) and
       data.card and player.room:getCardArea(data.card) == Card.Processing
   end,
   on_use = function(self, event, target, player, data)
-    player.room:obtainCard(player.id, data.card, true, fk.ReasonJustMove, skill.name)
+    player.room:obtainCard(player.id, data.card, true, fk.ReasonJustMove, tiandu.name)
   end,
 })
 
-skill:addTest(function(room, me)
+tiandu:addTest(function(room, me)
   FkTest.runInRoom(function()
     room:handleAddLoseSkills(me, "tiandu")
   end)
@@ -29,4 +29,4 @@ skill:addTest(function(room, me)
   lu.assertEquals(#me:getCardIds("h"), 1)
 end)
 
-return skill
+return tiandu

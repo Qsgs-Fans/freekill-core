@@ -1,19 +1,19 @@
-local skill = fk.CreateSkill{
+local kongcheng = fk.CreateSkill{
   name = "kongcheng",
   frequency = Skill.Compulsory,
 }
 
-skill:addEffect("prohibit", {
+kongcheng:addEffect("prohibit", {
   is_prohibited = function(self, from, to, card)
-    if to:hasSkill(skill.name) and to:isKongcheng() and card then
+    if to:hasSkill(kongcheng.name) and to:isKongcheng() and card then
       return table.contains({"slash", "duel"}, card.trueName)
     end
   end,
 })
 
-skill:addEffect(fk.AfterCardsMove, {
+kongcheng:addEffect(fk.AfterCardsMove, {
   can_refresh = function(self, event, target, player, data)
-    if not (player:hasSkill(skill.name) and player:isKongcheng()) then return end
+    if not (player:hasSkill(kongcheng.name) and player:isKongcheng()) then return end
     for _, move in ipairs(data) do
       if move.from == player.id then
         for _, info in ipairs(move.moveInfo) do
@@ -25,12 +25,12 @@ skill:addEffect(fk.AfterCardsMove, {
     end
   end,
   on_refresh = function(self, event, target, player, data)
-    player:broadcastSkillInvoke("kongcheng")
-    player.room:notifySkillInvoked(player, "kongcheng", "defensive")
+    player:broadcastSkillInvoke(kongcheng.name)
+    player.room:notifySkillInvoked(player, kongcheng.name, "defensive")
   end,
 })
 
-skill:addTest(function(room, me)
+kongcheng:addTest(function(room, me)
   local comp2 = room.players[2]
 
   FkTest.runInRoom(function()
@@ -47,4 +47,4 @@ skill:addTest(function(room, me)
   lu.assertTrue(comp2:canUseTo(duel, me))
 end)
 
-return skill
+return kongcheng

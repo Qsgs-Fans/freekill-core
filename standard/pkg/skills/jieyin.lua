@@ -1,8 +1,8 @@
-local skill = fk.CreateSkill {
+local jieyin = fk.CreateSkill {
   name = "jieyin",
 }
 
-skill:addEffect("active", {
+jieyin:addEffect("active", {
   anim_type = "support",
   prompt = "#jieyin-active",
   max_phase_use_time = 1,
@@ -17,13 +17,13 @@ skill:addEffect("active", {
   on_use = function(self, room, effect)
     local from = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
-    room:throwCard(effect.cards, skill.name, from, from)
+    room:throwCard(effect.cards, jieyin.name, from, from)
     if target:isAlive() and target:isWounded() then
       room:recover({
         who = target,
         num = 1,
         recoverBy = from,
-        skillName = skill.name,
+        skillName = jieyin.name,
       })
     end
     if from:isAlive() and from:isWounded() then
@@ -31,10 +31,10 @@ skill:addEffect("active", {
         who = from,
         num = 1,
         recoverBy = from,
-        skillName = skill.name,
+        skillName = jieyin.name,
       })
     end
   end,
 })
 
-return skill
+return jieyin

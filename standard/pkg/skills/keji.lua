@@ -1,10 +1,10 @@
-local skill = fk.CreateSkill{
+local keji = fk.CreateSkill{
   name = "keji",
 }
 
-skill:addEffect(fk.EventPhaseChanging, {
+keji:addEffect(fk.EventPhaseChanging, {
   can_trigger = function(self, event, target, player, data)
-    if target == player and player:hasSkill(skill.name) and data.to == Player.Discard then
+    if target == player and player:hasSkill(keji.name) and data.to == Player.Discard then
       local room = player.room
       local logic = room.logic
       local play_ids = logic:getEventsOfScope(GameEvent.Phase, 1, function (e)
@@ -18,8 +18,8 @@ skill:addEffect(fk.EventPhaseChanging, {
       ---@param e GameEvent.UseCard | GameEvent.RespondCard
       local function playCheck (e)
         local in_play = false
-        for _, ids in ipairs(play_ids) do
-          if e.id > ids[1] and e.id < ids[2] then
+        for _, phase_event in ipairs(play_ids) do
+          if e.id > phase_event.id and e.id < phase_event.end_id then
             in_play = true
             break
           end
@@ -35,9 +35,9 @@ skill:addEffect(fk.EventPhaseChanging, {
   end,
 })
 
-skill:addTest(function(room, me)
+keji:addTest(function(room, me)
   FkTest.runInRoom(function()
-    room:handleAddLoseSkills(me, skill.name)
+    room:handleAddLoseSkills(me, keji.name)
   end)
 
   FkTest.setNextReplies(me, { "1" })
@@ -54,4 +54,4 @@ skill:addTest(function(room, me)
   lu.assertEquals(#me:getCardIds("h"), 10)
 end)
 
-return skill
+return keji

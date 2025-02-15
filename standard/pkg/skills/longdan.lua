@@ -1,8 +1,8 @@
-local skill = fk.CreateSkill {
+local longdan = fk.CreateSkill {
   name = "longdan",
 }
 
-skill:addEffect("viewas", {
+longdan:addEffect("viewas", {
   pattern = "slash,jink",
   prompt = "#longdan",
   handly_pile = true,
@@ -29,10 +29,10 @@ skill:addEffect("viewas", {
     elseif _c.name == "jink" then
       c = Fk:cloneCard("slash")
     end
-    c.skillName = skill.name
+    c.skillName = longdan.name
     c:addSubcard(cards[1])
     return c
   end,
 })
 
-return skill
+return longdan

@@ -1,21 +1,19 @@
-local skill_name = "qicai"
-
-local skill = fk.CreateSkill{
-  name = skill_name,
+local qicai = fk.CreateSkill{
+  name = "qicai",
   frequency = Skill.Compulsory,
 }
 
-skill:addEffect("targetmod", {
+qicai:addEffect("targetmod", {
   bypass_distances = function(self, player, skill, card)
-    return player:hasSkill(skill_name) and card and card.type == Card.TypeTrick
+    return player:hasSkill(qicai.name) and card and card.type == Card.TypeTrick
   end,
 })
 
-skill:addTest(function(room, me)
+qicai:addTest(function(room, me)
   local faraway = table.filter(room:getOtherPlayers(me), function(other) return me:distanceTo(other) > 1 end)
 
   FkTest.runInRoom(function()
-    room:handleAddLoseSkills(me, skill_name)
+    room:handleAddLoseSkills(me, "qicai")
     -- 让顺手牵羊可以用一下
     for _, other in ipairs(room:getOtherPlayers(me, false)) do
       other:drawCards(1)
@@ -29,4 +27,4 @@ skill:addTest(function(room, me)
   end
 end)
 
-return skill
+return qicai

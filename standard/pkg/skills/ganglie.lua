@@ -1,8 +1,8 @@
-local skill = fk.CreateSkill({
+local ganglie = fk.CreateSkill({
   name = "ganglie",
 })
 
-skill:addEffect(fk.Damaged, {
+ganglie:addEffect(fk.Damaged, {
   anim_type = "masochism",
   on_use = function(self, event, target, player, data)
     local room = player.room
@@ -10,25 +10,25 @@ skill:addEffect(fk.Damaged, {
     if from and not from.dead then room:doIndicate(player.id, {from.id}) end
     local judge = {
       who = player,
-      reason = skill.name,
+      reason = ganglie.name,
       pattern = ".|.|^heart",
     }
     room:judge(judge)
     if judge.card.suit ~= Card.Heart and from and not from.dead then
-      local discards = room:askForDiscard(from, 2, 2, false, skill.name, true)
+      local discards = room:askForDiscard(from, 2, 2, false, ganglie.name, true)
       if #discards == 0 then
         room:damage{
           from = player,
           to = from,
           damage = 1,
-          skillName = skill.name,
+          skillName = ganglie.name,
         }
       end
     end
   end,
 })
 
-skill:addTest(function(room, me)
+ganglie:addTest(function(room, me)
   local comp2 = room.players[2]
   FkTest.runInRoom(function()
     room:handleAddLoseSkills(me, "ganglie")
@@ -88,4 +88,4 @@ skill:addTest(function(room, me)
   lu.assertEquals(#comp2:getCardIds("h"), 2)
 end)
 
-return skill
+return ganglie

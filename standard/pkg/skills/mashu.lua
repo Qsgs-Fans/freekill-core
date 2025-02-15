@@ -1,17 +1,17 @@
-local skill = fk.CreateSkill{
+local mashu = fk.CreateSkill{
   name = "mashu",
   frequency = Skill.Compulsory,
 }
 
-skill:addEffect("distance", {
+mashu:addEffect("distance", {
   correct_func = function(self, from, to)
-    if from:hasSkill(skill.name) then
+    if from:hasSkill(mashu.name) then
       return -1
     end
   end,
 })
 
-skill:addTest(function(room, me)
+mashu:addTest(function(room, me)
   local origin = table.map(room:getOtherPlayers(me), function(other) return me:distanceTo(other) end)
 
   FkTest.runInRoom(function()
@@ -23,4 +23,4 @@ skill:addTest(function(room, me)
   end
 end)
 
-return skill
+return mashu

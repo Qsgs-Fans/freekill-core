@@ -1,8 +1,8 @@
-local skill = fk.CreateSkill {
+local guose = fk.CreateSkill {
   name = "guose",
 }
 
-skill:addEffect("viewas", {
+guose:addEffect("viewas", {
   anim_type = "control",
   pattern = "indulgence",
   prompt = "#guose",
@@ -13,7 +13,7 @@ skill:addEffect("viewas", {
   view_as = function(self, player, cards)
     if #cards ~= 1 then return end
     local c = Fk:cloneCard("indulgence")
-    c.skillName = skill.name
+    c.skillName = guose.name
     c:addSubcard(cards[1])
     return c
   end,
@@ -22,4 +22,4 @@ skill:addEffect("viewas", {
   end,
 })
 
-return skill
+return guose

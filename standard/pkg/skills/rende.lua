@@ -1,8 +1,8 @@
-local skill = fk.CreateSkill {
+local rende = fk.CreateSkill {
   name = "rende",
 }
 
-skill:addEffect("active", {
+rende:addEffect("active", {
   anim_type = "support",
   prompt = "#rende-active",
   min_card_num = 1,
@@ -18,17 +18,17 @@ skill:addEffect("active", {
     local player = effect.from
     local cards = effect.cards
     local marks = player:getMark("_rende_cards-phase")
-    room:moveCardTo(cards, Player.Hand, target, fk.ReasonGive, skill.name, nil, false, player.id)
+    room:moveCardTo(cards, Player.Hand, target, fk.ReasonGive, rende.name, nil, false, player.id)
     room:addPlayerMark(player, "_rende_cards-phase", #cards)
     if marks < 2 and marks + #cards >= 2 and not player.dead and player:isWounded() then
       room:recover{
         who = player,
         num = 1,
         recoverBy = player,
-        skillName = skill.name,
+        skillName = rende.name,
       }
     end
   end,
 })
 
-return skill
+return rende

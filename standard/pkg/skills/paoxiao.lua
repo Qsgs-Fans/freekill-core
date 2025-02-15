@@ -1,19 +1,19 @@
-local sk = fk.CreateSkill{
+local paoxiao = fk.CreateSkill{
   name = "paoxiao",
   frequency = Skill.Compulsory,
 }
 
-sk:addEffect("targetmod", {
+paoxiao:addEffect("targetmod", {
   bypass_times = function(self, player, skill, scope, card)
-    if player:hasSkill(sk.name) and card and card.trueName == "slash_skill" and scope == Player.HistoryPhase then
+    if player:hasSkill(paoxiao.name) and card and card.trueName == "slash_skill" and scope == Player.HistoryPhase then
       return true
     end
   end,
 })
 
-sk:addEffect(fk.CardUsing, {
+paoxiao:addEffect(fk.CardUsing, {
   can_refresh = function(self, event, target, player, data)
-    return target == player and player:hasSkill(sk.name) and
+    return target == player and player:hasSkill(paoxiao.name) and
       data.card.trueName == "slash" and
       player:usedCardTimes("slash", Player.HistoryPhase) > 1
   end,
@@ -22,9 +22,9 @@ sk:addEffect(fk.CardUsing, {
     player.room:doAnimate("InvokeSkill", {
       name = "paoxiao",
       player = player.id,
-      skill_type = sk.name,
+      skill_type = paoxiao.name,
     })
   end,
 })
 
-return sk
+return paoxiao

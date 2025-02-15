@@ -1,11 +1,11 @@
-local skill = fk.CreateSkill({
+local lianying = fk.CreateSkill({
   name = "lianying",
 })
 
-skill:addEffect(fk.AfterCardsMove, {
+lianying:addEffect(fk.AfterCardsMove, {
   anim_type = "drawcard",
   can_trigger = function(self, event, target, player, data)
-    if not (player:hasSkill(skill.name) and player:isKongcheng()) then return end
+    if not (player:hasSkill(lianying.name) and player:isKongcheng()) then return end
     for _, move in ipairs(data) do
       if move.from == player then
         for _, info in ipairs(move.moveInfo) do
@@ -17,13 +17,13 @@ skill:addEffect(fk.AfterCardsMove, {
     end
   end,
   on_use = function(self, event, target, player, data)
-    player:drawCards(1, skill.name)
+    player:drawCards(1, lianying.name)
   end,
 })
 
-skill:addTest(function(room, me)
+lianying:addTest(function(room, me)
   FkTest.runInRoom(function()
-    room:handleAddLoseSkills(me, skill.name)
+    room:handleAddLoseSkills(me, lianying.name)
   end)
   FkTest.setNextReplies(me, { "1", "1", "1", "1", "1", "1", "1", "1" })
   FkTest.runInRoom(function()
@@ -33,4 +33,4 @@ skill:addTest(function(room, me)
   lu.assertEquals(#me:getCardIds("h"), 1)
 end)
 
-return skill
+return lianying

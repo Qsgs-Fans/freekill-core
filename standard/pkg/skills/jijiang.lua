@@ -1,21 +1,21 @@
-local skill = fk.CreateSkill {
+local jijiang = fk.CreateSkill {
   name = "jijiang$",
 }
 
-skill:addEffect("viewas", {
+jijiang:addEffect("viewas", {
   anim_type = "offensive",
   pattern = "slash",
   card_filter = Util.FalseFunc,
   view_as = function(self, player, cards)
     if #cards ~= 0 then return end
     local c = Fk:cloneCard("slash")
-    c.skillName = skill.name
+    c.skillName = jijiang.name
     return c
   end,
   before_use = function(self, player, use)
     local room = player.room
     if use.tos then
-      room:doIndicate(player.id, TargetGroup:getRealTargets(use.tos))
+      room:doIndicate(player.id, table.map(use.tos, Util.IdMapper))
     end
 
     for _, p in ipairs(room:getOtherPlayers(player)) do
@@ -35,7 +35,7 @@ skill:addEffect("viewas", {
     end
 
     room:setPlayerMark(player, "jijiang_failed-phase", 1)
-    return skill.name
+    return jijiang.name
   end,
   enabled_at_play = function(self, player)
     return player:getMark("jijiang_failed-phase") == 0 and
@@ -50,4 +50,4 @@ skill:addEffect("viewas", {
   end,
 })
 
-return skill
+return jijiang

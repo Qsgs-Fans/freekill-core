@@ -1,8 +1,8 @@
-local skill = fk.CreateSkill {
+local qixi = fk.CreateSkill {
   name = "qixi",
 }
 
-skill:addEffect("viewas", {
+qixi:addEffect("viewas", {
   anim_type = "control",
   pattern = "dismantlement",
   prompt = "#qixi",
@@ -13,7 +13,7 @@ skill:addEffect("viewas", {
   view_as = function(self, player, cards)
     if #cards ~= 1 then return end
     local c = Fk:cloneCard("dismantlement")
-    c.skillName = skill.name
+    c.skillName = qixi.name
     c:addSubcard(cards[1])
     return c
   end,
@@ -22,4 +22,4 @@ skill:addEffect("viewas", {
   end
 })
 
-return skill
+return qixi

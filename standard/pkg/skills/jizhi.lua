@@ -1,19 +1,19 @@
-local skill = fk.CreateSkill{
+local jizhi = fk.CreateSkill{
   name = "jizhi",
 }
 
-skill:addEffect(fk.CardUsing, {
+jizhi:addEffect(fk.CardUsing, {
   anim_type = "drawcard",
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(skill.name) and
+    return target == player and player:hasSkill(jizhi.name) and
       data.card:isCommonTrick() and not data.card:isVirtual()
   end,
   on_use = function(self, event, target, player, data)
-    player:drawCards(1, skill.name)
+    player:drawCards(1, jizhi.name)
   end,
 })
 
-skill:addTest(function(room, me)
+jizhi:addTest(function(room, me)
   local comp2 = room.players[2]
 
   FkTest.runInRoom(function()
@@ -45,4 +45,4 @@ skill:addTest(function(room, me)
   lu.assertEquals(#me:getCardIds("h"), 1)
 end)
 
-return skill
+return jizhi

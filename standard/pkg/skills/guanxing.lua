@@ -1,11 +1,11 @@
-local skill = fk.CreateSkill({
+local guanxing = fk.CreateSkill({
   name = "guanxing",
 })
 
-skill:addEffect(fk.EventPhaseStart, {
+guanxing:addEffect(fk.EventPhaseStart, {
   anim_type = "control",
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(skill.name) and player.phase == Player.Start
+    return target == player and player:hasSkill(guanxing.name) and player.phase == Player.Start
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
@@ -13,4 +13,4 @@ skill:addEffect(fk.EventPhaseStart, {
   end,
 })
 
-return skill
+return guanxing

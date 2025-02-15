@@ -1,8 +1,8 @@
-local skill = fk.CreateSkill {
+local zhiheng = fk.CreateSkill {
   name = "zhiheng",
 }
 
-skill:addEffect("active", {
+zhiheng:addEffect("active", {
   anim_type = "drawcard",
   prompt = "#zhiheng-active",
   max_phase_use_time = 1,
@@ -13,11 +13,11 @@ skill:addEffect("active", {
   end,
   on_use = function(self, room, effect)
     local from = effect.from
-    room:throwCard(effect.cards, skill.name, from, from)
+    room:throwCard(effect.cards, zhiheng.name, from, from)
     if from:isAlive() then
-      from:drawCards(#effect.cards, skill.name)
+      from:drawCards(#effect.cards, zhiheng.name)
     end
   end,
 })
 
-return skill
+return zhiheng

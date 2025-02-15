@@ -66,7 +66,6 @@ end
 local Death = GameEvent:subclass("GameEvent.Death")
 function Death:prepare()
   local deathData = self.data
-  local room = self.room
   local victim = deathData.who
   if victim.dead then
     return true
@@ -88,7 +87,7 @@ function Death:main()
   local logic = room.logic
   logic:trigger(fk.BeforeGameOverJudge, victim, deathData)
 
-  local killer = deathData.damage and deathData.damage.from or nil
+  local killer = deathData.damage and deathData.damage.from or deathData.killer
   if killer then
     room:sendLog{
       type = "#KillPlayer",

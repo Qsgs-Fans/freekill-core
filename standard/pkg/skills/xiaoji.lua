@@ -1,10 +1,10 @@
-local skill = fk.CreateSkill {
+local xiaoji = fk.CreateSkill {
   name = "xiaoji",
 }
 
-skill:addEffect(fk.AfterCardsMove, {
+xiaoji:addEffect(fk.AfterCardsMove, {
   can_trigger = function(self, event, target, player, data)
-    if not player:hasSkill(self.name) then return end
+    if not player:hasSkill(xiaoji.name) then return end
     for _, move in ipairs(data) do
       if move.from == player then
         for _, info in ipairs(move.moveInfo) do
@@ -33,19 +33,19 @@ skill:addEffect(fk.AfterCardsMove, {
     end
   end,
   on_cost = function(self, event, target, player, data)
-    if player.room:askForSkillInvoke(player, skill.name) then
+    if player.room:askForSkillInvoke(player, xiaoji.name) then
       return true
     end
     self.cancel_cost = true
   end,
   on_use = function(self, event, target, player, data)
-    player:drawCards(2, skill.name)
+    player:drawCards(2, xiaoji.name)
   end,
 })
 
-skill:addTest(function(room, me)
+xiaoji:addTest(function(room, me)
   FkTest.runInRoom(function()
-    room:handleAddLoseSkills(me, skill.name)
+    room:handleAddLoseSkills(me, xiaoji.name)
   end)
   FkTest.setNextReplies(me, { "1", "1", "1", "1", "1", "1", "1", "1" })
 
@@ -73,4 +73,4 @@ skill:addTest(function(room, me)
   lu.assertEquals(#me:getCardIds("h"), 4)
 end)
 
-return skill
+return xiaoji

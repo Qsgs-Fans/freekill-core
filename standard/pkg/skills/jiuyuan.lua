@@ -1,11 +1,11 @@
-local skill = fk.CreateSkill{
+local jiuyuan = fk.CreateSkill{
   name = "jiuyuan$",
   frequency = Skill.Compulsory,
 }
 
-skill:addEffect(fk.PreHpRecover, {
+jiuyuan:addEffect(fk.PreHpRecover, {
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(skill.name) and
+    return target == player and player:hasSkill(jiuyuan.name) and
       data.card and data.card.trueName == "peach" and
       data.recoverBy and data.recoverBy.kingdom == "wu" and data.recoverBy ~= player
   end,
@@ -14,4 +14,4 @@ skill:addEffect(fk.PreHpRecover, {
   end,
 })
 
-return skill
+return jiuyuan

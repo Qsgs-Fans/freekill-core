@@ -1,18 +1,18 @@
-local skill = fk.CreateSkill{
+local biyue = fk.CreateSkill{
   name = "biyue",
 }
 
-skill:addEffect(fk.EventPhaseStart, {
+biyue:addEffect(fk.EventPhaseStart, {
   anim_type = "drawcard",
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(skill.name) and player.phase == Player.Finish
+    return target == player and player:hasSkill(biyue.name) and player.phase == Player.Finish
   end,
   on_use = function(self, event, target, player, data)
-    player:drawCards(1, skill.name)
+    player:drawCards(1, biyue.name)
   end,
 })
 
-skill:addTest(function(room, me)
+biyue:addTest(function(room, me)
   FkTest.runInRoom(function()
     room:handleAddLoseSkills(me, "biyue")
   end)
@@ -30,4 +30,4 @@ skill:addTest(function(room, me)
   lu.assertEquals(#me:getCardIds("h"), 1)
 end)
 
-return skill
+return biyue

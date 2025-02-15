@@ -1,8 +1,8 @@
-local skill = fk.CreateSkill {
+local qingnang = fk.CreateSkill {
   name = "qingnang",
 }
 
-skill:addEffect("active", {
+qingnang:addEffect("active", {
   anim_type = "support",
   prompt = "#qingnang-active",
   max_phase_use_time = 1,
@@ -17,16 +17,16 @@ skill:addEffect("active", {
   on_use = function(self, room, effect)
     local from = effect.from
     local to = effect.tos[1]
-    room:throwCard(effect.cards, skill.name, from, from)
+    room:throwCard(effect.cards, qingnang.name, from, from)
     if to:isAlive() and to:isWounded() then
       room:recover({
         who = to,
         num = 1,
         recoverBy = from,
-        skillName = skill.name,
+        skillName = qingnang.name,
       })
     end
   end,
 })
 
-return skill
+return qingnang

@@ -1,8 +1,8 @@
-local skill = fk.CreateSkill {
+local wusheng = fk.CreateSkill {
   name = "wusheng",
 }
 
-skill:addEffect("viewas", {
+wusheng:addEffect("viewas", {
   anim_type = "offensive",
   pattern = "slash",
   prompt = "#wusheng",
@@ -13,10 +13,10 @@ skill:addEffect("viewas", {
   view_as = function(self, player, cards)
     if #cards ~= 1 then return end
     local c = Fk:cloneCard("slash")
-    c.skillName = skill.name
+    c.skillName = wusheng.name
     c:addSubcard(cards[1])
     return c
   end,
 })
 
-return skill
+return wusheng

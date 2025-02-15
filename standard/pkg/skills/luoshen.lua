@@ -1,38 +1,38 @@
-local skill = fk.CreateSkill{
+local luoshen = fk.CreateSkill{
   name = "luoshen",
 }
 
-skill:addEffect(fk.EventPhaseStart, {
+luoshen:addEffect(fk.EventPhaseStart, {
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(skill.name) and player.phase == Player.Start
+    return target == player and player:hasSkill(luoshen.name) and player.phase == Player.Start
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
     while true do
       local judge = {
         who = player,
-        reason = skill.name,
+        reason = luoshen.name,
         pattern = ".|.|spade,club",
       }
       room:judge(judge)
-      if judge.card.color ~= Card.Black or player.dead or not room:askForSkillInvoke(player, skill.name) then
+      if judge.card.color ~= Card.Black or player.dead or not room:askForSkillInvoke(player, luoshen.name) then
         break
       end
     end
   end,
 })
-skill:addEffect(fk.FinishJudge, {
+luoshen:addEffect(fk.FinishJudge, {
   can_trigger = function(self, event, target, player, data)
-    return target == player and not player.dead and data.reason == skill.name and data.card.color == Card.Black and
+    return target == player and not player.dead and data.reason == luoshen.name and data.card.color == Card.Black and
       player.room:getCardArea(data.card) == Card.Processing
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
-    player.room:obtainCard(player.id, data.card, false, fk.ReasonJustMove, nil, skill.name)
+    player.room:obtainCard(player.id, data.card, false, fk.ReasonJustMove, nil, luoshen.name)
   end,
 })
 
-skill:addTest(function(room, me)
+luoshen:addTest(function(room, me)
   FkTest.runInRoom(function()
     room:handleAddLoseSkills(me, "luoshen")
   end)
@@ -61,4 +61,4 @@ skill:addTest(function(room, me)
   lu.assertEquals(#me:getCardIds("h"), rnd)
 end)
 
-return skill
+return luoshen

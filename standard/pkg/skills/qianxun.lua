@@ -1,19 +1,17 @@
-local skill_name = "qianxun"
-
-local skill = fk.CreateSkill{
-  name = skill_name,
+local qianxun = fk.CreateSkill{
+  name = "qianxun",
   frequency = Skill.Compulsory,
 }
 
-skill:addEffect("prohibit", {
+qianxun:addEffect("prohibit", {
   is_prohibited = function(self, from, to, card)
-    if to:hasSkill(skill.name) and card then
+    if to:hasSkill(qianxun.name) and card then
       return table.contains({"indulgence", "snatch"}, card.trueName)
     end
   end,
 })
 
-skill:addTest(function(room, me)
+qianxun:addTest(function(room, me)
   local comp2 = room.players[2]
 
   local snatch = Fk:getCardById(table.find(room.draw_pile, function(cid)
@@ -32,7 +30,7 @@ skill:addTest(function(room, me)
   lu.assertTrue(comp2:canUseTo(indulgence, me))
 
   FkTest.runInRoom(function()
-    room:handleAddLoseSkills(me, skill_name)
+    room:handleAddLoseSkills(me, "qianxun")
   end)
 
   lu.assertFalse(comp2:canUseTo(snatch, me))
@@ -40,4 +38,4 @@ skill:addTest(function(room, me)
 end
 )
 
-return skill
+return qianxun

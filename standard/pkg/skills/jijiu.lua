@@ -1,8 +1,8 @@
-local skill = fk.CreateSkill {
+local jijiu = fk.CreateSkill {
   name = "jijiu",
 }
 
-skill:addEffect("viewas", {
+jijiu:addEffect("viewas", {
   anim_type = "support",
   pattern = "peach",
   prompt = "#jijiu",
@@ -14,7 +14,7 @@ skill:addEffect("viewas", {
     if #cards ~= 1 then return end
     local c = Fk:cloneCard("peach")
     c.skillName = skill.name
-    c:addSubcard(cards[1])
+    c:addSubcard(jijiu[1])
     return c
   end,
   enabled_at_play = Util.FalseFunc,
@@ -23,4 +23,4 @@ skill:addEffect("viewas", {
   end,
 })
 
-return skill
+return jijiu

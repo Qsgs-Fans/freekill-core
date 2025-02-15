@@ -1,8 +1,8 @@
-local skill = fk.CreateSkill {
+local lijian = fk.CreateSkill {
   name = "lijian",
 }
 
-skill:addEffect("active", {
+lijian:addEffect("active", {
   anim_type = "offensive",
   prompt = "#lijian-active",
   max_phase_use_time = 1,
@@ -21,10 +21,10 @@ skill:addEffect("active", {
     end
   end,
   on_use = function(self, room, effect)
-    local player = room:getPlayerById(effect.from)
-    room:throwCard(effect.cards, skill.name, player, player)
+    local player = effect.from
+    room:throwCard(effect.cards, lijian.name, player, player)
     local duel = Fk:cloneCard("duel")
-    duel.skillName = skill.name
+    duel.skillName = lijian.name
     local new_use = { ---@type CardUseStruct
       from = effect.tos[2],
       tos = { { effect.tos[1] } },
@@ -43,4 +43,4 @@ skill:addEffect("active", {
   end,
 })
 
-return skill
+return lijian

@@ -35,11 +35,11 @@ skill:addEffect(fk.BeforeHpChanged, {
     local game_event = logic:getCurrentEvent()
     if game_event.event ~= GameEvent.ChangeHp then return false end
     local hpChangedData = game_event.data
-    if hpChangedData[1] ~= player or hpChangedData[3] ~= "damage" then return false end
+    if hpChangedData.who ~= player or hpChangedData.reason ~= "damage" then return false end
     game_event = game_event.parent
     if game_event.event ~= GameEvent.Damage then return false end
     game_event = game_event.parent
-    if game_event.event ~= GameEvent.SkillEffect or game_event.data[3].trueName ~= "slash_skill" then return false end
+    if game_event.event ~= GameEvent.SkillEffect or game_event.data.trueName ~= "slash_skill" then return false end
     game_event = game_event.parent
     if game_event.event ~= GameEvent.CardEffect then return false end
     local effect = game_event.data
@@ -68,7 +68,7 @@ skill:addEffect(fk.DamageFinished, {
     local logic = player.room.logic
     local game_event = logic:getCurrentEvent()
     if data.card == nil or data.to ~= player then return false end
-    if game_event.event ~= GameEvent.SkillEffect or game_event.data[3].trueName ~= "slash_skill" then return false end
+    if game_event.event ~= GameEvent.SkillEffect or game_event.data.trueName ~= "slash_skill" then return false end
     game_event = game_event.parent
     if game_event.event ~= GameEvent.CardEffect then return false end
     local effect = game_event.data

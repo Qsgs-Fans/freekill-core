@@ -1,8 +1,8 @@
-local skill = fk.CreateSkill {
+local qingguo = fk.CreateSkill {
   name = "qingguo",
 }
 
-skill:addEffect("viewas", {
+qingguo:addEffect("viewas", {
   anim_type = "defensive",
   pattern = "jink",
   prompt = "#qingguo",
@@ -20,4 +20,4 @@ skill:addEffect("viewas", {
   end,
 })
 
-return skill
+return qingguo

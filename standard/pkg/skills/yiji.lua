@@ -1,8 +1,8 @@
-local skill = fk.CreateSkill {
+local yiji = fk.CreateSkill {
   name = "yiji",
 }
 
-skill:addEffect(fk.Damaged, {
+yiji:addEffect(fk.Damaged, {
   on_trigger = function(self, event, target, player, data)
     self.cancel_cost = false
     for _ = 1, data.damage do
@@ -12,7 +12,7 @@ skill:addEffect(fk.Damaged, {
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
-    if room:askForSkillInvoke(player, skill.name, data) then
+    if room:askForSkillInvoke(player, yiji.name, data) then
       return true
     end
     self.cancel_cost = true
@@ -29,19 +29,19 @@ skill:addEffect(fk.Damaged, {
           table.removeOne(ids, id)
         end
         room:moveCardTo(ret.cards, Card.PlayerHand, room:getPlayerById(ret.targets[1]), fk.ReasonGive,
-        skill.name, nil, false, player.id, nil, player.id)
+        yiji.name, nil, false, player.id, nil, player.id)
         if #ids == 0 then break end
         if player.dead then
           room:moveCards({
             ids = ids,
             toArea = Card.DiscardPile,
             moveReason = fk.ReasonJustMove,
-            skillName = skill.name,
+            skillName = yiji.name,
           })
           break
         end
       else
-        room:moveCardTo(ids, Player.Hand, player, fk.ReasonGive, skill.name, nil, false, player.id)
+        room:moveCardTo(ids, Player.Hand, player, fk.ReasonGive, yiji.name, nil, false, player.id)
         break
       end
     end
@@ -65,4 +65,4 @@ yiji_active:addEffect("active", {
   end,
 })
 
-return skill, yiji_active
+return yiji, yiji_active
