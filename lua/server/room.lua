@@ -1161,51 +1161,54 @@ function Room:askToChooseCards(player, params)
   return chosenCards
 end
 
+---@class askToChooseCardAndPlayersParams: askToChoosePlayersParams
+---@field pattern? string @ 选牌规则
+
 --- 询问玩家选择1张牌和若干名角色。
 ---
 --- 返回两个值，第一个是选择的目标列表，第二个是选择的那张牌的id
 ---@param player ServerPlayer @ 要询问的玩家
----@param targets integer[] @ 选择目标的id范围
----@param minNum integer @ 选目标最小值
----@param maxNum integer @ 选目标最大值
----@param pattern? string @ 选牌规则
----@param prompt? string @ 提示信息
----@param cancelable? boolean @ 能否点取消
----@param no_indicate? boolean @ 是否不显示指示线
----@param targetTipName? string @ 引用的选择目标提示的函数名
----@param extra_data? table @额外信息
----@return integer[], integer?
-function Room:askForChooseCardAndPlayers(player, targets, minNum, maxNum, pattern, prompt, skillName, cancelable, no_indicate, targetTipName, extra_data)
+---@param params askToChooseCardAndPlayersParams @ 各种变量
+---@return ServerPlayer[], integer?
+function Room:askToChooseCardAndPlayers(player, params)
+  local maxNum, minNum = params.max_num, params.min_num
   if maxNum < 1 then
     return {}
   end
-  cancelable = (cancelable == nil) and true or cancelable
-  no_indicate = no_indicate or false
-  pattern = pattern or "."
+  params.cancelable = (params.cancelable == nil) and true or params.cancelable
+  params.no_indicate = params.no_indicate or false
+  params.pattern = params.pattern or "."
 
   local pcards = table.filter(player:getCardIds({ Player.Hand, Player.Equip }), function(id)
     local c = Fk:getCardById(id)
-    return c:matchPattern(pattern)
+    return c:matchPattern(params.pattern)
   end)
-  if #pcards == 0 and not cancelable then return {} end
+  if #pcards == 0 and not params.cancelable then return {} end
 
   local data = {
-    targets = targets,
+    targets = params.targets,
     num = maxNum,
     min_num = minNum,
-    pattern = pattern,
-    skillName = skillName,
-    targetTipName = targetTipName,
-    extra_data = extra_data,
+    pattern = params.pattern,
+    skillName = params.skill_name,
+    targetTipName = params.target_tip_name,
+    extra_data = params.extra_data,
   }
-  local _, ret = self:askForUseActiveSkill(player, "choose_players_skill", prompt or "", cancelable, data, no_indicate)
+  local activeParams = { ---@type AskToUseActiveSkillParams
+    skill_name = "choose_players_skill",
+    prompt = params.prompt or "",
+    cancelable = params.cancelable,
+    extra_data = data,
+    no_indicate = params.no_indicate
+  }
+  local _, ret = self:askToUseActiveSkill(player, activeParams)
   if ret then
     return ret.targets, ret.cards[1]
   else
-    if cancelable then
+    if params.cancelable then
       return {}
     else
-      return table.random(targets, minNum), table.random(pcards)
+      return table.random(params.targets, minNum), table.random(pcards)
     end
   end
 end
