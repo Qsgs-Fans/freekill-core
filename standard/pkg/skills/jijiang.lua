@@ -20,7 +20,13 @@ jijiang:addEffect("viewas", {
 
     for _, p in ipairs(room:getOtherPlayers(player)) do
       if p.kingdom == "shu" then
-        local cardResponded = room:askForResponse(p, "slash", "slash", "#jijiang-ask:" .. player.id, true)
+        local params = { ---@type AskToUseCardParams
+          skill_name = "slash",
+          pattern = "slash",
+          prompt = "#jijiang-ask:" .. player.id,
+          cancelable = true,
+        }
+        local cardResponded = room:askToResponse(p, params)
         if cardResponded then
           room:responseCard({
             from = p.id,

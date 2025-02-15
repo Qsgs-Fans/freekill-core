@@ -12,7 +12,7 @@ yiji:addEffect(fk.Damaged, {
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
-    if room:askForSkillInvoke(player, yiji.name, data) then
+    if room:askToSkillInvoke(player, { skill_name = yiji.name }) then
       return true
     end
     self.cancel_cost = true
@@ -22,7 +22,7 @@ yiji:addEffect(fk.Damaged, {
     local ids = room:getNCards(2)
     while not player.dead do
       room:setPlayerMark(player, "yiji_cards", ids)
-      local _, ret = room:askForUseActiveSkill(player, "yiji_active", "#yiji-give", true, nil, true)
+      local _, ret = room:askToUseActiveSkill(player, { skill_name = "yiji_active", prompt = "#yiji-give",  cancelable = true, no_indicate = true })
       room:setPlayerMark(player, "yiji_cards", 0)
       if ret then
         for _, id in ipairs(ret.cards) do

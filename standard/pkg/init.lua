@@ -62,7 +62,7 @@ local role_getlogic = function()
       local generals = table.connect(room:findGenerals(function(g)
         return table.contains(Fk.lords, g)
       end, lord_num), room:getNGenerals(generalNum))
-      lord_generals = room:askForGeneral(lord, generals, n)
+      lord_generals = room:askToChooseGeneral(lord, { generals = generals, n = n })
       local lord_general, deputy
       if type(lord_generals) == "table" then
         deputy = lord_generals[2]
@@ -80,7 +80,7 @@ local role_getlogic = function()
 
       room:prepareGeneral(lord, lord_general, deputy, true)
 
-      room:askForChooseKingdom({lord})
+      room:askToChooseKingdom({lord})
       room:broadcastProperty(lord, "kingdom")
 
       -- 显示技能
@@ -151,7 +151,7 @@ local role_getlogic = function()
       room:prepareGeneral(p, general, deputy)
     end
 
-    room:askForChooseKingdom(nonlord)
+    room:askToChooseKingdom(nonlord)
   end
 
   return role_logic

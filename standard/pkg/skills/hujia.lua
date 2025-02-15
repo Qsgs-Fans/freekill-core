@@ -16,7 +16,14 @@ local hujia_spec = {
     local room = player.room
     for _, p in ipairs(room:getOtherPlayers(player)) do
       if p:isAlive() and p.kingdom == "wei" then
-        local cardResponded = room:askForResponse(p, "jink", "jink", "#hujia-ask:" .. player.id, true, {hujia_ask = true})
+        local params = { ---@type AskToUseCardParams
+          skill_name = "jink",
+          pattern = "jink",
+          prompt = "#hujia-ask:" .. player.id,
+          cancelable = true,
+          extra_data = {hujia_ask = true}
+        }
+        local cardResponded = room:askToResponse(p, params)
         if cardResponded then
           room:responseCard({
             from = p.id,

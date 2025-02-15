@@ -33,7 +33,7 @@ xiaoji:addEffect(fk.AfterCardsMove, {
     end
   end,
   on_cost = function(self, event, target, player, data)
-    if player.room:askForSkillInvoke(player, xiaoji.name) then
+    if player.room:askToSkillInvoke(player, { skill_name = xiaoji.name }) then
       return true
     end
     self.cancel_cost = true

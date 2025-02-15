@@ -15,7 +15,7 @@ luoshen:addEffect(fk.EventPhaseStart, {
         pattern = ".|.|spade,club",
       }
       room:judge(judge)
-      if judge.card.color ~= Card.Black or player.dead or not room:askForSkillInvoke(player, luoshen.name) then
+      if judge.card.color ~= Card.Black or player.dead or not room:askToSkillInvoke(player, { skill_name = luoshen.name }) then
         break
       end
     end

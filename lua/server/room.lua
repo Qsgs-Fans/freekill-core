@@ -1072,7 +1072,7 @@ function Room:askToChoosePlayers(player, params)
   params.no_indicate = params.no_indicate or false
 
   local data = {
-    targets = params.targets,
+    targets = table.map(params.targets, Util.IdMapper),
     num = maxNum,
     min_num = minNum,
     pattern = "",
@@ -1184,7 +1184,7 @@ function Room:askToChooseCardAndPlayers(player, params)
   if #pcards == 0 and not params.cancelable then return {} end
 
   local data = {
-    targets = params.targets,
+    targets = table.map(params.targets, Util.IdMapper),
     num = maxNum,
     min_num = minNum,
     pattern = params.pattern,
@@ -1235,7 +1235,7 @@ function Room:askToChooseCardsAndPlayers(player, params)
   if #pcards < minCardNum and not params.cancelable then return {}, {}, false end
 
   local data = {
-    targets = params.targets,
+    targets = table.map(params.targets, Util.IdMapper),
     max_t_num = maxTargetNum,
     min_t_num = minTargetNum,
     max_c_num = maxCardNum,

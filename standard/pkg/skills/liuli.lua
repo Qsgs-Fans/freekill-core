@@ -15,7 +15,7 @@ liuli:addEffect(fk.TargetConfirming, {
     local targets = table.filter(room.alive_players, function (p)
       return player:inMyAttackRange(p) and p ~= data.from and not data.from:isProhibited(p, data.card)
     end)
-    local plist, cid = room:askForChooseCardAndPlayers(player, targets, 1, 1, nil, "#liuli-target", liuli.name, true)
+    local plist, cid = room:askToChooseCardAndPlayers(player, { targets = targets, min_num = 1, max_num = 1, prompt = "#liuli-target", skill_name = liuli.name, cancelable = true })
     if #plist > 0 then
       self.cost_data = {tos = plist, cards = {cid}}
       return true

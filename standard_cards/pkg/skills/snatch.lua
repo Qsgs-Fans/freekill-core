@@ -15,7 +15,7 @@ skill:addEffect("active", {
   target_num = 1,
   on_effect = function(self, room, effect)
     if effect.from.dead or effect.to.dead or effect.to:isAllNude() then return end
-    local cid = room:askForCardChosen(effect.from, effect.to, "hej", skill.name)
+    local cid = room:askToChooseCard(effect.from, { target = effect.to, flag = "hej", skill_name = skill.name })
     room:obtainCard(effect.from, cid, false, fk.ReasonPrey)
   end,
 })
