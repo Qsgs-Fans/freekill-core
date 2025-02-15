@@ -1507,20 +1507,20 @@ function Room:askToPoxi(player, params)
   end
 end
 
+---@class askToChooseCardsParams: askToChooseCardParams
+---@field min integer @ 最小选牌数
+---@field max integer @ 最大选牌数
+
 --- 完全类似askForCardChosen，但是可以选择多张牌。
 --- 相应的，返回的是id的数组而不是单个id。
----@param chooser ServerPlayer @ 要被询问的人
----@param target ServerPlayer @ 被选牌的人
----@param min integer @ 最小选牌数
----@param max integer @ 最大选牌数
----@param flag any @ 用"hej"三个字母的组合表示能选择哪些区域, h 手牌区, e - 装备区, j - 判定区
----可以通过flag.card_data = {{牌堆1名, 牌堆1ID表},...}来定制能选择的牌
----@param reason string @ 原因，一般是技能名
----@param prompt? string @ 提示信息
+---@param player ServerPlayer @ 要被询问的人
+---@param params askToChooseCardsParams @ 各种变量
 ---@return integer[] @ 选择的id
-function Room:askForCardsChosen(chooser, target, min, max, flag, reason, prompt)
+function Room:askToChooseCards(player, params)
+  local target, flag, reason, prompt = params.target, params.flag, params.skill_name, params.prompt
+  local min, max = params.min, params.max
   if min == 1 and max == 1 then
-    return { self:askForCardChosen(chooser, target, flag, reason, prompt) }
+    return { self:askToChooseCard(player, params) }
   end
 
   local cards
@@ -1550,7 +1550,7 @@ function Room:askForCardsChosen(chooser, target, min, max, flag, reason, prompt)
     if string.find(flag, "h") and #handcards > 0 then
       table.insert(cards_data, {"$Hand", handcards})
       for _, id in ipairs(handcards) do
-        if not chooser:cardVisible(id) then
+        if not player:cardVisible(id) then
           visible_data[tostring(id)] = false
         end
       end
@@ -1568,7 +1568,15 @@ function Room:askForCardsChosen(chooser, target, min, max, flag, reason, prompt)
       table.insert(cards_data, t)
     end
   end
-  local ret = self:askForPoxi(chooser, "AskForCardsChosen", cards_data, data, false)
+
+  local poxiParams = { ---@type askToPoxiParams
+    poxi_type = "AskForCardsChosen",
+    data = cards_data,
+    extra_data = data,
+    cancelable = false
+  }
+
+  local ret = self:askToPoxi(player, poxiParams)
   local new_ret = table.filter(ret, function(id) return id ~= -1 end)
   local hidden_num = #ret - #new_ret
   if hidden_num > 0 then

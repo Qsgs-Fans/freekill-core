@@ -317,7 +317,7 @@ end
 ---@param cancelable? boolean @ 是否可取消
 ---@return integer[] @ 选择的牌ID数组
 ---@deprecated
-function Room:askForPoxi(player, poxi_type, data, extra_data, cancelable)
+function CompatAskFor:askForPoxi(player, poxi_type, data, extra_data, cancelable)
   cancelable = (cancelable == nil) and true or cancelable
 
   local params = { ---@type askToPoxiParams
@@ -329,5 +329,33 @@ function Room:askForPoxi(player, poxi_type, data, extra_data, cancelable)
 
   return self:askToPoxi(player, params)
 end
+
+--- 完全类似askForCardChosen，但是可以选择多张牌。
+--- 相应的，返回的是id的数组而不是单个id。
+---@param chooser ServerPlayer @ 要被询问的人
+---@param target ServerPlayer @ 被选牌的人
+---@param min integer @ 最小选牌数
+---@param max integer @ 最大选牌数
+---@param flag any @ 用"hej"三个字母的组合表示能选择哪些区域, h 手牌区, e - 装备区, j - 判定区
+---可以通过flag.card_data = {{牌堆1名, 牌堆1ID表},...}来定制能选择的牌
+---@param reason string @ 原因，一般是技能名
+---@param prompt? string @ 提示信息
+---@return integer[] @ 选择的id
+---@deprecated
+function CompatAskFor:askForCardsChosen(chooser, target, min, max, flag, reason, prompt)
+  prompt = prompt or ""
+
+  local params = { ---@type askToChooseCardsParams
+    min = min,
+    max = max,
+    target = target,
+    flag = flag,
+    skill_name = reason,
+    prompt = prompt
+  }
+
+  return self:askToChooseCards(chooser, params)
+end
+
 
 return CompatAskFor
