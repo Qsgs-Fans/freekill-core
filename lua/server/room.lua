@@ -971,7 +971,7 @@ function Room:askToUseActiveSkill(player, params)
   }
 end
 
-Room.askForUseViewAsSkill = Room.askToUseActiveSkill
+Room.askToUseViewAsSkill = Room.askToUseActiveSkill
 
 ---@class AskToDiscardParams: AskToUseActiveSkillParams
 ---@field min_num integer @ 最小值
@@ -1267,7 +1267,7 @@ end
 
 ---@class AskToYijiParams: AskToChoosePlayersParams
 ---@field cards? integer[] @ 要分配的卡牌。默认拥有的所有牌
----@field expand_pile? string|integer[] @ 可选私人牌堆名称，如要分配你武将牌上的牌请填写
+---@field expand_pile? string|integer[] @ 可选私人牌堆名称，或额外可选牌
 ---@field single_max? integer|table @ 限制每人能获得的最大牌数。输入整数或(以角色id为键以整数为值)的表
 ---@field skip? boolean @ 是否跳过移动。默认不跳过
 
@@ -2087,27 +2087,30 @@ function Room:handleUseCardReply(player, data)
   end
 end
 
+---@class AskToUseRealCardParams
+---@field pattern string|integer[] @ 选卡规则，或可选的牌id表
+---@field skill_name? string @ 烧条时显示的技能名
+---@field prompt? string @ 询问提示信息。默认为：请使用一张牌
+---@field extra_data? UseExtraData|table @ 额外信息，因技能而异了
+---@field cancelable? boolean @ 是否可以取消。默认可以取消
+---@field skip? boolean @ 是否跳过使用。默认不跳过
+---@field expand_pile? string|integer[] @ 可选私人牌堆名称，或额外可选牌
 
-
---- 询问玩家从一些实体牌忠选一个使用。默认无次数限制，与askForUseCard主要区别是不能调用转化技
+--- 询问玩家从一些实体牌中选一个使用。默认无次数限制，与askForUseCard主要区别是不能调用转化技
 ---@param player ServerPlayer @ 要询问的玩家
----@param pattern string|integer[] @ 选卡规则，或可选的牌id表
----@param skillName? string @ 技能名，用于焦点提示
----@param prompt? string @ 询问提示信息。默认为：请使用一张牌
----@param extra_data? UseExtraData|table @ 额外信息，因技能而异了
----@param cancelable? boolean @ 是否可以取消。默认可以取消
----@param skipUse? boolean @ 是否跳过使用。默认不跳过
+---@param params AskToUseRealCardParams @ 各种变量
 ---@return UseCardDataSpec? @ 返回卡牌使用框架。取消使用则返回空
-function Room:askForUseRealCard(player, pattern, skillName, prompt, extra_data, cancelable, skipUse)
-  pattern = type(pattern) == "string" and pattern or tostring(Exppattern{ id = pattern })
-  skillName = skillName or ""
-  prompt = prompt or ("#AskForUseOneCard:::"..skillName)
-  if (cancelable == nil) then cancelable = true end
-  extra_data = extra_data and table.simpleClone(extra_data) or {}
+function Room:askToUseRealCard(player, params)
+  params.pattern = type(params.pattern) == "string" and params.pattern or tostring(Exppattern{ id = params.pattern })
+  params.skill_name = params.skill_name or ""
+  params.prompt = params.prompt or ("#AskForUseOneCard:::"..params.skill_name)
+  if (params.cancelable == nil) then params.cancelable = true end
+  local extra_data = params.extra_data and table.simpleClone(params.extra_data) or {}
   if extra_data.bypass_times == nil then extra_data.bypass_times = true end
   if extra_data.extraUse == nil then extra_data.extraUse = true end
+  local pattern, skillName, prompt, cancelable, skipUse = params.pattern, params.skill_name, params.prompt, params.cancelable, params.skip
 
-  local pile = extra_data.expand_pile
+  local pile = params.expand_pile or extra_data.expand_pile
   local cards = player:getCardIds("h")
   if type(pile) == "string" then
     table.insertTable(cards, player:getPile(pile))
@@ -2127,7 +2130,7 @@ function Room:askForUseRealCard(player, pattern, skillName, prompt, extra_data, 
   extra_data.skillName = skillName
   if #cardIds == 0 and not cancelable then return end
   extra_data.cardIds = cardIds
-  local _, dat = self:askForUseViewAsSkill(player, "userealcard_skill", prompt, cancelable, extra_data)
+  local _, dat = self:askToUseViewAsSkill(player, { skill_name = "userealcard_skill", prompt = prompt, cancelable = cancelable, extra_data = extra_data })
   if (not cancelable) and (not dat) then
     for _, cid in ipairs(cardIds) do
       local card = Fk:getCardById(cid)
@@ -2141,7 +2144,7 @@ function Room:askForUseRealCard(player, pattern, skillName, prompt, extra_data, 
   if not dat then return end
   local use = {
     from = player,
-    tos = table.map(dat.targets, Util.Id2PlayerMapper),
+    tos = dat.targets,
     card = Fk:getCardById(dat.cards[1]),
     extraUse = extra_data.extraUse,
   }
@@ -2151,6 +2154,13 @@ function Room:askForUseRealCard(player, pattern, skillName, prompt, extra_data, 
   return use
 end
 
+---@class AskToUseCardParams
+---@field skill_name? string @ 烧条时显示的技能名
+---@field pattern string|integer[] @ 使用牌的规则
+---@field prompt? string @ 提示信息
+---@field cancelable? boolean @ 是否可以取消。默认可以取消
+---@field extra_data? UseExtraData|table @ 额外信息，因技能而异了
+---@field event_data? CardEffectData @ 事件信息
 
 -- available extra_data:
 -- * must_targets: integer[]
@@ -2161,18 +2171,18 @@ end
 ---
 --- 询问玩家使用一张牌。
 ---@param player ServerPlayer @ 要询问的玩家
----@param card_name? string @ 使用牌的牌名，若pattern指定了则可随意写，它影响的是烧条的提示信息
----@param pattern? string @ 使用牌的规则，默认就是card_name的值
----@param prompt? string @ 提示信息
----@param cancelable? boolean @ 能否点取消
----@param extra_data? UseExtraData @ 额外信息
----@param event_data? CardEffectEvent @ 事件信息
+---@param params AskToUseCardParams @ 各种变量
 ---@return UseCardDataSpec? @ 返回关于本次使用牌的数据，以便后续处理
-function Room:askForUseCard(player, card_name, pattern, prompt, cancelable, extra_data, event_data)
-  pattern = pattern or card_name
+function Room:askToUseCard(player, params)
+  params.cancelable = (params.cancelable == nil) and true or params.cancelable
+  local extra_data = params.extra_data and table.simpleClone(params.extra_data) or {}
+  if extra_data.bypass_times == nil then extra_data.bypass_times = true end
+  params.prompt = params.prompt or ""
+  local card_name, prompt, cancelable, event_data = params.skill_name, params.prompt, params.cancelable, params.event_data
   if event_data and (event_data.disresponsive or table.contains(event_data.disresponsiveList or Util.DummyTable, player.id)) then
     return nil
   end
+  local pattern = params.pattern
 
   if event_data and event_data.prohibitedCardNames then
     local exp = Exppattern:Parse(pattern)
@@ -2186,10 +2196,6 @@ function Room:askForUseCard(player, card_name, pattern, prompt, cancelable, extr
   end
 
   local command = "AskForUseCard"
-  cancelable = (cancelable == nil) and true or cancelable
-  extra_data = extra_data or {}
-  if extra_data.bypass_times == nil then extra_data.bypass_times = true end
-  prompt = prompt or ""
 
   local askForUseCardData = {
     user = player,
@@ -2244,30 +2250,27 @@ end
 
 --- 询问一名玩家打出一张牌。
 ---@param player ServerPlayer @ 要询问的玩家
----@param card_name string @ 牌名
----@param pattern? string @ 牌的规则
----@param prompt? string @ 提示信息
----@param cancelable? boolean @ 能否取消
----@param extra_data? any @ 额外数据
----@param effectData? CardEffectEvent @ 关联的卡牌生效流程
+---@param params AskToUseCardParams @ 各种变量
 ---@return Card? @ 打出的牌
-function Room:askForResponse(player, card_name, pattern, prompt, cancelable, extra_data, effectData)
-  if effectData and (effectData.disresponsive or table.contains(effectData.disresponsiveList or Util.DummyTable, player.id)) then
+function Room:askToResponse(player, params)
+  params.cancelable = (params.cancelable == nil) and true or params.cancelable
+  local extra_data = params.extra_data and table.simpleClone(params.extra_data) or {}
+  params.prompt = params.prompt or ""
+  local card_name, pattern, prompt, cancelable, event_data =
+    params.skill_name, params.pattern, params.prompt,
+    params.cancelable, params.event_data
+  if event_data and (event_data.disresponsive or table.contains(event_data.disresponsiveList or Util.DummyTable, player.id)) then
     return nil
   end
 
   local command = "AskForResponseCard"
-  cancelable = (cancelable == nil) and true or cancelable
-  extra_data = extra_data or Util.DummyTable
-  pattern = pattern or card_name
-  prompt = prompt or ""
 
   local eventData = {
     user = player,
     cardName = card_name,
     pattern = pattern,
     extraData = extra_data,
-    eventData = effectData,
+    eventData = event_data,
   }
   self.logic:trigger(fk.AskForCardResponse, player, eventData)
 
@@ -2322,25 +2325,24 @@ end
 ---
 --- 函数名字虽然是“询问无懈可击”，不过其实也可以给别的牌用就是了。
 ---@param players ServerPlayer[] @ 要询问的玩家列表
----@param card_name string @ 询问的牌名，默认为无懈
----@param pattern string @ 牌的规则
----@param prompt? string @ 提示信息
----@param cancelable? boolean @ 能否点取消
----@param extra_data? any @ 额外信息
----@param effectData? CardEffectEvent @ 关联的卡牌生效流程
+---@param params AskToUseCardParams @ 各种变量
 ---@return UseCardDataSpec? @ 最终决胜出的卡牌使用信息
-function Room:askForNullification(players, card_name, pattern, prompt, cancelable, extra_data, effectData)
+function Room:askToNullification(players, params)
+  params.skill_name = params.skill_name or "nullification"
+  params.pattern = params.pattern or "nullification"
+  params.cancelable = (params.cancelable == nil) and true or params.cancelable
+  local extra_data = params.extra_data and table.simpleClone(params.extra_data) or {}
+  params.prompt = params.prompt or ""
+
+  local card_name, pattern, prompt, cancelable, event_data =
+    params.skill_name, params.pattern, params.prompt,
+    params.cancelable, params.event_data
   if #players == 0 then
-    self.logic:trigger(fk.AfterAskForNullification, nil, { eventData = effectData })
+    self.logic:trigger(fk.AfterAskForNullification, nil, { eventData = event_data })
     return nil
   end
 
   local command = "AskForUseCard"
-  card_name = card_name or "nullification"
-  cancelable = (cancelable == nil) and true or cancelable
-  extra_data = extra_data or Util.DummyTable
-  prompt = prompt or ""
-  pattern = pattern or card_name
 
   local useResult
   local disabledSkillNames = {}
@@ -2356,7 +2358,7 @@ function Room:askForNullification(players, card_name, pattern, prompt, cancelabl
       cardName = card_name,
       pattern = pattern,
       extraData = extra_data,
-      eventData = effectData,
+      eventData = event_data,
     }
     self.logic:trigger(fk.HandleAskForPlayCard, nil, eventData, true)
 
@@ -2383,23 +2385,27 @@ function Room:askForNullification(players, card_name, pattern, prompt, cancelabl
 
   local askForNullificationData = {
     result = useResult,
-    eventData = effectData,
+    eventData = event_data,
   }
   self.logic:trigger(fk.AfterAskForNullification, nil, askForNullificationData)
   return useResult
 end
+
+---@class AskToAGParams
+---@field id_list integer[] | Card[] @ 可选的卡牌列表
+---@field cancelable? boolean @ 能否点取消
+---@field skill_name? string @ 烧条时显示的技能名
 
 -- AG(a.k.a. Amazing Grace) functions
 -- Popup a box that contains many cards, then ask player to choose one
 
 --- 询问玩家从AG中选择一张牌。
 ---@param player ServerPlayer @ 要询问的玩家
----@param id_list integer[] | Card[] @ 可选的卡牌列表
----@param cancelable? boolean @ 能否点取消
----@param reason? string @ 原因
+---@param params AskToAGParams @ 各种变量
 ---@return integer @ 选择的卡牌
-function Room:askForAG(player, id_list, cancelable, reason)
-  id_list = Card:getIdList(id_list)
+function Room:askToAG(player, params)
+  params.id_list = Card:getIdList(params.id_list)
+  local id_list, cancelable, reason = params.id_list, params.cancelable, params.skill_name
   if #id_list == 1 and not cancelable then
     return id_list[1]
   end

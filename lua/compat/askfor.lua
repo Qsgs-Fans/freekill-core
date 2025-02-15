@@ -488,6 +488,7 @@ end
 ---@param noPut? boolean @ 是否进行放置牌操作
 ---@param areaNames? string[] @ 左侧提示信息
 ---@return table<"top"|"bottom", integer[]> @ 左侧提示信息
+---@deprecated
 function CompatAskFor:askForGuanxing(player, cards, top_limit, bottom_limit, customNotify, noPut, areaNames)
   -- 这一大堆都是来提前报错的
   local leng = #cards
@@ -528,6 +529,7 @@ end
 ---@param piles_name string[] @ 牌堆名，不足部分替换为“牌堆1、牌堆2...”
 ---@param customNotify? string @ 自定义读条操作提示
 ---@return integer[][] @ 交换后的结果
+---@deprecated
 function CompatAskFor:askForExchange(player, piles, piles_name, customNotify)
   piles_name = piles_name or Util.DummyTable
   local x = #piles - #piles_name
@@ -545,6 +547,150 @@ function CompatAskFor:askForExchange(player, piles, piles_name, customNotify)
   }
 
   return self:askToExchange(player, params)
+end
+
+--- 询问玩家从一些实体牌中选一个使用。默认无次数限制，与askForUseCard主要区别是不能调用转化技
+---@param player ServerPlayer @ 要询问的玩家
+---@param pattern string|integer[] @ 选卡规则，或可选的牌id表
+---@param skillName? string @ 技能名，用于焦点提示
+---@param prompt? string @ 询问提示信息。默认为：请使用一张牌
+---@param extra_data? UseExtraData|table @ 额外信息，因技能而异了
+---@param cancelable? boolean @ 是否可以取消。默认可以取消
+---@param skipUse? boolean @ 是否跳过使用。默认不跳过
+---@return UseCardDataSpec? @ 返回卡牌使用框架。取消使用则返回空
+---@deprecated
+function Room:askForUseRealCard(player, pattern, skillName, prompt, extra_data, cancelable, skipUse)
+  pattern = type(pattern) == "string" and pattern or tostring(Exppattern{ id = pattern })
+  skillName = skillName or ""
+  prompt = prompt or ("#AskForUseOneCard:::" .. skillName)
+  if (cancelable == nil) then cancelable = true end
+  extra_data = extra_data and table.simpleClone(extra_data) or {}
+  if extra_data.bypass_times == nil then extra_data.bypass_times = true end
+  if extra_data.extraUse == nil then extra_data.extraUse = true end
+
+  local params = { ---@type AskToUseRealCardParams
+    pattern = pattern,
+    skill_name = skillName,
+    prompt = prompt,
+    extra_data = extra_data,
+    cancelable = cancelable,
+    skip = skipUse,
+    expand_pile = extra_data.expand_pile
+  }
+  return self:askToUseRealCard(player, params)
+end
+
+
+-- available extra_data:
+-- * must_targets: integer[]
+-- * exclusive_targets: integer[]
+-- * fix_targets: integer[]
+-- * bypass_distances: boolean
+-- * bypass_times: boolean
+---
+--- 询问玩家使用一张牌。
+---@param player ServerPlayer @ 要询问的玩家
+---@param card_name? string @ 使用牌的牌名，若pattern指定了则可随意写，它影响的是烧条的提示信息
+---@param pattern? string @ 使用牌的规则，默认就是card_name的值
+---@param prompt? string @ 提示信息
+---@param cancelable? boolean @ 能否点取消
+---@param extra_data? UseExtraData @ 额外信息
+---@param event_data? CardEffectData @ 事件信息
+---@return UseCardDataSpec? @ 返回关于本次使用牌的数据，以便后续处理
+---@deprecated
+function CompatAskFor:askForUseCard(player, card_name, pattern, prompt, cancelable, extra_data, event_data)
+  pattern = pattern or card_name
+  cancelable = (cancelable == nil) and true or cancelable
+  extra_data = extra_data and table.simpleClone(extra_data) or {}
+  if extra_data.bypass_times == nil then extra_data.bypass_times = true end
+  prompt = prompt or ""
+
+  local params = { ---@type AskToUseCardParams
+    pattern = pattern,
+    skill_name = card_name,
+    prompt = prompt,
+    cancelable = cancelable,
+    extra_data = extra_data,
+    event_data = event_data
+  }
+  return self:askToUseCard(player, params)
+end
+
+--- 询问一名玩家打出一张牌。
+---@param player ServerPlayer @ 要询问的玩家
+---@param card_name string @ 牌名
+---@param pattern? string @ 牌的规则
+---@param prompt? string @ 提示信息
+---@param cancelable? boolean @ 能否取消
+---@param extra_data? any @ 额外数据
+---@param effectData? CardEffectData @ 关联的卡牌生效流程
+---@return Card? @ 打出的牌
+---@deprecated
+function CompatAskFor:askForResponse(player, card_name, pattern, prompt, cancelable, extra_data, effectData)
+  pattern = pattern or card_name
+  cancelable = (cancelable == nil) and true or cancelable
+  extra_data = extra_data or Util.DummyTable
+  prompt = prompt or ""
+
+  local params = { ---@type AskToUseCardParams
+    pattern = pattern,
+    skill_name = card_name,
+    prompt = prompt,
+    cancelable = cancelable,
+    extra_data = extra_data,
+    event_data = effectData
+  }
+  return self:askToResponse(player, params)
+end
+
+--- 同时询问多名玩家是否使用某一张牌。
+---
+--- 函数名字虽然是“询问无懈可击”，不过其实也可以给别的牌用就是了。
+---@param players ServerPlayer[] @ 要询问的玩家列表
+---@param card_name string @ 询问的牌名，默认为无懈
+---@param pattern string @ 牌的规则
+---@param prompt? string @ 提示信息
+---@param cancelable? boolean @ 能否点取消
+---@param extra_data? any @ 额外信息
+---@param effectData? CardEffectData @ 关联的卡牌生效流程
+---@return UseCardDataSpec? @ 最终决胜出的卡牌使用信息
+function CompatAskFor:askForNullification(players, card_name, pattern, prompt, cancelable, extra_data, effectData)
+  card_name = card_name or "nullification"
+  cancelable = (cancelable == nil) and true or cancelable
+  extra_data = extra_data or Util.DummyTable
+  prompt = prompt or ""
+  pattern = pattern or card_name
+
+  local params = { ---@type AskToUseCardParams
+    pattern = pattern,
+    skill_name = card_name,
+    prompt = prompt,
+    cancelable = cancelable,
+    extra_data = extra_data,
+    event_data = effectData
+  }
+  return self:askToNullification(players, params)
+end
+
+-- AG(a.k.a. Amazing Grace) functions
+-- Popup a box that contains many cards, then ask player to choose one
+
+--- 询问玩家从AG中选择一张牌。
+---@param player ServerPlayer @ 要询问的玩家
+---@param id_list integer[] | Card[] @ 可选的卡牌列表
+---@param cancelable? boolean @ 能否点取消
+---@param reason? string @ 原因
+---@return integer @ 选择的卡牌
+---@deprecated
+function CompatAskFor:askForAG(player, id_list, cancelable, reason)
+  id_list = Card:getIdList(id_list)
+
+  local params = { ---@type AskToAGParams
+    id_list = id_list,
+    skill_name = reason,
+    cancelable = cancelable,
+  }
+  return self:askToAG(player, params)
 end
 
 
