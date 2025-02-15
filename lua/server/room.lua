@@ -975,7 +975,7 @@ end
 
 Room.askForUseViewAsSkill = Room.askToUseActiveSkill
 
----@class askToDiscardParams: AskToUseActiveSkillParams
+---@class AskToDiscardParams: AskToUseActiveSkillParams
 ---@field min_num integer @ 最小值
 ---@field max_num integer @ 最大值
 ---@field include_equip? boolean @ 能不能弃装备区？
@@ -986,7 +986,7 @@ Room.askForUseViewAsSkill = Room.askToUseActiveSkill
 ---
 --- 在这个函数里面牌已经被弃掉了（除非skipDiscard为true）。
 ---@param player ServerPlayer @ 弃牌角色
----@param params askToDiscardParams @ 各种变量
+---@param params AskToDiscardParams @ 各种变量
 ---@return integer[] @ 弃掉的牌的id列表，可能是空的
 function Room:askToDiscard(player, params)
   local skillName = params.skill_name
@@ -1055,7 +1055,7 @@ function Room:askToDiscard(player, params)
   return toDiscard
 end
 
----@class askToChoosePlayersParams: AskToUseActiveSkillParams
+---@class AskToChoosePlayersParams: AskToUseActiveSkillParams
 ---@field targets ServerPlayer[] @ 可以选的目标范围
 ---@field min_num integer @ 最小值
 ---@field max_num integer @ 最大值
@@ -1063,7 +1063,7 @@ end
 
 --- 询问一名玩家从targets中选择若干名玩家出来。
 ---@param player ServerPlayer @ 要做选择的玩家
----@param params askToChoosePlayersParams @ 各种变量
+---@param params AskToChoosePlayersParams @ 各种变量
 ---@return ServerPlayer[] @ 选择的玩家列表，可能为空
 function Room:askToChoosePlayers(player, params)
   local maxNum, minNum = params.max_num, params.min_num
@@ -1101,7 +1101,7 @@ function Room:askToChoosePlayers(player, params)
   end
 end
 
----@class askToCardsParams: AskToUseActiveSkillParams
+---@class AskToCardsParams: AskToUseActiveSkillParams
 ---@field min_num integer @ 最小值
 ---@field max_num integer @ 最大值
 ---@field include_equip? boolean @ 能不能选装备
@@ -1112,7 +1112,7 @@ end
 ---
 --- 与askForDiscard类似，但是不对选择的牌进行操作就是了。
 ---@param player ServerPlayer @ 要询问的玩家
----@param params askToCardsParams @ 各种变量
+---@param params AskToCardsParams @ 各种变量
 ---@return integer[] @ 选择的牌的id列表，可能是空的
 function Room:askToCards(player, params)
   local maxNum, minNum, expand_pile = params.max_num, params.min_num, params.expand_pile
@@ -1161,14 +1161,14 @@ function Room:askToCards(player, params)
   return chosenCards
 end
 
----@class askToChooseCardAndPlayersParams: askToChoosePlayersParams
+---@class AskToChooseCardAndPlayersParams: AskToChoosePlayersParams
 ---@field pattern? string @ 选牌规则
 
 --- 询问玩家选择1张牌和若干名角色。
 ---
 --- 返回两个值，第一个是选择的目标列表，第二个是选择的那张牌的id
 ---@param player ServerPlayer @ 要询问的玩家
----@param params askToChooseCardAndPlayersParams @ 各种变量
+---@param params AskToChooseCardAndPlayersParams @ 各种变量
 ---@return ServerPlayer[], integer?
 function Room:askToChooseCardAndPlayers(player, params)
   local maxNum, minNum = params.max_num, params.min_num
@@ -1213,7 +1213,7 @@ function Room:askToChooseCardAndPlayers(player, params)
   end
 end
 
----@class askToChooseCardsAndPlayersParams: askToChooseCardAndPlayersParams
+---@class AskToChooseCardsAndPlayersParams: AskToChooseCardAndPlayersParams
 ---@field min_card_num integer @ 选卡牌最小值
 ---@field max_card_num integer @ 选卡牌最大值
 ---@field expand_pile? string|integer[] @ 可选私人牌堆名称，或额外可选牌
@@ -1222,7 +1222,7 @@ end
 ---
 --- 返回两个值，第一个是选择目标id列表，第二个是选择的牌id列表，第三个是否按了确定
 ---@param player ServerPlayer @ 要询问的玩家
----@param params askToChooseCardsAndPlayersParams @ 各种变量
+---@param params AskToChooseCardsAndPlayersParams @ 各种变量
 ---@return ServerPlayer[], integer[], boolean @ 第一个是选择目标id列表，第二个是选择的牌id列表，第三个是否按了确定
 function Room:askToChooseCardsAndPlayers(player, params)
   local maxTargetNum, minTargetNum, maxCardNum, minCardNum = params.max_num, params.min_num, params.max_card_num, params.min_card_num
@@ -1267,7 +1267,7 @@ function Room:askToChooseCardsAndPlayers(player, params)
   end
 end
 
----@class askToYijiParams: askToChoosePlayersParams
+---@class AskToYijiParams: AskToChoosePlayersParams
 ---@field cards? integer[] @ 要分配的卡牌。默认拥有的所有牌
 ---@field expand_pile? string|integer[] @ 可选私人牌堆名称，如要分配你武将牌上的牌请填写
 ---@field single_max? integer|table @ 限制每人能获得的最大牌数。输入整数或(以角色id为键以整数为值)的表
@@ -1275,7 +1275,7 @@ end
 
 --- 询问将卡牌分配给任意角色。
 ---@param player ServerPlayer @ 要询问的玩家
----@param params askToYijiParams @ 各种变量
+---@param params AskToYijiParams @ 各种变量
 ---@return table<integer, integer[]> @ 返回一个表，键为角色id，值为分配给其的牌id数组
 function Room:askToYiji(player, params)
   local targets = params.targets or self.alive_players
@@ -1366,14 +1366,14 @@ function Room:askToYiji(player, params)
   return list
 end
 
----@class askToChooseGeneralParams
+---@class AskToChooseGeneralParams
 ---@field generals string[] @ 可选武将
 ---@field n integer @ 可选数量，默认为1
 ---@field no_convert? boolean @ 可否变更，默认可
 
 --- 询问玩家选择一名武将。
 ---@param player ServerPlayer @ 询问目标
----@param params askToChooseGeneralParams @ 各种变量
+---@param params AskToChooseGeneralParams @ 各种变量
 ---@return string|string[] @ 选择的武将
 function Room:askToChooseGeneral(player, params)
   local command = "AskForGeneral"
@@ -1425,14 +1425,14 @@ function Room:askToChooseKingdom(players)
   end
 end
 
----@class askToChooseCardParams: AskToUseActiveSkillParams
+---@class AskToChooseCardParams: AskToUseActiveSkillParams
 ---@field target ServerPlayer @ 被选牌的人
 ---@field flag string | table @ 用"hej"三个字母的组合表示能选择哪些区域, h 手牌区, e - 装备区, j - 判定区
 ---@field skill_name string @ 原因，一般是技能名
 
 --- 询问player，选择target的一张牌。
 ---@param player ServerPlayer @ 要被询问的人
----@param params askToChooseCardParams @ 各种变量
+---@param params AaskToChooseCardParams @ 各种变量
 ---@return integer @ 选择的卡牌id
 function Room:askToChooseCard(player, params)
   local command = "AskForCardChosen"
@@ -1470,7 +1470,7 @@ function Room:askToChooseCard(player, params)
   return result
 end
 
----@class askToPoxiParams
+---@class AskToPoxiParams
 ---@field poxi_type string @ poxi关键词
 ---@field data any @ 牌堆信息
 ---@field extra_data any @ 额外信息
@@ -1482,7 +1482,7 @@ end
 ---
 --- 注意一定要返回一个表，毕竟本质上是选卡函数
 ---@param player ServerPlayer @ 要被询问的人
----@param params askToPoxiParams @ 各种变量
+---@param params AskToPoxiParams @ 各种变量
 ---@return integer[] @ 选择的牌ID数组
 function Room:askToPoxi(player, params)
   params.cancelable = (params.cancelable == nil) and true or params.cancelable
@@ -1507,14 +1507,14 @@ function Room:askToPoxi(player, params)
   end
 end
 
----@class askToChooseCardsParams: askToChooseCardParams
+---@class AskToChooseCardsParams: AskToChooseCardParams
 ---@field min integer @ 最小选牌数
 ---@field max integer @ 最大选牌数
 
 --- 完全类似askForCardChosen，但是可以选择多张牌。
 --- 相应的，返回的是id的数组而不是单个id。
 ---@param player ServerPlayer @ 要被询问的人
----@param params askToChooseCardsParams @ 各种变量
+---@param params AskToChooseCardsParams @ 各种变量
 ---@return integer[] @ 选择的id
 function Room:askToChooseCards(player, params)
   local target, flag, reason, prompt = params.target, params.flag, params.skill_name, params.prompt
@@ -1586,77 +1586,81 @@ function Room:askToChooseCards(player, params)
   return new_ret
 end
 
+---@class AskToChoiceParams
+---@field choices string[] @ 可选选项列表
+---@field skill_name? string @ 技能名
+---@field prompt? string @ 提示信息
+---@field detailed? boolean @ 选项是否详细描述
+---@field all_choices? string[] @ 所有选项（不可选变灰）
+---@field cancelable? boolean @ 是否可以点取消
+
 --- 询问一名玩家从众多选项中选择一个。
 ---@param player ServerPlayer @ 要询问的玩家
----@param choices string[] @ 可选选项列表
----@param skill_name? string @ 技能名
----@param prompt? string @ 提示信息
----@param detailed? boolean @ 选项详细描述
----@param all_choices? string[] @ 所有选项（不可选变灰）
+---@param params AskToChoiceParams @ 各种变量
 ---@return string @ 选择的选项
-function Room:askForChoice(player, choices, skill_name, prompt, detailed, all_choices)
-  if #choices == 1 and not all_choices then return choices[1] end
-  assert(not all_choices or table.every(choices, function(c) return table.contains(all_choices, c) end))
+function Room:askToChoice(player, params)
+  if #params.choices == 1 and not params.all_choices then return params.choices[1] end
+  assert(not params.all_choices or table.every(params.choices, function(c) return table.contains(params.all_choices, c) end))
   local command = "AskForChoice"
-  prompt = prompt or ""
-  all_choices = all_choices or choices
+  params.prompt = params.prompt or ""
+  params.all_choices = params.all_choices or params.choices
 
   local req = Request:new(player, command)
-  req.focus_text = skill_name
+  req.focus_text = params.skill_name
   req.receive_decode = false -- 这个不用decode
   req:setData(player, {
-    choices, all_choices, skill_name, prompt, detailed
+    params.choices, params.all_choices, params.skill_name, params.prompt, params.detailed
   })
   local result = req:getResult(player)
 
   if result == "" then
-    if table.contains(choices, "Cancel") then
+    if table.contains(params.choices, "Cancel") then
       result = "Cancel"
     else
-      result = choices[1]
+      result = params.choices[1]
     end
   end
   return result
 end
+
+---@class AskToChoicesParams: AskToChoiceParams
+---@field min_num number @ 最少选择项数
+---@field max_num number @ 最多选择项数
 
 --- 询问一名玩家从众多选项中勾选任意项。
 ---@param player ServerPlayer @ 要询问的玩家
----@param choices string[] @ 可选选项列表
----@param minNum number @ 最少选择项数
----@param maxNum number @ 最多选择项数
----@param skill_name? string @ 技能名
----@param prompt? string @ 提示信息
----@param cancelable? boolean @ 是否可取消
----@param detailed? boolean @ 选项详细描述
----@param all_choices? string[] @ 所有选项（不可选变灰）
+---@param params AskToChoicesParams @ 各种变量
 ---@return string[] @ 选择的选项
-function Room:askForChoices(player, choices, minNum, maxNum, skill_name, prompt, cancelable, detailed, all_choices)
-  cancelable = (cancelable == nil) and true or cancelable
-  if #choices <= minNum and not all_choices and not cancelable then return choices end
+function Room:askToChoices(player, params)
+  local minNum, maxNum = params.min_num, params.max_num
+  params.cancelable = (params.cancelable == nil) and true or params.cancelable
+  if #params.choices <= minNum and not params.all_choices and not params.cancelable then return params.choices end
   assert(minNum <= maxNum)
-  assert(not all_choices or table.every(choices, function(c) return table.contains(all_choices, c) end))
+  assert(not params.all_choices or table.every(params.choices, function(c) return table.contains(params.all_choices, c) end))
 
   local command = "AskForChoices"
-  skill_name = skill_name or ""
-  prompt = prompt or ""
-  all_choices = all_choices or choices
-  detailed = detailed or false
+  params.skill_name = params.skill_name or ""
+  params.prompt = params.prompt or ""
+  params.all_choices = params.all_choices or params.choices
+  params.detailed = params.detailed or false
 
   local req = Request:new(player, command)
-  req.focus_text = skill_name
+  req.focus_text = params.skill_name
   req:setData(player, {
-    choices, all_choices, {minNum, maxNum}, cancelable, skill_name, prompt, detailed
+    params.choices, params.all_choices, {minNum, maxNum}, params.cancelable, params.skill_name, params.prompt, params.detailed
   })
   local result = req:getResult(player)
   if result == "" then
-    if cancelable then
+    if params.cancelable then
       return {}
     else
-      return table.random(choices, math.min(minNum, #choices))
+      return table.random(params.choices, math.min(minNum, #params.choices))
     end
   end
   return result
 end
+
+---@class askToSkillInvokeParams
 
 --- 询问玩家是否发动技能。
 ---@param player ServerPlayer @ 要询问的玩家

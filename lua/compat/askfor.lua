@@ -55,7 +55,7 @@ function CompatAskFor:askForDiscard(player, minNum, maxNum, includeEquip, skillN
   no_indicate = no_indicate or false
   pattern = pattern or "."
 
-  local params = { ---@type askToDiscardParams
+  local params = { ---@type AskToDiscardParams
     min_num = minNum,
     max_num = maxNum,
     include_equip = includeEquip,
@@ -89,7 +89,7 @@ function CompatAskFor:askForChoosePlayers(player, targets, minNum, maxNum, promp
   cancelable = (cancelable == nil) and true or cancelable
   no_indicate = no_indicate or false
 
-  local params = { ---@type askToChoosePlayersParams
+  local params = { ---@type AskToChoosePlayersParams
     targets = table.map(targets, Util.Id2PlayerMapper),
     min_num = minNum,
     max_num = maxNum,
@@ -127,7 +127,7 @@ function CompatAskFor:askForCard(player, minNum, maxNum, includeEquip, skillName
   pattern = pattern or (includeEquip and "." or ".|.|.|hand")
   prompt = prompt or ("#AskForCard:::" .. maxNum .. ":" .. minNum)
 
-  local params = { ---@type askToCardsParams
+  local params = { ---@type AskToCardsParams
     min_num = minNum,
     max_num = maxNum,
     include_equip = includeEquip,
@@ -164,7 +164,7 @@ function CompatAskFor:askForChooseCardAndPlayers(player, targets, minNum, maxNum
   no_indicate = no_indicate or false
   pattern = pattern or "."
 
-  local params = { ---@type askToChooseCardAndPlayersParams
+  local params = { ---@type AskToChooseCardAndPlayersParams
     targets = table.map(targets, Util.Id2PlayerMapper),
     min_num = minNum,
     max_num = maxNum,
@@ -204,7 +204,7 @@ function CompatAskFor:askForChooseCardsAndPlayers(player, minCardNum, maxCardNum
   no_indicate = no_indicate or false
   pattern = pattern or "."
 
-  local params = { ---@type askToChooseCardsAndPlayersParams
+  local params = { ---@type AskToChooseCardsAndPlayersParams
     targets = table.map(targets, Util.Id2PlayerMapper),
     min_card_num = minCardNum,
     max_card_num = maxCardNum,
@@ -245,7 +245,7 @@ function CompatAskFor:askForYiji(player, cards, targets, skillName, minNum, maxN
   minNum = minNum or 0
   maxNum = maxNum or #cards
 
-  local params = { ---@type askToYijiParams
+  local params = { ---@type AskToYijiParams
     targets = targets,
     min_num = minNum,
     max_num = maxNum,
@@ -269,7 +269,7 @@ end
 function CompatAskFor:askForGeneral(player, generals, n, noConvert)
   n = n or 1
 
-  local params = { ---@type askToChooseGeneralParams
+  local params = { ---@type AskToChooseGeneralParams
     generals = generals,
     n = n,
     no_convert = noConvert
@@ -295,7 +295,7 @@ end
 function CompatAskFor:askForCardChosen(chooser, target, flag, reason, prompt)
   prompt = prompt or ""
 
-  local params = { ---@type askToChooseCardParams
+  local params = { ---@type AskToChooseCardParams
     target = target,
     flag = flag,
     skill_name = reason,
@@ -320,7 +320,7 @@ end
 function CompatAskFor:askForPoxi(player, poxi_type, data, extra_data, cancelable)
   cancelable = (cancelable == nil) and true or cancelable
 
-  local params = { ---@type askToPoxiParams
+  local params = { ---@type AskToPoxiParams
     poxi_type = poxi_type,
     data = data,
     extra_data = extra_data,
@@ -345,7 +345,7 @@ end
 function CompatAskFor:askForCardsChosen(chooser, target, min, max, flag, reason, prompt)
   prompt = prompt or ""
 
-  local params = { ---@type askToChooseCardsParams
+  local params = { ---@type AskToChooseCardsParams
     min = min,
     max = max,
     target = target,
@@ -355,6 +355,289 @@ function CompatAskFor:askForCardsChosen(chooser, target, min, max, flag, reason,
   }
 
   return self:askToChooseCards(chooser, params)
+end
+
+--- 询问一名玩家从众多选项中选择一个。
+---@param player ServerPlayer @ 要询问的玩家
+---@param choices string[] @ 可选选项列表
+---@param skill_name? string @ 技能名
+---@param prompt? string @ 提示信息
+---@param detailed? boolean @ 选项详细描述
+---@param all_choices? string[] @ 所有选项（不可选变灰）
+---@return string @ 选择的选项
+---@deprecated
+function CompatAskFor:askForChoice(player, choices, skill_name, prompt, detailed, all_choices)
+  local params = { ---@type AskToChoiceParams
+    choices = choices,
+    skill_name = skill_name,
+    prompt = prompt,
+    detailed = detailed,
+    all_choices = all_choices
+  }
+
+  return self:askToChoice(player, params)
+end
+
+--- 询问一名玩家从众多选项中勾选任意项。
+---@param player ServerPlayer @ 要询问的玩家
+---@param choices string[] @ 可选选项列表
+---@param minNum number @ 最少选择项数
+---@param maxNum number @ 最多选择项数
+---@param skill_name? string @ 技能名
+---@param prompt? string @ 提示信息
+---@param cancelable? boolean @ 是否可取消
+---@param detailed? boolean @ 选项详细描述
+---@param all_choices? string[] @ 所有选项（不可选变灰）
+---@return string[] @ 选择的选项
+---@deprecated
+function Room:CompatAskFor(player, choices, minNum, maxNum, skill_name, prompt, cancelable, detailed, all_choices)
+  cancelable = (cancelable == nil) and true or cancelable
+  local params = { ---@type AskToChoiceParams
+    choices = choices,
+    min_num = minNum,
+    max_num = maxNum,
+    skill_name = skill_name,
+    prompt = prompt,
+    detailed = detailed,
+    all_choices = all_choices
+  }
+
+  return self:askToChoices(player, params)
+end
+
+--- 询问玩家是否发动技能。
+---@param player ServerPlayer @ 要询问的玩家
+---@param skill_name string @ 技能名
+---@param data? any @ 未使用
+---@param prompt? string @ 提示信息
+---@return boolean
+function Room:askForSkillInvoke(player, skill_name, data, prompt)
+  local command = "AskForSkillInvoke"
+  local req = Request:new(player, command)
+  req.focus_text = skill_name
+  req.receive_decode = false -- 这个返回的都是"1" 不用decode
+  req:setData(player, { skill_name, prompt })
+  return req:getResult(player) ~= ""
+end
+
+--- 询问玩家在自定义大小的框中排列卡牌（观星、交换、拖拽选牌）
+---@param player ServerPlayer @ 要询问的玩家
+---@param skillname string @ 烧条技能名
+---@param cardMap any @ { "牌堆1卡表", "牌堆2卡表", …… }
+---@param prompt? string @ 操作提示
+---@param box_size? integer @ 数值对应卡牌平铺张数的最大值，为0则有单个卡位，每张卡占100单位长度，默认为7
+---@param max_limit? integer[] @ 每一行牌上限 { 第一行, 第二行，…… }，不填写则不限
+---@param min_limit? integer[] @ 每一行牌下限 { 第一行, 第二行，…… }，不填写则不限
+---@param free_arrange? boolean @ 是否允许自由排列第一行卡的位置，默认不能
+---@param pattern? string @ 控制第一行卡牌是否可以操作，不填写默认均可操作
+---@param poxi_type? string @ 控制每张卡牌是否可以操作、确定键是否可以点击，不填写默认均可操作
+---@param default_choice? table[] @ 超时的默认响应值，在带poxi_type时需要填写
+---@return table[]
+function Room:askForArrangeCards(player, skillname, cardMap, prompt, free_arrange, box_size, max_limit, min_limit, pattern, poxi_type, default_choice)
+  prompt = prompt or ""
+  local areaNames = {}
+  if type(cardMap[1]) == "number" then
+    cardMap = {cardMap}
+  else
+    for i = #cardMap, 1, -1 do
+      if type(cardMap[i]) == "string" then
+        table.insert(areaNames, 1, cardMap[i])
+        table.remove(cardMap, i)
+      end
+    end
+  end
+  if #areaNames == 0 then
+    areaNames = {skillname, "toObtain"}
+  end
+  box_size = box_size or 7
+  max_limit = max_limit or {#cardMap[1], #cardMap > 1 and #cardMap[2] or #cardMap[1]}
+  min_limit = min_limit or {0, 0}
+  for _ = #cardMap + 1, #min_limit, 1 do
+    table.insert(cardMap, {})
+  end
+  pattern = pattern or "."
+  poxi_type = poxi_type or ""
+  local command = "AskForArrangeCards"
+  local data = {
+    cards = cardMap,
+    names = areaNames,
+    prompt = prompt,
+    size = box_size,
+    capacities = max_limit,
+    limits = min_limit,
+    is_free = free_arrange or false,
+    pattern = pattern or ".",
+    poxi_type = poxi_type or "",
+    cancelable = ((pattern ~= "." or poxi_type ~= "") and (default_choice == nil))
+  }
+  local req = Request:new(player, command)
+  req:setData(player, data)
+  local result = req:getResult(player)
+  -- local result = player.room:askForCustomDialog(player, skillname,
+  -- "RoomElement/ArrangeCardsBox.qml", {
+  --   cardMap, prompt, box_size, max_limit, min_limit, free_arrange or false, areaNames,
+  --   pattern or ".", poxi_type or "", ((pattern ~= "." or poxi_type ~= "") and (default_choice == nil))
+  -- })
+  if result == "" then
+    if default_choice then return default_choice end
+    for j = 1, #min_limit, 1 do
+      if #cardMap[j] < min_limit[j] then
+        local cards = {table.connect(table.unpack(cardMap))}
+        if #min_limit > 1 then
+          for i = 2, #min_limit, 1 do
+            table.insert(cards, {})
+            if #cards[i] < min_limit[i] then
+              for _ = 1, min_limit[i] - #cards[i], 1 do
+                table.insert(cards[i], table.remove(cards[1], #cards[1] + #cards[i] - min_limit[i] + 1))
+              end
+            end
+          end
+          if #cards[1] > max_limit[1] then
+            for i = 2, #max_limit, 1 do
+              while #cards[i] < max_limit[i] do
+                table.insert(cards[i], table.remove(cards[1], max_limit[1] + 1))
+                if #cards[1] == max_limit[1] then return cards end
+              end
+            end
+          end
+        end
+        return cards
+      end
+    end
+    return cardMap
+  end
+  return result
+end
+
+-- TODO: guanxing type
+--- 询问玩家对若干牌进行观星。
+---
+--- 观星完成后，相关的牌会被置于牌堆顶或者牌堆底。所以这些cards最好不要来自牌堆，一般先用getNCards从牌堆拿出一些牌。
+---@param player ServerPlayer @ 要询问的玩家
+---@param cards integer[] @ 可以被观星的卡牌id列表
+---@param top_limit? integer[] @ 置于牌堆顶的牌的限制(下限,上限)，不填写则不限
+---@param bottom_limit? integer[] @ 置于牌堆底的牌的限制(下限,上限)，不填写则不限
+---@param customNotify? string @ 自定义读条操作提示
+---param prompt? string @ 观星框的标题(暂时雪藏)
+---@param noPut? boolean @ 是否进行放置牌操作
+---@param areaNames? string[] @ 左侧提示信息
+---@return table<"top"|"bottom", integer[]>
+function Room:askForGuanxing(player, cards, top_limit, bottom_limit, customNotify, noPut, areaNames)
+  -- 这一大堆都是来提前报错的
+  local leng = #cards
+  top_limit = top_limit or { 0, leng }
+  bottom_limit = bottom_limit or { 0, leng }
+  if #top_limit > 0 then
+    assert(top_limit[1] >= 0 and top_limit[2] >= 0, "limits error: The lower limit should be greater than 0")
+    assert(top_limit[1] <= top_limit[2], "limits error: The upper limit should be less than the lower limit")
+  end
+  if #bottom_limit > 0 then
+    assert(bottom_limit[1] >= 0 and bottom_limit[2] >= 0, "limits error: The lower limit should be greater than 0")
+    assert(bottom_limit[1] <= bottom_limit[2], "limits error: The upper limit should be less than the lower limit")
+  end
+  if #top_limit > 0 and #bottom_limit > 0 then
+    assert(leng >= top_limit[1] + bottom_limit[1] and leng <= top_limit[2] + bottom_limit[2], "limits Error: No enough space")
+  end
+  if areaNames then
+    assert(#areaNames == 2, "areaNames error: Should have 2 elements")
+  else
+    areaNames =  { "Top", "Bottom" }
+  end
+  local command = "AskForGuanxing"
+  local max_top = top_limit[2]
+  local card_map = {}
+  if max_top > 0 then
+    table.insert(card_map, table.slice(cards, 1, max_top + 1))
+  end
+  if max_top < leng then
+    table.insert(card_map, table.slice(cards, max_top + 1))
+  end
+  local data = {
+    prompt = "",
+    is_free = true,
+    cards = card_map,
+    min_top_cards = top_limit[1],
+    max_top_cards = top_limit[2],
+    min_bottom_cards = bottom_limit[1],
+    max_bottom_cards = bottom_limit[2],
+    top_area_name = areaNames[1],
+    bottom_area_name = areaNames[2],
+  }
+
+  local req = Request:new(player, command)
+  req.focus_text = customNotify
+  req:setData(player, data)
+  local result = req:getResult(player)
+  local top, bottom
+  if result ~= "" then
+    local d = result
+    if top_limit[2] == 0 then
+      top = Util.DummyTable
+      bottom = d[1]
+    else
+      top = d[1]
+      bottom = d[2] or Util.DummyTable
+    end
+  else
+    local pos = math.min(top_limit[2], leng - bottom_limit[1])
+    top = table.slice(cards, 1, pos + 1)
+    bottom = table.slice(cards, pos + 1)
+  end
+
+  if not noPut then
+    for i = #top, 1, -1 do
+      table.removeOne(self.draw_pile, top[i])
+      table.insert(self.draw_pile, 1, top[i])
+    end
+    for i = 1, #bottom, 1 do
+      table.removeOne(self.draw_pile, bottom[i])
+      table.insert(self.draw_pile, bottom[i])
+    end
+
+    self:syncDrawPile()
+    self:sendLog{
+      type = "#GuanxingResult",
+      from = player.id,
+      arg = #top,
+      arg2 = #bottom,
+    }
+  end
+
+  return { top = top, bottom = bottom }
+end
+
+--- 询问玩家任意交换几堆牌堆。
+---
+---@param player ServerPlayer @ 要询问的玩家
+---@param piles (integer[])[] @ 卡牌id列表的列表，也就是……几堆牌堆的集合
+---@param piles_name string[] @ 牌堆名，不足部分替换为“牌堆1、牌堆2...”
+---@param customNotify? string @ 自定义读条操作提示
+---@return (integer[])[]
+function Room:askForExchange(player, piles, piles_name, customNotify)
+  local command = "AskForExchange"
+  piles_name = piles_name or Util.DummyTable
+  local x = #piles - #piles_name
+  if x > 0 then
+    for i = 1, x, 1 do
+      table.insert(piles_name, Fk:translate("Pile") .. i)
+    end
+  elseif x < 0 then
+    piles_name = table.slice(piles_name, 1, #piles + 1)
+  end
+  local data = {
+    piles = piles,
+    piles_name = piles_name,
+  }
+
+  local req = Request:new(player, command)
+  req.focus_text = customNotify
+  req:setData(player, data)
+  local result = req:getResult(player)
+  if result ~= "" then
+    return result
+  else
+    return piles
+  end
 end
 
 
