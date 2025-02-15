@@ -68,7 +68,7 @@ function LegacyTriggerSkill:doCost(event, target, player, data)
   -- 对于那种cost直接返回true的锁定技，如果是预亮技，那么还是询问一下好
   if ret and player:isFakeSkill(self) and end_time - start_time < 1000 and
     (self.main_skill and self.main_skill or self).visible then
-    ret = room:askForSkillInvoke(player, self.name)
+    ret = room:askToSkillInvoke(player, { skill_name = self.name })
   end
   room.current_cost_skill = nil
 
@@ -103,7 +103,7 @@ function LegacyTriggerSkill:cost(event, target, player, data)
     return true
   end
 
-  if player.room:askForSkillInvoke(player, self.name) then
+  if player.room:askToSkillInvoke(player, { skill_name = self.name }) then
     return true
   end
   return false

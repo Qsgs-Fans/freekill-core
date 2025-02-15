@@ -136,7 +136,7 @@ function M.triggerForLegacy(self, event, target, data, refresh_only)
 
       while #skill_names > 0 do
         local skill_name = prio <= 0 and table.random(skill_names) or
-          room:askForChoice(player, skill_names, "trigger", "#choose-trigger")
+          room:askToChoice(player, { choices = skill_names, skill_name = "trigger", prompt = "#choose-trigger" })
 
         local skill = skill_name == "game_rule" and GameRule
           or Fk.skills[skill_name]

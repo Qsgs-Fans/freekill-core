@@ -33,8 +33,8 @@ Room:include(GameEventWrappers)
 GameLogic = require "server.gamelogic"
 ServerPlayer = require "server.serverplayer"
 
-CompactAskFor = require "compat.askfor"
-Room:include(CompactAskFor)
+CompatAskFor = require "compat.askfor"
+Room:include(CompatAskFor)
 
 -- 唉，兼容牢函数
 GameLogic:include(dofile "lua/compat/gamelogic.lua")
@@ -902,9 +902,7 @@ end
 -- 交互方法
 ------------------------------------------------------------------------
 
----@class AskToUseActiveSkillParams
----@field skill_name string @ 所调用的主动技的技能名
----@field prompt? string @ 烧条上面显示的提示文本内容
+---@class AskToUseActiveSkillParams: AskToSkillInvokeParams
 ---@field cancelable? boolean @ 是否可以点取消
 ---@field no_indicate? boolean @ 是否不显示指示线
 ---@field extra_data? table @ 额外信息
@@ -1432,7 +1430,7 @@ end
 
 --- 询问player，选择target的一张牌。
 ---@param player ServerPlayer @ 要被询问的人
----@param params AaskToChooseCardParams @ 各种变量
+---@param params AskToChooseCardParams @ 各种变量
 ---@return integer @ 选择的卡牌id
 function Room:askToChooseCard(player, params)
   local command = "AskForCardChosen"
@@ -1660,72 +1658,75 @@ function Room:askToChoices(player, params)
   return result
 end
 
----@class askToSkillInvokeParams
+---@class AskToSkillInvokeParams
+---@field skill_name string @ 烧条时显示的技能名
+---@field prompt? string @ 提示信息
 
 --- 询问玩家是否发动技能。
 ---@param player ServerPlayer @ 要询问的玩家
----@param skill_name string @ 技能名
----@param data? any @ 未使用
----@param prompt? string @ 提示信息
----@return boolean
-function Room:askForSkillInvoke(player, skill_name, data, prompt)
+---@param params AskToSkillInvokeParams @ 各种变量
+---@return boolean @ 是否发动
+function Room:askToSkillInvoke(player, params)
   local command = "AskForSkillInvoke"
   local req = Request:new(player, command)
-  req.focus_text = skill_name
+  req.focus_text = params.skill_name
   req.receive_decode = false -- 这个返回的都是"1" 不用decode
-  req:setData(player, { skill_name, prompt })
+  req:setData(player, { params.skill_name, params.prompt })
   return req:getResult(player) ~= ""
 end
 
+---@class AskToArrangeCardsParams: AskToSkillInvokeParams
+---@field card_map any @ { "牌堆1卡表", "牌堆2卡表", …… }
+---@field prompt? string @ 操作提示
+---@field box_size? integer @ 数值对应卡牌平铺张数的最大值，为0则有单个卡位，每张卡占100单位长度，默认为7
+---@field max_limit? integer[] @ 每一行牌上限 { 第一行, 第二行，…… }，不填写则不限
+---@field min_limit? integer[] @ 每一行牌下限 { 第一行, 第二行，…… }，不填写则不限
+---@field free_arrange? boolean @ 是否允许自由排列第一行卡的位置，默认不能
+---@field pattern? string @ 控制第一行卡牌是否可以操作，不填写默认均可操作
+---@field poxi_type? string @ 控制每张卡牌是否可以操作、确定键是否可以点击，不填写默认均可操作
+---@field default_choice? table[] @ 超时的默认响应值，在带poxi_type时需要填写
+
 --- 询问玩家在自定义大小的框中排列卡牌（观星、交换、拖拽选牌）
 ---@param player ServerPlayer @ 要询问的玩家
----@param skillname string @ 烧条技能名
----@param cardMap any @ { "牌堆1卡表", "牌堆2卡表", …… }
----@param prompt? string @ 操作提示
----@param box_size? integer @ 数值对应卡牌平铺张数的最大值，为0则有单个卡位，每张卡占100单位长度，默认为7
----@param max_limit? integer[] @ 每一行牌上限 { 第一行, 第二行，…… }，不填写则不限
----@param min_limit? integer[] @ 每一行牌下限 { 第一行, 第二行，…… }，不填写则不限
----@param free_arrange? boolean @ 是否允许自由排列第一行卡的位置，默认不能
----@param pattern? string @ 控制第一行卡牌是否可以操作，不填写默认均可操作
----@param poxi_type? string @ 控制每张卡牌是否可以操作、确定键是否可以点击，不填写默认均可操作
----@param default_choice? table[] @ 超时的默认响应值，在带poxi_type时需要填写
----@return table[]
-function Room:askForArrangeCards(player, skillname, cardMap, prompt, free_arrange, box_size, max_limit, min_limit, pattern, poxi_type, default_choice)
-  prompt = prompt or ""
+---@param params AskToArrangeCardsParams @ 各种变量
+---@return table[] @ 排列后的牌堆结果
+function Room:askToArrangeCards(player, params)
+  params.prompt = params.prompt or ""
   local areaNames = {}
-  if type(cardMap[1]) == "number" then
-    cardMap = {cardMap}
+  if type(params.card_map[1]) == "number" then
+    params.card_map = {params.card_map}
   else
-    for i = #cardMap, 1, -1 do
-      if type(cardMap[i]) == "string" then
-        table.insert(areaNames, 1, cardMap[i])
-        table.remove(cardMap, i)
+    for i = #params.card_map, 1, -1 do
+      if type(params.card_map[i]) == "string" then
+        table.insert(areaNames, 1, params.card_map[i])
+        table.remove(params.card_map, i)
       end
     end
   end
   if #areaNames == 0 then
-    areaNames = {skillname, "toObtain"}
+    areaNames = {params.skill_name, "toObtain"}
   end
-  box_size = box_size or 7
-  max_limit = max_limit or {#cardMap[1], #cardMap > 1 and #cardMap[2] or #cardMap[1]}
-  min_limit = min_limit or {0, 0}
-  for _ = #cardMap + 1, #min_limit, 1 do
+  local cardMap = params.card_map
+  params.box_size = params.box_size or 7
+  params.max_limit = params.max_limit or {#cardMap[1], #cardMap > 1 and #cardMap[2] or #cardMap[1]}
+  params.min_limit = params.min_limit or {0, 0}
+  for _ = #cardMap + 1, #params.min_limit, 1 do
     table.insert(cardMap, {})
   end
-  pattern = pattern or "."
-  poxi_type = poxi_type or ""
+  params.pattern = params.pattern or "."
+  params.poxi_type = params.poxi_type or ""
   local command = "AskForArrangeCards"
   local data = {
     cards = cardMap,
     names = areaNames,
-    prompt = prompt,
-    size = box_size,
-    capacities = max_limit,
-    limits = min_limit,
-    is_free = free_arrange or false,
-    pattern = pattern or ".",
-    poxi_type = poxi_type or "",
-    cancelable = ((pattern ~= "." or poxi_type ~= "") and (default_choice == nil))
+    prompt = params.prompt,
+    size = params.box_size,
+    capacities = params.max_limit,
+    limits = params.min_limit,
+    is_free = params.free_arrange or false,
+    pattern = params.pattern or ".",
+    poxi_type = params.poxi_type or "",
+    cancelable = ((params.pattern ~= "." or params.poxi_type ~= "") and (params.default_choice == nil))
   }
   local req = Request:new(player, command)
   req:setData(player, data)
@@ -1736,24 +1737,24 @@ function Room:askForArrangeCards(player, skillname, cardMap, prompt, free_arrang
   --   pattern or ".", poxi_type or "", ((pattern ~= "." or poxi_type ~= "") and (default_choice == nil))
   -- })
   if result == "" then
-    if default_choice then return default_choice end
-    for j = 1, #min_limit, 1 do
-      if #cardMap[j] < min_limit[j] then
+    if params.default_choice then return params.default_choice end
+    for j = 1, #params.min_limit, 1 do
+      if #cardMap[j] < params.min_limit[j] then
         local cards = {table.connect(table.unpack(cardMap))}
-        if #min_limit > 1 then
-          for i = 2, #min_limit, 1 do
+        if #params.min_limit > 1 then
+          for i = 2, #params.min_limit, 1 do
             table.insert(cards, {})
-            if #cards[i] < min_limit[i] then
-              for _ = 1, min_limit[i] - #cards[i], 1 do
-                table.insert(cards[i], table.remove(cards[1], #cards[1] + #cards[i] - min_limit[i] + 1))
+            if #cards[i] < params.min_limit[i] then
+              for _ = 1, params.min_limit[i] - #cards[i], 1 do
+                table.insert(cards[i], table.remove(cards[1], #cards[1] + #cards[i] - params.min_limit[i] + 1))
               end
             end
           end
-          if #cards[1] > max_limit[1] then
-            for i = 2, #max_limit, 1 do
-              while #cards[i] < max_limit[i] do
-                table.insert(cards[i], table.remove(cards[1], max_limit[1] + 1))
-                if #cards[1] == max_limit[1] then return cards end
+          if #cards[1] > params.max_limit[1] then
+            for i = 2, #params.max_limit, 1 do
+              while #cards[i] < params.max_limit[i] do
+                table.insert(cards[i], table.remove(cards[1], params.max_limit[1] + 1))
+                if #cards[1] == params.max_limit[1] then return cards end
               end
             end
           end
@@ -1766,21 +1767,24 @@ function Room:askForArrangeCards(player, skillname, cardMap, prompt, free_arrang
   return result
 end
 
--- TODO: guanxing type
+---@class AskToGuanxingParams
+---@field cards integer[] @ 可以被观星的卡牌id列表
+---@field top_limit? integer[] @ 置于牌堆顶的牌的限制(下限,上限)，不填写则不限
+---@field bottom_limit? integer[] @ 置于牌堆底的牌的限制(下限,上限)，不填写则不限
+---@field skill_name? string @ 烧条时显示的技能名
+---@field title? string @ 观星框的标题
+---@field skip? boolean @ 是否进行放置牌操作
+---@field area_names? string[] @ 左侧提示信息
+
 --- 询问玩家对若干牌进行观星。
 ---
 --- 观星完成后，相关的牌会被置于牌堆顶或者牌堆底。所以这些cards最好不要来自牌堆，一般先用getNCards从牌堆拿出一些牌。
 ---@param player ServerPlayer @ 要询问的玩家
----@param cards integer[] @ 可以被观星的卡牌id列表
----@param top_limit? integer[] @ 置于牌堆顶的牌的限制(下限,上限)，不填写则不限
----@param bottom_limit? integer[] @ 置于牌堆底的牌的限制(下限,上限)，不填写则不限
----@param customNotify? string @ 自定义读条操作提示
----param prompt? string @ 观星框的标题(暂时雪藏)
----@param noPut? boolean @ 是否进行放置牌操作
----@param areaNames? string[] @ 左侧提示信息
----@return table<"top"|"bottom", integer[]>
-function Room:askForGuanxing(player, cards, top_limit, bottom_limit, customNotify, noPut, areaNames)
+---@param params AskToGuanxingParams @ 各种变量
+---@return table<"top"|"bottom", integer[]> @ 观星后的牌堆结果
+function Room:askToGuanxing(player, params)
   -- 这一大堆都是来提前报错的
+  local cards, top_limit, bottom_limit, customNotify, noPut = params.cards, params.top_limit, params.bottom_limit, params.prompt, params.skip
   local leng = #cards
   top_limit = top_limit or { 0, leng }
   bottom_limit = bottom_limit or { 0, leng }
@@ -1795,11 +1799,12 @@ function Room:askForGuanxing(player, cards, top_limit, bottom_limit, customNotif
   if #top_limit > 0 and #bottom_limit > 0 then
     assert(leng >= top_limit[1] + bottom_limit[1] and leng <= top_limit[2] + bottom_limit[2], "limits Error: No enough space")
   end
-  if areaNames then
-    assert(#areaNames == 2, "areaNames error: Should have 2 elements")
+  if params.area_names then
+    assert(#params.area_names > 0, "area_names error: Should have elements")
   else
-    areaNames =  { "Top", "Bottom" }
+    params.area_names =  { "Top", "Bottom" }
   end
+  params.prompt = params.prompt or ""
   local command = "AskForGuanxing"
   local max_top = top_limit[2]
   local card_map = {}
@@ -1810,15 +1815,15 @@ function Room:askForGuanxing(player, cards, top_limit, bottom_limit, customNotif
     table.insert(card_map, table.slice(cards, max_top + 1))
   end
   local data = {
-    prompt = "",
+    prompt = params.prompt,
     is_free = true,
     cards = card_map,
     min_top_cards = top_limit[1],
     max_top_cards = top_limit[2],
     min_bottom_cards = bottom_limit[1],
     max_bottom_cards = bottom_limit[2],
-    top_area_name = areaNames[1],
-    bottom_area_name = areaNames[2],
+    top_area_name = params.area_names[1],
+    bottom_area_name = params.area_names[2],
   }
 
   local req = Request:new(player, command)
@@ -1863,27 +1868,31 @@ function Room:askForGuanxing(player, cards, top_limit, bottom_limit, customNotif
   return { top = top, bottom = bottom }
 end
 
+---@class AskToExchangeParams
+---@field piles integer[][] @ 卡牌id列表的列表，也就是……几堆牌堆的集合
+---@field piles_name? string[] @ 牌堆名，不足部分替换为“牌堆1、牌堆2...”
+---@field skill_name? string @ 烧条时显示的技能名
+
 --- 询问玩家任意交换几堆牌堆。
 ---
 ---@param player ServerPlayer @ 要询问的玩家
----@param piles (integer[])[] @ 卡牌id列表的列表，也就是……几堆牌堆的集合
----@param piles_name string[] @ 牌堆名，不足部分替换为“牌堆1、牌堆2...”
----@param customNotify? string @ 自定义读条操作提示
----@return (integer[])[]
-function Room:askForExchange(player, piles, piles_name, customNotify)
+---@param params AskToExchangeParams @ 各种变量
+---@return integer[][] @ 交换后的结果
+function Room:askToExchange(player, params)
+  local piles, customNotify = params.piles, params.prompt
   local command = "AskForExchange"
-  piles_name = piles_name or Util.DummyTable
-  local x = #piles - #piles_name
+  params.piles_name = params.piles_name or Util.DummyTable
+  local x = #piles - #params.piles_name
   if x > 0 then
     for i = 1, x, 1 do
-      table.insert(piles_name, Fk:translate("Pile") .. i)
+      table.insert(params.piles_name, Fk:translate("Pile") .. i)
     end
   elseif x < 0 then
-    piles_name = table.slice(piles_name, 1, #piles + 1)
+    params.piles_name = table.slice(params.piles_name, 1, #piles + 1)
   end
   local data = {
     piles = piles,
-    piles_name = piles_name,
+    piles_name = params.piles_name,
   }
 
   local req = Request:new(player, command)

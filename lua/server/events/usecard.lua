@@ -241,7 +241,7 @@ function UseCard:main()
         if target:hasEmptyEquipSlot(subType) then
           table.insert(choices, target:getAvailableEquipSlots(subType)[1])
         end
-        useCardData.toPutSlot = room:askForChoice(target, choices, "replace_equip", "#GameRuleReplaceEquipment")
+        useCardData.toPutSlot = room:askToChoice(target, { choices = choices, skill_name = "replace_equip", prompt = "#GameRuleReplaceEquipment" })
       end
     end
   end

@@ -390,7 +390,7 @@ end
 ---@param all_choices? string[] @ 所有选项（不可选变灰）
 ---@return string[] @ 选择的选项
 ---@deprecated
-function Room:CompatAskFor(player, choices, minNum, maxNum, skill_name, prompt, cancelable, detailed, all_choices)
+function CompatAskFor:CompatAskFor(player, choices, minNum, maxNum, skill_name, prompt, cancelable, detailed, all_choices)
   cancelable = (cancelable == nil) and true or cancelable
   local params = { ---@type AskToChoiceParams
     choices = choices,
@@ -411,13 +411,14 @@ end
 ---@param data? any @ 未使用
 ---@param prompt? string @ 提示信息
 ---@return boolean
-function Room:askForSkillInvoke(player, skill_name, data, prompt)
-  local command = "AskForSkillInvoke"
-  local req = Request:new(player, command)
-  req.focus_text = skill_name
-  req.receive_decode = false -- 这个返回的都是"1" 不用decode
-  req:setData(player, { skill_name, prompt })
-  return req:getResult(player) ~= ""
+---@deprecated
+function CompatAskFor:askForSkillInvoke(player, skill_name, data, prompt)
+  local params = { ---@type AskToSkillInvokeParams
+    skill_name = skill_name,
+    prompt = prompt,
+  }
+
+  return self:askToSkillInvoke(player, params)
 end
 
 --- 询问玩家在自定义大小的框中排列卡牌（观星、交换、拖拽选牌）
@@ -432,8 +433,9 @@ end
 ---@param pattern? string @ 控制第一行卡牌是否可以操作，不填写默认均可操作
 ---@param poxi_type? string @ 控制每张卡牌是否可以操作、确定键是否可以点击，不填写默认均可操作
 ---@param default_choice? table[] @ 超时的默认响应值，在带poxi_type时需要填写
----@return table[]
-function Room:askForArrangeCards(player, skillname, cardMap, prompt, free_arrange, box_size, max_limit, min_limit, pattern, poxi_type, default_choice)
+---@return table[] @ 排列后的牌堆结果
+---@deprecated
+function CompatAskFor:askForArrangeCards(player, skillname, cardMap, prompt, free_arrange, box_size, max_limit, min_limit, pattern, poxi_type, default_choice)
   prompt = prompt or ""
   local areaNames = {}
   if type(cardMap[1]) == "number" then
@@ -457,56 +459,20 @@ function Room:askForArrangeCards(player, skillname, cardMap, prompt, free_arrang
   end
   pattern = pattern or "."
   poxi_type = poxi_type or ""
-  local command = "AskForArrangeCards"
-  local data = {
-    cards = cardMap,
-    names = areaNames,
+  local params = { ---@type AskToArrangeCardsParams
+    skill_name = skillname,
+    card_map = cardMap,
     prompt = prompt,
-    size = box_size,
-    capacities = max_limit,
-    limits = min_limit,
-    is_free = free_arrange or false,
-    pattern = pattern or ".",
-    poxi_type = poxi_type or "",
-    cancelable = ((pattern ~= "." or poxi_type ~= "") and (default_choice == nil))
+    free_arrange = free_arrange,
+    box_size = box_size,
+    max_limit = max_limit,
+    min_limit = min_limit,
+    pattern = pattern,
+    poxi_type = poxi_type,
+    default_choice = default_choice
   }
-  local req = Request:new(player, command)
-  req:setData(player, data)
-  local result = req:getResult(player)
-  -- local result = player.room:askForCustomDialog(player, skillname,
-  -- "RoomElement/ArrangeCardsBox.qml", {
-  --   cardMap, prompt, box_size, max_limit, min_limit, free_arrange or false, areaNames,
-  --   pattern or ".", poxi_type or "", ((pattern ~= "." or poxi_type ~= "") and (default_choice == nil))
-  -- })
-  if result == "" then
-    if default_choice then return default_choice end
-    for j = 1, #min_limit, 1 do
-      if #cardMap[j] < min_limit[j] then
-        local cards = {table.connect(table.unpack(cardMap))}
-        if #min_limit > 1 then
-          for i = 2, #min_limit, 1 do
-            table.insert(cards, {})
-            if #cards[i] < min_limit[i] then
-              for _ = 1, min_limit[i] - #cards[i], 1 do
-                table.insert(cards[i], table.remove(cards[1], #cards[1] + #cards[i] - min_limit[i] + 1))
-              end
-            end
-          end
-          if #cards[1] > max_limit[1] then
-            for i = 2, #max_limit, 1 do
-              while #cards[i] < max_limit[i] do
-                table.insert(cards[i], table.remove(cards[1], max_limit[1] + 1))
-                if #cards[1] == max_limit[1] then return cards end
-              end
-            end
-          end
-        end
-        return cards
-      end
-    end
-    return cardMap
-  end
-  return result
+
+  return self:askToArrangeCards(player, params)
 end
 
 -- TODO: guanxing type
@@ -521,8 +487,8 @@ end
 ---param prompt? string @ 观星框的标题(暂时雪藏)
 ---@param noPut? boolean @ 是否进行放置牌操作
 ---@param areaNames? string[] @ 左侧提示信息
----@return table<"top"|"bottom", integer[]>
-function Room:askForGuanxing(player, cards, top_limit, bottom_limit, customNotify, noPut, areaNames)
+---@return table<"top"|"bottom", integer[]> @ 左侧提示信息
+function CompatAskFor:askForGuanxing(player, cards, top_limit, bottom_limit, customNotify, noPut, areaNames)
   -- 这一大堆都是来提前报错的
   local leng = #cards
   top_limit = top_limit or { 0, leng }
@@ -543,78 +509,26 @@ function Room:askForGuanxing(player, cards, top_limit, bottom_limit, customNotif
   else
     areaNames =  { "Top", "Bottom" }
   end
-  local command = "AskForGuanxing"
-  local max_top = top_limit[2]
-  local card_map = {}
-  if max_top > 0 then
-    table.insert(card_map, table.slice(cards, 1, max_top + 1))
-  end
-  if max_top < leng then
-    table.insert(card_map, table.slice(cards, max_top + 1))
-  end
-  local data = {
-    prompt = "",
-    is_free = true,
-    cards = card_map,
-    min_top_cards = top_limit[1],
-    max_top_cards = top_limit[2],
-    min_bottom_cards = bottom_limit[1],
-    max_bottom_cards = bottom_limit[2],
-    top_area_name = areaNames[1],
-    bottom_area_name = areaNames[2],
+  local params = { ---@type AskToGuanxingParams
+    cards = cards,
+    top_limit = top_limit,
+    bottom_limit = bottom_limit,
+    skill_name = customNotify,
+    skip = noPut,
+    area_names = areaNames
   }
 
-  local req = Request:new(player, command)
-  req.focus_text = customNotify
-  req:setData(player, data)
-  local result = req:getResult(player)
-  local top, bottom
-  if result ~= "" then
-    local d = result
-    if top_limit[2] == 0 then
-      top = Util.DummyTable
-      bottom = d[1]
-    else
-      top = d[1]
-      bottom = d[2] or Util.DummyTable
-    end
-  else
-    local pos = math.min(top_limit[2], leng - bottom_limit[1])
-    top = table.slice(cards, 1, pos + 1)
-    bottom = table.slice(cards, pos + 1)
-  end
-
-  if not noPut then
-    for i = #top, 1, -1 do
-      table.removeOne(self.draw_pile, top[i])
-      table.insert(self.draw_pile, 1, top[i])
-    end
-    for i = 1, #bottom, 1 do
-      table.removeOne(self.draw_pile, bottom[i])
-      table.insert(self.draw_pile, bottom[i])
-    end
-
-    self:syncDrawPile()
-    self:sendLog{
-      type = "#GuanxingResult",
-      from = player.id,
-      arg = #top,
-      arg2 = #bottom,
-    }
-  end
-
-  return { top = top, bottom = bottom }
+  return self:askToGuanxing(player, params)
 end
 
 --- 询问玩家任意交换几堆牌堆。
 ---
 ---@param player ServerPlayer @ 要询问的玩家
----@param piles (integer[])[] @ 卡牌id列表的列表，也就是……几堆牌堆的集合
+---@param piles integer[][] @ 卡牌id列表的列表，也就是……几堆牌堆的集合
 ---@param piles_name string[] @ 牌堆名，不足部分替换为“牌堆1、牌堆2...”
 ---@param customNotify? string @ 自定义读条操作提示
----@return (integer[])[]
-function Room:askForExchange(player, piles, piles_name, customNotify)
-  local command = "AskForExchange"
+---@return integer[][] @ 交换后的结果
+function CompatAskFor:askForExchange(player, piles, piles_name, customNotify)
   piles_name = piles_name or Util.DummyTable
   local x = #piles - #piles_name
   if x > 0 then
@@ -624,20 +538,13 @@ function Room:askForExchange(player, piles, piles_name, customNotify)
   elseif x < 0 then
     piles_name = table.slice(piles_name, 1, #piles + 1)
   end
-  local data = {
+  local params = { ---@type AskToExchangeParams
     piles = piles,
     piles_name = piles_name,
+    skill_name = customNotify,
   }
 
-  local req = Request:new(player, command)
-  req.focus_text = customNotify
-  req:setData(player, data)
-  local result = req:getResult(player)
-  if result ~= "" then
-    return result
-  else
-    return piles
-  end
+  return self:askToExchange(player, params)
 end
 
 

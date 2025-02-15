@@ -155,7 +155,7 @@ function MiscEventWrappers:changeHero(player, new_general, full, isDeputy, sendL
       allKingdoms = Fk:getKingdomMap(new.kingdom)
     end
     if #allKingdoms > 0 then
-      kingdom = self:askForChoice(player, allKingdoms, "AskForKingdom", "#ChooseInitialKingdom")
+      kingdom = self:askToChoice(player, { choices = allKingdoms, skill_name = "AskForKingdom", prompt = "#ChooseInitialKingdom" })
     end
   end
 
