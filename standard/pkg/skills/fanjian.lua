@@ -14,8 +14,8 @@ fanjian:addEffect("active", {
   on_use = function(self, room, effect)
     local player = effect.from
     local target = effect.tos[1]
-    local choice = room:askForChoice(target, {"spade", "heart", "club", "diamond"}, fanjian.name)
-    local card = room:askForCardChosen(target, player, 'h', fanjian.name)
+    local choice = room:askToChoice(target, { choices = {"spade", "heart", "club", "diamond"}, skill_name = fanjian.name })
+    local card = room:askToChooseCard(target, { target = player, flag = 'h', skill_name = fanjian.name })
     room:obtainCard(target.id, card, true, fk.ReasonPrey)
     if Fk:getCardById(card):getSuitString() ~= choice and target:isAlive() then
       room:damage{

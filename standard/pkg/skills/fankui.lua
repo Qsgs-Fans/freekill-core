@@ -18,7 +18,7 @@ fankui:addEffect(fk.Damaged, {
     local room = player.room
     local from = data.from
     local flag =  from == player and "e" or "he"
-    local card = room:askForCardChosen(player, from, flag, fankui.name)
+    local card = room:askToChooseCard(player, { target = from, flag = flag, skill_name = fankui.name })
     room:obtainCard(player.id, card, false, fk.ReasonPrey)
   end
 })

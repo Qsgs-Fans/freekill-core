@@ -36,7 +36,7 @@ skill:addEffect("active", {
       must_targets = effect.subTargets,
       bypass_times = true,
     }
-    local use = room:askForUseCard(to, "slash", nil, prompt, nil, extra_data, effect)
+    local use = room:askToUseCard(to, { skill_name = "slash", pattern = "slash", prompt = prompt, cancelable = true, extra_data = extra_data, event_data = effect })
     if use then
       use.extraUse = true
       room:useCard(use)

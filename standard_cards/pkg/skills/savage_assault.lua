@@ -23,7 +23,13 @@ skill:addEffect("active", {
     end
     local cardResponded
     for i = 1, loopTimes do
-      cardResponded = room:askForResponse(effect.to, 'slash', nil, nil, true, nil, effect)
+      local params = { ---@type AskToUseCardParams
+        skill_name = 'slash',
+        pattern = 'slash',
+        cancelable = true,
+        event_data = effect
+      }
+      cardResponded = room:askToResponse(effect.to, params)
       if cardResponded then
         room:responseCard({
           from = effect.to.id,
@@ -50,6 +56,7 @@ skill:addTest(function(room, me)
     room:useCard {
       from = me,
       card = Fk:cloneCard("savage_assault"),
+      tos = {}
     }
   end)
   lu.assertEquals(me.hp, 4)

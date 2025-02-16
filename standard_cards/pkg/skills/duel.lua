@@ -36,7 +36,13 @@ skill:addEffect("active", {
 
       local cardResponded
       for i = 1, loopTimes do
-        cardResponded = room:askForResponse(currentResponser, 'slash', nil, nil, true, nil, effect)
+        local params = { ---@type AskToUseCardParams
+          skill_name = 'slash',
+          pattern = 'slash',
+          cancelable = true,
+          event_data = effect
+        }
+        cardResponded = room:askToResponse(currentResponser, params)
         if cardResponded then
           room:responseCard({
             from = currentResponser.id,
