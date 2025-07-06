@@ -9,6 +9,7 @@ import Fk
 import Fk.Common
 import Fk.RoomElement
 import Fk.PhotoElement as PhotoElement
+import Fk.Widgets
 import "RoomLogic.js" as Logic
 
 Item {
@@ -891,24 +892,37 @@ Item {
     lcall("UpdateRequestUI", "SkillButton", skill_name, "click", { selected } );
   }
 
-  Drawer {
+  PopupLoader {
     id: roomDrawer
-    width: parent.width * 0.36 / mainWindow.scale
-    height: parent.height / mainWindow.scale
-    dim: false
-    clip: true
-    dragMargin: 0
-    scale: mainWindow.scale
-    transformOrigin: Item.TopLeft
+    width: realMainWin.width * 0.4
+    height: realMainWin.height * 0.95
+    x: realMainWin.height * 0.025
+    y: realMainWin.height * 0.025
 
-    ColumnLayout {
+    background: Rectangle {
+      radius: 12 / mainWindow.scale
+      color: "#FAFAFB"
+      opacity: 0.9
+    }
+
+    sourceComponent: ColumnLayout {
       anchors.fill: parent
+
+      ViewSwitcher {
+        id: drawerBar
+        Layout.alignment: Qt.AlignHCenter
+        model: [
+          luatr("Log"),
+          luatr("Chat"),
+        ]
+      }
 
       SwipeView {
         Layout.fillWidth: true
         Layout.fillHeight: true
         interactive: false
         currentIndex: drawerBar.currentIndex
+        clip: true
         Item {
           LogEdit {
             id: log
@@ -924,23 +938,18 @@ Item {
         }
       }
 
-      TabBar {
-        id: drawerBar
-        width: roomDrawer.width
-        TabButton {
-          width: roomDrawer.width / 2
-          text: luatr("Log")
-        }
-        TabButton {
-          width: roomDrawer.width / 2
-          text: luatr("Chat")
-        }
+      function addToLog(msg) {
+        log.append({ logText: msg });
+      }
+
+      function addChat(msg, raw) {
+        chat.append(msg, raw);
       }
     }
   }
 
-  Popup {
-    id: cheatDrawer
+  PopupLoader {
+    id: cheatPopup
     width: realMainWin.width * 0.60
     height: realMainWin.height * 0.8
     anchors.centerIn: parent
@@ -949,23 +958,6 @@ Item {
       radius: 5
       border.color: "#A6967A"
       border.width: 1
-    }
-
-    Loader {
-      id: cheatLoader
-      anchors.centerIn: parent
-      width: parent.width / mainWindow.scale
-      height: parent.height / mainWindow.scale
-      scale: mainWindow.scale
-      clip: true
-      onSourceChanged: {
-        if (item === null)
-          return;
-        item.finish.connect(() => {
-          cheatDrawer.close();
-        });
-      }
-      onSourceComponentChanged: sourceChanged();
     }
   }
 
@@ -1178,7 +1170,7 @@ Item {
     if (raw.msg.startsWith("$")) {
       if (specialChat(pid, raw, raw.msg.slice(1))) return; // 蛋花、语音
     }
-    chat.append(msg, raw);
+    roomDrawer.item.addChat(msg, raw);
 
     if (photo === undefined) {
       const user = raw.userName;
@@ -1242,9 +1234,9 @@ Item {
       const m = luatr(msg);
       data.msg = m;
       if (general === "")
-        chat.append(`[${time}] ${userName}: ${m}`, data);
+        roomDrawer.item.addChat(`[${time}] ${userName}: ${m}`, data);
       else
-        chat.append(`[${time}] ${userName}(${general}): ${m}`, data);
+        roomDrawer.item.addChat(`[${time}] ${userName}(${general}): ${m}`, data);
 
       const photo = Logic.getPhoto(pid);
       if (photo === undefined) {
@@ -1274,9 +1266,9 @@ Item {
                           + (idx ? idx.toString() : ""));
       data.msg = m;
       if (general === "")
-        chat.append(`[${time}] ${userName}: ${m}`, data);
+        roomDrawer.item.addChat(`[${time}] ${userName}: ${m}`, data);
       else
-        chat.append(`[${time}] ${userName}(${general}): ${m}`, data)
+        roomDrawer.item.addChat(`[${time}] ${userName}(${general}): ${m}`, data)
 
       const photo = Logic.getPhoto(pid);
       if (photo === undefined) {
@@ -1292,12 +1284,12 @@ Item {
   }
 
   function addToLog(msg) {
-    log.append({ logText: msg });
+    roomDrawer.item.addToLog(msg);
   }
 
   function sendDanmaku(msg) {
     danmaku.sendLog(msg);
-    chat.append(null, {
+    roomDrawer.item.addChat(null, {
       msg: msg,
       general: "__server", // FIXME: 基于默认读取貂蝉的数据
       userName: "",
@@ -1317,15 +1309,15 @@ Item {
   }
 
   function startCheat(type, data) {
-    cheatLoader.sourceComponent = Qt.createComponent(`../Cheat/${type}.qml`);
-    cheatLoader.item.extra_data = data;
-    cheatDrawer.open();
+    cheatPopup.sourceComponent = Qt.createComponent(`../Cheat/${type}.qml`);
+    cheatPopup.item.extra_data = data;
+    cheatPopup.open();
   }
 
   function startCheatByPath(path, data) {
-    cheatLoader.sourceComponent = Qt.createComponent(`${AppPath}/${path}.qml`);
-    cheatLoader.item.extra_data = data;
-    cheatDrawer.open();
+    cheatPopup.sourceComponent = Qt.createComponent(`${AppPath}/${path}.qml`);
+    cheatPopup.item.extra_data = data;
+    cheatPopup.open();
   }
 
   function resetToInit() {
