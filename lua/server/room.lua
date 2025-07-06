@@ -679,6 +679,9 @@ end
 --- 向战报中发送一条log。
 ---@param log LogMessage @ Log的实际内容
 function Room:sendLog(log)
+  local logic = self.logic
+  local eventStackLevel = logic:getCurrentEventDepth()
+  log.eventDepth = eventStackLevel
   self:doBroadcastNotify("GameLog", json.encode(log))
 end
 

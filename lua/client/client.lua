@@ -11,6 +11,7 @@
 ---@field public replaying_show boolean 重放时是否要看到全部牌
 ---@field public record any
 ---@field public last_update_ui integer @ 上次刷新状态技UI的时间
+---@field public event_stack_logs table<integer, string> @ 用于UI通过log显示插结情况
 Client = AbstractRoom:subclass('Client')
 
 -- load client classes
@@ -76,6 +77,7 @@ function Client:initialize(_client)
   self.disabled_packs = {}
   self.disabled_generals = {}
   -- self.last_update_ui = os.getms()
+  self.event_stack_logs = {}
 
   self.recording = false
 end
@@ -268,6 +270,14 @@ end
 ---@param msg LogMessage
 function Client:appendLog(msg, visible_data)
   local text = parseMsg(msg, nil, visible_data)
+  local depth = msg.eventDepth or 0
+
+  -- 删除深度高的log 模拟事件已出栈
+  for d in pairs(self.event_stack_logs) do
+    if depth < d then self.event_stack_logs[d] = nil end
+  end
+  self.event_stack_logs[depth] = text
+
   self:notifyUI("GameLog", text)
   if msg.toast then
     self:notifyUI("ShowToast", text)
@@ -620,7 +630,7 @@ local function mergeMoves(moves)
   return ret
 end
 
-local function sendMoveCardLog(move, visible_data)
+local function sendMoveCardLog(move, visible_data, depth)
   local client = ClientInstance ---@class Client
   if #move.ids == 0 then return end
   local hidden = not not table.find(move.ids, function(id)
@@ -636,6 +646,7 @@ local function sendMoveCardLog(move, visible_data)
         arg = move.fromSpecialName,
         arg2 = #move.ids,
         card = move.ids,
+        eventDepth = depth,
       }, visible_data)
     elseif move.fromArea == Card.DrawPile then
       client:appendLog({
@@ -643,6 +654,7 @@ local function sendMoveCardLog(move, visible_data)
         from = move.to,
         card = move.ids,
         arg = #move.ids,
+        eventDepth = depth,
       }, visible_data)
     elseif move.fromArea == Card.Processing then
       client:appendLog({
@@ -650,6 +662,7 @@ local function sendMoveCardLog(move, visible_data)
         from = move.to,
         card = move.ids,
         arg = #move.ids,
+        eventDepth = depth,
       }, visible_data)
     elseif move.fromArea == Card.DiscardPile then
       client:appendLog({
@@ -657,6 +670,7 @@ local function sendMoveCardLog(move, visible_data)
         from = move.to,
         card = move.ids,
         arg = #move.ids,
+        eventDepth = depth,
       }, visible_data)
     elseif move.from then
       client:appendLog({
@@ -665,6 +679,7 @@ local function sendMoveCardLog(move, visible_data)
         to = { move.to },
         arg = #move.ids,
         card = move.ids,
+        eventDepth = depth,
       }, visible_data)
     else
       client:appendLog({
@@ -672,6 +687,7 @@ local function sendMoveCardLog(move, visible_data)
         from = move.to,
         card = move.ids,
         arg = #move.ids,
+        eventDepth = depth,
       }, visible_data)
     end
   elseif move.toArea == Card.PlayerEquip then
@@ -679,6 +695,7 @@ local function sendMoveCardLog(move, visible_data)
       type = "$InstallEquip",
       from = move.to,
       card = move.ids,
+      eventDepth = depth,
     }, visible_data)
   elseif move.toArea == Card.PlayerJudge then
     if move.from ~= move.to and move.fromArea == Card.PlayerJudge then
@@ -687,6 +704,7 @@ local function sendMoveCardLog(move, visible_data)
         from = move.from,
         to = { move.to },
         card = move.ids,
+        eventDepth = depth,
       }, visible_data)
     elseif move.from then
       client:appendLog({
@@ -694,6 +712,7 @@ local function sendMoveCardLog(move, visible_data)
         from = move.from,
         to = { move.to },
         card = move.ids,
+        eventDepth = depth,
       }, visible_data)
     end
   elseif move.toArea == Card.PlayerSpecial then
@@ -703,12 +722,14 @@ local function sendMoveCardLog(move, visible_data)
       arg2 = #move.ids,
       from = move.to,
       card = move.ids,
+      eventDepth = depth,
     }, visible_data)
   elseif move.fromArea == Card.PlayerEquip then
     client:appendLog({
       type = "$UninstallEquip",
       from = move.from,
       card = move.ids,
+      eventDepth = depth,
     }, visible_data)
   elseif move.toArea == Card.Processing then
     if move.fromArea == Card.DrawPile and (move.moveReason == fk.ReasonPut or move.moveReason == fk.ReasonJustMove) then
@@ -717,6 +738,7 @@ local function sendMoveCardLog(move, visible_data)
           type = "$ViewCardFromDrawPile",
           from = move.proposer,
           arg = #move.ids,
+          eventDepth = depth,
         }, visible_data)
       else
         client:appendLog({
@@ -724,6 +746,7 @@ local function sendMoveCardLog(move, visible_data)
           from = move.proposer,
           card = move.ids,
           arg = #move.ids,
+          eventDepth = depth,
         }, visible_data)
         client:setCardNote(move.ids, {
           type = "$$TurnOverCard",
@@ -738,6 +761,7 @@ local function sendMoveCardLog(move, visible_data)
       from = move.from,
       card = move.ids,
       arg = #move.ids,
+      eventDepth = depth,
     }, visible_data)
     client:setCardNote(move.ids, {
       type = "$$PutCard",
@@ -752,6 +776,7 @@ local function sendMoveCardLog(move, visible_data)
           to = {move.proposer},
           card = move.ids,
           arg = #move.ids,
+          eventDepth = depth,
         }, visible_data)
       else
         client:appendLog({
@@ -759,6 +784,7 @@ local function sendMoveCardLog(move, visible_data)
           from = move.from,
           card = move.ids,
           arg = #move.ids,
+          eventDepth = depth,
         }, visible_data)
       end
     elseif move.moveReason == fk.ReasonPutIntoDiscardPile then
@@ -766,6 +792,7 @@ local function sendMoveCardLog(move, visible_data)
         type = "$PutToDiscard",
         card = move.ids,
         arg = #move.ids,
+        eventDepth = depth,
       }, visible_data)
     end
   -- elseif move.toArea == Card.Void then
@@ -781,9 +808,10 @@ local function sendMoveCardLog(move, visible_data)
   end
 end
 
----@param raw_moves CardsMoveStruct[]
-fk.client_callback["MoveCards"] = function(self, raw_moves)
-  -- jsonData: CardsMoveStruct[]
+---@param data { depth: integer, moves: CardsMoveStruct[] }
+fk.client_callback["MoveCards"] = function(self, data)
+  -- jsonData: { depth, CardsMoveStruct[] }
+  local depth, raw_moves = data.depth, data.moves
   self:moveCards(raw_moves)
   local visible_data = {}
   for _, move in ipairs(raw_moves) do
@@ -797,7 +825,7 @@ fk.client_callback["MoveCards"] = function(self, raw_moves)
   visible_data.merged = merged
   self:notifyUI("MoveCards", visible_data)
   for _, move in ipairs(merged) do
-    sendMoveCardLog(move, visible_data)
+    sendMoveCardLog(move, visible_data, depth)
   end
 end
 

@@ -378,6 +378,7 @@ FreeKill使用的是libgit2的C API，与此同时使用Git完成拓展包的下
   ["Sort by Suit"] = "按花色",
   ["Chat"] = "聊天",
   ["Log"] = "战报",
+  ["EventStack"] = "结算情况",
   ["Return to Bottom"] = "回到底部",
   ["Trusting ..."] = "托管中 ...",
   ["Observing ..."] = "旁观中 ...",

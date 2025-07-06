@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import Fk.Pages
 
 Rectangle {
+  color: "transparent"
   property bool isLobby: false
 
   function append(chatter) {

@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import Fk.Pages
 
 Rectangle {
+  color: "transparent"
   property bool isLobby: false
 
   function append(chatter, data) {
@@ -80,17 +81,22 @@ Rectangle {
   }
 
   function loadSkills() {
-    for (let i = 1; i <= 23; i++) {
-      skills.append({ name: "fastchat_m", idx: i });
+    skills.clear();
+    const general = roomScene.getPhoto(Self.id)?.general;
+    if (general) {
+      loadGeneralSkillAudios(general);
+      findWinDeathAudio(general, true);
+      findWinDeathAudio(general, false);
     }
-    const general = roomScene.getPhoto(Self.id).general;
-    const deputyGeneral = roomScene.getPhoto(Self.id).deputyGeneral;
-    loadGeneralSkillAudios(general);
-    loadGeneralSkillAudios(deputyGeneral);
-    findWinDeathAudio(general, true);
-    findWinDeathAudio(deputyGeneral, true);
-    findWinDeathAudio(general, false);
-    findWinDeathAudio(deputyGeneral, false);
+    const deputyGeneral = roomScene.getPhoto(Self.id)?.deputyGeneral;
+    if (deputyGeneral) {
+      loadGeneralSkillAudios(deputyGeneral);
+      findWinDeathAudio(deputyGeneral, true);
+      findWinDeathAudio(deputyGeneral, false);
+    }
+    for (let i = 1; i <= 23; i++) {
+      skills.append({ name: "fastchat_m", idx: i, specific: false });
+    }
   }
 
   function loadPlayers() {
@@ -278,9 +284,14 @@ Rectangle {
         width: soundSelector.width
         height: 30
         text: {
-          luatr((name.startsWith("~") || name.startsWith("!")) ? name :
-            "$" + name + (specific ? '_' + general : "") + 
-            (idx ? idx.toString() : ""))
+          const isWinOrDeathAudio = name.startsWith("~") || name.startsWith("!");
+          let ret = name;
+
+          if (!isWinOrDeathAudio) {
+            ret = `$${name}${specific ? '_' + general : ""}${idx}`;
+          }
+
+          return luatr(ret);
         }
 
         onClicked: {

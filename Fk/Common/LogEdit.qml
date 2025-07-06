@@ -45,6 +45,11 @@ ListView {
     onClicked: root.currentIndex = logModel.count - 1;
   }
 
+  function clear() {
+    logModel.clear();
+    root.currentIndex = 0;
+  }
+
   function append(data) {
     const autoScroll = root.currentIndex === logModel.count - 1;
     logModel.append(data);

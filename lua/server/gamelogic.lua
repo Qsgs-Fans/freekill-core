@@ -531,6 +531,10 @@ function GameLogic:getCurrentEvent()
   return self.game_event_stack.t[self.game_event_stack.p]
 end
 
+function GameLogic:getCurrentEventDepth()
+  return self.game_event_stack.p
+end
+
 ---@param eventType GameEvent
 function GameLogic:getMostRecentEvent(eventType)
   return self:getCurrentEvent():findParent(eventType, true)

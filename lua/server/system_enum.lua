@@ -40,6 +40,7 @@
 ---@field public arg2? any @ 要替换%arg2的内容
 ---@field public arg3? any @ 要替换%arg3的内容
 ---@field public toast? boolean @ 是否顺手把消息发送一条相同的toast
+---@field public eventDepth? integer @ 这条log对应的事件栈中的插结深度 自动填的不用管
 
 --- SkillUseStruct 使用技能的数据
 ---@class SkillUseStruct

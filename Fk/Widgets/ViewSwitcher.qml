@@ -13,7 +13,7 @@ ListView {
   spacing: 0
   currentIndex: 0
   orientation: Qt.Horizontal
-  highlight: Rectangle { color: "#E6E6E7"; radius: 8 }
+  highlight: Rectangle { color: "#C4C4C5"; radius: 8 }
   highlightMoveDuration: 200
 
   onModelChanged: {

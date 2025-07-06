@@ -24,7 +24,7 @@ Popup {
       if (item === null) {
         return;
       }
-      item.finish.connect(() => {
+      item.finish?.connect(() => {
         root.close();
       });
     }
