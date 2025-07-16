@@ -1259,6 +1259,7 @@ Item {
     const userName = data.userName;
     const general = luatr(data.general);
 
+
     if (msg.startsWith("@")) { // 蛋花
       if (config.hidePresents)
         return true;
@@ -1297,8 +1298,10 @@ Item {
     } else if (msg.startsWith("!") || msg.startsWith("~")) { // 胜利、阵亡
       const g = msg.slice(1);
       const extension = lcall("GetGeneralData", g).extension;
-      if (!config.disableMsgAudio)
-        Backend.playSound("./packages/" + extension + "/audio/" + (msg.startsWith("!") ? "win/" : "death/") + g);
+      if (!config.disableMsgAudio) {
+        const path = SkinBank.getAudio(g, extension, msg.startsWith("!") ? "win" : "death");
+        Backend.playSound(path);
+      }
 
       const m = luatr(msg);
       data.msg = m;
@@ -1321,7 +1324,6 @@ Item {
       const skill = split[0];
       const idx = parseInt(split[1]);
       const gene = split[2];
-
       if (!config.disableMsgAudio)
         try {
           callbacks["LogEvent"]({

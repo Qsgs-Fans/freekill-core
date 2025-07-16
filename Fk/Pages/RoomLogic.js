@@ -1457,12 +1457,11 @@ callbacks["LogEvent"] = (data) => {
       let extension;
       let path;
       let dat;
-
       const tryPlaySound = (general) => {
         if (general) {
           const dat = lcall("GetGeneralData", general);
           const extension = dat.extension;
-          const path = `./packages/${extension}/audio/skill/${skill}_${general}`;
+          const path = SkinBank.getAudio(skill + "_" + general, extension, "skill");
           if (Backend.exists(`${path}.mp3`) || Backend.exists(`${path}1.mp3`)) {
             Backend.playSound(path, data.i);
             return true;
@@ -1479,7 +1478,7 @@ callbacks["LogEvent"] = (data) => {
       // finally normal skill
       dat = lcall("GetSkillData", skill);
       extension = dat.extension;
-      path = `./packages/${extension}/audio/skill/${skill}`;
+      path = SkinBank.getAudio(skill, extension, "skill");
       Backend.playSound(path, data.i);
       break;
     }
@@ -1490,8 +1489,8 @@ callbacks["LogEvent"] = (data) => {
     case "Death": {
       const item = getPhoto(data.to);
       const extension = lcall("GetGeneralData", item.general).extension;
-      Backend.playSound("./packages/" + extension + "/audio/death/"
-                        + item.general);
+      const path = SkinBank.getAudio(item.general, extension, "death");
+      Backend.playSound(path);
       break;
     }
     default:
