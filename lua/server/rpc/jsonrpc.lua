@@ -1,6 +1,7 @@
 -- 手搓jsonrpc协议的一小部分
 
 local json = require 'json'
+local io = io
 
 local _reqId = 0
 
@@ -38,7 +39,7 @@ end
 
 ---@class JsonRpcPacket
 ---@field jsonrpc "2.0"
----@field method string
+---@field method? string
 ---@field params? table<string, any> | any[]
 ---@field id? integer
 ---@field result? any
@@ -51,13 +52,24 @@ local parse = function(str)
   if not ok then
     return nil, "rpc: json parse err"
   end
+  setmetatable(obj, { __tostring = json.encode })
 
   if obj.jsonrpc ~= "2.0" then
     return nil, "rpc: not a jsonrpc packet"
   end
 
+  -- 只要有id就合法 起码是reply包
+  if type(obj.id) == "number" then
+    return obj, nil
+  end
+
+  -- 剩下就是notify包
+  if type(obj.method) == "string" then
+    return obj, nil
+  end
+
   -- 懒得判了
-  return obj, nil
+  return nil, "rpc: not a jsonrpc packet"
 end
 
 ---@param obj JsonRpcPacket
@@ -67,17 +79,34 @@ local packet_type = function(obj)
     return "notify"
   end
 
-  if obj.result ~= nil then
-    return "reply"
+  if type(obj.method) == "string" then
+    return "request"
   end
 
-  return "request"
+  return "reply"
 end
 
+local _print = print
+
+---@param data string
+local function write(data)
+  _print(data)
+end
+
+---@return string
+local function read()
+  return io.read()
+end
+
+---@class jsonrpc
 local M = {}
 M.request = request
 M.reply = reply
 M.notify = notify
 M.parse = parse
 M.packet_type = packet_type
+
+M.write = write
+M.read = read
+
 return M

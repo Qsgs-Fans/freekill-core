@@ -3,9 +3,11 @@ local os = os
 -- 下面俩是系统上要安装的 freekill不提供
 
 -- 需安装lua-socket包
-local socket = require("socket")
+local socket = require "socket"
 -- 需安装lua-filesystem包
-local fs = require("lfs")
+local fs = require "lfs"
+
+local jsonrpc = require "server.rpc.jsonrpc"
 
 local fk = {}
 
@@ -26,7 +28,28 @@ function fk.GetMicroSecond()
 end
 
 -- TODO: QRandomGenerator
--- TODO: qDebug一系列
+
+function fk.qDebug(fmt, ...)
+  jsonrpc.write(jsonrpc.notify("qDebug", { string.format(fmt, ...) }))
+end
+
+function fk.qInfo(fmt, ...)
+  jsonrpc.write(jsonrpc.notify("qInfo", { string.format(fmt, ...) }))
+end
+
+function fk.qWarning(fmt, ...)
+  jsonrpc.write(jsonrpc.notify("qWarning", { string.format(fmt, ...) }))
+end
+
+function fk.qCritical(fmt, ...)
+  jsonrpc.write(jsonrpc.notify("qCritical", { string.format(fmt, ...) }))
+end
+
+-- 连print也要？！
+
+function print(...)
+  jsonrpc.write(jsonrpc.notify("print", { ... }))
+end
 
 -- swig/player.i
 fk.Player_Invalid = 0

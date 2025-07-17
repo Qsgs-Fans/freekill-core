@@ -6,13 +6,51 @@ local os = os
 local io = io
 
 package.path = package.path .. "./?.lua;./?/init.lua;./lua/lib/?.lua;./lua/?.lua;./lua/?/init.lua"
-fk = require("server.rpc.fk")
+fk = require "server.rpc.fk"
+local jsonrpc = require "server.rpc.jsonrpc"
 
--- 加载新月杀相关内容
+-- 加载新月杀相关内容并ban掉两个吃stdin的
 dofile "lua/freekill.lua"
 dofile "lua/server/scheduler.lua"
 
-local mainLoop = function()
+---@diagnostic disable-next-line lowercase-global
+dbg = Util.DummyFunc
+debug.debug = Util.DummyFunc
+
+---@param packet JsonRpcPacket
+local tryHandlePacket = function(packet)
+  print(packet)
 end
 
-print "Hello, world"
+local mainLoop = function()
+  while true do
+    local msg = jsonrpc.read()
+    if msg == nil then
+      -- EOF
+      break
+    end
+
+    local packet = jsonrpc.parse(msg)
+    if packet == nil then
+      goto continue
+    end
+
+    -- 先假设我发过去的request全都是阻塞式读取，不让room挂起
+    -- 那这个循环其实只会接收到request
+
+    if jsonrpc.packet_type(packet) == "request" then
+      if packet.method == "exit" then
+        break
+      end
+      tryHandlePacket(packet)
+    end
+
+    ::continue::
+  end
+end
+
+-- 参考文献：http://lua-users.org/lists/lua-l/2021-12/msg00023.html
+-- if __name__ == '__main__':
+if not ... then
+  mainLoop()
+end
