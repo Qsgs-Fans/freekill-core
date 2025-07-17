@@ -143,7 +143,7 @@ Item {
           extension = dat.extension;
           path = SkinBank.getAudio(skill + "_" + general, extension, "skill");
           //path = "./packages/" + extension + "/audio/skill/" + skill + "_" + general;
-          if (Backend.exists(path + ".mp3") || Backend.exists(path + "1.mp3")) {
+          if (path !== undefined) {
             Backend.playSound(path, idx);
             return;
           }

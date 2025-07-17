@@ -24,11 +24,11 @@ var TILE_ICON_DIR = AppPath + "/image/button/tileicon/"
 var LOBBY_IMG_DIR = AppPath + "/image/lobby/";
 var MISC_DIR = AppPath + "/image/misc/";
 
-const searchPkgResource = function(path, name, suffix) {
+const searchPkgResource = function (path, name, suffix) {
   suffix = suffix ?? ".png";
   const dirs = Backend.ls(AppPath + "/packages/").filter(dir =>
     !Pacman.getDisabledPacks().includes(dir) &&
-      !dir.endsWith(".disabled")
+    !dir.endsWith(".disabled")
   );
   if (typeof config !== "undefined" && config.enabledResourcePacks) {
     for (const packName of config.enabledResourcePacks) {
@@ -46,7 +46,7 @@ const searchPkgResource = function(path, name, suffix) {
   }
 }
 
-const searchPkgResourceWithExtension = function(extension, path, name, suffix) {
+const searchPkgResourceWithExtension = function (extension, path, name, suffix) {
   suffix = suffix ?? ".png";
   if (typeof config !== "undefined" && config.enabledResourcePacks) {
     for (const packName of config.enabledResourcePacks) {
@@ -60,19 +60,20 @@ const searchPkgResourceWithExtension = function(extension, path, name, suffix) {
 }
 
 
-const searchAudioResourceWithExtension = function(extension, path, name, suffix) {
-  suffix = suffix ?? ".mp3";
+const searchAudioResourceWithExtension = function (extension, path, name, suffix = ".mp3") {
   if (typeof config !== "undefined" && config.enabledResourcePacks) {
     for (const packName of config.enabledResourcePacks) {
-      const resPath = AppPath + "/resource_pak/" + packName + "/packages/" + extension + path + name + suffix;
-      const opppath="./resource_pak/" + packName + "/packages/" + extension + path + name + suffix;
-      if (Backend.exists(resPath)) return opppath;
+      const resPath = `${AppPath}/resource_pak/${packName}/packages/${extension}${path}${name}${suffix}`;
+      if (Backend.exists(resPath)) {
+        return `./resource_pak/${packName}/packages/${extension}${path}${name}${suffix}`;
+      }
     }
   }
 
-  const ret = AppPath + "/packages/" + extension + path + name + suffix;
-  const oppret = "./packages/" + extension + path + name + suffix;
-  if (Backend.exists(ret)) return oppret;
+  const retPath = `${AppPath}/packages/${extension}${path}${name}${suffix}`;
+  if (Backend.exists(retPath)) {
+    return `./packages/${extension}${path}${name}${suffix}`;
+  }
 }
 
 function searchBuiltinPic(path, name, suffix) {
@@ -202,24 +203,23 @@ function removeMp3Suffix(path) {
   return path.replace(/(1)?\.mp3$/i, "");
 }
 
+function getAudio(name, extension, audiotype) {
+  const basePath = "/audio/" + audiotype + "/";
+  const tryPaths = [
+    [extension, basePath, name, ".mp3"],
+    [extension, basePath, name, "1.mp3"]
+  ];
 
-function getAudio(name,extension,audiotype) {
-
-  const ret =  searchAudioResourceWithExtension(extension, "/audio/"+audiotype+"/", name,".mp3");
-  const ret2 =  searchAudioResourceWithExtension(extension, "/audio/"+audiotype+"/", name,"1.mp3");
-  if (Backend.exists(ret)) {
-    return removeMp3Suffix(ret);
-  }
-  if (Backend.exists(ret2)) {
-    return removeMp3Suffix(ret2);
+  for (const args of tryPaths) {
+    const ret = searchAudioResourceWithExtension(...args);
+    if (ret) {
+      return removeMp3Suffix(ret);
+    }
   }
 }
 
-
-function getAudioRealPath(name,extension,audiotype) {
-
-  const ret =  searchPkgResourceWithExtension(extension, "/audio/"+audiotype+"/", name,".mp3");
-  
+function getAudioRealPath(name, extension, audiotype) {
+  const ret = searchPkgResourceWithExtension(extension, "/audio/" + audiotype + "/", name, ".mp3");
   if (Backend.exists(ret)) {
     return ret;
   }

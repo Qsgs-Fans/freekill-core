@@ -9,7 +9,8 @@ import Fk
 import Fk.Common
 import Fk.RoomElement
 import Fk.PhotoElement as PhotoElement
-import Fk.Widgets
+import Fk.Widgets as W
+import Fk.LobbyElement as L
 import "RoomLogic.js" as Logic
 
 Item {
@@ -124,7 +125,7 @@ Item {
 
       MenuItem {
         id: volumeButton
-        text: luatr("Audio Settings")
+        text: luatr("Audio and Controls")
         icon.source: AppPath + "/image/button/tileicon/configure"
         onClicked: {
           volumeDialog.open();
@@ -907,7 +908,7 @@ Item {
     lcall("UpdateRequestUI", "SkillButton", skill_name, action, data);
   }
 
-  PopupLoader {
+  W.PopupLoader {
     id: roomDrawer
     width: realMainWin.width * 0.4
     height: realMainWin.height * 0.95
@@ -929,7 +930,7 @@ Item {
       scale: mainWindow.scale
       transformOrigin: Item.TopLeft
 
-      ViewSwitcher {
+      W.ViewSwitcher {
         id: drawerBar
         Layout.alignment: Qt.AlignHCenter
         model: [
@@ -1000,7 +1001,7 @@ Item {
     }
   }
 
-  PopupLoader {
+  W.PopupLoader {
     id: cheatLoader
     width: realMainWin.width * 0.60
     height: realMainWin.height * 0.8
@@ -1065,8 +1066,8 @@ Item {
 
   Popup {
     id: volumeDialog
-    width: realMainWin.width * 0.5
-    height: realMainWin.height * 0.5
+    width: realMainWin.width * 0.6
+    height: realMainWin.height * 0.6
     anchors.centerIn: parent
     background: Rectangle {
       color: "#EEEEEEEE"
@@ -1075,12 +1076,27 @@ Item {
       border.width: 1
     }
 
-    Loader { // 塞不下了 TODO: 换新
-      anchors.centerIn: parent
-      width: parent.width / mainWindow.scale
-      height: parent.height / mainWindow.scale
-      scale: mainWindow.scale
-      source: "../LobbyElement/AudioSetting.qml"
+    W.SideBarSwitcher {
+      id: settingBar
+      width: 200
+      height: parent.height
+      model: ListModel {
+        ListElement { name: "Audio Settings" }
+        ListElement { name: "Control Settings" }
+      }
+    }
+
+    SwipeView {
+      width: volumeDialog.width - settingBar.width - 16
+      x: settingBar.width + 16
+      height: settingBar.height
+      Layout.fillHeight: true
+      interactive: false
+      orientation: Qt.Vertical
+      currentIndex: settingBar.currentIndex
+      clip: true
+      L.AudioSetting {}
+      L.ControlSetting {}
     }
   }
 
@@ -1102,7 +1118,7 @@ Item {
       width: parent.width / mainWindow.scale
       height: parent.height / mainWindow.scale
       scale: mainWindow.scale
-      source: AppPath + "/Fk/Pages/" + overviewType + "Overview.qml"
+      source: overviewType + "Overview.qml"
     }
   }
 

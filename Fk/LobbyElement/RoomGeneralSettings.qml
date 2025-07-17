@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Fk.Widgets as W
+
 Item {
   width: 600
   height: 800
