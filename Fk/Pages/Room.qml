@@ -125,7 +125,7 @@ Item {
 
       MenuItem {
         id: volumeButton
-        text: luatr("Audio and Controls")
+        text: luatr("Settings")
         icon.source: AppPath + "/image/button/tileicon/configure"
         onClicked: {
           volumeDialog.open();

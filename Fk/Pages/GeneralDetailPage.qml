@@ -44,7 +44,7 @@ Item {
     if (!skilldata) return;
     const extension = skilldata.extension;
     for (let i = 0; i < 999; i++) {
-     const fname = SkinBank.getAudioRealPath(skill +(i !== 0 ? i.toString() : ""), extension, "skill");
+      const fname = SkinBank.getAudioRealPath(skill +(i !== 0 ? i.toString() : ""), extension, "skill");
 
       if (Backend.exists(fname)) {
         audioModel.append({ name: skill, idx: i, specific: false});
@@ -357,7 +357,7 @@ Item {
           const general = root.general
           const extension = lcall("GetGeneralData", general).extension;
           const path = SkinBank.getAudio(general, extension, "win");
-          if (Backend.exists(path)) {
+          if (path !== undefined) {
             Backend.playSound(path);
           }
         }
@@ -428,8 +428,8 @@ Item {
         onClicked: {
           const general = root.general
           const extension = lcall("GetGeneralData", general).extension;
-          let path = SkinBank.getAudio(general, extension, "death");
-          if (Backend.exists(path)) {
+          const path = SkinBank.getAudio(general, extension, "death");
+          if (path !== undefined) {
             Backend.playSound(path);
           }
         }

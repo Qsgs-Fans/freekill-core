@@ -1765,7 +1765,7 @@ end
 --- 同时询问多名玩家选择一些牌（要求所有玩家选牌规则相同，不同的请自行构造request）
 ---@param player ServerPlayer @ 发起者
 ---@param params askToJointCardsParams @ 各种变量
----@return table<Player, integer[]> @ 返回键值表，键为Player、值为选择的牌id列表
+---@return table<ServerPlayer, integer[]> @ 返回键值表，键为Player、值为选择的牌id列表
 function Room:askToJointCards(player, params)
   local skill_name = params.skill_name or "AskForCardChosen"
   local cancelable = (params.cancelable == nil) and true or params.cancelable
@@ -3309,11 +3309,28 @@ local function shouldUpdateWinRate(room)
   return Fk.game_modes[room.settings.gameMode]:countInFunc(room)
 end
 
+--- 获取一名角色一局游戏的胜负结果。
+--- 胜利1；失败2；平局3。
+---@param winner string @ 获胜的身份，空字符串表示平局
+---@param role string @ 角色的身份
+---@return integer @ 胜负结果
+local function victoryResult(winner, role)
+  local ret
+  if table.contains(winner:split("+"), role) then
+    ret = 1
+  elseif winner == "" then
+    ret = 3
+  else
+    ret = 2
+  end
+  return ret
+end
+
 --- 结束一局游戏。
 ---@param winner string @ 获胜的身份，空字符串表示平局
 function Room:gameOver(winner)
   if not self.game_started then return end
-  self:setBanner("GameSummary", self:getGameSummary())
+  self:setBanner("GameSummary", self:getGameSummary(winner))
   self.room:destroyRequestTimer()
 
   if table.contains(
@@ -3344,13 +3361,7 @@ function Room:gameOver(winner)
       local result
 
       if p.id > 0 then
-        if table.contains(winner:split("+"), p.role) then
-          result = 1
-        elseif winner == "" then
-          result = 3
-        else
-          result = 2
-        end
+        result = victoryResult(winner, p.role)
 
         local general, deputyGeneral = p.general, p.deputyGeneral
         if record then
@@ -3386,7 +3397,7 @@ end
 
 --- 获取一局游戏的总结，包括每个玩家的回合数、回血、伤害、受伤、击杀
 ---@return table<integer, integer[]> @ 玩家id到总结的映射
-function Room:getGameSummary()
+function Room:getGameSummary(winner)
   local summary = {}
   for _, p in ipairs(self.players) do
     -- 选将阶段直接房间解散的智慧 有点意思

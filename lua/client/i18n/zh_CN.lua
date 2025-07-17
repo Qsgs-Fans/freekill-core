@@ -24,7 +24,6 @@ Fk:loadTranslationTable {
   ["Game BGM"] = "游戏BGM",
   ["Poster Girl"] = "看板娘",
 
-  ["Audio and Controls"] = "音频和控制", -- in Room
   ["Audio Settings"] = "音频",
   ["Audio and Message"] = "音频和消息",
   ["BGM Volume"] = "BGM音量",
@@ -143,6 +142,7 @@ Fk:loadTranslationTable {
 
   ["$OnlineInfo"] = "大厅人数：%1，总在线人数：%2",
 
+  ["Settings"] = "设置", -- in Room
   ["Overview"] = "一览",
   ["Generals Overview"] = "武将一览",
   ["Cards Overview"] = "卡牌一览",
@@ -426,6 +426,7 @@ FreeKill使用的是libgit2的C API，与此同时使用Git完成拓展包的下
   ["$Winner"] = "%1 获胜",
   ["$NoWinner"] = "平局！",
   ["Name"] = "名称",
+  ["Victory or Defeat"] = "胜负",
   ["Role"] = "身份",
   ["Turn"] = "回合",
   ["Recover"] = "回血",
