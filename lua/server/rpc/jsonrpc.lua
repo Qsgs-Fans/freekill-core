@@ -74,7 +74,7 @@ end
 
 ---@param obj JsonRpcPacket
 ---@return "request" | "notify" | "reply"
-local packet_type = function(obj)
+local packetType = function(obj)
   if obj.id == nil then
     return "notify"
   end
@@ -93,9 +93,56 @@ local function write(data)
   _print(data)
 end
 
----@return string
+---@type string[]
+local _buffer = {}
+local _waitingRequestId = -1
+local _eof = false
+
+---@return string?
 local function read()
-  return io.read()
+  if #_buffer > 0 then
+    local ret = table.remove(_buffer, #_buffer)
+    return ret
+  end
+
+  if _eof then return nil end
+
+  local ret = io.read()
+  if ret == nil then _eof = true end
+  return ret
+end
+
+---@return nil
+local function call(method, params)
+  write(notify(method, params))
+end
+
+---@return any
+local function callAndWait(method, params)
+  write(request(method, params))
+  local current = coroutine.running()
+  if coroutine.isyieldable(current) then
+    -- TODO: 挂起，甚至要记录roomId和reqId
+    -- TODO: 还好lua是单线程，不用担心_reqId改变，赞美吧
+  else
+    _waitingRequestId = _reqId
+    while true do
+      local msg = io.read()
+      if msg == nil then
+        _eof = true
+        break
+      end
+
+      local obj = parse(msg)
+      if obj then
+        if packetType(obj) == "reply" and obj.id == _waitingRequestId then
+          return obj.result
+        else
+          table.insert(_buffer, 1, msg)
+        end
+      end
+    end
+  end
 end
 
 ---@class jsonrpc
@@ -104,9 +151,12 @@ M.request = request
 M.reply = reply
 M.notify = notify
 M.parse = parse
-M.packet_type = packet_type
+M.packetType = packetType
 
 M.write = write
 M.read = read
+
+M.call = call
+M.callAndWait = callAndWait
 
 return M

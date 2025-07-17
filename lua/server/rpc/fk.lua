@@ -6,6 +6,8 @@ local os = os
 local socket = require "socket"
 -- 需安装lua-filesystem包
 local fs = require "lfs"
+-- 需手动编译安装，详见src/swig/qrandom文件夹
+local qrandom = require 'freekill-qrandomgen'
 
 local jsonrpc = require "server.rpc.jsonrpc"
 
@@ -27,28 +29,28 @@ function fk.GetMicroSecond()
   return socket.gettime() * 1000 * 1000
 end
 
--- TODO: QRandomGenerator
+fk.QRandomGenerator = qrandom.new
 
 function fk.qDebug(fmt, ...)
-  jsonrpc.write(jsonrpc.notify("qDebug", { string.format(fmt, ...) }))
+  jsonrpc.call("qDebug", { string.format(fmt, ...) })
 end
 
 function fk.qInfo(fmt, ...)
-  jsonrpc.write(jsonrpc.notify("qInfo", { string.format(fmt, ...) }))
+  jsonrpc.call("qInfo", { string.format(fmt, ...) })
 end
 
 function fk.qWarning(fmt, ...)
-  jsonrpc.write(jsonrpc.notify("qWarning", { string.format(fmt, ...) }))
+  jsonrpc.call("qWarning", { string.format(fmt, ...) })
 end
 
 function fk.qCritical(fmt, ...)
-  jsonrpc.write(jsonrpc.notify("qCritical", { string.format(fmt, ...) }))
+  jsonrpc.call("qCritical", { string.format(fmt, ...) })
 end
 
 -- 连print也要？！
 
 function print(...)
-  jsonrpc.write(jsonrpc.notify("print", { ... }))
+  jsonrpc.call("print", { ... })
 end
 
 -- swig/player.i

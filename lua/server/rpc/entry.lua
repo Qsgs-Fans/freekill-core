@@ -23,6 +23,13 @@ local tryHandlePacket = function(packet)
 end
 
 local mainLoop = function()
+  InitScheduler {
+    getRoom = function(_, id)
+      return jsonrpc.callAndWait("getRoom", { id })
+    end,
+  }
+  jsonrpc.call("hello", { "world" })
+
   while true do
     local msg = jsonrpc.read()
     if msg == nil then
@@ -38,7 +45,7 @@ local mainLoop = function()
     -- 先假设我发过去的request全都是阻塞式读取，不让room挂起
     -- 那这个循环其实只会接收到request
 
-    if jsonrpc.packet_type(packet) == "request" then
+    if jsonrpc.packetType(packet) == "request" then
       if packet.method == "exit" then
         break
       end

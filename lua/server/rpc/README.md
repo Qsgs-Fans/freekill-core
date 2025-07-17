@@ -1,5 +1,32 @@
-新月杀Server端Lua这一块的RPC化方案
+新月杀Lua server：rpc版
 =====================================
+
+基于stdio与json-rpc协议的简单rpc方案，旨在避免单进程的oom问题。
+
+依赖：
+
+- 必须是Linux系统，已测试过Debian与Arch
+- 安装lua-socket包
+- 安装lua-filesystem包
+- 去freekill的repo底下找到src/swig/qrandom文件夹，按里面README操作
+
+（TODO）如果用AUR中的freekill安装的话，这些依赖会直接安装
+
+（TODO）按以下命令行开服，就会启用RPC模式，将lua相关运行在单独进程：
+
+```sh
+$ ./FreeKill -s <port> --use-rpc
+```
+
+或者想要测试的话就在根目录下（core的）执行命令
+
+```sh
+$ lua lua/server/rpc/entry.sh
+```
+
+以下是开发时思路。
+
+_______
 
 目前是一个`RoomThread`线程管一个`lua_State *`。
 这样的坏处是lua虚拟机和我们共用内存空间，虽然拼尽全力的在找c++内存问题也拼尽全力的修复了，
