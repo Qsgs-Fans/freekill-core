@@ -110,7 +110,7 @@ Notify:
 关于jsonrpc完整版详见https://wiki.geekdream.com/Specification/json-rpc_2.0.html，我反正用到啥就实现啥
 接下来规定双方怎么调用相关函数就行。
 
-具体实现
+实现细节
 ----------
 
 首先我们要有两套方案，这个很好区分：
@@ -118,13 +118,62 @@ Notify:
 * 通用方案：RoomThread中`L->dofile("server/scheduler.lua")`然后信号槽
 * rpc方案：RoomThread中起新进程`lua entry.lua`，与进程之间通信，RoomThread里面定义所有对方需要用到的rpc方法，并帮他调cpp函数，同时调lua的方法
 
-然后是Lua这边的依赖怎么办，那就直接用lua命令了，同时只考虑Linux，那可以选包管理器里面有的：
+然后是依赖问题。C++这边需要用到`QProcess`建立与子进程连接，那不就等于没有依赖了。
+
+Lua直接用lua命令启动进程，在纯血lua的基础上必须引入依赖，只考虑Linux，可以选包管理器里面有的：
 
 * lua-socket: `socket.gettime()`解决微秒问题
 * lua-filesystem: 解决文件系统相关问题
-* QRandomGenerator: 我没有什么可以说的，自己从新月杀Repo中编译安装一个，用Qt终究铸成大错
+* QRandomGenerator: 我没有什么可以说的，自己从新月杀Repo中编译安装一个（src/swig/qrandom）
 
 Lua的话应该运行一个主循环，循环就不断从stdin读取一行，然后处理。
 
 其次就是设计双方具体的RPC方法了。
 
+我们先回顾当前线程方案的做法：
+
+- 平时，RoomThread线程待命（`poll()`）
+- 主线程传来的signal会唤醒RoomThread线程，进而执行一个Lua函数
+- 直到Lua函数返回为止，这个过程中其他线程传来的信号量会放在Qt内部的消息队列中
+- RoomThread调用Lua的过程中，Lua会调用很多C++函数，但这些C++函数不会反过来调用更多Lua函数
+- 其他线程调用Lua时，如果有锁则必须等待锁
+
+如此看来其实不用考虑异步之类的东西，做个阻塞式RPC完全能满足要求，在RPC情景下：
+
+- 平时，RoomThread线程待命（`poll()`），Lua进程待命（`socket:receive()`）
+- 主线程传来的signal会唤醒RoomThread线程，进而执行一个Lua函数（通过发送rpc请求）
+- 直到Lua函数返回（通过收到rpc答复判断）为止，槽函数不可返回 这个过程中其他线程传来的信号量会放在Qt内部的消息队列中
+- 因此槽函数必须用阻塞式等待（`QProcess::waitForReadyRead()`）等待Lua发来rpc包，若为request（执行C++函数），则执行并返回response，若为正在等的response，则返回
+- 其他线程调用Lua时，必须等待锁（一样的阻塞式等待到response）
+
+综上所述，不需要考虑得太复杂，调用一次rpc方法的伪代码如下就行了，两端都可以这么做：
+
+```py
+def callRpc(method, params):
+  packetToSend = jsonrpc.request(method, params)
+  socket.write(json.encode(packetToSend))
+  waitingId = packetToSend.id
+
+  while True:
+    msg = socket.read()
+    packet, ok = json.decode(msg)
+    if not ok:
+      socket.write(jsonrpc.error())
+    if packet.id == waitingId and packet.method == None:
+      return packet.result
+    else:
+      jsonrpc.server_response(methodDict, packet)
+```
+
+RPC方法一览
+--------------
+
+C++侧需要实现的：前面提到过的几乎所有swig方法。
+
+Lua需要实现的：
+
+- HandleRequest
+- ResumeRoom
+- SetPlayerProperty: 新增。因为ServerPlayer中含多个cpp侧自由变化的成员。
+- AddObserver: 新增。因为`cRoom.observers`为cpp自由变化。
+- RemoveObserver: 新增。理由同上。

@@ -1,3 +1,10 @@
+-- fk.lua: 目标是干掉swig 实现新月杀swig提供的所有功能
+-- 里面会有一系列非常像test中写过的代码。。
+--
+-- 带 --[[ mut ]] 注释的是模仿rust的let mut写法，意思就是这个是可变的
+-- 因为平时lua依赖方法直接读取C++对象的值，现在没有C++
+-- 具体的变化全都要通过rpc传递
+
 local os = os
 
 -- 下面俩是系统上要安装的 freekill不提供
@@ -10,6 +17,42 @@ local fs = require "lfs"
 local qrandom = require 'freekill-qrandomgen'
 
 local jsonrpc = require "server.rpc.jsonrpc"
+local stdio = require "server.rpc.stdio"
+local dispatchers = require "server.rpc.dispatchers"
+
+local notifyRpc = function(method, params)
+  local req = jsonrpc.notification(method, params)
+  stdio.send(json.encode(req))
+end
+
+local callRpc = function(method, params)
+  local req = jsonrpc.request(method, params)
+  local id = req.id
+  stdio.send(json.encode(req))
+
+  while true do
+    local msg = stdio.receive()
+    if msg == nil then break end
+
+    local ok, packet = pcall(json.decode, msg)
+    if not ok then
+      stdio.send(json.encode(jsonrpc.response_error(req, 'parse_error', packet)))
+      goto continue
+    end
+
+    if packet.jsonrpc == "2.0" and packet.id == id and packet.method == nil then
+      ---@cast packet JsonRpcPacket
+      return packet.result
+    else
+      local res = jsonrpc.server_response(dispatchers, packet)
+      if res then
+        stdio.send(json.encode(res))
+      end
+    end
+
+    ::continue::
+  end
+end
 
 local fk = {}
 
@@ -23,6 +66,19 @@ end
 
 -- swig/qt.i
 
+fk.QList = function(arr)
+  return setmetatable(arr, {
+    __index = {
+      at = function(self, i)
+        return self[i+1]
+      end,
+      length = function(self)
+        return #self
+      end,
+    }
+  })
+end
+
 --- 注：socket只能精确到0.1毫秒
 ---@return integer
 function fk.GetMicroSecond()
@@ -32,25 +88,31 @@ end
 fk.QRandomGenerator = qrandom.new
 
 function fk.qDebug(fmt, ...)
-  jsonrpc.call("qDebug", { string.format(fmt, ...) })
+  notifyRpc("qDebug", { string.format(fmt, ...) })
 end
 
 function fk.qInfo(fmt, ...)
-  jsonrpc.call("qInfo", { string.format(fmt, ...) })
+  notifyRpc("qInfo", { string.format(fmt, ...) })
 end
 
 function fk.qWarning(fmt, ...)
-  jsonrpc.call("qWarning", { string.format(fmt, ...) })
+  notifyRpc("qWarning", { string.format(fmt, ...) })
 end
 
 function fk.qCritical(fmt, ...)
-  jsonrpc.call("qCritical", { string.format(fmt, ...) })
+  notifyRpc("qCritical", { string.format(fmt, ...) })
 end
 
 -- 连print也要？！
 
 function print(...)
-  jsonrpc.call("print", { ... })
+  local params = {}
+  local args = { ... }
+  local n = select("#", ...)
+  for i = 1, n do
+    table.insert(params, tostring(args[i]))
+  end
+  notifyRpc("print", params)
 end
 
 -- swig/player.i
@@ -61,6 +123,23 @@ fk.Player_Run = 3
 fk.Player_Leave = 4
 fk.Player_Robot = 5
 fk.Player_Offline = 6
+
+-- 还好服务端用不到setter.
+---@type metatable
+local _Player_MT = {
+  __index = {
+    getId = function(t) return t.id end,
+    getScreenName = function(t) return t.screenName end,
+    getAvatar = function(t) return t.avatar end,
+    getTotalGameTime = function(t) return t.totalGameTime end,
+    getState = function(t) return t.state end,
+    getGameData = function(t) return t.gameData end,
+
+    -- RPC场景下died及其关联的逃跑惩罚判断应该值得思考
+    isDied = function(t) return t.died end,
+    setDied = function(t, v) t.died = v end,
+  },
+}
 
 -- swig/client.i
 
@@ -88,9 +167,155 @@ end
 
 ---@type fun(path: string): boolean
 fk.QmlBackend_isDir = function(path)
-  return fs.attributes(path).mode == "directory"
+  return fs.attributes(path) and fs.attributes(path).mode == "directory"
 end
 
--- swig/server.i: 没有附加到fk上的内容
+-- swig/server.i
+
+---@param command string
+---@param jsondata string
+---@param timeout integer
+---@param timestamp? integer
+local _ServerPlayer_doRequest = function(self, command, jsondata, timeout, timestamp)
+  callRpc("ServerPlayer_doRequest", { command, jsondata, timeout, timestamp })
+end
+
+---@return string
+local _ServerPlayer_waitForReply = function(self, timeout)
+  return callRpc("ServerPlayer_waitForReply", { timeout })
+end
+
+local _ServerPlayer_doNotify = function(self, command, jsondata)
+  return callRpc("ServerPlayer_waitForReply", { command, jsondata })
+end
+
+-- ServerPlayer必须要绑定到具体socket上，uid完全不够用
+
+---@type metatable
+local _ServerPlayer_MT = {
+  __index = setmetatable({
+    doRequest = _ServerPlayer_doRequest,
+    waitForReply = _ServerPlayer_waitForReply,
+    doNotify = _ServerPlayer_doNotify,
+
+    -- TODO
+    thinking = function(t) return t._thinking end,
+    setThinking = function(t, v) t._thinking = v end,
+    emitKick = function() end,
+  }, _Player_MT),
+}
+
+fk.ServerPlayer = function(t)
+  return setmetatable({
+    id = t.id,
+    screenName = t.screenName,
+    avatar = t.avatar,
+    totalGameTime = t.totalGameTime,
+
+    --[[ mut ]] state = t.state,
+    gameData = fk.QList(t.gameData),
+
+    -- TODO: 这两个应该是和C++代码完全绑定的，需要考虑
+    died = false,
+    _thinking = false,
+  }, _ServerPlayer_MT)
+end
+
+local _Room_getOwner = function(self)
+  local players = self.players
+  local ownerId = self.ownerId
+
+  for _, p in ipairs(players) do
+    if p.id == ownerId then
+      return p
+    end
+  end
+end
+
+local _Room_hasObserver = function(self, player)
+  for _, p in ipairs(self.observers) do
+    if p.id == player.id then
+      return true
+    end
+  end
+  return false
+end
+
+local _Room_delay = function(self, ms)
+  callRpc("Room_delay", { self.id, ms })
+end
+
+local _Room_updatePlayerWinRate = function(self, id, mode, role, result)
+  callRpc("Room_updatePlayerWinRate", { self.id, id, mode, role, result })
+end
+
+local _Room_updateGeneralWinRate = function(self, general, mode, role, result)
+  callRpc("Room_updateGeneralWinRate", { self.id, general, mode, role, result })
+end
+
+local _Room_gameOver = function(self)
+  callRpc("Room_gameOver", { self.id })
+end
+
+local _Room_setRequestTimer = function(self, ms)
+  callRpc("Room_setRequestTimer", { self.id, ms })
+end
+
+local _Room_destroyRequestTimer = function(self)
+  callRpc("Room_destroyRequestTimer", { self.id })
+end
+
+---@type metatable
+local _Room_MT = {
+  __index = {
+    getId = function(t) return t.id end,
+    getPlayers = function(t) return t.players end,
+    getOwner = _Room_getOwner,
+    getObservers = function(t) return t.observers end,
+    hasObserver = _Room_hasObserver,
+    getTimeout = function(t) return t.timeout end,
+    delay = _Room_delay,
+
+    updatePlayerWinRate = _Room_updatePlayerWinRate,
+    updateGeneralWinRate = _Room_updateGeneralWinRate,
+    gameOver = _Room_gameOver,
+    setRequestTimer = _Room_setRequestTimer,
+    destroyRequestTimer = _Room_destroyRequestTimer,
+
+    -- 这两个引用计数啥的我估计没啥用了，之后看看怎么完全剔除
+    increaseRefCount = function() end,
+    decreaseRefCount = function() end,
+
+    settings = function(t) return t._settings end,
+  }
+}
+
+fk.Room = function(t)
+  local players = {}
+  for _, obj in ipairs(t.players) do
+    table.insert(players, fk.ServerPlayer(obj))
+  end
+
+  return setmetatable({
+    id = t.id,
+    players = fk.QList(players),
+    ownerId = t.ownerId,
+    --[[ mut ]] observers = fk.QList({}),
+    timeout = t.timeout,
+
+    _settings = t.settings,
+  }, _Room_MT)
+end
+
+local _RoomThread_getRoom = function(_, id)
+  local roomData = callRpc("RoomThread_getRoom", { id })
+  return fk.Room(roomData)
+end
+
+fk.RoomThread = function()
+  return {
+    getRoom = _RoomThread_getRoom,
+  }
+end
 
 return fk

@@ -6,8 +6,11 @@ local os = os
 local io = io
 
 package.path = package.path .. "./?.lua;./?/init.lua;./lua/lib/?.lua;./lua/?.lua;./lua/?/init.lua"
+
 fk = require "server.rpc.fk"
 local jsonrpc = require "server.rpc.jsonrpc"
+local stdio = require "server.rpc.stdio"
+local dispatchers = require "server.rpc.dispatchers"
 
 -- 加载新月杀相关内容并ban掉两个吃stdin的
 dofile "lua/freekill.lua"
@@ -17,42 +20,18 @@ dofile "lua/server/scheduler.lua"
 dbg = Util.DummyFunc
 debug.debug = Util.DummyFunc
 
----@param packet JsonRpcPacket
-local tryHandlePacket = function(packet)
-  print(packet)
-end
-
 local mainLoop = function()
-  InitScheduler {
-    getRoom = function(_, id)
-      return jsonrpc.callAndWait("getRoom", { id })
-    end,
-  }
-  jsonrpc.call("hello", { "world" })
+  InitScheduler(fk.RoomThread())
+  stdio.send(jsonrpc.encode_rpc(jsonrpc.notification, "hello", { "world" }))
 
   while true do
-    local msg = jsonrpc.read()
-    if msg == nil then
-      -- EOF
-      break
+    local msg = stdio.receive()
+    if msg == nil then break end
+
+    local res = jsonrpc.server_response(dispatchers, msg)
+    if res then
+      stdio.send(json.encode(res))
     end
-
-    local packet = jsonrpc.parse(msg)
-    if packet == nil then
-      goto continue
-    end
-
-    -- 先假设我发过去的request全都是阻塞式读取，不让room挂起
-    -- 那这个循环其实只会接收到request
-
-    if jsonrpc.packetType(packet) == "request" then
-      if packet.method == "exit" then
-        break
-      end
-      tryHandlePacket(packet)
-    end
-
-    ::continue::
   end
 end
 
