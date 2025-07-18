@@ -151,6 +151,7 @@ fk.QmlBackend_ls = function(path)
       table.insert(ret, entry)
     end
   end
+  table.sort(ret)
   return ret
 end
 
