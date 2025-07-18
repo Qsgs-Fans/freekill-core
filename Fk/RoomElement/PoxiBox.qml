@@ -113,7 +113,9 @@ GraphicsBox {
       text: luatr("OK")
       enabled: lcall("PoxiFeasible", root.poxi_type, root.selected_ids,
                      root.card_data, root.extra_data);
-      onClicked: root.cardsSelected(root.selected_ids)
+      onClicked: {
+        shuffleInvisibleOutput();
+      }
     }
 
     MetroButton {
@@ -198,4 +200,34 @@ GraphicsBox {
     }
     return null;
   }
+
+  function shuffleInvisibleOutput() {
+    let output = root.selected_ids.slice();
+    const visible_data = extra_data?.visible_data ?? {};
+
+    for (let h = 0; h < cardModel.count; h++) {
+      let cards = cardModel.get(h).areaCards;
+      let invisible = [];
+      let chosenInvisible = [];
+      for (let j = 0; j < cards.count; j++) {
+        let cid = cards.get(j).cid;
+        if (visible_data[cid.toString()] == false) {
+          invisible.push(cid);
+          let k = output.indexOf(cid)
+          if (k !== -1) {
+            chosenInvisible.push(k);
+          }
+        }
+      }
+      if (!chosenInvisible.length) continue;
+      for (let i = 0; i < chosenInvisible.length; i++) {
+        const randomIndex = Math.floor(Math.random() * invisible.length);
+        let newCid = invisible.splice(randomIndex, 1)[0];
+        output[chosenInvisible[i]] = newCid;
+      }
+
+    }
+    root.cardsSelected(output);
+  }
+
 }
