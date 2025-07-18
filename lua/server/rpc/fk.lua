@@ -42,7 +42,7 @@ local callRpc = function(method, params)
 
     if packet.jsonrpc == "2.0" and packet.id == id and packet.method == nil then
       ---@cast packet JsonRpcPacket
-      return packet.result
+      return packet.result, packet.error
     else
       local res = jsonrpc.server_response(dispatchers, packet)
       if res then
@@ -132,7 +132,6 @@ local _Player_MT = {
     getScreenName = function(t) return t.screenName end,
     getAvatar = function(t) return t.avatar end,
     getTotalGameTime = function(t) return t.totalGameTime end,
-    getState = function(t) return t.state end,
     getGameData = function(t) return t.gameData end,
 
     -- RPC场景下died及其关联的逃跑惩罚判断应该值得思考
@@ -177,16 +176,35 @@ end
 ---@param timeout integer
 ---@param timestamp? integer
 local _ServerPlayer_doRequest = function(self, command, jsondata, timeout, timestamp)
-  callRpc("ServerPlayer_doRequest", { command, jsondata, timeout, timestamp })
+  callRpc("ServerPlayer_doRequest", { self.connId, command, tostring(jsondata), timeout, timestamp })
 end
 
----@return string
 local _ServerPlayer_waitForReply = function(self, timeout)
-  return callRpc("ServerPlayer_waitForReply", { timeout })
+  local ret, err = callRpc("ServerPlayer_waitForReply", { self.connId, timeout })
+  if err ~= nil then
+    return "__cancel"
+  end
+  return ret
 end
 
 local _ServerPlayer_doNotify = function(self, command, jsondata)
-  return callRpc("ServerPlayer_waitForReply", { command, jsondata })
+  callRpc("ServerPlayer_doNotify", { self.connId, command, tostring(jsondata) })
+end
+
+local _ServerPlayer_getState = function(self)
+  local ret, err = callRpc("ServerPlayer_getState", { self.connId })
+  if err ~= nil or ret == fk.Player_Run then
+    return fk.Player_Robot
+  end
+  return ret
+end
+
+local _ServerPlayer_thinking = function(self)
+  return callRpc("ServerPlayer_thinking", { self.connId })
+end
+
+local _ServerPlayer_setThinking = function(self, think)
+  callRpc("ServerPlayer_setThinking", { self.connId, think })
 end
 
 -- ServerPlayer必须要绑定到具体socket上，uid完全不够用
@@ -198,26 +216,29 @@ local _ServerPlayer_MT = {
     waitForReply = _ServerPlayer_waitForReply,
     doNotify = _ServerPlayer_doNotify,
 
+    getState = _ServerPlayer_getState,
+
+    thinking = _ServerPlayer_thinking,
+    setThinking = _ServerPlayer_setThinking,
+
     -- TODO
-    thinking = function(t) return t._thinking end,
-    setThinking = function(t, v) t._thinking = v end,
     emitKick = function() end,
   }, _Player_MT),
 }
 
 fk.ServerPlayer = function(t)
   return setmetatable({
+    connId = t.connId,
+
     id = t.id,
     screenName = t.screenName,
     avatar = t.avatar,
     totalGameTime = t.totalGameTime,
 
-    --[[ mut ]] state = t.state,
     gameData = fk.QList(t.gameData),
 
     -- TODO: 这两个应该是和C++代码完全绑定的，需要考虑
     died = false,
-    _thinking = false,
   }, _ServerPlayer_MT)
 end
 

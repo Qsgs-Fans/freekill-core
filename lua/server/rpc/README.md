@@ -12,10 +12,10 @@
 
 （TODO）如果用AUR中的freekill安装的话，这些依赖会直接安装
 
-（TODO）按以下命令行开服，就会启用RPC模式，将lua相关运行在单独进程：
+（github rpc分支的freekill）按以下命令行开服，就会启用RPC模式，将lua相关运行在单独进程：
 
 ```sh
-$ ./FreeKill -s <port> --use-rpc
+$ ./FreeKill --rpc -s <port>
 ```
 
 或者想要测试的话就在根目录下（core的）执行命令
