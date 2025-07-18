@@ -76,7 +76,7 @@ local function add_error_object(error_name, error_object)
   for k, v in pairs(error_objects) do
     if v.code == error_object.code then
       error("Error code " .. tostring(error_object.code) ..
-         " is already assigned to " .. k)
+        " is already assigned to " .. k)
     end
   end
 
@@ -264,48 +264,6 @@ end
 
 local function get_next_free_id()
   return _reqId
-end
-
---- 返回jsonrpc包，或者nil与error字符串
----@param str string
----@return JsonRpcPacket?, string?
-local parse = function(str)
-  local ok, obj = pcall(json.decode, str)
-  if not ok then
-    return nil, "rpc: json parse err"
-  end
-  setmetatable(obj, { __tostring = json.encode })
-
-  if obj.jsonrpc ~= "2.0" then
-    return nil, "rpc: not a jsonrpc packet"
-  end
-
-  -- 只要有id就合法 起码是reply包
-  if type(obj.id) == "number" then
-    return obj, nil
-  end
-
-  -- 剩下就是notify包
-  if type(obj.method) == "string" then
-    return obj, nil
-  end
-
-  -- 懒得判了
-  return nil, "rpc: not a jsonrpc packet"
-end
-
----@param obj JsonRpcPacket
----@return "request" | "notify" | "reply"
-local packetType = function(obj)
-  if obj.id == nil then
-    return "notify"
-  end
-
-  if type(obj.method) == "string" then
-    return "request"
-  end
-
-  return "reply"
 end
 
 ---@class jsonrpc
