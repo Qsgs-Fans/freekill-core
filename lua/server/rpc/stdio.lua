@@ -5,6 +5,9 @@ local io = io
 
 ---@return string?
 local function receive()
+  if fk._rpc_finished then
+    return nil
+  end
   return io.read()
 end
 

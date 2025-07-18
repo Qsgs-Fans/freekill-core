@@ -2,8 +2,6 @@
 -- 关于rpc的说明详见README
 
 -- 在加载freekill.lua之前，必须先做好所有准备，模拟出类似swig的环境
-local os = os
-local io = io
 
 package.path = package.path .. "./?.lua;./?/init.lua;./lua/lib/?.lua;./lua/?.lua;./lua/?/init.lua"
 

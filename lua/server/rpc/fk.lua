@@ -134,9 +134,7 @@ local _Player_MT = {
     getTotalGameTime = function(t) return t.totalGameTime end,
     getGameData = function(t) return t.gameData end,
 
-    -- RPC场景下died及其关联的逃跑惩罚判断应该值得思考
-    isDied = function(t) return t.died end,
-    setDied = function(t, v) t.died = v end,
+    getState = function(t) return t.state end,
   },
 }
 
@@ -191,14 +189,6 @@ local _ServerPlayer_doNotify = function(self, command, jsondata)
   callRpc("ServerPlayer_doNotify", { self.connId, command, tostring(jsondata) })
 end
 
-local _ServerPlayer_getState = function(self)
-  local ret, err = callRpc("ServerPlayer_getState", { self.connId })
-  if err ~= nil or ret == fk.Player_Run then
-    return fk.Player_Robot
-  end
-  return ret
-end
-
 local _ServerPlayer_thinking = function(self)
   return callRpc("ServerPlayer_thinking", { self.connId })
 end
@@ -207,7 +197,13 @@ local _ServerPlayer_setThinking = function(self, think)
   callRpc("ServerPlayer_setThinking", { self.connId, think })
 end
 
--- ServerPlayer必须要绑定到具体socket上，uid完全不够用
+local _ServerPlayer_setDied = function(self, died)
+  callRpc("ServerPlayer_setDied", { self.connId, died })
+end
+
+local _ServerPlayer_emitKick = function(self)
+  callRpc("ServerPlayer_emitKick", { self.connId })
+end
 
 ---@type metatable
 local _ServerPlayer_MT = {
@@ -216,13 +212,11 @@ local _ServerPlayer_MT = {
     waitForReply = _ServerPlayer_waitForReply,
     doNotify = _ServerPlayer_doNotify,
 
-    getState = _ServerPlayer_getState,
-
     thinking = _ServerPlayer_thinking,
     setThinking = _ServerPlayer_setThinking,
 
-    -- TODO
-    emitKick = function() end,
+    setDied = _ServerPlayer_setDied,
+    emitKick = _ServerPlayer_emitKick,
   }, _Player_MT),
 }
 
@@ -235,14 +229,13 @@ fk.ServerPlayer = function(t)
     avatar = t.avatar,
     totalGameTime = t.totalGameTime,
 
-    gameData = fk.QList(t.gameData),
+    state = t.state,
 
-    -- TODO: 这两个应该是和C++代码完全绑定的，需要考虑
-    died = false,
+    gameData = fk.QList(t.gameData),
   }, _ServerPlayer_MT)
 end
 
-local _Room_getOwner = function(self)
+local room_getOwner = function(self)
   local players = self.players
   local ownerId = self.ownerId
 
@@ -253,7 +246,7 @@ local _Room_getOwner = function(self)
   end
 end
 
-local _Room_hasObserver = function(self, player)
+local room_hasObserver = function(self, player)
   for _, p in ipairs(self.observers) do
     if p.id == player.id then
       return true
@@ -286,14 +279,22 @@ local _Room_destroyRequestTimer = function(self)
   callRpc("Room_destroyRequestTimer", { self.id })
 end
 
+local _Room_increaseRefCount = function(self)
+  callRpc("Room_increaseRefCount", { self.id })
+end
+
+local _Room_decreaseRefCount = function(self)
+  callRpc("Room_decreaseRefCount", { self.id })
+end
+
 ---@type metatable
 local _Room_MT = {
   __index = {
     getId = function(t) return t.id end,
     getPlayers = function(t) return t.players end,
-    getOwner = _Room_getOwner,
+    getOwner = room_getOwner,
     getObservers = function(t) return t.observers end,
-    hasObserver = _Room_hasObserver,
+    hasObserver = room_hasObserver,
     getTimeout = function(t) return t.timeout end,
     delay = _Room_delay,
 
@@ -303,9 +304,9 @@ local _Room_MT = {
     setRequestTimer = _Room_setRequestTimer,
     destroyRequestTimer = _Room_destroyRequestTimer,
 
-    -- 这两个引用计数啥的我估计没啥用了，之后看看怎么完全剔除
-    increaseRefCount = function() end,
-    decreaseRefCount = function() end,
+    -- 虽然C++ Room变成NULL无关紧要了，但我们希望先保存数据库再销毁房间，所以做了
+    increaseRefCount = _Room_increaseRefCount,
+    decreaseRefCount = _Room_decreaseRefCount,
 
     settings = function(t) return t._settings end,
   }
@@ -338,5 +339,7 @@ fk.RoomThread = function()
     getRoom = _RoomThread_getRoom,
   }
 end
+
+fk._rpc_finished = false
 
 return fk
