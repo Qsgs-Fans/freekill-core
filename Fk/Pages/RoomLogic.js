@@ -1462,7 +1462,7 @@ callbacks["LogEvent"] = (data) => {
           const dat = lcall("GetGeneralData", general);
           const extension = dat.extension;
           const path = SkinBank.getAudio(skill + "_" + general, extension, "skill");
-          if (Backend.exists(`${path}.mp3`) || Backend.exists(`${path}1.mp3`)) {
+          if (path !== undefined) {
             Backend.playSound(path, data.i);
             return true;
           }
@@ -1483,7 +1483,8 @@ callbacks["LogEvent"] = (data) => {
       break;
     }
     case "PlaySound": {
-      Backend.playSound(data.name);
+      const path = SkinBank.getAudioByPath(data.name);
+      Backend.playSound(path);
       break;
     }
     case "Death": {

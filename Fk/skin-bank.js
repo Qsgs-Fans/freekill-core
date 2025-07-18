@@ -59,20 +59,37 @@ const searchPkgResourceWithExtension = function (extension, path, name, suffix) 
   if (Backend.exists(ret)) return ret;
 }
 
-
+// 尝试在资源包中查找武将技能语音
 const searchAudioResourceWithExtension = function (extension, path, name, suffix = ".mp3") {
   if (typeof config !== "undefined" && config.enabledResourcePacks) {
     for (const packName of config.enabledResourcePacks) {
       const resPath = `${AppPath}/resource_pak/${packName}/packages/${extension}${path}${name}${suffix}`;
       if (Backend.exists(resPath)) {
-        return `./resource_pak/${packName}/packages/${extension}${path}${name}${suffix}`;
+        return `./resource_pak/${packName}/packages/${extension}${path}${name}`;
       }
     }
   }
 
   const retPath = `${AppPath}/packages/${extension}${path}${name}${suffix}`;
   if (Backend.exists(retPath)) {
-    return `./packages/${extension}${path}${name}${suffix}`;
+    return `./packages/${extension}${path}${name}`;
+  }
+}
+
+// 尝试在资源包中根据路径查找音效
+const searchAudioResourceByPath = function (path) {
+  if (typeof config !== "undefined" && config.enabledResourcePacks) {
+    for (const packName of config.enabledResourcePacks) {
+      const resPath = `${AppPath}/resource_pak/${packName}${path}`;
+      if (Backend.exists(resPath)) {
+        return `./resource_pak/${packName}${path}`;
+      }
+    }
+  }
+
+  const retPath = `${AppPath}${path}`;
+  if (Backend.exists(retPath)) {
+    return path;
   }
 }
 
@@ -203,6 +220,7 @@ function removeMp3Suffix(path) {
   return path.replace(/(1)?\.mp3$/i, "");
 }
 
+// 武将技能语音
 function getAudio(name, extension, audiotype) {
   const basePath = "/audio/" + audiotype + "/";
   const tryPaths = [
@@ -213,9 +231,14 @@ function getAudio(name, extension, audiotype) {
   for (const args of tryPaths) {
     const ret = searchAudioResourceWithExtension(...args);
     if (ret) {
-      return removeMp3Suffix(ret);
+      return ret;
     }
   }
+}
+
+// 非技能的卡牌和其他语音
+function getAudioByPath(path) {
+  return removeMp3Suffix(searchAudioResourceByPath(path + ".mp3"));
 }
 
 function getAudioRealPath(name, extension, audiotype) {

@@ -128,7 +128,7 @@ Item {
         text: luatr("Settings")
         icon.source: AppPath + "/image/button/tileicon/configure"
         onClicked: {
-          volumeDialog.open();
+          settingsDialog.open();
         }
       }
 
@@ -1064,8 +1064,9 @@ Item {
     }
   }
 
-  Popup {
-    id: volumeDialog
+  W.PopupLoader {
+    id: settingsDialog
+    padding: 0
     width: realMainWin.width * 0.6
     height: realMainWin.height * 0.6
     anchors.centerIn: parent
@@ -1087,10 +1088,9 @@ Item {
     }
 
     SwipeView {
-      width: volumeDialog.width - settingBar.width - 16
+      width: settingsDialog.width - settingBar.width - 16
       x: settingBar.width + 16
-      height: settingBar.height
-      Layout.fillHeight: true
+      height: parent.height
       interactive: false
       orientation: Qt.Vertical
       currentIndex: settingBar.currentIndex
@@ -1100,7 +1100,7 @@ Item {
     }
   }
 
-  Popup {
+  W.PopupLoader {
     id: overviewDialog
     width: realMainWin.width * 0.75
     height: realMainWin.height * 0.75
