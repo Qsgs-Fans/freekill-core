@@ -87,7 +87,7 @@ const searchAudioResourceByPath = function (path) {
     }
   }
 
-  const retPath = `${AppPath}${path}`;
+  const retPath = `${AppPath}/${path}`;
   if (Backend.exists(retPath)) {
     return path;
   }
@@ -238,7 +238,10 @@ function getAudio(name, extension, audiotype) {
 
 // 非技能的卡牌和其他语音
 function getAudioByPath(path) {
-  return removeMp3Suffix(searchAudioResourceByPath(path + ".mp3"));
+  const ret = searchAudioResourceByPath(path + ".mp3")
+  if (ret) {
+    return removeMp3Suffix(ret);
+  }
 }
 
 function getAudioRealPath(name, extension, audiotype) {
