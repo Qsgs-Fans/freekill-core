@@ -248,8 +248,6 @@ function CardManager:getCardsFromPileByRule(pattern, num, fromPile)
     return {}
   end
 
-  local cardPack = {}
-
   local matchedIds = {}
   for _, id in ipairs(pileToSearch) do
     if Fk:getCardById(id):matchPattern(pattern) then
@@ -257,11 +255,18 @@ function CardManager:getCardsFromPileByRule(pattern, num, fromPile)
     end
   end
 
+  if #matchedIds == 0 then
+    return {}
+  end
+
+  local cardPack = {}
+
   local loopTimes = math.min(num, #matchedIds)
+  local i
   for _ = 1, loopTimes do
-    local randomCardId = matchedIds[math.random(1, #matchedIds)]
-    table.insert(cardPack, randomCardId)
-    table.removeOne(matchedIds, randomCardId)
+    i = math.random(1, #matchedIds)
+    table.insert(cardPack, matchedIds[i])
+    table.remove(matchedIds, i)
   end
 
   return cardPack
