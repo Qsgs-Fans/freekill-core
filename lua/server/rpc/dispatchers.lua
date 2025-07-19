@@ -71,8 +71,6 @@ local addObserver = function(params)
     return false, "Room not found"
   end
 
-  print(json.encode(obj))
-
   table.insert(room.room:getObservers(), fk.ServerPlayer(obj))
   return true, nil
 end
