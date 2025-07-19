@@ -18,6 +18,37 @@ dofile "lua/server/scheduler.lua"
 dbg = Util.DummyFunc
 debug.debug = Util.DummyFunc
 
+local deadline_tab = setmetatable({}, { __mode = "k" })
+
+local TIMEOUT = 10
+local infinity = 1 / 0
+local function deadLoopCheck()
+  local co = coroutine.running()
+  local ddl = deadline_tab[co] or infinity
+  if os.time() > ddl then
+    error("Execution time exceed.")
+  end
+end
+
+-- 唉，全局穿透
+-- 先改写他俩实现超时检测，等版本上来点之后把原生coroutine调用全杀了
+
+local cocreate = coroutine.create
+---@diagnostic disable-next-line
+coroutine.create = function(f, ...)
+  return cocreate(function(...)
+    debug.sethook(coroutine.running(), deadLoopCheck, "", 50000)
+    return f(...)
+  end, ...)
+end
+local coresume = coroutine.resume
+---@diagnostic disable-next-line
+coroutine.resume = function(co, ...)
+  local deadline = os.time() + TIMEOUT
+  deadline_tab[co] = deadline
+  return coresume(co, ...)
+end
+
 local mainLoop = function()
   InitScheduler(fk.RoomThread())
   stdio.send(jsonrpc.encode_rpc(jsonrpc.notification, "hello", { "world" }))

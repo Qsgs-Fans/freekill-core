@@ -9,8 +9,12 @@ local os = os
 
 -- 下面俩是系统上要安装的 freekill不提供
 
+-- 需安装lua-posix包
+local posix = require 'posix'
+
 -- 需安装lua-socket包
-local socket = require "socket"
+-- local socket = require "socket"
+
 -- 需安装lua-filesystem包
 local fs = require "lfs"
 -- 需手动编译安装，详见src/swig/qrandom文件夹
@@ -79,10 +83,10 @@ fk.QList = function(arr)
   })
 end
 
---- 注：socket只能精确到0.1毫秒
 ---@return integer
 function fk.GetMicroSecond()
-  return socket.gettime() * 1000 * 1000
+  local date = posix.sys.time.gettimeofday()
+  return date.tv_sec * 1000000 + date.tv_usec
 end
 
 fk.QRandomGenerator = qrandom.new
