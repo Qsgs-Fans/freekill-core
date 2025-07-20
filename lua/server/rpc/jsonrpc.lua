@@ -121,6 +121,7 @@ local function request(method, params, id)
   req.id = id or _reqId
   if req.id == _reqId then
     _reqId = req.id + 1
+    if _reqId > 10000000 then _reqId = 1 end
   end
   return req
 end

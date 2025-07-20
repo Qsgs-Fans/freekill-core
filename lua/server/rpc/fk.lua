@@ -47,6 +47,12 @@ local callRpc = function(method, params)
     if packet.jsonrpc == "2.0" and packet.id == id and packet.method == nil then
       ---@cast packet JsonRpcPacket
       return packet.result, packet.error
+
+    elseif packet.error then
+      -- 和Json RPC spec不合的一集，我们可能收到预期之外的error
+      -- 这可能是我io编程不达标导致的
+      -- 对于这种id不合的error包扔了
+      fk.qCritical(msg)
     else
       local res = jsonrpc.server_response(dispatchers, packet)
       if res then
