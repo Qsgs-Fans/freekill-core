@@ -1196,7 +1196,7 @@ function Room:askToChooseCardsAndChoice(player, params)
     disabled = all_cards and table.filter(all_cards, function (id)
       return not table.contains(cards, id)
     end) or {},
-    extra_data = params.extra_data
+    extra_data = params.extra_data or {}
   }
   local command = "AskForCardsAndChoice"
   local req = Request:new(player, command)
