@@ -758,6 +758,19 @@ function CardEffectData:setResponseTimes(num, target)
   self.fixedResponseTimesList[target or self.to] = num
 end
 
+-- 改变生效卡牌的卡牌技能
+---@param skill string
+function CardEffectData:changeCardSkill(skill)
+  assert(Fk.skills[skill] and Fk.skills[skill]:isInstanceOf(CardSkill))
+  local card = self.card:clone()
+  local c = table.simpleClone(self.card)
+  for k, v in pairs(c) do
+    card[k] = v
+  end
+  card.skill = Fk.skills[skill]
+  self.card = card
+end
+
 ---@class CardEffectEvent: TriggerEvent
 ---@field data CardEffectData
 local CardEffectEvent = TriggerEvent:subclass("CardEffectEvent")
