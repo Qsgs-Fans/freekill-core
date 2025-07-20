@@ -10,10 +10,10 @@ local os = os
 -- 下面俩是系统上要安装的 freekill不提供
 
 -- 需安装lua-posix包
-local posix = require 'posix'
+-- local posix = require 'posix'
 
 -- 需安装lua-socket包
--- local socket = require "socket"
+local socket = require "socket"
 
 -- 需安装lua-filesystem包
 local fs = require "lfs"
@@ -91,8 +91,9 @@ end
 
 ---@return integer
 function fk.GetMicroSecond()
-  local date = posix.sys.time.gettimeofday()
-  return date.tv_sec * 1000000 + date.tv_usec
+  -- local date = posix.sys.time.gettimeofday()
+  -- return date.tv_sec * 1000000 + date.tv_usec
+  return socket.gettime() * 1000 * 1000;
 end
 
 fk.QRandomGenerator = qrandom.new
