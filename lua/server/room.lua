@@ -792,7 +792,7 @@ function Room:notifySkillInvoked(player, skill_name, skill_type, tos)
   local bigAnim = false
   local skill = Fk.skills[skill_name]
   if not skill then skill_type = "" else
-    if not skill.mute and (skill:hasTag(Skill.Limited) or skill:hasTag(Skill.Wake)) then
+    if not skill.mute and (skill:hasTag(Skill.Limited) or skill:hasTag(Skill.Wake)) and not skill.is_delay_effect then
       bigAnim = true -- 优先大招特效
     end
     if not skill_type then
@@ -831,10 +831,11 @@ function Room:notifySkillInvoked(player, skill_name, skill_type, tos)
       skill_type = skill_type,
     })
   else
+    skill_name = (skill:getSkeleton() or skill).name
     self:doAnimate("InvokeUltSkill", {
       name = skill_name,
       player = player.id,
-      deputy = player.deputyGeneral and player.deputyGeneral ~= "" and table.contains(Fk.generals[player.deputyGeneral]:getSkillNameList(true), skill_name),
+      deputy = Fk.generals[player.deputyGeneral] ~= nil and table.contains(Fk.generals[player.deputyGeneral]:getSkillNameList(true), skill_name),
     })
     self:delay(2000)
   end
