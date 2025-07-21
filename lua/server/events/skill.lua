@@ -44,11 +44,12 @@ function SkillEffect:main()
           return to
         end
       end) or {}
-    local mute, no_indicate, audio_index = skill.mute, skill.no_indicate, skill.audio_index
+    local mute, no_indicate, audio_index, anim_type = skill.mute, skill.no_indicate, skill.audio_index, skill.anim_type
     if type(cost_data) == "table" then
       if cost_data.mute then mute = cost_data.mute end
       if cost_data.no_indicate then no_indicate = cost_data.no_indicate end
       if cost_data.audio_index then audio_index = cost_data.audio_index end
+      if cost_data.anim_type then anim_type = cost_data.anim_type end
     end
     if not mute then
       if skill:getSkeleton() and skill:getSkeleton().attached_equip then
@@ -78,7 +79,7 @@ function SkillEffect:main()
           audio_index = table.random(audio_index)
         end
         player:broadcastSkillInvoke(skill:getSkeleton().name, audio_index)
-        room:notifySkillInvoked(player, skill.name, skill.anim_type, no_indicate and {} or tos)
+        room:notifySkillInvoked(player, skill.name, anim_type, no_indicate and {} or tos)
       end
     end
     if not no_indicate then
