@@ -482,6 +482,9 @@ function Phase:main()
         end
         if table.contains(player:getCardIds(Player.Judge), cid) then
           room:moveCardTo(card, Card.Processing, nil, fk.ReasonPut, "phase_judge")
+          if card:isVirtual() then
+            room:sendCardVirtName({cid}, card.name)
+          end
 
           local effect_data = CardEffectData:new {
             card = card,

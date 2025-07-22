@@ -713,7 +713,7 @@ function Room:sendFootnote(ids, log)
   self:doBroadcastNotify("SetCardFootnote", json.encode{ ids, log })
 end
 
---- 为一些牌设置虚拟转化牌名
+--- 为一些牌设置虚拟转化牌名（仅影响桌面上的牌，处理区/弃牌堆/虚空区）
 ---@param ids integer[] @ 要设置虚拟牌名的牌的id列表
 ---@param name string @ 虚拟牌名
 function Room:sendCardVirtName(ids, name)
