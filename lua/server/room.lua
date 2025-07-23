@@ -3345,7 +3345,8 @@ function Room:gameOver(winner)
     self:setPlayerProperty(p, "role_shown", true)
 
     -- 不知道某个C++ ServerPlayer此时的视角 只好都转回来
-    p._splayer:doNotify("ChangeSelf", tostring(p._splayer:getId()))
+    -- 直接调C++的话还必须手搓cbor.encode 没一点脾气
+    p._splayer:doNotify("ChangeSelf", cbor.encode(p._splayer:getId()))
   end
 
   self:doBroadcastNotify("GameOver", winner)

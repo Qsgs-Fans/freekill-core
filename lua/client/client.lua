@@ -27,11 +27,15 @@ local pattern_refresh_commands = {
   "AskForResponseCard",
 }
 
--- 无需进行JSON.parse，但可能传入JSON字符串的command
+-- 传了个string且不知道为什么不走cbor.decode的
 local no_decode_commands = {
   "ErrorMsg",
   "ErrorDlg",
   "Heartbeat",
+  "ServerMessage",
+
+  "UpdateAvatar",
+  "UpdatePassword",
 }
 
 ClientCallback = function(_self, command, jsonData, isRequest)
@@ -45,13 +49,7 @@ ClientCallback = function(_self, command, jsonData, isRequest)
   if table.contains(no_decode_commands, command) then
     data = jsonData
   else
-    local err, ret = pcall(json.decode, jsonData)
-    if err == false then
-      -- 不关心报错
-      data = jsonData
-    else
-      data = ret
-    end
+    data = cbor.decode(jsonData)
   end
 
   if table.contains(pattern_refresh_commands, command) then

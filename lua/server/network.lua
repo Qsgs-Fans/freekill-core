@@ -108,7 +108,7 @@ function Request:_sendPacket(player)
 
   -- 发送请求数据并将控制者标记为烧条中
   local jsonData = self.data[player.id]
-  if self.send_encode then jsonData = json.encode(jsonData) end
+  if self.send_encode then jsonData = cbor.encode(jsonData) end
   -- FIXME: 这里确认数据是否发送的环节一定要写在C++代码中
   self.send_success[controller] = controller:getState() == fk.Player_Online
   controller:doRequest(self.command, jsonData, self.timeout, self.timestamp)

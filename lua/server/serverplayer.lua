@@ -40,20 +40,30 @@ function ServerPlayer:initialize(_self)
 end
 
 ---@param command string
----@param jsonData string
-function ServerPlayer:doNotify(command, jsonData)
+---@param data string
+function ServerPlayer:doNotify(command, data)
+  if type(data) == "string" then
+    local err, dat = pcall(json.decode, data)
+    if err ~= false then
+      -- fk.qWarning("Don't use json.encode. Pass value directly to ServerPlayer:doNotify.\n"..debug.traceback())
+      data = dat
+    end
+  end
+
+  local cbordata = cbor.encode(data)
+
   local room = self.room
   for _, p in ipairs(self._observers) do
     if p:getState() ~= fk.Player_Robot then
       room.notify_count = room.notify_count + 1
-      p:doNotify(command, jsonData)
+      p:doNotify(command, cbordata)
     end
   end
 
   for _, t in ipairs(room.observers) do
     local id, p = table.unpack(t)
     if id == self.id and room.room:hasObserver(p) and p:getState() ~= fk.Player_Robot then
-      p:doNotify(command, jsonData)
+      p:doNotify(command, cbordata)
     end
   end
 
