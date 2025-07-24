@@ -177,7 +177,7 @@ function Round:action()
       GameEvent.Turn:create(TurnData:new(room.current, "game_rule")):exec()
     end
 
-    room:ActExtraTurn()
+    room:actExtraTurn()
     table.remove(data.turn_table, 1)
     data.from = data.to
 
@@ -205,14 +205,14 @@ function Round:main()
 
   if roundCount == 1 then
     logic:trigger(fk.GameStart, room.current, data)
-    room:ActExtraTurn()
+    room:actExtraTurn()
   end
 
   logic:trigger(fk.RoundStart, room.current, data)
-  room:ActExtraTurn()
+  room:actExtraTurn()
   self:action()
   logic:trigger(fk.RoundEnd, room.current, data)
-  room:ActExtraTurn()
+  room:actExtraTurn()
 end
 
 function Round:clear()

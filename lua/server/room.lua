@@ -3875,12 +3875,15 @@ end
 
 
 --- 进行待执行的额外回合
-function Room:ActExtraTurn()
+function Room:actExtraTurn()
   while #self.extra_turn_list > 0 do
     local data = table.remove(self.extra_turn_list, 1)
     data.who:gainAnExtraTurn(false, data.reason, data.phases, data.extra_data)
   end
 end
+
+---@deprecated @ 用actExtraTurn代替
+Room.ActExtraTurn = Room.actExtraTurn
 
 local function isSame(table1, table2)
   if #table1 ~= #table2 then return false end
