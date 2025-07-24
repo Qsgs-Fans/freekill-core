@@ -56,6 +56,7 @@ function TriggerEvent:setCostData(skill, v)
 end
 
 ---@param skill Skill
+---@return CostData|any
 function TriggerEvent:getCostData(skill)
   return self:getSkillData(skill, "cost_data")
 end
