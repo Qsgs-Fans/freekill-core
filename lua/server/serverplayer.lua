@@ -294,10 +294,6 @@ function ServerPlayer:gainAnExtraTurn(delay, skillName, phases, extra_data)
     return
   end
 
-  room:sendLog{
-    type = "#GainAnExtraTurn",
-    from = self.id
-  }
 
   local current = room.current
   room:setCurrent(self)

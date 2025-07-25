@@ -208,6 +208,8 @@ function Round:main()
     room:actExtraTurn()
   end
 
+  room:sendLog{ type = "$RoundStart", arg = roundCount }
+
   logic:trigger(fk.RoundStart, room.current, data)
   room:actExtraTurn()
   self:action()
@@ -218,39 +220,7 @@ end
 function Round:clear()
   local room = self.room
 
-  for _, p in ipairs(room.players) do
-    p:setCardUseHistory("", 0, Player.HistoryRound)
-    p:setSkillUseHistory("", 0, Player.HistoryRound)
-    for name, _ in pairs(p.mark) do
-      if name:find("-round", 1, true) then
-        room:setPlayerMark(p, name, 0)
-      end
-    end
-  end
-
-  for cid, cmark in pairs(room.card_marks) do
-    for name, _ in pairs(cmark) do
-      if name:find("-round", 1, true) then
-        room:setCardMark(Fk:getCardById(cid), name, 0)
-      end
-    end
-  end
-
-  for name, _ in pairs(room.banners) do
-    if name:find("-round", 1, true) then
-      room:setBanner(name, 0)
-    end
-  end
-
-  for name, _ in pairs(room.tag) do
-    if name:find("-round", 1, true) then
-      room:setTag(name, nil)
-    end
-  end
-
-  for _, p in ipairs(room.players) do
-    p:filterHandcards()
-  end
+  room:clearHistory(Player.HistoryRound)
 end
 
 ---@class GameEvent.Turn : GameEvent
@@ -280,41 +250,9 @@ function Turn:prepare()
 
   if player.dead then return true end
 
-  room:sendLog{ type = "$AppendSeparator" }
+  --room:sendLog{ type = "$AppendSeparator" }
 
-  for _, p in ipairs(room.players) do
-    p:setCardUseHistory("", 0, Player.HistoryTurn)
-    p:setSkillUseHistory("", 0, Player.HistoryTurn)
-    for name, _ in pairs(p.mark) do
-      if name:find("-turn", 1, true) then
-        room:setPlayerMark(p, name, 0)
-      end
-    end
-  end
-
-  for cid, cmark in pairs(room.card_marks) do
-    for name, _ in pairs(cmark) do
-      if name:find("-turn", 1, true) then
-        room:setCardMark(Fk:getCardById(cid), name, 0)
-      end
-    end
-  end
-
-  for name, _ in pairs(room.banners) do
-    if name:find("-turn", 1, true) then
-      room:setBanner(name, 0)
-    end
-  end
-
-  for name, _ in pairs(room.tag) do
-    if name:find("-turn", 1, true) then
-      room:setTag(name, nil)
-    end
-  end
-
-  for _, p in ipairs(room.players) do
-    p:filterHandcards()
-  end
+  room:clearHistory(Player.HistoryTurn)
 
   logic:trigger(fk.PreTurnStart, player, data)
   if data.turn_end then return true end
@@ -333,6 +271,12 @@ function Turn:main()
   local data = self.data
   local player = data.who
   local logic = room.logic
+
+  if data.reason == "game_rule" then
+    room:sendLog{ type = "$TurnStart", from = player.id }
+  else
+    room:sendLog{ type = "$ExtraTurnStart", from = player.id, arg = data.reason }
+  end
 
   --标志正式进入回合，第一步先把phase设置为PhaseNone，以便于可用NotActive正确判定回合内外
   player.phase = Player.PhaseNone
@@ -364,39 +308,13 @@ function Turn:clear()
   current.phase = Player.NotActive
   room:broadcastProperty(current, "phase")
 
-  for _, p in ipairs(room.players) do
-    p:setCardUseHistory("", 0, Player.HistoryTurn)
-    p:setSkillUseHistory("", 0, Player.HistoryTurn)
-    for name, _ in pairs(p.mark) do
-      if name:find("-turn", 1, true) then
-        room:setPlayerMark(p, name, 0)
-      end
-    end
+  if data.reason == "game_rule" then
+    room:sendLog{ type = "$TurnEnd", from = current.id }
+  else
+    room:sendLog{ type = "$ExtraTurnEnd", from = current.id, arg = data.reason }
   end
 
-  for cid, cmark in pairs(room.card_marks) do
-    for name, _ in pairs(cmark) do
-      if name:find("-turn", 1, true) then
-        room:setCardMark(Fk:getCardById(cid), name, 0)
-      end
-    end
-  end
-
-  for name, _ in pairs(room.banners) do
-    if name:find("-turn", 1, true) then
-      room:setBanner(name, 0)
-    end
-  end
-
-  for name, _ in pairs(room.tag) do
-    if name:find("-turn", 1, true) then
-      room:setTag(name, nil)
-    end
-  end
-
-  for _, p in ipairs(room.players) do
-    p:filterHandcards()
-  end
+  room:clearHistory(Player.HistoryTurn)
 end
 
 ---@class GameEvent.Phase : GameEvent
@@ -561,39 +479,7 @@ function Phase:clear()
   player.phase = (room.current == player and Player.PhaseNone or Player.NotActive)
   room:broadcastProperty(player, "phase")
 
-  for _, p in ipairs(room.players) do
-    p:setCardUseHistory("", 0, Player.HistoryPhase)
-    p:setSkillUseHistory("", 0, Player.HistoryPhase)
-    for name, _ in pairs(p.mark) do
-      if name:find("-phase", 1, true) then
-        room:setPlayerMark(p, name, 0)
-      end
-    end
-  end
-
-  for cid, cmark in pairs(room.card_marks) do
-    for name, _ in pairs(cmark) do
-      if name:find("-phase", 1, true) then
-        room:setCardMark(Fk:getCardById(cid), name, 0)
-      end
-    end
-  end
-
-  for name, _ in pairs(room.banners) do
-    if name:find("-phase", 1, true) then
-      room:setBanner(name, 0)
-    end
-  end
-
-  for name, _ in pairs(room.tag) do
-    if name:find("-phase", 1, true) then
-      room:setTag(name, nil)
-    end
-  end
-
-  for _, p in ipairs(room.players) do
-    p:filterHandcards()
-  end
+  room:clearHistory(Player.HistoryPhase)
 end
 
 return { DrawInitial, Round, Turn, Phase }

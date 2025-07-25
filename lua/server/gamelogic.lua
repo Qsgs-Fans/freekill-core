@@ -305,7 +305,7 @@ function GameLogic:prepareForStart()
     self:addTriggerSkill(trig)
   end
 
-  room:sendLog{ type = "$GameStart" }
+  room:sendLog{ type = "$GameStart", arg = room.settings.gameMode }
 end
 
 function GameLogic:action()

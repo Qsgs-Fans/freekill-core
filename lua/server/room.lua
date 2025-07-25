@@ -3940,4 +3940,46 @@ function Room:unbanSortingHandcards(player, suffix)
   self:setPlayerMark(player, MarkEnum.SortProhibited .. suffix, 0)
 end
 
+---阶段性清理各种标记
+---@param scope integer
+function Room:clearHistory (scope)
+  local suffixMap = {
+    [Player.HistoryPhase] = "-phase", [Player.HistoryTurn] = "-turn", [Player.HistoryRound] = "-round",
+  }
+  local suffix = suffixMap[scope]
+  for _, p in ipairs(self.players) do
+    p:setCardUseHistory("", 0, scope)
+    p:setSkillUseHistory("", 0, scope)
+    for name, _ in pairs(p.mark) do
+      if name:find(suffix, 1, true) then
+        self:setPlayerMark(p, name, 0)
+      end
+    end
+  end
+
+  for cid, cmark in pairs(self.card_marks) do
+    for name, _ in pairs(cmark) do
+      if name:find(suffix, 1, true) then
+        self:setCardMark(Fk:getCardById(cid), name, 0)
+      end
+    end
+  end
+
+  for name, _ in pairs(self.banners) do
+    if name:find(suffix, 1, true) then
+      self:setBanner(name, 0)
+    end
+  end
+
+  for name, _ in pairs(self.tag) do
+    if name:find(suffix, 1, true) then
+      self:setTag(name, nil)
+    end
+  end
+
+  for _, p in ipairs(self.players) do
+    p:filterHandcards()
+  end
+end
+
 return Room

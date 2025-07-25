@@ -623,8 +623,14 @@ Fk:loadTranslationTable {
 Fk:loadTranslationTable {
   -- game processing
   ["$AppendSeparator"] = '<font color="grey">------------------------------</font>',
-  ["$GameStart"] = "== 游戏开始 ==",
-  ["$GameEnd"] = "== 游戏结束 ==",
+  ["$GameStart"] = "== 游戏 %arg 开始 ==",
+  ["$GameEnd"] = "<font color='grey'>------------</font> 游戏结束 <font color='grey'>------------</font>",
+  ["$TurnStart"] = "<font color='grey'>-------</font> %from 回合开始 <font color='grey'>-------</font>",
+  ["$ExtraTurnStart"] = "<font color='grey'>-------</font> %from 的 %arg 回合开始 <font color='grey'>-------</font>",
+  ["$TurnEnd"] = "<font color='grey'>-------</font> %from 回合结束 <font color='grey'>-------</font>",
+  ["$ExtraTurnEnd"] = "<font color='grey'>-------</font> %from 的 %arg 回合结束 <font color='grey'>-------</font>",
+  ["$RoundStart"] = "<font color='grey'>--------------</font> 第 %arg 轮开始 <font color='grey'>--------------</font>",
+  ["$RoundEnd"] = "<font color='grey'>--------------</font> 第 %arg 轮结束 <font color='grey'>--------------</font>",
 
   -- get/lose skill
   ["#AcquireSkill"] = "%from 获得了〖%arg〗",
@@ -665,7 +671,7 @@ Fk:loadTranslationTable {
 
   -- phase
   ["#PhaseSkipped"] = "%from 跳过了 %arg",
-  ["#GainAnExtraTurn"] = "%from 开始进行一个额外的回合",
+  --["#GainAnExtraTurn"] = "%from 开始进行一个额外的回合",
   ["#GainAnExtraPhase"] = "%from 开始进行一个额外的 %arg",
 
   -- useCard
