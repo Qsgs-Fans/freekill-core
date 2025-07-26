@@ -229,7 +229,7 @@ function GameLogic:prepareDrawPile()
   local seed = math.random(2 << 32 - 1)
   room:prepareDrawPile(seed)
   room:doBroadcastNotify("PrepareDrawPile", seed)
-  room:doBroadcastNotify("UpdateDrawPile", tostring(#room.draw_pile))
+  room:doBroadcastNotify("UpdateDrawPile", #room.draw_pile)
 end
 
 function GameLogic:attachSkillToPlayers()

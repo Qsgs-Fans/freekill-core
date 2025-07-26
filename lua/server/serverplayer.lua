@@ -40,12 +40,12 @@ function ServerPlayer:initialize(_self)
 end
 
 ---@param command string
----@param data string
+---@param data any
 function ServerPlayer:doNotify(command, data)
   if type(data) == "string" then
     local err, dat = pcall(json.decode, data)
     if err ~= false then
-      -- fk.qWarning("Don't use json.encode. Pass value directly to ServerPlayer:doNotify.\n"..debug.traceback())
+      fk.qWarning("Don't use json.encode. Pass value directly to ServerPlayer:doNotify.\n"..debug.traceback())
       data = dat
     end
   end
@@ -100,7 +100,7 @@ end
 --- 发送一句聊天
 ---@param msg string
 function ServerPlayer:chat(msg)
-  self.room:doBroadcastNotify("Chat", json.encode {
+  self.room:doBroadcastNotify("Chat", {
     type = 2,
     sender = self.id,
     msg = msg,
@@ -127,20 +127,20 @@ function ServerPlayer:reconnect()
   local room = self.room
 
   local summary = room:toJsonObject(self)
-  self:doNotify("Reconnect", json.encode(summary))
-  self:doNotify("RoomOwner", json.encode{ room.room:getOwner():getId() })
+  self:doNotify("Reconnect", summary)
+  self:doNotify("RoomOwner", { room.room:getOwner():getId() })
 
   -- send fake skills
   for _, s in ipairs(self._manually_fake_skills) do
-    self:doNotify("AddSkill", json.encode{ self.id, s.name, true })
+    self:doNotify("AddSkill", { self.id, s.name, true })
     if table.contains(self.prelighted_skills, s) then
-      self:doNotify("PrelightSkill", json.encode{ s.name, true })
+      self:doNotify("PrelightSkill", { s.name, true })
     end
   end
 
   for _, skills in ipairs(room.status_skills) do
     for _, skill in ipairs(skills) do
-      self:doNotify("AddStatusSkill", json.encode{ skill.name })
+      self:doNotify("AddStatusSkill", { skill.name })
     end
   end
 
@@ -193,7 +193,7 @@ function ServerPlayer:showCards(cards)
   --   from = self.id,
   --   card = cards,
   -- }
-  -- room:doBroadcastNotify("ShowCard", json.encode{
+  -- room:doBroadcastNotify("ShowCard", {
   --   from = self.id,
   --   cards = cards,
   -- })
@@ -422,7 +422,7 @@ end
 function ServerPlayer:addVirtualEquip(card)
   self:removeVirtualEquip(card:getEffectiveId())
   Player.addVirtualEquip(self, card)
-  self.room:doBroadcastNotify("AddVirtualEquip", json.encode{
+  self.room:doBroadcastNotify("AddVirtualEquip", {
     player = self.id,
     name = card.name,
     subcards = card.subcards,
@@ -432,7 +432,7 @@ end
 function ServerPlayer:removeVirtualEquip(cid)
   local ret = Player.removeVirtualEquip(self, cid)
   if ret then
-    self.room:doBroadcastNotify("RemoveVirtualEquip", json.encode{
+    self.room:doBroadcastNotify("RemoveVirtualEquip", {
       player = self.id,
       id = cid,
     })
@@ -443,25 +443,25 @@ end
 --- 增加卡牌使用次数
 function ServerPlayer:addCardUseHistory(cardName, num)
   Player.addCardUseHistory(self, cardName, num)
-  self.room:doBroadcastNotify("AddCardUseHistory", json.encode{self.id, cardName, num})
+  self.room:doBroadcastNotify("AddCardUseHistory", {self.id, cardName, num})
 end
 
 --- 设置卡牌已使用次数
 function ServerPlayer:setCardUseHistory(cardName, num, scope)
   Player.setCardUseHistory(self, cardName, num, scope)
-  self.room:doBroadcastNotify("SetCardUseHistory", json.encode{self.id, cardName, num, scope})
+  self.room:doBroadcastNotify("SetCardUseHistory", {self.id, cardName, num, scope})
 end
 
 -- 增加技能发动次数
 function ServerPlayer:addSkillUseHistory(skillName, num)
   Player.addSkillUseHistory(self, skillName, num)
-  self.room:doBroadcastNotify("AddSkillUseHistory", json.encode{self.id, skillName, num})
+  self.room:doBroadcastNotify("AddSkillUseHistory", {self.id, skillName, num})
 end
 
 -- 设置技能已发动次数
 function ServerPlayer:setSkillUseHistory(skillName, num, scope)
   Player.setSkillUseHistory(self, skillName, num, scope)
-  self.room:doBroadcastNotify("SetSkillUseHistory", json.encode{self.id, skillName, num, scope})
+  self.room:doBroadcastNotify("SetSkillUseHistory", {self.id, skillName, num, scope})
 end
 
 --- 设置连环状态
@@ -563,7 +563,7 @@ function ServerPlayer:addFakeSkill(skill)
   table.insertIfNeed(self._manually_fake_skills, skill)
 
   -- TODO
-  self:doNotify("AddSkill", json.encode{ self.id, skill.name, true })
+  self:doNotify("AddSkill", { self.id, skill.name, true })
 end
 
 ---@param skill Skill | string
@@ -575,7 +575,7 @@ function ServerPlayer:loseFakeSkill(skill)
   table.removeOne(self._manually_fake_skills, skill)
 
   -- TODO
-  self:doNotify("LoseSkill", json.encode{ self.id, skill.name, true })
+  self:doNotify("LoseSkill", { self.id, skill.name, true })
 end
 
 ---@param skill string | Skill
@@ -604,7 +604,7 @@ function ServerPlayer:prelightSkill(skill, isPrelight)
     end
   end
 
-  self:doNotify("PrelightSkill", json.encode{ skill.name, isPrelight })
+  self:doNotify("PrelightSkill", { skill.name, isPrelight })
 end
 
 ---@param isDeputy? boolean
@@ -839,7 +839,7 @@ function ServerPlayer:addBuddy(other)
     other = self.room:getPlayerById(other)
   end
   Player.addBuddy(self, other)
-  self.room:doBroadcastNotify("AddBuddy", json.encode{ self.id, other.id })
+  self.room:doBroadcastNotify("AddBuddy", { self.id, other.id })
 end
 
 function ServerPlayer:removeBuddy(other)
@@ -847,7 +847,7 @@ function ServerPlayer:removeBuddy(other)
     other = self.room:getPlayerById(other)
   end
   Player.removeBuddy(self, other)
-  self.room:doBroadcastNotify("RmBuddy", json.encode{ self.id, other.id })
+  self.room:doBroadcastNotify("RmBuddy", { self.id, other.id })
 end
 
 -- 青釭剑

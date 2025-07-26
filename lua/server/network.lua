@@ -298,7 +298,6 @@ function Request:ask()
   self:_finish()
 
   self._asked = true
-  p(self.result)
 
   if not room.hasSurrendered then
     room.logic:trigger(fk.AfterRequestAsk, nil, self, true)
