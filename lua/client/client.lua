@@ -44,6 +44,9 @@ ClientCallback = function(_self, command, jsonData, isRequest)
     table.insert(self.record, {math.floor(os.getms() / 1000), isRequest, command, jsonData})
   end
 
+  -- CBOR调试中。。。
+  -- print(command, jsonData:gsub(".", function(c) return ("%02x"):format(c:byte()) end))
+
   local cb = fk.client_callback[command]
   local data
   if table.contains(no_decode_commands, command) then
@@ -1139,6 +1142,7 @@ fk.client_callback["ChangeSelf"] = function(self, data)
   local pid = tonumber(data)
   self.client:changeSelf(pid) -- for qml
   Self = self:getPlayerById(pid)
+  print(pid, Self, table.concat(table.map(self.players, tostring), ","))
   self:notifyUI("ChangeSelf", pid)
 end
 

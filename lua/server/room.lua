@@ -3285,7 +3285,7 @@ function Room:shuffleDrawPile()
   AbstractRoom.shuffleDrawPile(self, seed)
 
   self:doBroadcastNotify("ShuffleDrawPile", seed)
-  self:doBroadcastNotify("UpdateDrawPile", tostring(#self.draw_pile))
+  self:doBroadcastNotify("UpdateDrawPile", #self.draw_pile)
 
   self.logic:trigger(fk.AfterDrawPileShuffle, nil, {})
 end

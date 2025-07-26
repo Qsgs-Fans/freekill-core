@@ -103,7 +103,7 @@ function Request:_sendPacket(player)
     -- 切换视角
     table.removeOne(from._observers, controller)
     table.insert(player._observers, controller)
-    controller:doNotify("ChangeSelf", tostring(player.id))
+    controller:doNotify("ChangeSelf", cbor.encode(player.id))
   end
 
   -- 发送请求数据并将控制者标记为烧条中
