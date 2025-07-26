@@ -886,7 +886,7 @@ callbacks["AskForGeneral"] = (data) => {
     Qt.createComponent("../RoomElement/ChooseGeneralBox.qml");
   const box = roomScene.popupBox.item;
   box.accepted.connect(() => {
-    replyToServer(JSON.stringify(box.choices));
+    replyToServer(box.choices);
   });
   box.generals = generals;
   box.choiceNum = n ?? 1;
@@ -972,7 +972,7 @@ callbacks["AskForGuanxing"] = (data) => {
   }, []);
   box.initializeCards();
   box.accepted.connect(() => {
-    replyToServer(JSON.stringify(box.getResult()));
+    replyToServer(box.getResult());
   });
 }
 
@@ -1002,7 +1002,7 @@ callbacks["AskForExchange"] = (data) => {
   box.areaNames = cards_name
   box.initializeCards();
   box.accepted.connect(() => {
-    replyToServer(JSON.stringify(box.getResult()));
+    replyToServer(box.getResult());
   });
 }
 
@@ -1074,7 +1074,7 @@ callbacks["AskForChoices"] = (data) => {
     box.result.forEach(id => {
       ret.push(all_choices[id]);
     });
-    replyToServer(JSON.stringify(ret));
+    replyToServer(ret);
   });
 }
 
@@ -1141,7 +1141,7 @@ callbacks["AskForCardsChosen"] = (data) => {
 
   roomScene.popupBox.moveToCenter();
   box.cardsSelected.connect((ids) => {
-    replyToServer(JSON.stringify(ids));
+    replyToServer(ids);
   });
 }
 
@@ -1167,7 +1167,7 @@ callbacks["AskForPoxi"] = (dat) => {
 
   roomScene.popupBox.moveToCenter();
   box.cardsSelected.connect((ids) => {
-    replyToServer(JSON.stringify(ids));
+    replyToServer(ids);
   });
 }
 
@@ -1199,7 +1199,7 @@ callbacks["AskForMoveCardInBoard"] = (data) => {
 
   box.arrangeCards();
   box.accepted.connect(() => {
-    replyToServer(JSON.stringify(box.getResult()));
+    replyToServer(box.getResult());
   });
 }
 
@@ -1631,7 +1631,7 @@ callbacks["GetPlayerHandcards"] = (data) => {
   const hand = dashboard.handcardArea.cards.map(c => {
     return c.cid;
   })
-  replyToServer(JSON.stringify(hand));
+  replyToServer(hand);
 }
 
 callbacks["ReplyToServer"] = (data) => {

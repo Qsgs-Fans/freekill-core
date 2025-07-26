@@ -116,7 +116,7 @@ function ReqResponseCard:doOKButton()
     targets = self.selected_targets or {},
   }
   if ClientInstance then
-    ClientInstance:notifyUI("ReplyToServer", json.encode(reply))
+    ClientInstance:notifyUI("ReplyToServer", reply)
   else
     return reply
   end

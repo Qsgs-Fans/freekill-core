@@ -119,6 +119,7 @@ end
 -- 一般来说，在一次同时询问中，需要人类玩家全部回复完了，AI才进行回复
 ---@param player ServerPlayer
 ---@param use_ai boolean
+---@return any
 function Request:_checkReply(player, use_ai)
   local room = self.room
 
@@ -186,6 +187,11 @@ function Request:_checkReply(player, use_ai)
     end
   end
 
+  local ok, ret = pcall(cbor.decode, reply)
+  if ok then
+    reply = ret
+  end
+
   if reply == '' then reply = '__cancel' end
   return reply
 end
@@ -249,9 +255,6 @@ function Request:ask()
       local reply = self:_checkReply(player, use_ai)
 
       if reply ~= "__notready" then
-        if reply ~= "__cancel" and (self.receive_decode and not use_ai) then
-          reply = json.decode(reply)
-        end
         self.result[player.id] = reply
         table.remove(players, i)
         replied_players = replied_players + 1
@@ -295,6 +298,7 @@ function Request:ask()
   self:_finish()
 
   self._asked = true
+  p(self.result)
 
   if not room.hasSurrendered then
     room.logic:trigger(fk.AfterRequestAsk, nil, self, true)

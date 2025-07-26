@@ -147,7 +147,7 @@ function ReqPlayCard:doOKButton()
     special_skill = self.skill_name
   }
   if ClientInstance then
-    ClientInstance:notifyUI("ReplyToServer", json.encode(reply))
+    ClientInstance:notifyUI("ReplyToServer", reply)
   else
     return reply
   end

@@ -196,17 +196,19 @@ Item {
 
           ClientInstance.notifyServer(
             "CreateRoom",
-            JSON.stringify([roomName.text, playerNum.value,
-            config.preferredTimeout, {
-              enableFreeAssign: freeAssignCheck.checked,
-              enableDeputy: deputyCheck.checked,
-              gameMode: config.preferedMode,
-              disabledPack: disabledPack,
-              generalNum: config.preferredGeneralNum,
-              luckTime: config.preferredLuckTime,
-              password: roomPassword.text,
-              disabledGenerals,
-            }])
+            [
+              roomName.text, playerNum.value,
+              config.preferredTimeout, {
+                enableFreeAssign: freeAssignCheck.checked,
+                enableDeputy: deputyCheck.checked,
+                gameMode: config.preferedMode,
+                disabledPack: disabledPack,
+                generalNum: config.preferredGeneralNum,
+                luckTime: config.preferredLuckTime,
+                password: roomPassword.text,
+                disabledGenerals,
+              }
+            ]
           );
         }
       }

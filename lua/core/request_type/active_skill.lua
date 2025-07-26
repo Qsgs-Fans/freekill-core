@@ -379,7 +379,7 @@ function ReqActiveSkill:doOKButton()
     reply.special_skill = self.skill_name
   end
   if ClientInstance then
-    ClientInstance:notifyUI("ReplyToServer", json.encode(reply))
+    ClientInstance:notifyUI("ReplyToServer", reply)
   else
     return reply
   end

@@ -88,7 +88,7 @@ function Room:initialize(_room)
   self.notify_count = 0
   self.notify_max = 500
 
-  self.settings = json.decode(self.room:settings())
+  self.settings = cbor.decode(self.room:settings())
   self.disabled_packs = self.settings.disabledPack
   if not Fk.game_modes[self.settings.gameMode] then
     self.settings.gameMode = "aaa_role_mode"

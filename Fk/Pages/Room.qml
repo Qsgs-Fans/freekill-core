@@ -116,7 +116,7 @@ Item {
             Backend.controlReplayer("shutdown");
             mainStack.pop();
           } else if (config.observing) {
-            ClientInstance.notifyServer("QuitRoom", "[]");
+            ClientInstance.notifyServer("QuitRoom", "");
           } else {
             quitDialog.open();
           }
@@ -208,7 +208,7 @@ Item {
     anchors.centerIn: parent
     enabled: config.serverEnableBot && canAddRobot
     onClicked: {
-      ClientInstance.notifyServer("AddRobot", "[]");
+      ClientInstance.notifyServer("AddRobot", "");
     }
   }
   onPlayersAlteredChanged: {
@@ -224,7 +224,7 @@ Item {
     enabled: isAllReady
     anchors.centerIn: parent
     onClicked: {
-      ClientInstance.notifyServer("StartGame", "[]");
+      ClientInstance.notifyServer("StartGame", "");
     }
   }
 
@@ -253,7 +253,7 @@ Item {
       for (let i = 0; i < photoModel.count; i++) {
         let item = photoModel.get(i);
         if (item.isOwner) {
-          ClientInstance.notifyServer("KickPlayer", item.id.toString());
+          ClientInstance.notifyServer("KickPlayer", item.id);
         }
       }
     }
@@ -1556,7 +1556,7 @@ Item {
     const cur = num.curComp;
     const robotsToAdd = Math.max(0, min - cur);
     for (let i = 0; i < robotsToAdd; i++) {
-      ClientInstance.notifyServer("AddRobot", "[]");
+      ClientInstance.notifyServer("AddRobot", "");
     }
   }
 
