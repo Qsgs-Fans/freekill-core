@@ -1145,13 +1145,22 @@ end
 ---@param subcards? integer[] @ 子卡（某些技能可以提前确定子卡，如奇策、妙弦）
 ---@param ban_cards? string[] @ 被排除的卡名
 ---@param extra_data? UseExtraData|table @ 用于使用的额外信息
+---@param vs_pattern? string @ 转化后的卡牌pattern
 ---@return string[] @ 返回牌名列表
-function Player:getViewAsCardNames(skill_name, card_names, subcards, ban_cards, extra_data)
+function Player:getViewAsCardNames(skill_name, card_names, subcards, ban_cards, extra_data, vs_pattern)
   ban_cards = ban_cards or Util.DummyTable
   extra_data = extra_data or Util.DummyTable
+  if vs_pattern == nil then
+    local skill = Fk.skills[skill_name]---@type ActiveSkill | ViewAsSkill
+    if skill:isInstanceOf(ViewAsSkill) then
+      vs_pattern = skill.pattern
+    end
+    vs_pattern = "."
+  end
   return table.filter(card_names, function (name)
     local card = Fk:cloneCard(name)
     card.skillName = skill_name
+    card:setMark("Global_VS_Pattern", vs_pattern)
     if subcards then card:addSubcards(subcards) end
     if table.contains(ban_cards, card.trueName) or table.contains(ban_cards, card.name) then return false end
     if Fk.currentResponsePattern == nil then

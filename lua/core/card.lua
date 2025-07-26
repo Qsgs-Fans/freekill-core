@@ -707,7 +707,7 @@ function Card:getDefaultTarget (player, extra_data)
   end
 end
 
---- 判断此牌能否符合一个卡牌规则。
+--- 判断此牌能否符合一个卡牌规则（考虑转化技在合法性判断时未确定实体牌的情况）。
 function Card:matchVSPattern(pattern)
   local vs_pattern = self:getMark("Global_VS_Pattern")
   if type(vs_pattern) == "string" then
