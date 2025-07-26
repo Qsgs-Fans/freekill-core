@@ -79,6 +79,7 @@ function ReqPlayCard:skillButtonValidity(name)
       for _, n in ipairs(cnames) do
         local c = Fk:cloneCard(n)
         c.skillName = name
+        c:setMark("Global_VS_Pattern", skill.pattern)
         ret = c.skill:canUse(player, c, extra_data) and not player:prohibitUse(c)
         if ret then break end
       end

@@ -293,6 +293,10 @@ end
 
 --- 判断此牌能否符合一个卡牌规则。
 function Card:matchPattern(pattern)
+  local vs_pattern = self:getMark("Global_VS_Pattern")
+  if type(vs_pattern) == "string" then
+    return Exppattern:Parse(vs_pattern):matchExp(pattern)
+  end
   return Exppattern:Parse(pattern):match(self)
 end
 
