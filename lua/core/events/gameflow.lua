@@ -63,6 +63,7 @@ TurnData = TriggerData:subclass("TurnData")
 ---@param reason? string @ 当前额外回合的原因，不为额外回合则为game_rule
 ---@param phases? Phase[] @ 回合进行的额定阶段列表
 function TurnData:initialize(who, reason, phases)
+  TriggerData.initialize(self, {})
   self.who = who
   self.reason = reason or "game_rule"
   self.phase_table = table.map(
