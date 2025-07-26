@@ -39,6 +39,7 @@ Item {
   property alias card: cardItem
   property alias glow: glowItem
   property var mark: ({})
+  property bool markVisible: true
   property alias chosenInBox: chosen.visible
 
   function getColor() {
@@ -220,7 +221,7 @@ Item {
     columns: 2
     rowSpacing: 1
     columnSpacing: 0
-    visible: known
+    visible: known && markVisible
     Repeater {
       model: mark
       delegate: cardMarkDelegate
