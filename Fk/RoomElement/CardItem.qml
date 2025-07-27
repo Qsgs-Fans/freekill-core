@@ -39,7 +39,7 @@ Item {
   property alias card: cardItem
   property alias glow: glowItem
   property var mark: ({})
-  property bool markVisible: true
+  property bool markVisible: false
   property alias chosenInBox: chosen.visible
 
   function getColor() {
@@ -371,6 +371,9 @@ Item {
     subtype = data.subtype ? data.subtype : "";
     virt_name = data.virt_name ? data.virt_name : "";
     mark = data.mark ?? {};
+    if (data.markVisible) {
+      markVisible = true;
+    }
   }
 
   function toData()
