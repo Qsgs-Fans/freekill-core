@@ -179,6 +179,7 @@ Item {
   Component {
     id: cardMarkDelegate
     Item {
+      visible : markVisible || modelData.k.includes("-public")
       width: root.width / 2
       height: 16
       Rectangle {
@@ -221,7 +222,7 @@ Item {
     columns: 2
     rowSpacing: 1
     columnSpacing: 0
-    visible: known && markVisible
+    visible: known
     Repeater {
       model: mark
       delegate: cardMarkDelegate
