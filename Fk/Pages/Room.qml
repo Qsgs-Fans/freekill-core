@@ -312,6 +312,7 @@ Item {
           text = luatr("GameMode") + luatr(data.gameMode) + "<br />"
             + luatr("LuckCardNum") + "<b>" + data.luckTime + "</b><br />"
             + luatr("ResponseTime") + "<b>" + config.roomTimeout + "</b><br />"
+            + luatr("ChooseGeneralTime") + "<b>" + data.generalTimeout + "</b><br />"
             + luatr("GeneralBoxNum") + "<b>" + data.generalNum + "</b>"
             + (data.enableFreeAssign ? "<br />" + luatr("IncludeFreeAssign")
                                      : "")

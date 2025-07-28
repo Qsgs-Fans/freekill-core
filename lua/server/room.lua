@@ -1403,6 +1403,7 @@ function Room:askToChooseGeneral(player, params)
   local defaultChoice = rule.default_choice(generals, extra_data)
 
   local req = Request:new(player, command)
+  req.timeout = self.settings.generalTimeout
   local data = {
     generals,
     n,
@@ -2923,6 +2924,7 @@ end
 ---@field skill_name string @ 烧条时显示的技能名
 ---@field game_type string @ 小游戏框关键词
 ---@field data_table table<integer, any> @ 以每个playerID为键的数据数组
+---@field timeout? integer @ 烧条时间，单位为秒。默认使用房间的timeout
 
 -- TODO: 重构request机制，不然这个还得手动拿client_reply
 ---@param players ServerPlayer[] @ 需要参与这个框的角色
@@ -2935,6 +2937,7 @@ function Room:askToMiniGame(players, params)
   local req = Request:new(players, command)
   req.focus_text = params.skill_name
   req.receive_decode = false -- 和customDialog同理
+  req.timeout = params.timeout or self.timeout
 
   for _, p in ipairs(players) do
     local data = params.data_table[p.id]
