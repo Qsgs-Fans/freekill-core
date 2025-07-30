@@ -59,12 +59,12 @@ local setPlayerState = function(params)
 end
 
 local addObserver = function(params)
-  if not (type(params[1]) == "number" and type(params[2]) == "table") then
+  if not (type(params[1]) == "number" and type(params[2]) == "string") then
     return false, nil
   end
 
   local roomId = params[1]
-  local obj = params[2]
+  local obj = cbor.decode(params[2])
 
   local room = GetRoom(roomId)
   if not room then

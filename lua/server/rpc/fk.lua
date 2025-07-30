@@ -357,7 +357,7 @@ end
 
 local _RoomThread_getRoom = function(_, id)
   local roomData = callRpc("RoomThread_getRoom", { id })
-  return fk.Room(roomData)
+  return fk.Room(cbor.decode(roomData))
 end
 
 fk.RoomThread = function()
