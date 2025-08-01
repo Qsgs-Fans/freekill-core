@@ -827,6 +827,7 @@ Item {
 
       Button {
         id: okButton
+        enabled: false
         text: luatr("OK")
         onClicked: lcall("UpdateRequestUI", "Button", "OK");
       }
