@@ -13,8 +13,13 @@ function ViewAsSkill:initialize(name, frequency)
   self.pattern = ""
 end
 
+---@class ViewAsPattern
+---@field public max_num number @ 推测转化底牌的最大数
+---@field public min_num number @ 推测转化底牌的最小数
+---@field public pattern string @ 推测参与转化的实体牌所满足的匹配器
+
 ---@param player Player @ the user
----@return table?
+---@return ViewAsPattern?
 function ViewAsSkill:filterPattern(player)
   return nil
 end
