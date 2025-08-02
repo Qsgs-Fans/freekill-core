@@ -1339,7 +1339,7 @@ callbacks["AskForResponseCard"] = (data) => {
   roomScene.okCancel.visible = true;
 }
 
-const function getMarkValue(value) {
+const getMarkValue = function(value) {
   if (value instanceof ArrayBuffer) {
     const uint8Array = new Uint8Array(value);
     let result = "";
