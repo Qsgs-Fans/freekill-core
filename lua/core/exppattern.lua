@@ -87,6 +87,8 @@ end
 local function matchSingleKey(matcher, card, key)
   local match = matcher[key == "color" and "suit" or key]
   if not match then return true end
+  local neg = match.neg or {}
+
   local val = card[key]
   if key == "suit" then
     val = card:getSuitString()
@@ -104,10 +106,16 @@ local function matchSingleKey(matcher, card, key)
     end
   end
 
+  if key == "color" then
+    local all_colors = {"red", "black", "nocolor"}
+    if not (table.hasIntersection(all_colors, match) or table.hasIntersection(all_colors, neg)) then
+      return false
+    end
+  end
+
   if table.contains(match, val) then
     return true
   else
-    local neg = match.neg
     if not neg then return false end
     for _, t in ipairs(neg) do
       if type(t) == "table" then
