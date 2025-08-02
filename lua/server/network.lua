@@ -246,7 +246,7 @@ function Request:ask()
     -- 然后如果作出的是“肯定”答复，那么添加到winner里面
     for i = #players, 1, -1 do
       local player = players[i]
-      local reply = self:_checkReply(player, use_ai)
+      local reply = self.timeout > 0 and self:_checkReply(player, use_ai) or "__notready"
 
       if reply ~= "__notready" then
         if reply ~= "__cancel" and (self.receive_decode and not use_ai) then

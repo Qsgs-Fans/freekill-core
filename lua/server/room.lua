@@ -3334,7 +3334,7 @@ end
 ---@param winner string @ 获胜的身份，空字符串表示平局
 function Room:gameOver(winner)
   if not self.game_started then return end
-  self:setBanner("GameSummary", self:getGameSummary(winner))
+  self:setBanner("GameSummary", self:getGameSummary())
   self.room:destroyRequestTimer()
 
   if table.contains(
@@ -3401,7 +3401,7 @@ end
 
 --- 获取一局游戏的总结，包括每个玩家的回合数、回血、伤害、受伤、击杀
 ---@return table<integer, integer[]> @ 玩家id到总结的映射
-function Room:getGameSummary(winner)
+function Room:getGameSummary()
   local summary = {}
   for _, p in ipairs(self.players) do
     -- 选将阶段直接房间解散的智慧 有点意思
