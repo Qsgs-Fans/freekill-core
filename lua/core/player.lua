@@ -136,6 +136,12 @@ local CBOR_TAG_PLAYER = 33001
 function Player:__tocbor()
   return cbor.encode(cbor.tagged(CBOR_TAG_PLAYER, self.id))
 end
+function Player:__touistring()
+  if self.deputyGeneral == "" then
+    return Fk:translate(self.general)
+  end
+  return Fk:translate("seat#" .. self.seat)
+end
 cbor.tagged_decoders[CBOR_TAG_PLAYER] = function(v)
   return Fk:currentRoom():getPlayerById(v)
 end

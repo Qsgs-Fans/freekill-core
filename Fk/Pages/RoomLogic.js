@@ -136,13 +136,7 @@ function arrangePhotos() {
 
 function replyToServer(jsonData) {
   ClientInstance.replyToServer("", jsonData);
-  if (!mainWindow.is_pending) {
-    roomScene.state = "notactive";
-  } else {
-    roomScene.state = "";
-    const data = mainWindow.fetchMessage();
-    return mainWindow.handleMessage(data.command, data.jsonData);
-  }
+  roomScene.state = "notactive";
 }
 
 function getPhotoModel(id) {
@@ -1345,10 +1339,28 @@ callbacks["AskForResponseCard"] = (data) => {
   roomScene.okCancel.visible = true;
 }
 
+const function getMarkValue(value) {
+  if (value instanceof ArrayBuffer) {
+    const uint8Array = new Uint8Array(value);
+    let result = "";
+
+    for (const byte of uint8Array) {
+      // 将字节转换为两位十六进制，并添加\x前缀
+      result += `\\x${byte.toString(16).padStart(2, '0')}`;
+    }
+    return leval(`(function(s) return ToUIString(cbor.decode(s)) end)("${result}")`)
+  } else if (!(value instanceof Object)) {
+    return value.toString();
+  } else {
+    return value;
+  }
+}
+
 callbacks["SetPlayerMark"] = (data) => {
   const player = getPhoto(data[0]);
   const mark = data[1];
-  const value = data[2] instanceof Object ? data[2] : data[2].toString();
+  const value = getMarkValue(data[2]);
+
   let area = mark.startsWith("@!") ? player.picMarkArea : player.markArea;
   if (data[2] === 0) {
     area.removeMark(mark);
@@ -1359,7 +1371,7 @@ callbacks["SetPlayerMark"] = (data) => {
 
 callbacks["SetBanner"] = (data) => {
   const mark = data[0];
-  const value = data[1] instanceof Object ? data[1] : data[1].toString();
+  const value = getMarkValue(data[1]);
   let area = roomScene.banner;
   if (data[1] === 0) {
     area.removeMark(mark);
