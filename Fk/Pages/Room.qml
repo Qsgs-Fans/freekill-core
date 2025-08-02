@@ -834,6 +834,7 @@ Item {
 
       Button {
         id: cancelButton
+        enabled: false
         text: luatr("Cancel")
         onClicked: lcall("UpdateRequestUI", "Button", "Cancel");
       }

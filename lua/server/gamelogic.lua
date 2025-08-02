@@ -621,7 +621,7 @@ end
 
 --- 获取实际的伤害事件
 ---@param n integer @ 最多找多少个
----@param func fun(e: GameEvent.Damage): boolean @ 过滤用的函数
+---@param func fun(e: GameEvent.Damage): boolean? @ 过滤用的函数
 ---@param scope? integer @ 查询历史范围，只能是当前阶段/回合/轮次
 ---@param end_id? integer @ 查询历史范围：从最后的事件开始逆序查找直到id为end_id的事件（不含）
 ---@return GameEvent.Damage[] @ 找到的符合条件的所有事件，最多n个但不保证有n个
