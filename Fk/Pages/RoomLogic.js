@@ -208,9 +208,10 @@ function moveCards(data) {
     if (!from || !to)
       continue;
     const items = from.remove(move.ids, move.fromSpecialName, data);
-    items.forEach((item) => item.known = !!data[item.cid.toString()]);
-    if (from === to && from !== tablePile)
+    items.forEach((item) => item.known = !!data[item.cid.toString()]); // updata card visible. must be before move animation
+    if (from === to && from !== tablePile) // decide whether to play the move animation
       continue;
+    //items.forEach((item) => item.markVisible = (to === dashboard.handcardArea)); // cardMark only visible in my handcardArea
     if (to === tablePile) {
       let vanished = items.filter(c => c.cid === -1);
       if (vanished.length > 0) {

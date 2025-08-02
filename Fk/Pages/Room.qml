@@ -312,6 +312,7 @@ Item {
           text = luatr("GameMode") + luatr(data.gameMode) + "<br />"
             + luatr("LuckCardNum") + "<b>" + data.luckTime + "</b><br />"
             + luatr("ResponseTime") + "<b>" + config.roomTimeout + "</b><br />"
+            + luatr("ChooseGeneralTime") + "<b>" + data.generalTimeout + "</b><br />"
             + luatr("GeneralBoxNum") + "<b>" + data.generalNum + "</b>"
             + (data.enableFreeAssign ? "<br />" + luatr("IncludeFreeAssign")
                                      : "")
@@ -826,12 +827,14 @@ Item {
 
       Button {
         id: okButton
+        enabled: false
         text: luatr("OK")
         onClicked: lcall("UpdateRequestUI", "Button", "OK");
       }
 
       Button {
         id: cancelButton
+        enabled: false
         text: luatr("Cancel")
         onClicked: lcall("UpdateRequestUI", "Button", "Cancel");
       }

@@ -4,7 +4,7 @@ local wusheng = fk.CreateSkill {
 
 wusheng:addEffect("viewas", {
   anim_type = "offensive",
-  pattern = "slash",
+  pattern = "slash|.|heart,diamond",
   prompt = "#wusheng",
   -- mute_card = true,
   handly_pile = true,

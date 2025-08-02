@@ -1403,6 +1403,7 @@ function Room:askToChooseGeneral(player, params)
   local defaultChoice = rule.default_choice(generals, extra_data)
 
   local req = Request:new(player, command)
+  req.timeout = self.settings.generalTimeout
   local data = {
     generals,
     n,
@@ -2923,6 +2924,7 @@ end
 ---@field skill_name string @ 烧条时显示的技能名
 ---@field game_type string @ 小游戏框关键词
 ---@field data_table table<integer, any> @ 以每个playerID为键的数据数组
+---@field timeout? integer @ 烧条时间，单位为秒。默认使用房间的timeout
 
 -- TODO: 重构request机制，不然这个还得手动拿client_reply
 ---@param players ServerPlayer[] @ 需要参与这个框的角色
@@ -2935,6 +2937,7 @@ function Room:askToMiniGame(players, params)
   local req = Request:new(players, command)
   req.focus_text = params.skill_name
   req.receive_decode = false -- 和customDialog同理
+  req.timeout = params.timeout or self.timeout
 
   for _, p in ipairs(players) do
     local data = params.data_table[p.id]
@@ -3876,12 +3879,15 @@ end
 
 
 --- 进行待执行的额外回合
-function Room:ActExtraTurn()
+function Room:actExtraTurn()
   while #self.extra_turn_list > 0 do
     local data = table.remove(self.extra_turn_list, 1)
     data.who:gainAnExtraTurn(false, data.reason, data.phases, data.extra_data)
   end
 end
+
+---@deprecated @ 用actExtraTurn代替
+Room.ActExtraTurn = Room.actExtraTurn
 
 local function isSame(table1, table2)
   if #table1 ~= #table2 then return false end
@@ -3936,6 +3942,48 @@ end
 function Room:unbanSortingHandcards(player, suffix)
   suffix = suffix or ""
   self:setPlayerMark(player, MarkEnum.SortProhibited .. suffix, 0)
+end
+
+---阶段性清理各种标记
+---@param scope integer
+function Room:clearHistory (scope)
+  local suffixMap = {
+    [Player.HistoryPhase] = "-phase", [Player.HistoryTurn] = "-turn", [Player.HistoryRound] = "-round",
+  }
+  local suffix = suffixMap[scope]
+  for _, p in ipairs(self.players) do
+    p:setCardUseHistory("", 0, scope)
+    p:setSkillUseHistory("", 0, scope)
+    for name, _ in pairs(p.mark) do
+      if name:find(suffix, 1, true) then
+        self:setPlayerMark(p, name, 0)
+      end
+    end
+  end
+
+  for cid, cmark in pairs(self.card_marks) do
+    for name, _ in pairs(cmark) do
+      if name:find(suffix, 1, true) then
+        self:setCardMark(Fk:getCardById(cid), name, 0)
+      end
+    end
+  end
+
+  for name, _ in pairs(self.banners) do
+    if name:find(suffix, 1, true) then
+      self:setBanner(name, 0)
+    end
+  end
+
+  for name, _ in pairs(self.tag) do
+    if name:find(suffix, 1, true) then
+      self:setTag(name, nil)
+    end
+  end
+
+  for _, p in ipairs(self.players) do
+    p:filterHandcards()
+  end
 end
 
 return Room

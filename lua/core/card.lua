@@ -707,4 +707,40 @@ function Card:getDefaultTarget (player, extra_data)
   end
 end
 
+--- 给卡牌赋予skillname，并赋予pattern（适用于转化技在合法性判断时未确定实体牌的情况）
+function Card:setVSPattern(skillName, pattern)
+  self.skillName = skillName
+  if pattern then
+    self:setMark("Global_VS_Pattern", pattern)
+  else
+    local skill = Fk.skills[skillName]---@type ActiveSkill | ViewAsSkill
+    if skill:isInstanceOf(ViewAsSkill) then
+      self:setMark("Global_VS_Pattern", skill.pattern or ".")
+    end
+  end
+end
+
+--- 判断此牌能否符合一个卡牌规则（适用于转化技在合法性判断时未确定实体牌的情况）
+function Card:matchVSPattern(pattern)
+  local vs_pattern = self:getMark("Global_VS_Pattern")
+  if type(vs_pattern) == "string" then
+    local exp = Exppattern:Parse(vs_pattern)
+    local matchers = {}
+    for _, m in ipairs(exp.matchers) do
+      --因为牌名信息已确认，直接指定之即可
+      --FIXME: 未考虑neg（似乎暂时用不到？）
+      if (m.name == nil or table.contains(m.name, self.name)) and
+        (m.trueName == nil or table.contains(m.trueName, self.trueName)) then
+        m.name = { self.name }
+        m.trueName = { self.trueName }
+        table.insert(matchers, m)
+      end
+    end
+    if #matchers == 0 then return false end
+    exp.matchers = matchers
+    return exp:matchExp(pattern)
+  end
+  return Exppattern:Parse(pattern):match(self)
+end
+
 return Card
