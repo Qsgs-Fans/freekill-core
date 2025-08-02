@@ -8,9 +8,11 @@ wusheng:addEffect("viewas", {
   prompt = "#wusheng",
   -- mute_card = true,
   handly_pile = true,
-  card_filter = function(self, player, to_select, selected)
-    return #selected == 0 and Fk:getCardById(to_select).color == Card.Red
-  end,
+  filter_pattern = {
+    min_num = 1,
+    max_num = 1,
+    pattern = ".|.|heart,diamond",
+  },
   view_as = function(self, player, cards)
     if #cards ~= 1 then return end
     local c = Fk:cloneCard("slash")

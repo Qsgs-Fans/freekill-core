@@ -13,6 +13,12 @@ function ViewAsSkill:initialize(name, frequency)
   self.pattern = ""
 end
 
+---@param player Player @ the user
+---@return table?
+function ViewAsSkill:filterPattern(player)
+  return nil
+end
+
 --- 判断一张牌是否可被此技能选中
 ---@param player Player @ 你自己
 ---@param to_select integer @ id of a card not selected
@@ -20,6 +26,20 @@ end
 ---@param selected_targets Player[] @ 已选目标
 ---@return boolean
 function ViewAsSkill:cardFilter(player, to_select, selected, selected_targets)
+  local filter_pattern = self:filterPattern(player)
+  if filter_pattern then
+    if filter_pattern.max_num == 0 or not Fk:getCardById(to_select):matchPattern(filter_pattern.pattern) then return false end
+    if #selected == filter_pattern.max_num - 1 then
+      local card = self:viewAs(player, table.connect(selected, {to_select}))
+      if card == nil then return false end
+      if Fk.currentResponsePattern == nil then
+        return player:canUse(card)
+      else
+        --FIXME: 无法判断当前是使用还是打出，暂且搁置
+        return true
+      end
+    end
+  end
   return false
 end
 
