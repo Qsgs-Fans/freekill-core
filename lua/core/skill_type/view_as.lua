@@ -50,7 +50,9 @@ function ViewAsSkill:cardFilter(player, to_select, selected, selected_targets)
         return Exppattern:Parse(Fk.currentResponsePattern):match(card)
       end
     elseif card then
-      card:setVSPattern(self.name, player)
+      if card:isVirtual() then
+        card:setVSPattern(self.name, player)
+      end
       if Fk.currentResponsePattern == nil then
         return player:canUse(card)
       else
