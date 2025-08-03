@@ -274,7 +274,7 @@ function UseCard:main()
         from = useCardData.from.id,
       })
     end
-    if card:isVirtual() or card.name ~= Fk:getCardById(card.id).name then
+    if card:isVirtual() or card.name ~= Fk:getCardById(card.id, true).name then
       room:sendCardVirtName(useCardIds, card.name)
     end
   end
