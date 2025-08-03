@@ -103,12 +103,12 @@ function Request:_sendPacket(player)
     -- 切换视角
     table.removeOne(from._observers, controller)
     table.insert(player._observers, controller)
-    controller:doNotify("ChangeSelf", tostring(player.id))
+    controller:doNotify("ChangeSelf", cbor.encode(player.id))
   end
 
   -- 发送请求数据并将控制者标记为烧条中
   local jsonData = self.data[player.id]
-  if self.send_encode then jsonData = json.encode(jsonData) end
+  if self.send_encode then jsonData = cbor.encode(jsonData) end
   -- FIXME: 这里确认数据是否发送的环节一定要写在C++代码中
   self.send_success[controller] = controller:getState() == fk.Player_Online
   controller:doRequest(self.command, jsonData, self.timeout, self.timestamp)
@@ -119,6 +119,7 @@ end
 -- 一般来说，在一次同时询问中，需要人类玩家全部回复完了，AI才进行回复
 ---@param player ServerPlayer
 ---@param use_ai boolean
+---@return any
 function Request:_checkReply(player, use_ai)
   local room = self.room
 
@@ -153,7 +154,11 @@ function Request:_checkReply(player, use_ai)
         -- FIXME: 写的依托且不考虑控制 后面看情况改！
         if self.luck_data then
           local luck_data = self.luck_data
-          if reply ~= "__cancel" then
+          -- 此处是CBOR化的影响
+          -- 除了默认的__notready和__cancel之外其他实际的消息必定是cbor编码过的
+          -- 这个函数的末尾强制用了cbor.decode，但是此处判断的时机还非常早
+          -- 所以手动判一下好了 不解析了
+          if reply ~= "__cancel" and reply ~= "\x68__cancel" then
             local pdata = luck_data[player.id]
             pdata.luckTime = pdata.luckTime - 1
             luck_data.discardInit(room, player)
@@ -184,6 +189,11 @@ function Request:_checkReply(player, use_ai)
       -- 还没轮到AI呢，所以需要标记为未答复
       reply = "__notready"
     end
+  end
+
+  local ok, ret = pcall(cbor.decode, reply)
+  if ok then
+    reply = ret
   end
 
   if reply == '' then reply = '__cancel' end
@@ -249,9 +259,6 @@ function Request:ask()
       local reply = self.timeout > 0 and self:_checkReply(player, use_ai) or "__notready"
 
       if reply ~= "__notready" then
-        if reply ~= "__cancel" and (self.receive_decode and not use_ai) then
-          reply = json.decode(reply)
-        end
         self.result[player.id] = reply
         table.remove(players, i)
         replied_players = replied_players + 1

@@ -8,7 +8,7 @@
 local os = os
 
 local RPC_MODE = os.getenv("FK_RPC_MODE") == "cbor" and "cbor" or "json"
-local cbor = require 'lua.server.rpc.cbor'
+local cbor = require 'server.rpc.cbor'
 
 -- 下面俩是系统上要安装的 freekill不提供
 
@@ -357,7 +357,7 @@ end
 
 local _RoomThread_getRoom = function(_, id)
   local roomData = callRpc("RoomThread_getRoom", { id })
-  return fk.Room(roomData)
+  return fk.Room(cbor.decode(roomData))
 end
 
 fk.RoomThread = function()

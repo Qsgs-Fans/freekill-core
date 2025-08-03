@@ -51,7 +51,7 @@ local setPlayerState = function(params)
   for _, p in ipairs(room.room:getPlayers()) do
     if p.id == playerId then
       p.state = newState
-      return true, nil
+      return true, true
     end
   end
 
@@ -59,12 +59,12 @@ local setPlayerState = function(params)
 end
 
 local addObserver = function(params)
-  if not (type(params[1]) == "number" and type(params[2]) == "table") then
+  if not (type(params[1]) == "number" and type(params[2]) == "string") then
     return false, nil
   end
 
   local roomId = params[1]
-  local obj = params[2]
+  local obj = cbor.decode(params[2])
 
   local room = GetRoom(roomId)
   if not room then
@@ -72,7 +72,7 @@ local addObserver = function(params)
   end
 
   table.insert(room.room:getObservers(), fk.ServerPlayer(obj))
-  return true, nil
+  return true, true
 end
 
 local removeObserver = function(params)
@@ -92,7 +92,7 @@ local removeObserver = function(params)
   for i, p in ipairs(observers) do
     if p.id == playerId then
       table.remove(observers, i)
-      return true, nil
+      return true, true
     end
   end
 

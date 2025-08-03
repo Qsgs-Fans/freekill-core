@@ -127,7 +127,7 @@ local role_getlogic = function()
         end
       end
       for _, skill in ipairs(lord_skills) do
-        room:doBroadcastNotify("AddSkill", json.encode{
+        room:doBroadcastNotify("AddSkill", {
           lord.id,
           skill
         })

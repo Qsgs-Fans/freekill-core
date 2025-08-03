@@ -11,7 +11,7 @@ local RPC_MODE = os.getenv("FK_RPC_MODE") == "cbor" and "cbor" or "json"
 local jsonrpc = require "server.rpc.jsonrpc"
 local stdio = require "server.rpc.stdio"
 local dispatchers = require "server.rpc.dispatchers"
-local cbor = require 'lua.server.rpc.cbor'
+local cbor = require 'server.rpc.cbor'
 
 -- 加载新月杀相关内容并ban掉两个吃stdin的
 dofile "lua/freekill.lua"

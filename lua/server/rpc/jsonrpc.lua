@@ -17,7 +17,7 @@
 
 local os = os
 local json = require 'json'
-local cbor = require 'lua.server.rpc.cbor'
+local cbor = require 'server.rpc.cbor'
 local RPC_MODE = os.getenv("FK_RPC_MODE") == "cbor" and "cbor" or "json"
 
 local key_jsonrpc, key_method, key_params, key_error, key_id, key_result,

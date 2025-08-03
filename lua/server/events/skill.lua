@@ -187,7 +187,7 @@ function SkillEventWrappers:handleAddLoseSkills(player, skill_names, source_skil
       if player:hasSkill(actual_skill, true, true) then
         local lost_skills = player:loseSkill(actual_skill, source_skill)
         for _, s in ipairs(lost_skills) do
-          self:doBroadcastNotify("LoseSkill", json.encode{
+          self:doBroadcastNotify("LoseSkill", {
             player.id,
             s.name
           })
@@ -222,7 +222,7 @@ function SkillEventWrappers:handleAddLoseSkills(player, skill_names, source_skil
         for _, s in ipairs(got_skills) do
           -- TODO: limit skill mark
 
-          self:doBroadcastNotify("AddSkill", json.encode{
+          self:doBroadcastNotify("AddSkill", {
             player.id,
             s.name
           })

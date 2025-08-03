@@ -835,7 +835,7 @@ end
 
 function SaveRecord()
   local c = ClientInstance
-  c.client:saveRecord(json.encode(c.record), c.record[2])
+  c.client:saveRecord(cbor.encode(c.record), c.record[2])
 end
 
 function GetCardProhibitReason(cid)
@@ -1199,6 +1199,19 @@ function GetPlayersAndObservers()
     })
   end
   return ret
+end
+
+function ToUIString(obj)
+  local f = getmetatable(obj).__touistring
+  if f then
+    local ret = f(obj)
+    if type(ret) == "string" then
+      return ret
+    end
+  end
+
+  -- 这里故意返回中文
+  return "未知类型"
 end
 
 dofile "lua/client/i18n/init.lua"
