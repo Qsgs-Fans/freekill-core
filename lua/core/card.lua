@@ -721,7 +721,7 @@ function Card:setVSPattern(skillName, player, pattern)
   else
     local skill = Fk.skills[skillName]---@type ViewAsSkill
     if skill:isInstanceOf(ViewAsSkill) then
-      local vs = player and skill:filterPattern(player, self.name) or nil
+      local vs = player and skill:filterPattern(player, self, self.subcards) or nil
       if vs and vs.subcards then
         self:addSubcards(vs.subcards)
         return

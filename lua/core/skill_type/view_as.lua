@@ -21,8 +21,9 @@ end
 
 ---@param player Player @ the user
 ---@param name? string @ the card name
+---@param selected? integer[] @ ids of selected cards
 ---@return ViewAsPattern?
-function ViewAsSkill:filterPattern(player, name)
+function ViewAsSkill:filterPattern(player, name, selected)
   return nil
 end
 
@@ -34,7 +35,7 @@ end
 ---@return boolean
 function ViewAsSkill:cardFilter(player, to_select, selected, selected_targets)
   local card = self:viewAs(player, table.connect(selected, {to_select}))
-  local filter_pattern = self:filterPattern(player, card and card.name)
+  local filter_pattern = self:filterPattern(player, card and card.name, selected)
   if filter_pattern then
     if filter_pattern.subcards then return false end
     if #selected >= filter_pattern.max_num then return false end
@@ -42,6 +43,14 @@ function ViewAsSkill:cardFilter(player, to_select, selected, selected_targets)
 
     if #selected == filter_pattern.max_num - 1 then
       if card == nil then return false end
+      if Fk.currentResponsePattern == nil then
+        return player:canUse(card)
+      else
+        --FIXME: 无法判断当前是使用还是打出，暂且搁置
+        return Exppattern:Parse(Fk.currentResponsePattern):match(card)
+      end
+    elseif card then
+      card:setVSPattern(self.name, player)
       if Fk.currentResponsePattern == nil then
         return player:canUse(card)
       else
