@@ -746,6 +746,7 @@ function Card:setVSPattern(skillName, player, pattern)
               if i == 0 then
                 table.insert(e_suits, "nosuit")
                 table.insert(e_colors, "nocolor")
+                table.insert(e_numbers, 0)
               elseif i == 1 then
                 if single_exp:matchExp(".|.|red") then
                   table.insert(e_suits, "heart")
@@ -763,9 +764,20 @@ function Card:setVSPattern(skillName, player, pattern)
                     table.insertIfNeed(e_colors, color_strings[j])
                   end
                 end
+                if #e_numbers == 0 and single_exp:matchExp(".|0") then
+                  table.insert(e_numbers, 0)
+                end
+                for j = 1, 13, 1 do
+                  if single_exp:matchExp(".|" .. tostring(j)) then
+                    table.insert(e_numbers, j)
+                  end
+                end
               else
                 if e_suits then
                   table.insertIfNeed(e_suits, "nosuit")
+                end
+                if e_numbers then
+                  table.insertIfNeed(e_numbers, 0)
                 end
                 local hasRed = table.find({"heart", "diamond", "red"}, function (str)
                   return single_exp:matchExp(".|.|" .. str)
@@ -789,7 +801,12 @@ function Card:setVSPattern(skillName, player, pattern)
                 break
               end
             end
-            m.suit = table.connect(e_suits, e_colors)
+            if m.suit == nil then
+              m.suit = table.connect(e_suits, e_colors)
+            end
+            if m.number == nil and #e_numbers < 14 then
+              m.number = e_numbers
+            end
           end
           table.insert(matchers, m)
         end
