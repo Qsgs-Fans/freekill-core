@@ -1055,7 +1055,7 @@ Item {
 
             ClientInstance.notifyServer("PushRequest", [
               "surrender", true
-            ]);
+            ].join(","));
           }
           surrenderDialog.close();
           break;
