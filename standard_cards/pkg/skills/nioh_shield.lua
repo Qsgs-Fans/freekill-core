@@ -62,16 +62,23 @@ skill:addTest(function (room, me)
   lu.assertFalse(exp3:matchExp(exp2))
   lu.assertTrue(exp3:matchExp(exp1))
 
-  local r_slash = Fk:cloneCard("slash")
-  r_slash.color = Card.Red
-  local club_slash = Fk:cloneCard("slash", Card.Club)
   local exp4 = Exppattern:Parse(".|.|red")
   local exp5 = Exppattern:Parse(".|.|^club")
+  local r_slash = Fk:cloneCard("slash")
+  lu.assertFalse(exp4:match(r_slash))
+  lu.assertTrue(exp5:match(r_slash))
+  r_slash.color = Card.Red
+  local club_slash = Fk:cloneCard("slash", Card.Club)
   lu.assertTrue(exp4:matchExp(exp5))
   lu.assertTrue(exp4:match(r_slash))
   lu.assertFalse(exp4:match(club_slash))
   lu.assertTrue(exp5:match(r_slash))
   lu.assertFalse(exp5:match(club_slash))
+  local exp6 = Exppattern:Parse(".|.|^club;.|.|red")
+  local spade_slash = Fk:cloneCard("slash", Card.Club)
+  lu.assertTrue(exp6:match(r_slash))
+  lu.assertFalse(exp6:match(club_slash))
+  lu.assertFalse(exp6:match(spade_slash))
 end)
 
 return skill
