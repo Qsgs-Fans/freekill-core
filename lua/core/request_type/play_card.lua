@@ -78,7 +78,7 @@ function ReqPlayCard:skillButtonValidity(name)
       local extra_data = self.extra_data
       for _, n in ipairs(cnames) do
         local c = Fk:cloneCard(n)
-        c:setVSPattern(name)
+        c:setVSPattern(name, player, nil)
         ret = c.skill:canUse(player, c, extra_data) and not player:prohibitUse(c)
         if ret then break end
       end

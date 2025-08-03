@@ -138,7 +138,7 @@ end
 ---@field public target_tip? fun(self: CardSkill, player: Player, to_select: Player, selected: Player[], selected_cards: integer[], card?: Card, selectable: boolean, extra_data: any): string|TargetTipDataSpec? @ 显示在目标武将牌脸上的提示
 
 ---@class ViewAsSkillSpec: UsableSkillSpec
----@field public filter_pattern? table|fun(self: ViewAsSkill, player: Player): table
+---@field public filter_pattern? ViewAsPattern|fun(self: ViewAsSkill, player: Player, card_name: string?): ViewAsPattern?
 ---@field public card_filter? fun(self: ViewAsSkill, player: Player, to_select: integer, selected: integer[], selected_targets: Player[]): any @ 判断卡牌能否选择
 ---@field public view_as fun(self: ViewAsSkill, player: Player, cards: integer[]): Card? @ 判断转化为什么牌
 ---@field public pattern? string

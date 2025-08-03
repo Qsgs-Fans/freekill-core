@@ -97,7 +97,7 @@ local function matchSingleKey(matcher, card, key)
   -- elseif key == "cardType" then
   --   val = card:getTypeString()
   elseif key == "place" then
-    val = placetable[Fk:currentRoom():getCardArea(card.id)]
+    val = placetable[Fk:currentRoom():getCardArea(card)]
     if not val then
       for _, p in ipairs(Fk:currentRoom().alive_players) do
         val = p:getPileNameOfId(card.id)

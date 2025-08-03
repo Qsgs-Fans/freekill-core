@@ -714,14 +714,88 @@ function Card:getDefaultTarget (player, extra_data)
 end
 
 --- 给卡牌赋予skillname，并赋予pattern（适用于转化技在合法性判断时未确定实体牌的情况）
-function Card:setVSPattern(skillName, pattern)
+function Card:setVSPattern(skillName, player, pattern)
   self.skillName = skillName
   if pattern then
     self:setMark("Global_VS_Pattern", pattern)
   else
-    local skill = Fk.skills[skillName]---@type ActiveSkill | ViewAsSkill
+    local skill = Fk.skills[skillName]---@type ViewAsSkill
     if skill:isInstanceOf(ViewAsSkill) then
-      self:setMark("Global_VS_Pattern", skill.pattern or ".")
+      local vs = player and skill:filterPattern(player, self.name) or nil
+      if vs and vs.subcards then
+        self:addSubcards(vs.subcards)
+        return
+      end
+      local exp = Exppattern:Parse(skill.pattern or ".")
+      local matchers = {}
+      for _, m in ipairs(exp.matchers) do
+        if (m.name == nil or table.contains(m.name, self.name)) and
+          (m.trueName == nil or table.contains(m.trueName, self.trueName)) then
+          --因为牌名信息已确认，直接指定之即可
+          --FIXME: 未考虑neg（似乎暂时用不到？）
+          m.name = { self.name }
+          m.trueName = { self.trueName }
+
+          if vs then
+            local single_exp = Exppattern:Parse(vs.pattern)
+            local e_suits, e_colors, e_numbers = {}, {}, {}
+            local suit_strings = {"spade", "club", "heart", "diamond", "nosuit"}
+            local color_strings = {"black", "black", "red", "red", "nocolor"}
+
+            for i = vs.min_num, vs.max_num, 1 do
+              if i == 0 then
+                table.insert(e_suits, "nosuit")
+                table.insert(e_colors, "nocolor")
+              elseif i == 1 then
+                if single_exp:matchExp(".|.|red") then
+                  table.insert(e_suits, "heart")
+                  table.insert(e_suits, "diamond")
+                  table.insert(e_colors, "red")
+                end
+                if single_exp:matchExp(".|.|black") then
+                  table.insert(e_suits, "spade")
+                  table.insert(e_suits, "club")
+                  table.insert(e_colors, "black")
+                end
+                for j, suit_str in ipairs(suit_strings) do
+                  if not table.contains(e_suits, suit_str) and single_exp:matchExp(".|.|" .. suit_str) then
+                    table.insert(e_suits, suit_str)
+                    table.insertIfNeed(e_colors, color_strings[j])
+                  end
+                end
+              else
+                if e_suits then
+                  table.insertIfNeed(e_suits, "nosuit")
+                end
+                local hasRed = table.find({"heart", "diamond", "red"}, function (str)
+                  return single_exp:matchExp(".|.|" .. str)
+                end)
+                local hasBlack = table.find({"spade", "club", "black"}, function (str)
+                  return single_exp:matchExp(".|.|" .. str)
+                end)
+                if hasRed then
+                  table.insertIfNeed(e_colors, "red")
+                end
+                if hasBlack then
+                  table.insertIfNeed(e_colors, "black")
+                end
+
+                if (hasRed and hasBlack) or table.find({"nosuit", "nocolor"}, function (str)
+                  return single_exp:matchExp(".|.|" .. str)
+                end) then
+                  table.insertIfNeed(e_colors, "nocolor")
+                end
+
+                break
+              end
+            end
+            m.suit = table.connect(e_suits, e_colors)
+          end
+          table.insert(matchers, m)
+        end
+      end
+      pattern = tostring(exp)
+      self:setMark("Global_VS_Pattern", pattern)
     end
   end
 end
@@ -730,21 +804,7 @@ end
 function Card:matchVSPattern(pattern)
   local vs_pattern = self:getMark("Global_VS_Pattern")
   if type(vs_pattern) == "string" then
-    local exp = Exppattern:Parse(vs_pattern)
-    local matchers = {}
-    for _, m in ipairs(exp.matchers) do
-      --因为牌名信息已确认，直接指定之即可
-      --FIXME: 未考虑neg（似乎暂时用不到？）
-      if (m.name == nil or table.contains(m.name, self.name)) and
-        (m.trueName == nil or table.contains(m.trueName, self.trueName)) then
-        m.name = { self.name }
-        m.trueName = { self.trueName }
-        table.insert(matchers, m)
-      end
-    end
-    if #matchers == 0 then return false end
-    exp.matchers = matchers
-    return exp:matchExp(pattern)
+    return Exppattern:Parse(vs_pattern):matchExp(pattern)
   end
   return Exppattern:Parse(pattern):match(self)
 end

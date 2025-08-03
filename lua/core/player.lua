@@ -1156,7 +1156,7 @@ function Player:getViewAsCardNames(skill_name, card_names, subcards, ban_cards, 
       card.skillName = skill_name
       card:addSubcards(subcards)
     else
-      card:setVSPattern(skill_name, vs_pattern)
+      card:setVSPattern(skill_name, self, vs_pattern)
     end
     if table.contains(ban_cards, card.trueName) or table.contains(ban_cards, card.name) then return false end
     if Fk.currentResponsePattern == nil then

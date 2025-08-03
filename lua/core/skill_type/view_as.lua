@@ -17,10 +17,12 @@ end
 ---@field public max_num number @ 推测转化底牌的最大数
 ---@field public min_num number @ 推测转化底牌的最小数
 ---@field public pattern string @ 推测参与转化的实体牌所满足的匹配器
+---@field public subcards number[]? @ 转化底牌（用于实体牌已完全确定的情况）
 
 ---@param player Player @ the user
+---@param name? string @ the card name
 ---@return ViewAsPattern?
-function ViewAsSkill:filterPattern(player)
+function ViewAsSkill:filterPattern(player, name)
   return nil
 end
 
@@ -31,19 +33,23 @@ end
 ---@param selected_targets Player[] @ 已选目标
 ---@return boolean
 function ViewAsSkill:cardFilter(player, to_select, selected, selected_targets)
-  local filter_pattern = self:filterPattern(player)
+  local card = self:viewAs(player, table.connect(selected, {to_select}))
+  local filter_pattern = self:filterPattern(player, card and card.name)
   if filter_pattern then
-    if filter_pattern.max_num == 0 or not Fk:getCardById(to_select):matchPattern(filter_pattern.pattern) then return false end
+    if filter_pattern.subcards then return false end
+    if #selected >= filter_pattern.max_num then return false end
+    if not Fk:getCardById(to_select):matchPattern(filter_pattern.pattern) then return false end
+
     if #selected == filter_pattern.max_num - 1 then
-      local card = self:viewAs(player, table.connect(selected, {to_select}))
       if card == nil then return false end
       if Fk.currentResponsePattern == nil then
         return player:canUse(card)
       else
         --FIXME: 无法判断当前是使用还是打出，暂且搁置
-        return true
+        return Exppattern:Parse(Fk.currentResponsePattern):match(card)
       end
     end
+    return true
   end
   return false
 end
