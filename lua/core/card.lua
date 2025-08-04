@@ -205,23 +205,17 @@ end
 local function updateColorAndNumber(card)
   local color = Card.NoColor
   local number = 0
-  local different_color = false
   for i, id in ipairs(card.subcards) do
     local c = Fk:getCardById(id)
-    number = #card.subcards == 1 and math.min(number + c.number, 13) or 0
     if i == 1 then
       card.suit = c.suit
+      number = math.min(c.number, 13)
+      color = c.color
     else
       card.suit = Card.NoSuit
-    end
+      number = 0
 
-    if color ~= c.color then
-      if not different_color then
-        if c.color ~= Card.NoColor then
-          different_color = true
-        end
-        color = c.color
-      else
+      if color ~= c.color then
         color = Card.NoColor
       end
     end
