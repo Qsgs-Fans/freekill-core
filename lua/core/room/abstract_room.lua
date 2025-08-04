@@ -114,7 +114,7 @@ function AbstractRoom:loadJsonObject(o)
   -- 需要上层（目前是Client）自己根据circle添加玩家
   self.current = self:getPlayerById(o.current)
   self.banners = o.banners
-  self.capacity = o.capacity
+  self.capacity = o.capacity or #self.players
   self.timeout = o.timeout
   self.settings = o.settings
   for k, v in pairs(o.players) do
