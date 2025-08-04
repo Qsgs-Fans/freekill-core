@@ -2964,7 +2964,7 @@ end
 -- 调用一个自定义对话框，须自备loadData方法
 ---@param player ServerPlayer @ 询问的角色
 ---@param params AskToCustomDialogParams @ 各种变量
----@return string @ 格式化字符串，可能需要json.decode
+---@return any
 function Room:askToCustomDialog(player, params)
   local command = "CustomDialog"
   local req = Request:new(player, command)

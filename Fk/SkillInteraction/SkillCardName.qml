@@ -18,8 +18,6 @@ MetroButton {
   onAnswerChanged: {
     if (!answer) return;
     lcall("UpdateRequestUI", "Interaction", "1", "update", answer);
-    // lcall("SetInteractionDataOfSkill", skill, JSON.stringify(answer));
-    // roomScene.dashboard.startPending(skill);
   }
 
   onClicked: {
