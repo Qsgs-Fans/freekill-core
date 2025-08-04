@@ -95,9 +95,9 @@ function Client:startRecording()
     os.date("%Y%m%d%H%M%S"),
     self.enter_room_data,
     cbor.encode { Self.id, Self.player:getScreenName(), Self.player:getAvatar() },
+    "", -- 由于C++写翻车，此条空出来
     "normal", -- 表示本录像是正常全流程，还是重连，还是旁观
     -- RESERVED
-    "",
     "",
     "",
     "",
@@ -1262,7 +1262,7 @@ fk.client_callback["Reconnect"] = function(self, data)
 
   if not self.replaying then
     self:startRecording()
-    self.record[5] = "reconnect"
+    self.record[6] = "reconnect"
     table.insert(self.record, {math.floor(os.getms() / 1000), false, "Reconnect", cbor.encode(data)})
   end
 
@@ -1282,7 +1282,7 @@ fk.client_callback["Observe"] = function(self, data)
 
   if not self.replaying then
     self:startRecording()
-    self.record[5] = "reconnect"
+    self.record[6] = "reconnect"
     table.insert(self.record, {math.floor(os.getms() / 1000), false, "Observe", cbor.encode(data)})
   end
 
