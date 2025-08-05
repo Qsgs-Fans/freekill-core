@@ -30,9 +30,10 @@ Flickable {
 
     RowLayout {
       Text {
-        text: luatr("General Packages")
+        text: luatr("General Packages Help")
         font.bold: true
       }
+      /*
       Button {
         text: luatr("Select All")
         onClicked: {
@@ -57,8 +58,9 @@ Flickable {
           }
         }
       }
+      */
     }
-
+/* 
     ColumnLayout {
       Repeater {
         id: mods
@@ -136,7 +138,7 @@ Flickable {
         }
       }
     }
-
+*/
     RowLayout {
       Text {
         text: luatr("Card Packages")
@@ -208,8 +210,9 @@ Flickable {
 
   Component.onCompleted: {
     loading = true;
-    const g = lcall("GetAllGeneralPack");
     let orig;
+    /*
+    const g = lcall("GetAllGeneralPack");
     const _mods = lcall("GetAllModNames");
     const modData = lcall("GetAllMods");
     const packs = lcall("GetAllGeneralPack");
@@ -219,6 +222,7 @@ Flickable {
       if (pkgs.length > 0)
         modList.append({ name: name, pkgs: JSON.stringify(pkgs) });
     });
+    */
 
     const c = lcall("GetAllCardPack");
     for (orig of c) {

@@ -79,13 +79,10 @@ function UsableSkill:withinTimesLimit(player, scope, card, card_name, to)
     end
   end
 
-  local temp_suf = table.simpleClone(MarkEnum.TempMarkSuffix)
-  local card_temp_suf = table.simpleClone(MarkEnum.CardTempMarkSuffix)
-
   return player:usedCardTimes(card_name, scope) < limit or
-  (card and not not card:hasMark(MarkEnum.BypassTimesLimit, card_temp_suf)) or
-  not not player:hasMark(MarkEnum.BypassTimesLimit, temp_suf) or
-  (to and not not to:hasMark(MarkEnum.BypassTimesLimitTo, temp_suf))
+  (card and not not card:hasMark(MarkEnum.BypassTimesLimit)) or
+  not not player:hasMark(MarkEnum.BypassTimesLimit) or
+  (to and not not to:hasMark(MarkEnum.BypassTimesLimitTo))
 end
 
 -- 获得技能的额外牌堆卡牌id表

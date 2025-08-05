@@ -173,14 +173,11 @@ function CardSkill:withinDistanceLimit(player, isattack, card, to)
     if skill:bypassDistancesCheck(player, self, card, to) then return true end
   end
 
-  local temp_suf = table.simpleClone(MarkEnum.TempMarkSuffix)
-  local card_temp_suf = table.simpleClone(MarkEnum.CardTempMarkSuffix)
-
   return (isattack and player:inMyAttackRange(to, nil, table.connect(Card:getIdList(card), card.fake_subcards))) or
   (player:distanceTo(to, nil, nil, table.connect(Card:getIdList(card), card.fake_subcards)) <= self:getDistanceLimit(player, card, to)) or
-  not not card:hasMark(MarkEnum.BypassDistancesLimit, card_temp_suf) or
-  not not player:hasMark(MarkEnum.BypassDistancesLimit, temp_suf) or
-  not not to:hasMark(MarkEnum.BypassDistancesLimitTo, temp_suf)
+  not not card:hasMark(MarkEnum.BypassDistancesLimit) or
+  not not player:hasMark(MarkEnum.BypassDistancesLimit) or
+  not not to:hasMark(MarkEnum.BypassDistancesLimitTo)
 end
 
 

@@ -2964,7 +2964,7 @@ end
 -- 调用一个自定义对话框，须自备loadData方法
 ---@param player ServerPlayer @ 询问的角色
 ---@param params AskToCustomDialogParams @ 各种变量
----@return any
+---@return any @ 返回qml的ClientInstance.replyToServer。注意0.5.12+版本不再需要json.decode
 function Room:askToCustomDialog(player, params)
   local command = "CustomDialog"
   local req = Request:new(player, command)

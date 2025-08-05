@@ -102,6 +102,7 @@ Fk:loadTranslationTable {
   ["General Settings"] = "通常设置",
   ["Package Settings"] = "拓展包设置",
   ["General Packages"] = "武将拓展包",
+  ["General Packages Help"] = "武将拓展包设置请移步大厅界面右下角的“武将一览”", -- TODO
   ["Card Packages"] = "卡牌拓展包",
   ["Select All"] = "全选",
   ["Choose one handcard"] = "选卡",
