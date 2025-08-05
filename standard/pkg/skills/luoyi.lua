@@ -42,7 +42,6 @@ luoyi:addTest(function(room, me)
     room:obtainCard(me, 1)
     GameEvent.Turn:create(TurnData:new(me, "game_rule")):exec()
   end)
-  -- p(me:getCardIds("h"))
   lu.assertEquals(#me:getCardIds("h"), 1)
   lu.assertEquals(comp2.hp, origin_hp - 2)
 

@@ -1146,7 +1146,6 @@ fk.client_callback["ChangeSelf"] = function(self, data)
   local pid = tonumber(data)
   self.client:changeSelf(pid) -- for qml
   Self = self:getPlayerById(pid)
-  print(pid, Self, table.concat(table.map(self.players, tostring), ","))
   self:notifyUI("ChangeSelf", pid)
 end
 
