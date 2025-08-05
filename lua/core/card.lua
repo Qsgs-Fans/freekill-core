@@ -167,6 +167,60 @@ function Card:__tostring()
   return string.format("<Card %s[%s %d]>", self.name, self:getSuitString(), self.number)
 end
 
+local CBOR_TAG_REAL_CARD = 33002
+local CBOR_TAG_VIRTUAL_CARD = 33003
+
+-- 为了节约 不要用string当key
+local CBOR_CARD_KEY_NAME = 2
+local CBOR_CARD_KEY_SUIT = 3
+local CBOR_CARD_KEY_NUMBER = 4
+local CBOR_CARD_KEY_COLOR = 5
+local CBOR_CARD_KEY_SUBCARDS = 6
+local CBOR_CARD_KEY_SKILL_NAMES = 7
+local CBOR_CARD_KEY_EXTRA_DATA = 8
+
+function Card:__tocbor()
+  if self.id ~= 0 then
+    return cbor.encode(cbor.tagged(CBOR_TAG_REAL_CARD, self.id))
+  else
+    return cbor.encode(cbor.tagged(
+      CBOR_TAG_VIRTUAL_CARD,
+      {
+        [CBOR_CARD_KEY_NAME] = self.name,
+        [CBOR_CARD_KEY_SUIT] = self.suit ~= Card.NoSuit and self.suit or nil,
+        [CBOR_CARD_KEY_NUMBER] = self.number ~= 0 and self.number or nil,
+        [CBOR_CARD_KEY_COLOR] = self.color ~= Card.NoColor and self.color or nil,
+        [CBOR_CARD_KEY_SUBCARDS] = #self.subcards > 0 and self.subcards or nil,
+        [CBOR_CARD_KEY_SKILL_NAMES] = #self.skillNames > 0 and self.skillNames or nil,
+        [CBOR_CARD_KEY_EXTRA_DATA] = self.extra_data and (
+          next(self.extra_data) ~= nil and self.extra_data or nil)
+        or nil,
+      }
+    ))
+  end
+end
+function Card:__touistring()
+  return self:toLogString()
+end
+cbor.tagged_decoders[CBOR_TAG_REAL_CARD] = function(v)
+  return Fk:getCardById(v)
+end
+cbor.tagged_decoders[CBOR_TAG_VIRTUAL_CARD] = function(v)
+  local card = Fk:cloneCard(
+    v[CBOR_CARD_KEY_NAME],
+    v[CBOR_CARD_KEY_SUIT],
+    v[CBOR_CARD_KEY_NUMBER]
+  )
+
+  card.color = v[CBOR_CARD_KEY_COLOR] or Card.NoColor
+  card.subcards = v[CBOR_CARD_KEY_SUBCARDS] or {}
+  card.skillNames = v[CBOR_CARD_KEY_SKILL_NAMES] or {}
+
+  card.extra_data = v[CBOR_CARD_KEY_EXTRA_DATA]
+
+  return card
+end
+
 --- 克隆特定卡牌并赋予花色与点数。
 ---
 --- 会将skill/special_skills/equip_skill继承到克隆牌中。

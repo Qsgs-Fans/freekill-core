@@ -81,6 +81,18 @@ function General:__tostring()
   return string.format("<General %s>", self.name)
 end
 
+local CBOR_TAG_GENERAL = 33005
+function General:__tocbor()
+  return cbor.encode(cbor.tagged(CBOR_TAG_GENERAL, self.name))
+end
+function General:__touistring()
+  return Fk:translate(self.name)
+end
+cbor.tagged_decoders[CBOR_TAG_GENERAL] = function(v)
+  return Fk.generals[v]
+end
+
+
 --- 为武将增加技能
 ---@param skill Skill|string @ （单个）武将技能
 function General:addSkill(skill)
