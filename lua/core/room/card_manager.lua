@@ -283,7 +283,7 @@ function CardManager:toJsonObject()
 
   local cmarks = {}
   for k, v in pairs(self.card_marks) do
-    cmarks[tostring(k)] = v
+    cmarks[tostring(k)] = next(v) ~= nil and v or nil
   end
 
   return {
@@ -294,7 +294,7 @@ function CardManager:toJsonObject()
     -- card_place和owner_map没必要；载入时setCardArea
 
     printed_cards = printed_cards,
-    card_marks = cmarks,
+    card_marks = next(cmarks) ~= nil and cmarks or nil,
   }
 end
 
@@ -311,9 +311,11 @@ function CardManager:loadJsonObject(o)
 
   for _, data in ipairs(o.printed_cards) do self:printCard(table.unpack(data)) end
 
-  for cid, marks in pairs(o.card_marks) do
+  for cid, marks in pairs(o.card_marks or Util.DummyTable) do
     for k, v in pairs(marks) do
-      Fk:getCardById(tonumber(cid)):setMark(k, v)
+      local id = tonumber(cid)
+      ---@cast id -nil
+      Fk:getCardById(id):setMark(k, v)
     end
   end
 end
