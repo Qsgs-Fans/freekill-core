@@ -176,6 +176,10 @@ function Request:_checkReply(player, use_ai)
             self:_sendPacket(room:getPlayerById(pid))
           end
         end
+        local ok, ret = pcall(cbor.decode, reply)
+        if ok then
+          reply = ret
+        end
       end
     end
   else
@@ -189,11 +193,6 @@ function Request:_checkReply(player, use_ai)
       -- 还没轮到AI呢，所以需要标记为未答复
       reply = "__notready"
     end
-  end
-
-  local ok, ret = pcall(cbor.decode, reply)
-  if ok then
-    reply = ret
   end
 
   if reply == '' then reply = '__cancel' end
