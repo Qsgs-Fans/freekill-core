@@ -253,7 +253,8 @@ Item {
       for (let i = 0; i < photoModel.count; i++) {
         let item = photoModel.get(i);
         if (item.isOwner) {
-          ClientInstance.notifyServer("KickPlayer", item.id);
+          // 傻逼qml喜欢加1.0
+          ClientInstance.notifyServer("KickPlayer", Math.floor(item.id));
         }
       }
     }

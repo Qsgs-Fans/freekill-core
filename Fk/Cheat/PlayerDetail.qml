@@ -128,7 +128,8 @@ Flickable {
           return true;
         }
         onClicked: {
-          ClientInstance.notifyServer("KickPlayer", pid);
+          // 傻逼qml喜欢加1.0
+          ClientInstance.notifyServer("KickPlayer", Math.floor(pid));
           root.finish();
         }
       }
