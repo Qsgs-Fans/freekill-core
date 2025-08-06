@@ -401,6 +401,8 @@ end
 -- ```@$xxx```: mark with card_name[] data
 --
 -- ```@&xxx```: mark with general_name[] data
+--
+-- ```@!xxx```: picMark shown on the bottom-right corner of the photo, @!! for notation
 ---@param player ServerPlayer @ 更新标记的玩家
 ---@param mark string @ 标记的名称
 ---@param value any @ 设置的值，可以是数字、字符串、表、键值表等

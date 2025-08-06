@@ -46,9 +46,15 @@ MoveCardsData = TriggerData:subclass("MoveCardsData")
 ---@field data MoveCardsData[]
 local MoveCardsEvent = TriggerEvent:subclass("MoveCardsEvent")
 
----@deprecated @ 直接simpleClone即可
 function MoveCardsData:copy()
-  return table.simpleClone(self)
+  local copy = {}
+  for _, key in ipairs({
+    "moveInfo", "from", "to", "toArea", "moveReason", "proposer", "skillName", "moveVisible",
+    "specialName", "specialVisible", "drawPilePosition", "moveMark", "visiblePlayers"
+  }) do
+    copy[key] = self[key]
+  end
+  return copy
 end
 
 --- DrawData 关于摸牌的数据

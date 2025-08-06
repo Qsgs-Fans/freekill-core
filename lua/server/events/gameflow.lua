@@ -323,7 +323,7 @@ local Phase = GameEvent:subclass("GameEvent.Phase")
 
 function Phase:__tostring()
   local data = self.data
-  return string.format("<Phase %s : %s by %s #%d>",
+  return string.format("<Phase %s: %s by %s #%d>",
     Util.PhaseStrMapper(data.phase), data.who, data.reason, self.id)
 end
 

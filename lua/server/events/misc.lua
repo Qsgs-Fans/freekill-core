@@ -7,7 +7,7 @@ local MiscEventWrappers = {} -- mixin
 local Game = GameEvent:subclass("GameEvent.Game")
 
 function Game:__tostring()
-  return string.format("<Game #%d>", self.id)
+  return string.format("<Game %s #%d>", Fk:currentRoom().settings.gameMode, self.id)
 end
 
 function Game:main()
