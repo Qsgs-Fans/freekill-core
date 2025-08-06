@@ -107,6 +107,7 @@ Flickable {
           const name = extra_data?.photo ? extra_data.photo.screenName : extra_data.screenName;
           const idx = config.blockedUsers.indexOf(name);
           if (idx === -1) {
+            if (name === "") return;
             config.blockedUsers.push(name);
           } else {
             config.blockedUsers.splice(idx, 1);

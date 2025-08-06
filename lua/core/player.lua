@@ -1687,6 +1687,7 @@ function Player:toJsonObject()
     player_cards = self.player_cards,
     special_cards = self.special_cards,
     buddy_list = self.buddy_list,
+    virtual_equips = self.virtual_equips,
   }
 end
 
@@ -1699,6 +1700,7 @@ function Player:loadJsonObject(o)
   self.player_cards = o.player_cards
   self.special_cards = o.special_cards
   self.buddy_list = o.buddy_list
+  self.virtual_equips = o.virtual_equips
 
   local pid = self.id
   local room = Fk:currentRoom()
