@@ -248,20 +248,22 @@ function Player:setMark(mark, count)
 end
 
 --- 获取角色对应Mark的数量。注意初始为0
----@param mark string @ 标记
+---@param name string @ 标记
 ---@return any
-function Player:getMark(mark)
-  local mark = self.mark[mark]
+function Player:getMark(name)
+  local mark = self.mark[name]
   if not mark then return 0 end
-  if type(mark) == "table" then return table.simpleClone(mark) end
+  if type(mark) == "table" and not Util.isCborObject(mark) then
+    return table.simpleClone(mark)
+  end
   return mark
 end
 
 --- 获取角色对应Mark并初始化为table
----@param mark string @ 标记
+---@param name string @ 标记
 ---@return table
-function Player:getTableMark(mark)
-  local mark = self.mark[mark]
+function Player:getTableMark(name)
+  local mark = self.mark[name]
   if type(mark) == "table" then return table.simpleClone(mark) end
   return {}
 end

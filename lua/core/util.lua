@@ -35,6 +35,13 @@ Util.lockTable = function(t)
   return setmetatable({}, new_mt)
 end
 
+-- 是否是可以被编解码成cbor tagged的
+Util.isCborObject = function(v)
+  if type(v) ~= "table" then return false end
+  local mt = getmetatable(v)
+  return mt and mt.__tocbor ~= nil
+end
+
 ---@param value integer
 ---@return string
 ---@overload fun(value: string): integer

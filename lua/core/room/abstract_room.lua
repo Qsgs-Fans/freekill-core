@@ -67,7 +67,11 @@ end
 
 --- 获得房间的banner，如果不存在则返回nil
 function AbstractRoom:getBanner(name)
-  return self.banners[name]
+  local v = self.banners[name]
+  if type(v) == "table" and not Util.isCborObject(v) then
+    return table.simpleClone(v)
+  end
+  return v
 end
 
 --- 设置房间的当前行动者
