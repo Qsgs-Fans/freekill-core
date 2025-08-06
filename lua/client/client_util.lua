@@ -1201,7 +1201,9 @@ function GetPlayersAndObservers()
   return ret
 end
 
-function ToUIString(obj)
+function ToUIString(v)
+  local ok, obj = pcall(cbor.decode, v)
+  if not ok then return "未知类型" end
   local f = getmetatable(obj).__touistring
   if f then
     local ret = f(obj)

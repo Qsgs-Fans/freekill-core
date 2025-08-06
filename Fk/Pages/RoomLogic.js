@@ -1339,14 +1339,7 @@ callbacks["AskForResponseCard"] = (data) => {
 
 const getMarkValue = function(value) {
   if (value instanceof ArrayBuffer) {
-    const uint8Array = new Uint8Array(value);
-    let result = "";
-
-    for (const byte of uint8Array) {
-      // 将字节转换为两位十六进制，并添加\x前缀
-      result += `\\x${byte.toString(16).padStart(2, '0')}`;
-    }
-    return leval(`(function(s) return ToUIString(cbor.decode(s)) end)("${result}")`)
+    return lcall("ToUIString", value);
   } else if (!(value instanceof Object)) {
     return value.toString();
   } else {
