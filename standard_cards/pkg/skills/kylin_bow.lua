@@ -6,7 +6,7 @@ local skill = fk.CreateSkill {
 skill:addEffect(fk.DamageCaused, {
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(skill.name) and
-      data.card and data.card.trueName == "slash" and not data.chain and
+      data.card and data.card.trueName == "slash" and data.by_user and
       table.find(data.to:getCardIds("e"), function (id)
         local card = Fk:getCardById(id)
         return card.sub_type == Card.SubtypeDefensiveRide or card.sub_type == Card.SubtypeOffensiveRide
