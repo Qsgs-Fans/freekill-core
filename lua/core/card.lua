@@ -807,7 +807,7 @@ function Card:setVSPattern(skillName, player, pattern)
                   table.insert(e_colors, "black")
                 end
                 for j, suit_str in ipairs(suit_strings) do
-                  if not table.contains(e_suits, suit_str) and single_exp:matchExp(".|.|" .. suit_str) then
+                  if not table.contains(e_suits, suit_str) and single_exp:matchExp(".|.|" .. suit_str .. "," .. color_strings[j]) then
                     table.insert(e_suits, suit_str)
                     table.insertIfNeed(e_colors, color_strings[j])
                   end

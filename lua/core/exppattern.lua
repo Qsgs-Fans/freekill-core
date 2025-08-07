@@ -83,69 +83,6 @@ local function fillCardTrueNameTable()
   end
 end
 
---- 判断某牌是否满足某个Matcher的某个key（例如牌名、点数、花色）
-local function matchSingleKey(matcher, card, key)
-  local match = matcher[key == "color" and "suit" or key]
-  if not match then return true end
-  local neg = match.neg or {}
-
-  local val = card[key]
-  if key == "suit" then
-    val = card:getSuitString()
-  elseif key == "color" then
-    val = card:getColorString()
-  -- elseif key == "cardType" then
-  --   val = card:getTypeString()
-  elseif key == "place" then
-    val = placetable[Fk:currentRoom():getCardArea(card)]
-    if not val then
-      for _, p in ipairs(Fk:currentRoom().alive_players) do
-        val = p:getPileNameOfId(card.id)
-        if val then break end
-      end
-    end
-  end
-
-  if key == "color" then
-    local all_colors = {"red", "black", "nocolor"}
-    if not (table.hasIntersection(all_colors, match) or table.hasIntersection(all_colors, neg)) then
-      return false
-    end
-  end
-
-  if table.contains(match, val) then
-    return true
-  else
-    if not neg then return false end
-    for _, t in ipairs(neg) do
-      if type(t) == "table" then
-        if not table.contains(t, val) then return true end
-      else
-        if t ~= val then return true end
-      end
-    end
-  end
-  return false
-end
-
---- 判断某个Card是否符合某个Matcher
----@param matcher Matcher
----@param card Card
-local function matchCard(matcher, card)
-  if type(card) == "number" then
-    card = Fk:getCardById(card)
-  end
-
-  return matchSingleKey(matcher, card, "trueName")
-     and matchSingleKey(matcher, card, "number")
-     and (matchSingleKey(matcher, card, "suit")
-     or matchSingleKey(matcher, card, "color"))
-     and matchSingleKey(matcher, card, "place")
-     and matchSingleKey(matcher, card, "name")
-     -- and matchSingleKey(matcher, card, "cardType")
-     and matchSingleKey(matcher, card, "id")
-end
-
 local function hasNegIntersection(a, b)
   -- 注意，这里是拿a.neg和b比
   local neg_pass = false
@@ -187,13 +124,100 @@ local function hasIntersection(a, b)
   return neg_pass
 end
 
+local function matchCase(a, all_cases)
+  if a == nil then return a end
+  local ret = table.filter(a, function (v)
+    return table.contains(all_cases, v)
+  end)
+  local ret_neg = {}
+  if a.neg then
+    for _, v in ipairs(a.neg) do
+      if type(v) == "table" then
+        local v2 = table.filter(v, function (v2)
+          return table.contains(all_cases, v2)
+        end)
+        if #v2 > 0 then
+          table.insert(ret_neg, v2)
+        end
+      elseif table.contains(all_cases, v) then
+        table.insert(ret_neg, v)
+      end
+    end
+  end
+  if #ret > 0 or #ret_neg > 0 then
+    if #ret_neg > 0 then
+      ret.neg = ret_neg
+    end
+    return ret
+  end
+end
+
+local function matchSuit(a, b)
+  local all_cases = {"spade", "club", "heart", "diamond", "nosuit"}
+  if not hasIntersection(matchCase(a, all_cases), matchCase(b, all_cases)) then return false end
+  all_cases = {"black", "red", "nocolor"}
+  return hasIntersection(matchCase(a, all_cases), matchCase(b, all_cases))
+end
+
+--- 判断某牌是否满足某个Matcher的某个key（例如牌名、点数、花色）
+local function matchSingleKey(matcher, card, key)
+  local match = matcher[key]
+  if not match then return true end
+  local neg = match.neg or {}
+
+  local val = card[key]
+  if key == "suit" then
+    return matchSuit(match, {card:getSuitString()}) and matchSuit(match, {card:getColorString()})
+  -- elseif key == "cardType" then
+  --   val = card:getTypeString()
+  elseif key == "place" then
+    val = placetable[Fk:currentRoom():getCardArea(card)]
+    if not val then
+      for _, p in ipairs(Fk:currentRoom().alive_players) do
+        val = p:getPileNameOfId(card.id)
+        if val then break end
+      end
+    end
+  end
+
+  if table.contains(match, val) then
+    return true
+  else
+    if not neg then return false end
+    for _, t in ipairs(neg) do
+      if type(t) == "table" then
+        if not table.contains(t, val) then return true end
+      else
+        if t ~= val then return true end
+      end
+    end
+  end
+  return false
+end
+
+--- 判断某个Card是否符合某个Matcher
+---@param matcher Matcher
+---@param card Card
+local function matchCard(matcher, card)
+  if type(card) == "number" then
+    card = Fk:getCardById(card)
+  end
+
+  return matchSingleKey(matcher, card, "trueName")
+     and matchSingleKey(matcher, card, "number")
+     and matchSingleKey(matcher, card, "suit")
+     and matchSingleKey(matcher, card, "place")
+     and matchSingleKey(matcher, card, "name")
+     -- and matchSingleKey(matcher, card, "cardType")
+     and matchSingleKey(matcher, card, "id")
+end
+
 ---@param a Matcher
 ---@param b Matcher
 local function matchMatcher(a, b)
   local keys = {
     "trueName",
     "number",
-    "suit",
     "place",
     "name",
     -- "cardType",
@@ -206,7 +230,7 @@ local function matchMatcher(a, b)
     end
   end
 
-  return true
+  return matchSuit(a.suit, b.suit)
 end
 
 local function parseNegative(list)
