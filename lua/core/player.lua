@@ -142,6 +142,27 @@ function Player:__touistring()
   end
   return Fk:translate("seat#" .. self.seat)
 end
+function Player:__toqml()
+  return {
+    moduleUri = "Fk.RoomElement",
+    typeName = "Photo",
+
+    -- 屋檐了，烂QML
+    properties = {
+      playerid = self.id,
+      scale = 0.55,
+      general = self.general,
+      deputyGeneral = self.deputyGeneral,
+      role = self.role,
+      state = "candidate",
+      screenName = self.player:getScreenName(),
+      kingdom = self.kingdom,
+      seatNumber = self.seat,
+      selectable = true,
+    },
+  }
+end
+
 cbor.tagged_decoders[CBOR_TAG_PLAYER] = function(v)
   return Fk:currentRoom():getPlayerById(v)
 end

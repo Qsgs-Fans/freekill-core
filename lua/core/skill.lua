@@ -104,6 +104,18 @@ end
 function Skill:__touistring()
   return Fk:translate(self.name)
 end
+function Skill:__toqml()
+  return {
+    moduleUri = "Fk.RoomElement",
+    typeName = "SkillButton",
+
+    properties = {
+      type = "notactive",
+      orig = self.name,
+      skill = Fk:translate(self.name),
+    },
+  }
+end
 cbor.tagged_decoders[CBOR_TAG_SKILL] = function(v)
   return Fk.skills[v]
 end

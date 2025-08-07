@@ -202,6 +202,34 @@ end
 function Card:__touistring()
   return self:toLogString()
 end
+function Card:__toqml()
+  local mark = {}
+  for k, v in pairs(self.mark) do
+    if k and k:startsWith("@") and v and v ~= 0 then
+      table.insert(mark, {
+        k = k, v = v,
+      })
+    end
+  end
+
+  return {
+    moduleUri = "Fk.RoomElement",
+    typeName = "CardItem",
+
+    properties = {
+      cid = self.id,
+      name = self.name,
+      extension = self.package.extensionName,
+      number = self.number,
+      suit = self:getSuitString(),
+      color = self:getColorString(),
+      mark = mark,
+      type = self.type,
+      subtype = self:getSubtypeString(),
+      multiple_targets = self.multiple_targets,
+    },
+  }
+end
 cbor.tagged_decoders[CBOR_TAG_REAL_CARD] = function(v)
   return Fk:getCardById(v)
 end

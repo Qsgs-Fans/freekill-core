@@ -1005,15 +1005,17 @@ function PoxiFeasible(poxi_type, selected, data, extra_data)
   return poxi.feasible(selected, data, extra_data)
 end
 
-function GetQmlMark(mtype, name, value, p)
+function GetQmlMark(mtype, name, p)
   local spec = Fk.qml_marks[mtype]
   if not spec then return {} end
+  local value
   p = ClientInstance:getPlayerById(p)
-  value = json.decode(value)
   if p then
     local pile = p:getPile(name)
     if #pile > 0 then
       value = pile
+    else
+      value = p:getMark(name)
     end
   end
   return {
@@ -1214,6 +1216,34 @@ function ToUIString(v)
 
   -- 这里故意返回中文
   return "未知类型"
+end
+
+local defaultQml = {
+  -- 比照Qt.createComponent参数名而设
+  moduleUri = "QtQuick",
+  typeName = "Rectangle",
+  url = nil,
+
+  -- 比照Component.createObject
+  properties = {
+    width = 80,
+    height = 100,
+    color = "green",
+  },
+}
+
+function ToQml(v)
+  local ok, obj = pcall(cbor.decode, v)
+  if not ok then return defaultQml end
+  local f = getmetatable(obj).__toqml
+  if f then
+    local ret = f(obj)
+    if type(ret) == "table" then
+      return ret
+    end
+  end
+
+  return defaultQml
 end
 
 dofile "lua/client/i18n/init.lua"

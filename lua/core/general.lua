@@ -88,6 +88,17 @@ end
 function General:__touistring()
   return Fk:translate(self.name)
 end
+function General:__toqml()
+  return {
+    moduleUri = "Fk.RoomElement",
+    typeName = "GeneralCardItem",
+
+    -- TODO 虚拟卡
+    properties = {
+      name = self.name,
+    },
+  }
+end
 cbor.tagged_decoders[CBOR_TAG_GENERAL] = function(v)
   return Fk.generals[v]
 end
