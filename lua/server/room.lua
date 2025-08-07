@@ -3988,4 +3988,17 @@ function Room:clearHistory (scope)
   end
 end
 
+
+--- 将一些牌洗入某个区域，不产生移动事件和动画（仅限弃牌堆、摸牌堆、虚空区
+---@param cards integer|integer[]|Card|Card[] @ 牌
+---@param area CardArea @ 目标区域
+---@param areaCards? integer[] @ 若指定顺序，则输入新区域牌的id表
+function Room:changeCardArea (cards, area, areaCards)
+  local ret = AbstractRoom.changeCardArea(self, cards, area, areaCards)
+  self:doBroadcastNotify("ChangeCardArea", {cards, area, areaCards or ret})
+  if area == Card.DrawPile then
+    self:doBroadcastNotify("UpdateDrawPile", #self.draw_pile)
+  end
+end
+
 return Room

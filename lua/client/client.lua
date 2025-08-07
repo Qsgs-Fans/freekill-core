@@ -1309,6 +1309,11 @@ fk.client_callback["SyncDrawPile"] = function(self, data)
   self.draw_pile = data
 end
 
+fk.client_callback["ChangeCardArea"] = function(self, data)
+  local cards, area, areaCards = table.unpack(data)
+  self:changeCardArea(cards, area, areaCards)
+end
+
 -- Create ClientInstance (used by Lua)
 -- Let Cpp call this function to create
 function CreateLuaClient(cpp_client)

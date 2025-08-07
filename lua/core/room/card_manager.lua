@@ -320,4 +320,50 @@ function CardManager:loadJsonObject(o)
   end
 end
 
+--- 将一些牌洗入某个区域，不产生移动事件和动画（仅限弃牌堆、摸牌堆、虚空区
+---@param cards integer|integer[]|Card|Card[] @ 牌
+---@param area CardArea @ 目标区域
+---@param areaCards? integer[] @ 若指定顺序，则输入新区域牌的id表
+---@return integer[] @ 返回新区域的牌id表
+function CardManager:changeCardArea(cards, area, areaCards)
+  cards = Card:getIdList(cards)
+  assert(table.every(cards, function(id) return self:getCardOwner(id) == nil end))
+  for _, id in ipairs(cards) do
+    local oldPlace = self.card_place[id]
+    self:setCardArea(id, area, nil)
+    if oldPlace == Card.DrawPile then
+      table.removeOne(self.draw_pile, id)
+    elseif oldPlace == Card.DiscardPile then
+      table.removeOne(self.discard_pile, id)
+    elseif oldPlace == Card.Processing then
+      table.removeOne(self.processing_area, id)
+    elseif oldPlace == Card.Void then
+      table.removeOne(self.void, id)
+    end
+  end
+  if areaCards == nil then
+    local areaMap = {
+      [Card.DrawPile] = self.draw_pile,
+      [Card.DiscardPile] = self.discard_pile,
+      [Card.Processing] = self.processing_area,
+      [Card.Void] = self.void,
+    }
+    areaCards = areaMap[area]
+    assert(areaCards)
+    for _, id in ipairs(cards) do
+      table.insert(areaCards, math.random(#areaCards), id)
+    end
+  end
+  if area == Card.DrawPile then
+    self.draw_pile = areaCards
+  elseif area == Card.DiscardPile then
+    self.discard_pile = areaCards
+  elseif area == Card.Processing then
+    self.processing_area = areaCards
+  elseif area == Card.Void then
+    self.void = areaCards
+  end
+  return areaCards
+end
+
 return CardManager
