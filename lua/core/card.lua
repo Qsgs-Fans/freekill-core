@@ -827,10 +827,11 @@ function Card:setVSPattern(skillName, player, pattern)
                 if e_numbers then
                   table.insertIfNeed(e_numbers, 0)
                 end
-                local hasRed = table.find({"heart", "diamond", "red"}, function (str)
+                --FIXME:需考虑已有的subcards
+                local hasRed = table.find({"heart,red", "diamond,red", "red"}, function (str)
                   return single_exp:matchExp(".|.|" .. str)
                 end)
-                local hasBlack = table.find({"spade", "club", "black"}, function (str)
+                local hasBlack = table.find({"spade,black", "club,black", "black"}, function (str)
                   return single_exp:matchExp(".|.|" .. str)
                 end)
                 if hasRed then
@@ -840,7 +841,7 @@ function Card:setVSPattern(skillName, player, pattern)
                   table.insertIfNeed(e_colors, "black")
                 end
 
-                if (hasRed and hasBlack) or table.find({"nosuit", "nocolor"}, function (str)
+                if (hasRed and hasBlack) or table.find({"nosuit,nocolor", "nocolor"}, function (str)
                   return single_exp:matchExp(".|.|" .. str)
                 end) then
                   table.insertIfNeed(e_colors, "nocolor")
