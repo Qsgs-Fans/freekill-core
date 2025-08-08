@@ -1232,7 +1232,7 @@ local function loadRoomSummary(self, data)
 
   for _, pid in ipairs(data.circle) do
     if pid ~= data.you then
-      fk.client_callback["AddPlayer"](self, players[tostring(pid)].setup_data)
+      fk.client_callback["AddPlayer"](self, players[pid].setup_data)
     end
   end
 
@@ -1265,7 +1265,7 @@ fk.client_callback["Reconnect"] = function(self, data)
     table.insert(self.record, {math.floor(os.getms() / 1000), false, "Reconnect", cbor.encode(data)})
   end
 
-  local setup_data = players[tostring(data.you)].setup_data
+  local setup_data = players[data.you].setup_data
   self:setup(setup_data[1], setup_data[2], setup_data[3])
   fk.client_callback["AddTotalGameTime"](self, { setup_data[1], setup_data[5] })
 
@@ -1285,7 +1285,7 @@ fk.client_callback["Observe"] = function(self, data)
     table.insert(self.record, {math.floor(os.getms() / 1000), false, "Observe", cbor.encode(data)})
   end
 
-  local setup_data = players[tostring(data.you)].setup_data
+  local setup_data = players[data.you].setup_data
   self:setup(setup_data[1], setup_data[2], setup_data[3])
 
   local enter_room_data = { data.timeout, data.settings }

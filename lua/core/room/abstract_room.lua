@@ -96,14 +96,14 @@ function AbstractRoom:toJsonObject()
 
   local players = {}
   for _, p in ipairs(self.players) do
-    players[tostring(p.id)] = p:toJsonObject()
+    players[p.id] = p:toJsonObject()
   end
 
   return {
     card_manager = card_manager,
     circle = table.map(self.players, Util.IdMapper),
     current = self.current and self.current.id or nil,
-    banners = self.banners,
+    banners = cbor.encode(self.banners),
     capacity = self.capacity,
     timeout = self.timeout,
     settings = self.settings,
@@ -117,17 +117,17 @@ function AbstractRoom:loadJsonObject(o)
 
   -- 需要上层（目前是Client）自己根据circle添加玩家
   self.current = self:getPlayerById(o.current)
-  self.banners = o.banners
   self.capacity = o.capacity or #self.players
   self.timeout = o.timeout
   self.settings = o.settings
   for k, v in pairs(o.players) do
-    local pid = tonumber(k)
-    self:getPlayerById(pid):loadJsonObject(v)
+    self:getPlayerById(k):loadJsonObject(v)
   end
   self.alive_players = table.filter(self.players, function(p)
     return p:isAlive()
   end)
+
+  self.banners = cbor.decode(o.banners)
 end
 
 -- 判断当前模式是否为某类模式

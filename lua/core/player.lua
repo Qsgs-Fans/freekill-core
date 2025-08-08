@@ -1711,7 +1711,7 @@ function Player:toJsonObject()
     properties = ptable,
     card_history = self.cardUsedHistory,
     skill_history = self.skillUsedHistory,
-    mark = self.mark,
+    mark = cbor.encode(self.mark),
     skills = table.map(self.player_skills, Util.NameMapper),
     player_cards = self.player_cards,
     special_cards = self.special_cards,
@@ -1724,12 +1724,13 @@ function Player:loadJsonObject(o)
   for k, v in pairs(o.properties) do self[k] = v end
   self.cardUsedHistory = o.card_history
   self.skillUsedHistory = o.skill_history
-  self.mark = o.mark
   for _, sname in ipairs(o.skills) do self:addSkill(sname) end
   self.player_cards = o.player_cards
   self.special_cards = o.special_cards
   self.buddy_list = o.buddy_list
   self.virtual_equips = o.virtual_equips
+
+  self.mark = cbor.decode(o.mark)
 
   local pid = self.id
   local room = Fk:currentRoom()
