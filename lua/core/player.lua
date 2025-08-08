@@ -1176,6 +1176,18 @@ function Player:canUseTo(card, to, extra_data)
   return can_use and Util.CardTargetFilter(card.skill, self, to, {}, card.subcards, card, _extra)
 end
 
+--- 确认玩家是否可以使用/打出特定牌，考虑Fk.currentResponsePattern。
+---@param card Card @ 特定牌
+---@param extra_data? UseExtraData @ 额外数据
+function Player:canUseOrResponseInCurrent(card, extra_data)
+  if Fk.currentResponsePattern == nil then
+    return self:canUse(card, extra_data)
+  else
+    --FIXME: 无法判断当前是使用还是打出，暂且搁置
+    return Exppattern:Parse(Fk.currentResponsePattern):match(card)
+  end
+end
+
 --- 当前可用的牌名筛选。用于转化技的interaction里对泛转化牌名的合法性检测
 ---@param skill_name string @ 泛转化技的技能名
 ---@param card_names string[] @ 待判定的牌名列表
@@ -1196,11 +1208,7 @@ function Player:getViewAsCardNames(skill_name, card_names, subcards, ban_cards, 
       card:setVSPattern(skill_name, self, vs_pattern)
     end
     if table.contains(ban_cards, card.trueName) or table.contains(ban_cards, card.name) then return false end
-    if Fk.currentResponsePattern == nil then
-      return self:canUse(card, extra_data)
-    else
-      return Exppattern:Parse(Fk.currentResponsePattern):match(card)
-    end
+    return self:canUseOrResponseInCurrent(card, extra_data)
   end)
 end
 

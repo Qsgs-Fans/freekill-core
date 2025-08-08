@@ -42,22 +42,43 @@ function ViewAsSkill:cardFilter(player, to_select, selected, selected_targets)
     if not Fk:getCardById(to_select):matchPattern(filter_pattern.pattern) then return false end
 
     if #selected == filter_pattern.max_num - 1 then
-      if card == nil then return false end
-      if Fk.currentResponsePattern == nil then
-        return player:canUse(card)
-      else
-        --FIXME: 无法判断当前是使用还是打出，暂且搁置
-        return Exppattern:Parse(Fk.currentResponsePattern):match(card)
-      end
+      return card ~= nil and player:canUseOrResponseInCurrent(card)
     elseif card then
       if card:isVirtual() then
         card:setVSPattern(self.name, player)
       end
-      if Fk.currentResponsePattern == nil then
-        return player:canUse(card)
-      else
-        --FIXME: 无法判断当前是使用还是打出，暂且搁置
-        return Exppattern:Parse(Fk.currentResponsePattern):match(card)
+      return player:canUseOrResponseInCurrent(card)
+    else
+      --无法判断当前转化的卡牌，故作估计处理（很可能会误判，特殊情况请根据实际情况重写cardFilter）
+      local card_names = {}
+      if self.interaction and Fk.all_card_types[self.interaction.data] ~= nil then
+        --优先判interaction结果（泛转化技）
+        table.indexOf(card_names, self.interaction.data)
+      elseif self.pattern then
+        --分析技能的pattern，仅考虑卡名的情况（单卡名，及以逗号分隔的多卡名）
+        local t = self.pattern:split(";")
+        for _, v in ipairs(t) do
+          local names = v:split("|")[1]:split(",")
+          for _, name in ipairs(names) do
+            if Fk.all_card_types[name] ~= nil then
+              table.insertIfNeed(card_names, name)
+            end
+          end
+        end
+      end
+      if #card_names > 0 then
+        for _, name in ipairs(card_names) do
+          filter_pattern = self:filterPattern(player, name, selected)
+          if filter_pattern and Fk:getCardById(to_select):matchPattern(filter_pattern.pattern) then
+            local c = Fk:cloneCard(name)
+            c:addSubcards(table.connect(selected, {to_select}))
+            c:setVSPattern(self.name, player)
+            if player:canUseOrResponseInCurrent(c) then
+              return true
+            end
+          end
+        end
+        return false
       end
     end
     return true

@@ -797,7 +797,7 @@ function Card:setVSPattern(skillName, player, pattern)
   else
     local skill = Fk.skills[skillName]---@type ViewAsSkill
     if skill:isInstanceOf(ViewAsSkill) then
-      local vs = player and skill:filterPattern(player, self, self.subcards) or nil
+      local vs = player and skill:filterPattern(player, self.name, self.subcards) or nil
       if vs and vs.subcards then
         self:addSubcards(vs.subcards)
         return
@@ -816,36 +816,36 @@ function Card:setVSPattern(skillName, player, pattern)
             local single_exp = Exppattern:Parse(vs.pattern)
             local e_suits, e_colors, e_numbers = {}, {}, {}
             local suit_strings = {"spade", "club", "heart", "diamond", "nosuit"}
-            local color_strings = {"black", "black", "red", "red", "nocolor"}
+            local color_strings = {"black", "red", "nocolor"}
 
-            for i = vs.min_num, vs.max_num, 1 do
+            for i = math.max(vs.min_num, #self.subcards), vs.max_num, 1 do
               if i == 0 then
                 table.insert(e_suits, "nosuit")
                 table.insert(e_colors, "nocolor")
                 table.insert(e_numbers, 0)
               elseif i == 1 then
-                if single_exp:matchExp(".|.|red") then
-                  table.insert(e_suits, "heart")
-                  table.insert(e_suits, "diamond")
-                  table.insert(e_colors, "red")
-                end
-                if single_exp:matchExp(".|.|black") then
-                  table.insert(e_suits, "spade")
-                  table.insert(e_suits, "club")
-                  table.insert(e_colors, "black")
-                end
-                for j, suit_str in ipairs(suit_strings) do
-                  if not table.contains(e_suits, suit_str) and single_exp:matchExp(".|.|" .. suit_str .. "," .. color_strings[j]) then
-                    table.insert(e_suits, suit_str)
-                    table.insertIfNeed(e_colors, color_strings[j])
+                if #self.subcards == 1 then
+                  table.insertIfNeed(e_suits, self:getSuitString())
+                  table.insertIfNeed(e_colors, self:getColorString())
+                  table.insertIfNeed(e_numbers, self.number)
+                else
+                  for _, suit_str in ipairs(color_strings) do
+                    if single_exp:matchExp(".|.|" .. suit_str) then
+                      table.insertIfNeed(e_colors, suit_str)
+                    end
                   end
-                end
-                if #e_numbers == 0 and single_exp:matchExp(".|0") then
-                  table.insert(e_numbers, 0)
-                end
-                for j = 1, 13, 1 do
-                  if single_exp:matchExp(".|" .. tostring(j)) then
-                    table.insert(e_numbers, j)
+                  for _, suit_str in ipairs(suit_strings) do
+                    if single_exp:matchExp(".|.|" .. suit_str) then
+                      table.insertIfNeed(e_suits, suit_str)
+                    end
+                  end
+                  if #e_numbers == 0 and single_exp:matchExp(".|0") then
+                    table.insert(e_numbers, 0)
+                  end
+                  for j = 1, 13, 1 do
+                    if single_exp:matchExp(".|" .. tostring(j)) then
+                      table.insert(e_numbers, j)
+                    end
                   end
                 end
               else
@@ -856,12 +856,18 @@ function Card:setVSPattern(skillName, player, pattern)
                   table.insertIfNeed(e_numbers, 0)
                 end
                 --FIXME:需考虑已有的subcards
-                local hasRed = table.find({"heart,red", "diamond,red", "red"}, function (str)
-                  return single_exp:matchExp(".|.|" .. str)
-                end)
-                local hasBlack = table.find({"spade,black", "club,black", "black"}, function (str)
-                  return single_exp:matchExp(".|.|" .. str)
-                end)
+                local hasRed = single_exp:matchExp(".|.|red")
+                local hasBlack = single_exp:matchExp(".|.|black")
+                if #self.subcards > 0 then
+                  if self.color == Card.Red then
+                    hasRed = true
+                  elseif self.color == Card.Black then
+                    hasBlack = true
+                  else
+                    table.insertIfNeed(e_colors, "nocolor")
+                    break
+                  end
+                end
                 if hasRed then
                   table.insertIfNeed(e_colors, "red")
                 end
@@ -869,9 +875,7 @@ function Card:setVSPattern(skillName, player, pattern)
                   table.insertIfNeed(e_colors, "black")
                 end
 
-                if (hasRed and hasBlack) or table.find({"nosuit,nocolor", "nocolor"}, function (str)
-                  return single_exp:matchExp(".|.|" .. str)
-                end) then
+                if (hasRed and hasBlack) or single_exp:matchExp(".|.|nocolor") then
                   table.insertIfNeed(e_colors, "nocolor")
                 end
 

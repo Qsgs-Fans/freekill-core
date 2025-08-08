@@ -83,80 +83,56 @@ local function fillCardTrueNameTable()
   end
 end
 
-local function hasNegIntersection(a, b)
-  -- 注意，这里是拿a.neg和b比
-  local neg_pass = false
-
-  -- 第一次比较： 比较neg和正常值，如有不同即认为可以匹配
-  -- 比如 ^jink 可以匹配 slash,jink
-  for _, neg in ipairs(a.neg or Util.DummyTable) do
-    for _, e in ipairs(b) do
-      if type(neg) == "table" then
-        neg_pass = not table.contains(neg, e)
-      else
-        neg_pass = neg ~= e
-      end
-      if neg_pass then return true end
-    end
-  end
-
-  -- 第二次比较： 比较双方neg
-  -- 比如 ^jink 可以匹配 ^slash
-  -- 没法比
-end
-
-local function hasIntersection(a, b)
-  if a == nil or b == nil or (#a + #b == 0) then
-    return true
-  end
-
-  local tmp = {}
-  for _, e in ipairs(a) do
-    tmp[e] = true
-  end
-  for _, e in ipairs(b) do
-    if tmp[e] then
-      return true
-    end
-  end
-  local neg_pass = hasNegIntersection(a, b) or hasNegIntersection(b, a)
-
-  return neg_pass
-end
-
-local function matchCase(a, all_cases)
-  if a == nil then return a end
-  local ret = table.filter(a, function (v)
-    return table.contains(all_cases, v)
+---@return string[]
+local function parseCase(list, suits)
+  local neg = list.neg or {}
+  local ret = table.filter(list, function (v)
+    return table.contains(suits, v)
   end)
-  local ret_neg = {}
-  if a.neg then
-    for _, v in ipairs(a.neg) do
-      if type(v) == "table" then
-        local v2 = table.filter(v, function (v2)
-          return table.contains(all_cases, v2)
-        end)
-        if #v2 > 0 then
-          table.insert(ret_neg, v2)
-        end
-      elseif table.contains(all_cases, v) then
-        table.insert(ret_neg, v)
+  for _, v in ipairs(neg) do
+    if type(v) == "table" then
+      local _s = table.filter(suits, function (_v)
+        return not table.contains(v, _v)
+      end)
+      if #_s < #suits then
+        table.insertTableIfNeed(ret, _s)
+        if #ret >= #suits then break end
+      end
+    else
+      local _s = table.simpleClone(suits)
+      if table.removeOne(_s, v) then
+        table.insertTableIfNeed(ret, _s)
+        if #ret >= #suits then break end
       end
     end
   end
-  if #ret > 0 or #ret_neg > 0 then
-    if #ret_neg > 0 then
-      ret.neg = ret_neg
-    end
-    return ret
+  if #ret == 0 then
+    ret = suits
   end
+  return ret
 end
 
-local function matchSuit(a, b)
-  local all_cases = {"spade", "club", "heart", "diamond", "nosuit"}
-  if not hasIntersection(matchCase(a, all_cases), matchCase(b, all_cases)) then return false end
-  all_cases = {"black", "red", "nocolor"}
-  return hasIntersection(matchCase(a, all_cases), matchCase(b, all_cases))
+---@return string[]
+local function parseSuit(list)
+  local suits = parseCase(list, {"spade", "club", "heart", "diamond", "nosuit"})
+  local colors = parseCase(list, {"black", "red", "nocolor"})
+
+  local all_suits = {{"spade", "club", "nosuit"}, {"heart", "diamond", "nosuit"}, {"nosuit"}}
+  local all_colors = {"black", "red", "nocolor"}
+
+  local ret = {}
+
+  for i, v1 in ipairs(all_colors) do
+    if table.contains(colors, v1) then
+      for _, v2 in ipairs(all_suits[i]) do
+        if table.contains(suits, v2) then
+          table.insert(ret, v2 .. "," .. v1)
+        end
+      end
+    end
+  end
+
+  return ret
 end
 
 --- 判断某牌是否满足某个Matcher的某个key（例如牌名、点数、花色）
@@ -167,7 +143,7 @@ local function matchSingleKey(matcher, card, key)
 
   local val = card[key]
   if key == "suit" then
-    return matchSuit(match, {card:getSuitString()}) and matchSuit(match, {card:getColorString()})
+    return table.contains(parseSuit(match), card:getSuitString() .. "," .. card:getColorString())
   -- elseif key == "cardType" then
   --   val = card:getTypeString()
   elseif key == "place" then
@@ -212,6 +188,47 @@ local function matchCard(matcher, card)
      and matchSingleKey(matcher, card, "id")
 end
 
+local function hasNegIntersection(a, b)
+  -- 注意，这里是拿a.neg和b比
+  local neg_pass = false
+
+  -- 第一次比较： 比较neg和正常值，如有不同即认为可以匹配
+  -- 比如 ^jink 可以匹配 slash,jink
+  for _, neg in ipairs(a.neg or Util.DummyTable) do
+    for _, e in ipairs(b) do
+      if type(neg) == "table" then
+        neg_pass = not table.contains(neg, e)
+      else
+        neg_pass = neg ~= e
+      end
+      if neg_pass then return true end
+    end
+  end
+
+  -- 第二次比较： 比较双方neg
+  -- 比如 ^jink 可以匹配 ^slash
+  -- 没法比
+end
+
+local function hasIntersection(a, b)
+  if a == nil or b == nil or (#a + #b == 0) then
+    return true
+  end
+
+  local tmp = {}
+  for _, e in ipairs(a) do
+    tmp[e] = true
+  end
+  for _, e in ipairs(b) do
+    if tmp[e] then
+      return true
+    end
+  end
+  local neg_pass = hasNegIntersection(a, b) or hasNegIntersection(b, a)
+
+  return neg_pass
+end
+
 ---@param a Matcher
 ---@param b Matcher
 local function matchMatcher(a, b)
@@ -230,7 +247,7 @@ local function matchMatcher(a, b)
     end
   end
 
-  return matchSuit(a.suit, b.suit)
+  return a.suit == nil or b.suit == nil or table.hasIntersection(parseSuit(a.suit), parseSuit(b.suit))
 end
 
 local function parseNegative(list)
