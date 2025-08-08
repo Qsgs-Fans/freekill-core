@@ -35,8 +35,15 @@ Item {
       width: childrenRect.width
       height: 22
       Text {
-        text: luatr(mark_name) + ' '
-              + (special_value !== '' ? special_value : mark_extra) // @$ @& 直接在名字里显示个数，牌堆是updatePileInfo控制标记值
+        // @$ @& 直接在名字里显示个数，牌堆是updatePileInfo控制标记值
+        text: {
+          const name = luatr(mark_name);
+          let value = mark_extra;
+          if (special_value) {
+            value = special_value;
+          }
+          return `${name} ${value}`;
+        }
         font.family: fontLibian.name
         font.pixelSize: 22
         font.letterSpacing: -0.6
@@ -111,7 +118,7 @@ Item {
     spacing: 0
   }
 
-  function setMark(mark, data) {
+  function setMark(mark, dat) {
     let i, modelItem;
     for (i = 0; i < markList.count; i++) {
       if (markList.get(i).mark_name === mark) {
@@ -121,9 +128,10 @@ Item {
     }
 
     let special_value = '';
+    let mark_extra = "";
     if (mark.startsWith('@$') || mark.startsWith('@&')) {
-      special_value += data.length;
-      data = data.join(',');
+      special_value += dat.length;
+      mark_extra = dat.join(',');
     } else if (mark.startsWith('@[')) {
       const close_br = mark.indexOf(']');
       if (close_br !== -1) {
@@ -135,16 +143,16 @@ Item {
         }
       }
     } else {
-      data = data instanceof Array
-           ? data.map((markText) => luatr(markText)).join(' ')
-           : luatr(data);
+      mark_extra = dat instanceof Array
+           ? dat.map((markText) => luatr(markText)).join(' ')
+           : luatr(dat);
     }
 
     if (modelItem) { // 如果已经存在
       modelItem.special_value = special_value;
-      modelItem.mark_extra = data;
+      modelItem.mark_extra = mark_extra;
     } else {
-      markList.append({ mark_name: mark, mark_extra: data, special_value });
+      markList.append({ mark_name: mark, mark_extra, special_value });
     }
 
     arrangeMarks();
