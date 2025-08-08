@@ -1015,7 +1015,7 @@ function GetQmlMark(mtype, name, p)
     if #pile > 0 then
       value = pile
     else
-      value = p:getMark(name)
+      value = p.mark[name]
     end
   end
   return {
