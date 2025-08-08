@@ -326,8 +326,13 @@ end
 ---@param areaCards? integer[] @ 若指定顺序，则输入新区域牌的id表
 ---@return integer[] @ 返回新区域的牌id表
 function CardManager:changeCardArea(cards, area, areaCards)
+  local areaMap = {
+    [Card.DrawPile] = self.draw_pile,
+    [Card.DiscardPile] = self.discard_pile,
+    [Card.Void] = self.void,
+  }
   cards = Card:getIdList(cards)
-  assert(table.every(cards, function(id) return self:getCardOwner(id) == nil end))
+  assert(table.every(cards, function(id) return areaMap[self.card_place[id]] ~= nil end))
   for _, id in ipairs(cards) do
     local oldPlace = self.card_place[id]
     self:setCardArea(id, area, nil)
@@ -335,31 +340,21 @@ function CardManager:changeCardArea(cards, area, areaCards)
       table.removeOne(self.draw_pile, id)
     elseif oldPlace == Card.DiscardPile then
       table.removeOne(self.discard_pile, id)
-    elseif oldPlace == Card.Processing then
-      table.removeOne(self.processing_area, id)
     elseif oldPlace == Card.Void then
       table.removeOne(self.void, id)
     end
   end
   if areaCards == nil then
-    local areaMap = {
-      [Card.DrawPile] = self.draw_pile,
-      [Card.DiscardPile] = self.discard_pile,
-      [Card.Processing] = self.processing_area,
-      [Card.Void] = self.void,
-    }
     areaCards = areaMap[area]
     assert(areaCards)
     for _, id in ipairs(cards) do
-      table.insert(areaCards, math.random(#areaCards), id)
+      table.insert(areaCards, math.random(#areaCards + 1), id)
     end
   end
   if area == Card.DrawPile then
     self.draw_pile = areaCards
   elseif area == Card.DiscardPile then
     self.discard_pile = areaCards
-  elseif area == Card.Processing then
-    self.processing_area = areaCards
   elseif area == Card.Void then
     self.void = areaCards
   end

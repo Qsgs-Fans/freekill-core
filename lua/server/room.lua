@@ -3989,7 +3989,7 @@ function Room:clearHistory (scope)
 end
 
 
---- 将一些牌洗入某个区域，不产生移动事件和动画（仅限弃牌堆、摸牌堆、虚空区
+--- 将一些牌洗入某个区域，不产生移动事件和动画（牌的原区域和目标区域仅限弃牌堆、摸牌堆、虚空区）
 ---@param cards integer|integer[]|Card|Card[] @ 牌
 ---@param area CardArea @ 目标区域
 ---@param areaCards? integer[] @ 若指定顺序，则输入新区域牌的id表
