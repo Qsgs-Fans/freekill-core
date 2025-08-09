@@ -53,7 +53,7 @@ function ViewAsSkill:cardFilter(player, to_select, selected, selected_targets)
       local card_names = {}
       if self.interaction and Fk.all_card_types[self.interaction.data] ~= nil then
         --优先判interaction结果（泛转化技）
-        table.indexOf(card_names, self.interaction.data)
+        table.insert(card_names, self.interaction.data)
       elseif self.pattern then
         --分析技能的pattern，仅考虑卡名的情况（单卡名，及以逗号分隔的多卡名）
         local t = self.pattern:split(";")
