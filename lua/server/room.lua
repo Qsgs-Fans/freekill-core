@@ -4001,4 +4001,14 @@ function Room:changeCardArea (cards, area, areaCards)
   end
 end
 
+
+--- 将角色私人牌堆设置为指定牌（请确保这些牌已经在该角色的私人牌堆上）
+---@param player ServerPlayer @ 角色
+---@param pile string @ 牌堆名
+---@param ids integer[] @ 要设置的牌id表
+function Room:setPlayerPile(player, pile, ids)
+  player.special_cards[pile] = ids
+  self:doBroadcastNotify("SetPlayerPile", { player.id, pile, ids })
+end
+
 return Room

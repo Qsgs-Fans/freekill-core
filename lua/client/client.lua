@@ -1314,6 +1314,12 @@ fk.client_callback["ChangeCardArea"] = function(self, data)
   self:changeCardArea(cards, area, areaCards)
 end
 
+fk.client_callback["SetPlayerPile"] = function(self, data)
+  local pid, pile, ids = table.unpack(data)
+  local player = ClientInstance:getPlayerById(pid)
+  player.special_cards[pile] = ids
+end
+
 -- Create ClientInstance (used by Lua)
 -- Let Cpp call this function to create
 function CreateLuaClient(cpp_client)
