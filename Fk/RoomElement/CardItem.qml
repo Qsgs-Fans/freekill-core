@@ -249,7 +249,7 @@ Item {
 
   Text {
     id: prohibitText
-    visible: !root.selectable
+    visible: !root.selectable && root.known
     anchors.centerIn: parent
     font.family: fontLibian.name
     font.pixelSize: 18

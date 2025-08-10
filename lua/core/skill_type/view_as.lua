@@ -134,7 +134,7 @@ function ViewAsSkill:prompt(player, selected_cards, selected_targets, extra_data
 ---@param data CardEffectData @ 被响应的牌的数据
 ---@return boolean?
 function ViewAsSkill:enabledAtNullification(player, data)
-  return false
+  return self:enabledAtResponse(player, false)
 end
 
 return ViewAsSkill

@@ -256,32 +256,28 @@ function CardSkill:preEffect(room, cardEffectData)
     local players = {}
     Fk.currentResponsePattern = "nullification"
     local cardCloned = Fk:cloneCard("nullification")
+    cardCloned:setVSPattern(nil, nil, ".")
     for _, p in ipairs(room.alive_players) do
-      if not p:prohibitUse(cardCloned) then
+      if not (
+        cardEffectData:isDisresponsive(p) or
+        cardEffectData:isUnoffsetable(p) or
+        p:prohibitUse(cardCloned)
+      ) then
         local cards = p:getHandlyIds()
         for _, cid in ipairs(cards) do
-          if Fk:getCardById(cid).trueName == "nullification" and
-            (not (
-              cardEffectData:isDisresponsive(p) or
-              cardEffectData:isUnoffsetable(p)
-            ))
-          then
+          if Fk:getCardById(cid).trueName == "nullification" then
             table.insert(players, p)
             break
           end
         end
         if not table.contains(players, p) then
-          Self = p -- for enabledAtResponse
+          -- Self = p -- for enabledAtResponse
           for _, s in ipairs(table.connect(p:getAllSkills(), rawget(p, "_fake_skills"))) do
             ---@cast s ViewAsSkill
             if
               s.pattern and
               Exppattern:Parse("nullification"):matchExp(s.pattern) and
-              (s:enabledAtNullification(p, cardEffectData) or s:enabledAtResponse(p)) and
-              (not (
-                cardEffectData:isDisresponsive(p) or
-                cardEffectData:isUnoffsetable(p)
-              ))
+              s:enabledAtNullification(p, cardEffectData)
             then
               table.insert(players, p)
               break

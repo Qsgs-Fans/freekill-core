@@ -726,7 +726,8 @@ callbacks["UpdateHandcard"] = (j) => {
   const id = parseInt(j);
   const sortable = lcall("CanSortHandcards", Self.id);
   let card;
-  roomScene.tableCards.forEach((v) => {
+
+  roomScene.dashboard.handcardArea.cards.forEach((v) => {
     if (v.cid === id) {
       card = v;
       return;
@@ -734,19 +735,11 @@ callbacks["UpdateHandcard"] = (j) => {
   });
 
   if (!card) {
-    roomScene.dashboard.handcardArea.cards.forEach((v) => {
-      if (v.cid === id) {
-        card = v;
-        return;
-      }
-    });
-  }
-
-  if (!card) {
     return;
   }
 
   card.setData(lcall("GetCardData", id));
+  card.known = lcall("CardVisibility", id);
   card.draggable = sortable;
 }
 
