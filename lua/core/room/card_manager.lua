@@ -167,11 +167,37 @@ function CardManager:showCards(cards, from)
     from = src,
     card = cards,
   }
+
+  --[[
+
   self:doBroadcastNotify("ShowCard", {
     from = src,
     cards = cards,
   })
   self:sendFootnote(cards, {
+    type = "##ShowCard",
+    from = src,
+  })
+  
+  ]]
+
+  local UICards = table.map(cards, function(cid)
+    local c = Fk:getCardById(cid)
+    c = Fk:cloneCard(c.name, c.suit, c.number)
+    return c
+  end)
+
+  local skillEvent = self.logic:getCurrentEvent()
+  if skillEvent and skillEvent.event == GameEvent.SkillEffect then
+    local ids = table.map(UICards, function (c)
+      return self:getVirtCardId(c)
+    end)
+    skillEvent:addExitFunc(function()
+      self:destroyTableCard(ids)
+    end)
+  end
+
+  self:showVirtualCard(UICards, from, {
     type = "##ShowCard",
     from = src,
   })
