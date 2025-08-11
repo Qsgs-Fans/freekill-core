@@ -278,10 +278,10 @@ function Client:appendLog(msg, visible_data)
 end
 
 ---@param msg LogMessage
-function Client:setCardNote(ids, msg)
+function Client:setCardNote(ids, msg, virtual)
   for _, id in ipairs(ids) do
     if id ~= -1 then
-      self:notifyUI("SetCardFootnote", { id, parseMsg(msg, true) })
+      self:notifyUI("SetCardFootnote", { id, parseMsg(msg, true), virtual })
     end
   end
 end
@@ -293,7 +293,7 @@ function Client:toJsonObject()
 end
 
 fk.client_callback["SetCardFootnote"] = function(self, data)
-  self:setCardNote(data[1], data[2]);
+  self:setCardNote(table.unpack(data));
 end
 
 fk.client_callback["NetworkDelayTest"] = function(self, data)
@@ -1323,6 +1323,9 @@ end
 fk.client_callback["ShowVirtualCard"] = function(self, data)
   local card, playerid, msg = table.unpack(data)
   if msg then msg = parseMsg(msg, true) end
+  if type(card) == "table" and card.class and card:isInstanceOf(Card) then
+    card = {card}
+  end
   self:notifyUI("ShowVirtualCard", { card, playerid, msg })
 end
 

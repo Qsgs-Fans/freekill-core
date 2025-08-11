@@ -470,10 +470,10 @@ function setEmotion(id, emotion, isCardId) {
   animation.start();
 }
 
-function setCardFootnote(id, footnote) {
+function setCardFootnote(id, footnote, virtual) {
   let card;
   roomScene.tableCards.forEach((v) => {
-    if (v.cid === id) {
+    if ((virtual? v.virt_id : v.cid) === id) {
       card = v;
       return;
     }
@@ -488,14 +488,14 @@ function setCardFootnote(id, footnote) {
 }
 
 callbacks["SetCardFootnote"] = (data) => {
-  const [id, note] = data;
-  setCardFootnote(id, note);
+  const [id, note, virtual] = data;
+  setCardFootnote(id, note, virtual);
 }
 
-function setCardVirtName(id, name) {
+function setCardVirtName(id, name, virtual) {
   let card;
   roomScene.tableCards.forEach((v) => {
-    if (v.cid === id) {
+    if ((virtual? v.virt_id : v.cid) === id) {
       card = v;
       return;
     }
@@ -509,8 +509,8 @@ function setCardVirtName(id, name) {
 }
 
 callbacks["SetCardVirtName"] = (data) => {
-  const [ids, note] = data;
-  ids.forEach(id => setCardVirtName(id, note));
+  const [ids, note, virtual] = data;
+  ids.forEach(id => setCardVirtName(id, note, virtual));
 }
 
 callbacks["ShowVirtualCard"] = (data) => {
@@ -521,22 +521,26 @@ callbacks["ShowVirtualCard"] = (data) => {
     from = (playerid === Self.id ? dashboard.handcardArea : photo.handcardArea);
   }
 
-  const dat = lcall("ToQml", card_data);
-  let component = Qt.createComponent(dat.moduleUri, dat.typeName);
-  let state = dat.properties;
-  const parentPos = roomScene.mapFromItem(from, 0, 0);
-  state.x = parentPos.x;
-  state.y = parentPos.y;
-  const card = component.createObject(roomScene.dynamicCardArea, state);
-  card.x -= card.width / 2;
-  card.y -= card.height / 2;
-  card.known = true;
-  if (footnote) {
-    card.footnote = footnote;
-    card.footnoteVisible = true;
+  const items = [];
+  for (let i = 0; i < card_data.length; i++) {
+    const dat = lcall("ToQml", card_data[i]);
+    let component = Qt.createComponent(dat.moduleUri, dat.typeName);
+    let state = dat.properties;
+    const parentPos = roomScene.mapFromItem(from, 0, 0);
+    state.x = parentPos.x;
+    state.y = parentPos.y;
+    const card = component.createObject(roomScene.dynamicCardArea, state);
+    card.x -= card.width / 2;
+    card.y -= card.height / 2;
+    card.known = true;
+    if (footnote) {
+      card.footnote = footnote;
+      card.footnoteVisible = true;
+    }
+    items.push(card);
   }
 
-  tablePile.add([card]);
+  tablePile.add(items);
   tablePile.updateCardPosition(true);
 }
 

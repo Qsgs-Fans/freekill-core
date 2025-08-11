@@ -180,7 +180,7 @@ function CardManager:showCards(cards, from)
 end
 
 --- 将虚拟牌展示到桌面（仅动画）
----@param card Card @ 需要展示的牌
+---@param card Card | Card[] @ 需要展示的牌
 ---@param player? ServerPlayer @ 牌来自谁的手牌区
 ---@param footnote? LogMessage @ 脚注
 function CardManager:showVirtualCard(card, player, footnote)

@@ -711,15 +711,17 @@ end
 -- 为一些牌设置脚注
 ---@param ids integer[] @ 要设置虚拟牌名的牌的id列表
 ---@param log LogMessage @ Log的实际内容
-function Room:sendFootnote(ids, log)
-  self:doBroadcastNotify("SetCardFootnote", { ids, log })
+---@param virtual? boolean @ 是否为虚拟牌
+function Room:sendFootnote(ids, log, virtual)
+  self:doBroadcastNotify("SetCardFootnote", { ids, log, not not virtual })
 end
 
 --- 为一些牌设置虚拟转化牌名（仅影响桌面上的牌，处理区/弃牌堆/虚空区）
 ---@param ids integer[] @ 要设置虚拟牌名的牌的id列表
 ---@param name string @ 虚拟牌名
-function Room:sendCardVirtName(ids, name)
-  self:doBroadcastNotify("SetCardVirtName", { ids, name })
+---@param virtual? boolean @ 是否为虚拟牌
+function Room:sendCardVirtName(ids, name, virtual)
+  self:doBroadcastNotify("SetCardVirtName", { ids, name, not not virtual })
 end
 
 --- 播放某种动画效果给players看。
