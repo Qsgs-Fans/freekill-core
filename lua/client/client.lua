@@ -1320,6 +1320,12 @@ fk.client_callback["SetPlayerPile"] = function(self, data)
   player.special_cards[pile] = ids
 end
 
+fk.client_callback["ShowVirtualCard"] = function(self, data)
+  local card, playerid, msg = table.unpack(data)
+  if msg then msg = parseMsg(msg, true) end
+  self:notifyUI("ShowVirtualCard", { card, playerid, msg })
+end
+
 -- Create ClientInstance (used by Lua)
 -- Let Cpp call this function to create
 function CreateLuaClient(cpp_client)

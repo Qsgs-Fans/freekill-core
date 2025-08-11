@@ -28,6 +28,7 @@
 ---@field public stackable_delayed boolean @ 是否为可堆叠的延时锦囊牌
 ---@field public is_passive? boolean @ 是否只能在响应时使用或打出
 ---@field public is_derived? boolean @ 判断是否为衍生牌
+---@field public virt_id integer @ 虚拟牌的特殊id，默认为0
 ---@field public extra_data? table @ 保存其他信息的键值表，如“合纵”、“应变”、“赠予”等
 local Card = class("Card")
 
@@ -128,6 +129,7 @@ function Card:initialize(name, suit, number, color)
 
   -- self.package = nil
   self.id = 0
+  self.virt_id = 0
   self.type = 0
   self.sub_type = Card.SubtypeNone
   -- self.skill = nil
@@ -178,6 +180,7 @@ local CBOR_CARD_KEY_COLOR = 5
 local CBOR_CARD_KEY_SUBCARDS = 6
 local CBOR_CARD_KEY_SKILL_NAMES = 7
 local CBOR_CARD_KEY_EXTRA_DATA = 8
+local CBOR_CARD_KEY_VIRT_ID = 9
 
 function Card:__tocbor()
   if self.id ~= 0 then
@@ -195,6 +198,7 @@ function Card:__tocbor()
         [CBOR_CARD_KEY_EXTRA_DATA] = self.extra_data and (
           next(self.extra_data) ~= nil and self.extra_data or nil)
         or nil,
+        [CBOR_CARD_KEY_VIRT_ID] = self.virt_id or 0,
       }
     ))
   end
@@ -218,6 +222,7 @@ function Card:__toqml()
 
     properties = {
       cid = self.id,
+      virt_id = self.virt_id,
       name = self.name,
       extension = self.package.extensionName,
       number = self.number,
@@ -245,6 +250,7 @@ cbor.tagged_decoders[CBOR_TAG_VIRTUAL_CARD] = function(v)
   card.skillNames = v[CBOR_CARD_KEY_SKILL_NAMES] or {}
 
   card.extra_data = v[CBOR_CARD_KEY_EXTRA_DATA]
+  card.virt_id = v[CBOR_CARD_KEY_VIRT_ID] or 0
 
   return card
 end

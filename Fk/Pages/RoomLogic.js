@@ -513,6 +513,43 @@ callbacks["SetCardVirtName"] = (data) => {
   ids.forEach(id => setCardVirtName(id, note));
 }
 
+callbacks["ShowVirtualCard"] = (data) => {
+  const [card_data, playerid, footnote] = data;
+  let from = drawPile;
+  const photo = getPhoto(playerid);
+  if (photo) {
+    from = (playerid === Self.id ? dashboard.handcardArea : photo.handcardArea);
+  }
+
+  const dat = lcall("ToQml", card_data);
+  let component = Qt.createComponent(dat.moduleUri, dat.typeName);
+  let state = dat.properties;
+  const parentPos = roomScene.mapFromItem(from, 0, 0);
+  state.x = parentPos.x;
+  state.y = parentPos.y;
+  const card = component.createObject(roomScene.dynamicCardArea, state);
+  card.x -= card.width / 2;
+  card.y -= card.height / 2;
+  card.known = true;
+  if (footnote) {
+    card.footnote = footnote;
+    card.footnoteVisible = true;
+  }
+
+  tablePile.add([card]);
+  tablePile.updateCardPosition(true);
+}
+
+callbacks["DestroyTableCard"] = (data) => {
+  for (let i = 0; i < tablePile.cards.length; i++) {
+    const card = tablePile.cards[i];
+    if (data.indexOf(card.virt_id) !== -1) {
+      //destroying the card immediately will cause animation errors
+      card.virt_id = 0;
+    }
+  }
+}
+
 function changeHp(id, delta, losthp) {
   const photo = getPhoto(id);
   if (!photo) {

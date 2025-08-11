@@ -50,6 +50,7 @@ Item {
 
   // properties for animation and game system
   property int cid: 0
+  property int virt_id: 0
   property bool selectable: true
   property bool selected: false
   property bool draggable: false
@@ -363,6 +364,7 @@ Item {
   function setData(data)
   {
     cid = data.cid;
+    virt_id = data.virt_id ?? 0;
     name = data.name;
     suit = data.suit;
     number = data.number;
@@ -380,6 +382,7 @@ Item {
   {
     const data = {
       cid: cid,
+      virt_id: virt_id,
       name: name,
       suit: suit,
       number: number,

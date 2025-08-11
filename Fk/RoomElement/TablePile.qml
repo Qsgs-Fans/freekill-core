@@ -39,7 +39,7 @@ Item {
       if (toVanish) {
         for (i = 0; i < discardedCards.length; i++) {
           card = discardedCards[i];
-          if (card.busy || inTable(card.cid)) {
+          if (card.busy || inTable(card.cid) || card.virt_id !== 0) {
             discardedCards.splice(i, 1);
             continue;
           }
@@ -53,7 +53,7 @@ Item {
 
         discardedCards = [];
         for (i = 0; i < cards.length; i++) {
-          if (cards[i].busy || inTable(cards[i].cid))
+          if (cards[i].busy || inTable(cards[i].cid) || cards[i].virt_id !== 0)
             continue;
           discardedCards.push(cards[i]);
         }

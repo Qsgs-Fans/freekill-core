@@ -9,6 +9,7 @@
 ---@field public filtered_cards table<integer, Card> @ 见于Engine，其实在这
 ---@field public printed_cards table<integer, Card> @ 见于Engine，其实在这
 ---@field public next_print_card_id integer
+---@field public next_virt_card_id integer @ 最新记录的虚拟牌id
 ---@field public card_marks table<integer, any> @ 用来存实体卡的card.mark
 local CardManager = {}    -- mixin
 
@@ -24,6 +25,7 @@ function CardManager:initCardManager()
   self.filtered_cards = {}
   self.printed_cards = {}
   self.next_print_card_id = -2
+  self.next_virt_card_id = 1
   self.card_marks = {}
 end
 
@@ -175,6 +177,22 @@ function CardManager:showCards(cards, from)
   })
 
   self.logic:trigger(fk.CardShown, from, { cardIds = cards })
+end
+
+--- 将虚拟牌展示到桌面（仅动画）
+---@param card Card @ 需要展示的牌
+---@param player? ServerPlayer @ 牌来自谁的手牌区
+---@param footnote? LogMessage @ 脚注
+function CardManager:showVirtualCard(card, player, footnote)
+  ---@cast self Room
+  self:doBroadcastNotify("ShowVirtualCard", { card, player and player.id, footnote })
+end
+
+--- 将桌面上的虚拟牌在移出（仅动画）
+---@param ids integer | integer[]
+function CardManager:destroyTableCard(ids)
+  ---@cast self Room
+  self:doBroadcastNotify("DestroyTableCard", type(ids) == "table" and ids or { ids })
 end
 
 --- 准备房间牌堆
@@ -357,6 +375,18 @@ function CardManager:changeCardArea(cards, area, areaCards)
     self.void = areaCards
   end
   return areaCards
+end
+
+--- 记录并获取虚拟牌的id
+---@param card Card
+---@return integer
+function CardManager:getVirtCardId(card)
+  if card.id ~= 0 then return card.id end
+  if card.virt_id == 0 then
+    card.virt_id = self.next_virt_card_id
+    self.next_virt_card_id = self.next_virt_card_id + 1
+  end
+  return card.virt_id
 end
 
 return CardManager

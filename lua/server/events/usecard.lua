@@ -260,23 +260,28 @@ function UseCard:main()
 
   local card = useCardData.card
   local useCardIds = Card:getIdList(card)
+  local footnote
+  if useCardData.tos and #useCardData.tos > 0 and #useCardData.tos <= 2 and not useCardData.noIndicate then
+    local tos = table.map(useCardData.tos, Util.IdMapper)
+    footnote = {
+      type = "##UseCardTo",
+      from = useCardData.from.id,
+      to = tos,
+    }
+  else
+    footnote = {
+      type = "##UseCard",
+      from = useCardData.from.id,
+    }
+  end
   if #useCardIds > 0 then
-    if useCardData.tos and #useCardData.tos > 0 and #useCardData.tos <= 2 and not useCardData.noIndicate then
-      local tos = table.map(useCardData.tos, Util.IdMapper)
-      room:sendFootnote(useCardIds, {
-        type = "##UseCardTo",
-        from = useCardData.from.id,
-        to = tos,
-      })
-    else
-      room:sendFootnote(useCardIds, {
-        type = "##UseCard",
-        from = useCardData.from.id,
-      })
-    end
+    room:sendFootnote(useCardIds, footnote)
     if card:isVirtual() or card.name ~= Fk:getCardById(card.id, true).name then
       room:sendCardVirtName(useCardIds, card.name)
     end
+  else
+    room:getVirtCardId(useCardData.card)
+    room:showVirtualCard(useCardData.card, useCardData.from, footnote)
   end
 
   if not useCardData.extraUse then
@@ -317,6 +322,9 @@ function UseCard:clear()
       toArea = Card.DiscardPile,
       moveReason = fk.ReasonUse,
     })
+  end
+  if useCardData.card.virt_id ~= 0 then
+    room:destroyTableCard(useCardData.card.virt_id)
   end
 end
 
@@ -387,14 +395,18 @@ function RespondCard:main()
   end
 
   room:moveCardTo(card, Card.Processing, nil, fk.ReasonResponse)
+  local footnote = {
+    type = "##ResponsePlayCard",
+    from = from.id,
+  }
   if #cardIds > 0 then
-    room:sendFootnote(cardIds, {
-      type = "##ResponsePlayCard",
-      from = from.id,
-    })
+    room:sendFootnote(cardIds, footnote)
     if isVirtual then
       room:sendCardVirtName(cardIds, card.name)
     end
+  else
+    room:getVirtCardId(respondCardData.card)
+    room:showVirtualCard(respondCardData.card, respondCardData.from, footnote)
   end
 
   logic:trigger(fk.CardResponding, from, respondCardData)
@@ -413,6 +425,9 @@ function RespondCard:clear()
       toArea = Card.DiscardPile,
       moveReason = fk.ReasonResponse,
     })
+  end
+  if respondCardData.card.virt_id ~= 0 then
+    room:destroyTableCard(respondCardData.card.virt_id)
   end
 end
 
