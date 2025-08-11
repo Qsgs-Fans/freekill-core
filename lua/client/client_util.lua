@@ -1017,6 +1017,8 @@ function GetQmlMark(mtype, name, p)
     else
       value = p.mark[name]
     end
+  else
+    value = ClientInstance:getBanner(name)
   end
   return {
     qml_path = type(spec.qml_path) == "function" and spec.qml_path(name, value, p) or spec.qml_path,
