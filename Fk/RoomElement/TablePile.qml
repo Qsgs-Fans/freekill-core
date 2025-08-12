@@ -39,7 +39,7 @@ Item {
       if (toVanish) {
         for (i = 0; i < discardedCards.length; i++) {
           card = discardedCards[i];
-          if (card.busy || inTable(card.cid) || card.virt_id !== 0) {
+          if (card.busy || inTable(card.cid) || card.holding_event_id !== 0) {
             discardedCards.splice(i, 1);
             continue;
           }
@@ -53,7 +53,7 @@ Item {
 
         discardedCards = [];
         for (i = 0; i < cards.length; i++) {
-          if (cards[i].busy || inTable(cards[i].cid) || cards[i].virt_id !== 0)
+          if (cards[i].busy || inTable(cards[i].cid) || cards[i].holding_event_id !== 0)
             continue;
           discardedCards.push(cards[i]);
         }
@@ -85,11 +85,26 @@ Item {
     }
   }
 
-  function remove(outputs)
+  function remove(outputs, _, visibleData)
   {
     let i, j;
 
-    let result = area.remove(outputs);
+    const to_remove = [];
+    for (i = 0; i < outputs.length; i++) {
+      if (!!visibleData[outputs[i].toString()])
+        to_remove.push(outputs[i]);
+      else {
+        for (let j = 0; j < cards.length; i++) {
+          if (cards[j].cid === outputs[i]) {
+            if (!cards[j].known)
+              to_remove.push(outputs[i]);
+            break;
+          }
+        }
+      }
+    }
+
+    let result = area.remove(to_remove);
     result.forEach(c => {
       const idx = discardedCards.indexOf(c);
       if (idx !== -1) {

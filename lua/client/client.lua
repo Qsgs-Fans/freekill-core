@@ -788,9 +788,9 @@ local function sendMoveCardLog(move, visible_data)
   end
 end
 
----@param raw_moves CardsMoveStruct[]
-fk.client_callback["MoveCards"] = function(self, raw_moves)
+fk.client_callback["MoveCards"] = function(self, data)
   -- jsonData: CardsMoveStruct[]
+  local raw_moves, event_id = table.unpack(data)
   self:moveCards(raw_moves)
   local visible_data = {}
   for _, move in ipairs(raw_moves) do
@@ -802,6 +802,7 @@ fk.client_callback["MoveCards"] = function(self, raw_moves)
   local separated = separateMoves(raw_moves)
   local merged = mergeMoves(separated)
   visible_data.merged = merged
+  visible_data.event_id = event_id
   self:notifyUI("MoveCards", visible_data)
   for _, move in ipairs(merged) do
     sendMoveCardLog(move, visible_data)
@@ -823,6 +824,7 @@ fk.client_callback["ShowCard"] = function(self, data)
     vdata[tostring(id)] = true
   end
   vdata.merged = merged
+  vdata.event_id = 0
   self:notifyUI("MoveCards", vdata)
 end
 
@@ -1321,12 +1323,12 @@ fk.client_callback["SetPlayerPile"] = function(self, data)
 end
 
 fk.client_callback["ShowVirtualCard"] = function(self, data)
-  local card, playerid, msg = table.unpack(data)
+  local card, playerid, msg, event_id = table.unpack(data)
   if msg then msg = parseMsg(msg, true) end
   if type(card) == "table" and card.class and card:isInstanceOf(Card) then
     card = {card}
   end
-  self:notifyUI("ShowVirtualCard", { card, playerid, msg })
+  self:notifyUI("ShowVirtualCard", { card, playerid, msg, event_id })
 end
 
 -- Create ClientInstance (used by Lua)

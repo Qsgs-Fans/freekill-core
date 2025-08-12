@@ -116,7 +116,7 @@ function MoveCards:main()
     room.logic:breakEvent()
   end
 
-  room:notifyMoveCards(nil, moveCardsData)
+  room:notifyMoveCards(nil, moveCardsData, self.id)
 
   for _, data in ipairs(moveCardsData) do
     if #data.moveInfo > 0 then
@@ -179,6 +179,10 @@ function MoveCards:main()
 
   room.logic:trigger(fk.AfterCardsMove, nil, moveCardsData)
   return true
+end
+
+function MoveCards:clear()
+  self.room:destroyTableCardByEvent(self.id)
 end
 
 local function convertOldMoveInfo(info)
@@ -291,7 +295,7 @@ end
 --- 向多名玩家告知一次移牌行为。
 ---@param players? ServerPlayer[] @ 要被告知的玩家列表，默认为全员
 ---@param moveDatas MoveCardsData[] @ 要告知的移牌信息列表
-function MoveEventWrappers:notifyMoveCards(players, moveDatas)
+function MoveEventWrappers:notifyMoveCards(players, moveDatas, event_id)
   ---@cast self Room
   if players == nil or #players == 0 then players = self.players end
   for _, p in ipairs(players) do
@@ -322,7 +326,7 @@ function MoveEventWrappers:notifyMoveCards(players, moveDatas)
       end
       table.insert(arg, v)
     end
-    p:doNotify("MoveCards", arg)
+    p:doNotify("MoveCards", {arg, event_id or 0})
   end
 end
 

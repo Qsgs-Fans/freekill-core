@@ -112,6 +112,10 @@ function SkillEffect:main()
   return data.trigger_break
 end
 
+function SkillEffect:clear()
+  self.room:destroyTableCardByEvent(self.id)
+end
+
 function SkillEffect:desc()
   local effectData = self.data
   local useData = effectData.skill_data

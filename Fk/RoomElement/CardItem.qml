@@ -67,6 +67,7 @@ Item {
   property int goBackDuration: 500
   property bool busy: false // whether there is a running emotion on the card
   property alias dragging: drag.active
+  property int holding_event_id: 0
 
   signal toggleDiscards()
   signal clicked(var card)

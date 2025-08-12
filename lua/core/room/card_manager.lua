@@ -187,20 +187,10 @@ function CardManager:showCards(cards, from)
     return c
   end)
 
-  local skillEvent = self.logic:getCurrentEvent()
-  if skillEvent and skillEvent.event == GameEvent.SkillEffect then
-    local ids = table.map(UICards, function (c)
-      return self:getVirtCardId(c)
-    end)
-    skillEvent:addExitFunc(function()
-      self:destroyTableCard(ids)
-    end)
-  end
-
   self:showVirtualCard(UICards, from, {
     type = "##ShowCard",
     from = src,
-  })
+  }, self.logic:getCurrentEvent().id)
 
   self.logic:trigger(fk.CardShown, from, { cardIds = cards })
 end
@@ -209,9 +199,10 @@ end
 ---@param card Card | Card[] @ 需要展示的牌
 ---@param player? ServerPlayer @ 牌来自谁的手牌区
 ---@param footnote? LogMessage @ 脚注
-function CardManager:showVirtualCard(card, player, footnote)
+---@param event_id? integer @ 当前事件的ID（用于清理UI处理区的卡）
+function CardManager:showVirtualCard(card, player, footnote, event_id)
   ---@cast self Room
-  self:doBroadcastNotify("ShowVirtualCard", { card, player and player.id, footnote })
+  self:doBroadcastNotify("ShowVirtualCard", { card, player and player.id, footnote, event_id or 0 })
 end
 
 --- 将桌面上的虚拟牌在移出（仅动画）
@@ -219,6 +210,13 @@ end
 function CardManager:destroyTableCard(ids)
   ---@cast self Room
   self:doBroadcastNotify("DestroyTableCard", type(ids) == "table" and ids or { ids })
+end
+
+--- 将桌面上的在该事件之后进入的卡牌移出（仅动画）
+---@param id integer
+function CardManager:destroyTableCardByEvent(id)
+  ---@cast self Room
+  self:doBroadcastNotify("DestroyTableCardByEvent", id)
 end
 
 --- 准备房间牌堆

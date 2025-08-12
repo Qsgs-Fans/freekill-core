@@ -281,7 +281,7 @@ function UseCard:main()
     end
   else
     room:getVirtCardId(useCardData.card)
-    room:showVirtualCard(useCardData.card, useCardData.from, footnote)
+    room:showVirtualCard(useCardData.card, useCardData.from, footnote, self.id)
   end
 
   if not useCardData.extraUse then
@@ -323,9 +323,7 @@ function UseCard:clear()
       moveReason = fk.ReasonUse,
     })
   end
-  if useCardData.card.virt_id ~= 0 then
-    room:destroyTableCard(useCardData.card.virt_id)
-  end
+  room:destroyTableCardByEvent(self.id)
 end
 
 ---@class GameEvent.RespondCard : GameEvent
@@ -406,7 +404,7 @@ function RespondCard:main()
     end
   else
     room:getVirtCardId(respondCardData.card)
-    room:showVirtualCard(respondCardData.card, respondCardData.from, footnote)
+    room:showVirtualCard(respondCardData.card, respondCardData.from, footnote, self.id)
   end
 
   logic:trigger(fk.CardResponding, from, respondCardData)
@@ -426,9 +424,7 @@ function RespondCard:clear()
       moveReason = fk.ReasonResponse,
     })
   end
-  if respondCardData.card.virt_id ~= 0 then
-    room:destroyTableCard(respondCardData.card.virt_id)
-  end
+  room:destroyTableCardByEvent(self.id)
 end
 
 ---@class GameEvent.CardEffect : GameEvent

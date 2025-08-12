@@ -48,6 +48,7 @@ function ClientPlayer:sendDataToUI()
   end
   if #card_moves > 0 then
     visible_data.merged = card_moves
+    visible_data.event_id = 0
     c:notifyUI("MoveCards", visible_data)
   end
 

@@ -199,12 +199,12 @@ function moveCards(data) {
     const move = moves[i];
     const from = getAreaItem(move.fromArea, move.from);
     const to = getAreaItem(move.toArea, move.to);
-    if (!from || !to || (from === to && from !== tablePile))
+    if (!from || !to || (from === to && from !== tablePile) || (from === tablePile && move.toArea === Card.DiscardPile))
       continue;
     const items = from.remove(move.ids, move.fromSpecialName, data);
     items.forEach((item) => item.known = !!data[item.cid.toString()]); // updata card visible. must be before move animation
-    //items.forEach((item) => item.markVisible = (to === dashboard.handcardArea)); // cardMark only visible in my handcardArea
     if (to === tablePile) {
+      items.forEach((item) => item.holding_event_id = data.event_id);
       let vanished = items.filter(c => c.cid === -1);
       if (vanished.length > 0) {
         drawPile.add(vanished, move.specialName);
@@ -514,7 +514,7 @@ callbacks["SetCardVirtName"] = (data) => {
 }
 
 callbacks["ShowVirtualCard"] = (data) => {
-  const [card_data, playerid, footnote] = data;
+  const [card_data, playerid, footnote, event_id] = data;
   let from = drawPile;
   const photo = getPhoto(playerid);
   if (photo) {
@@ -532,6 +532,7 @@ callbacks["ShowVirtualCard"] = (data) => {
     const card = component.createObject(roomScene.dynamicCardArea, state);
     card.x -= card.width / 2;
     card.y -= card.height / 2;
+    card.holding_event_id = event_id;
     card.known = true;
     if (footnote) {
       card.footnote = footnote;
@@ -549,7 +550,17 @@ callbacks["DestroyTableCard"] = (data) => {
     const card = tablePile.cards[i];
     if (data.indexOf(card.virt_id) !== -1) {
       //destroying the card immediately will cause animation errors
-      card.virt_id = 0;
+      card.holding_event_id = 0;
+    }
+  }
+}
+
+callbacks["DestroyTableCardByEvent"] = (data) => {
+  for (let i = 0; i < tablePile.cards.length; i++) {
+    const card = tablePile.cards[i];
+    if (card.holding_event_id >= data) {
+      //destroying the card immediately will cause animation errors
+      card.holding_event_id = 0;
     }
   }
 }
