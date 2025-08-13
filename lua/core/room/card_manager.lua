@@ -182,8 +182,9 @@ function CardManager:showCards(cards, from)
   ]]
 
   local UICards = table.map(cards, function(cid)
-    local c = Fk:getCardById(cid)
+    local c = Fk:getCardById(cid, true)
     c = Fk:cloneCard(c.name, c.suit, c.number)
+    --FIXME:filterCard应当如何体现？
     return c
   end)
 

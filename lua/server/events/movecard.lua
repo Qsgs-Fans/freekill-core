@@ -181,10 +181,6 @@ function MoveCards:main()
   return true
 end
 
-function MoveCards:clear()
-  self.room:destroyTableCardByEvent(self.id)
-end
-
 local function convertOldMoveInfo(info)
   local room = Fk:currentRoom()
   if type(info.from) == "number" then

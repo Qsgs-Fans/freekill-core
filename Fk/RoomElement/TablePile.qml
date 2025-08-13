@@ -89,7 +89,18 @@ Item {
   {
     let i, j;
 
-    let result = area.remove(outputs);
+    const to_remove = [];
+    for (j = 0; j < outputs.length; j++) {
+      for (i = cards.length - 1; i >= 0; i--) {
+        if (outputs[j] === cards[i].cid) {
+          if (cards[i].known === !!visibleData[outputs[j].toString()])
+            to_remove.push(outputs[j]);
+          break;
+        }
+      }
+    }
+
+    let result = area.remove(to_remove);
     result.forEach(c => {
       const idx = discardedCards.indexOf(c);
       if (idx !== -1) {
