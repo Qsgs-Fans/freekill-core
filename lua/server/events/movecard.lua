@@ -181,6 +181,17 @@ function MoveCards:main()
   return true
 end
 
+function MoveCards:clear()
+  local e = self.parent
+  while e do
+    if table.contains({GameEvent.SkillEffect, GameEvent.UseCard, GameEvent.RespondCard}, e.event) then
+      return
+    end
+    e = e.parent
+  end
+  self.room:destroyTableCardByEvent(self.id)
+end
+
 local function convertOldMoveInfo(info)
   local room = Fk:currentRoom()
   if type(info.from) == "number" then
