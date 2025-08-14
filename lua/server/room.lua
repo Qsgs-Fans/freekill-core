@@ -3288,10 +3288,9 @@ end
 
 --- 洗牌。
 function Room:shuffleDrawPile()
-  local seed = math.random(2 << 32 - 1)
-  AbstractRoom.shuffleDrawPile(self, seed)
+  AbstractRoom.shuffleDrawPile(self)
 
-  self:doBroadcastNotify("ShuffleDrawPile", seed)
+  self:doBroadcastNotify("ShuffleDrawPile", self.draw_pile)
   self:doBroadcastNotify("UpdateDrawPile", #self.draw_pile)
 
   self.logic:trigger(fk.AfterDrawPileShuffle, nil, {})

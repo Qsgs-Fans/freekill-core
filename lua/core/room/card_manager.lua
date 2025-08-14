@@ -226,15 +226,19 @@ function CardManager:destroyTableCardByEvent(id)
 end
 
 --- 准备房间牌堆
----@param seed integer @ 随机种子
-function CardManager:prepareDrawPile(seed)
+function CardManager:prepareDrawPile(new_draw_pile)
   local gamemode = Fk.game_modes[self.settings.gameMode]
   assert(gamemode)
 
   local draw_pile, void_pile = gamemode:buildDrawPile()
 
-  table.shuffle(draw_pile, seed)
-  self.draw_pile = draw_pile
+  if new_draw_pile then
+    self.draw_pile = new_draw_pile
+  else
+    table.shuffle(draw_pile)
+    self.draw_pile = draw_pile
+  end
+
   for _, id in ipairs(self.draw_pile) do
     self:setCardArea(id, Card.DrawPile, nil)
   end
@@ -245,17 +249,21 @@ function CardManager:prepareDrawPile(seed)
   end
 end
 
-function CardManager:shuffleDrawPile(seed)
+function CardManager:shuffleDrawPile(new_draw_pile)
   if #self.draw_pile + #self.discard_pile == 0 then
     return
   end
 
-  table.shuffle(self.discard_pile, seed)
-  table.insertTable(self.draw_pile, self.discard_pile)
+  if new_draw_pile then
+    self.draw_pile = new_draw_pile
+  else
+    table.shuffle(self.discard_pile)
+    table.insertTable(self.draw_pile, self.discard_pile)
+  end
+  self.discard_pile = {}
   for _, id in ipairs(self.discard_pile) do
     self:setCardArea(id, Card.DrawPile, nil)
   end
-  self.discard_pile = {}
 end
 
 --- 筛选出某卡牌在指定区域内的子牌id数组

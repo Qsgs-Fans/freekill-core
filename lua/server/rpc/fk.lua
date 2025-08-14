@@ -20,8 +20,6 @@ local socket = require "socket"
 
 -- 需安装lua-filesystem包
 local fs = require "lfs"
--- 需手动编译安装，详见src/swig/qrandom文件夹
-local qrandom = require 'freekill-qrandomgen'
 
 local jsonrpc = require "server.rpc.jsonrpc"
 local stdio = require "server.rpc.stdio"
@@ -109,8 +107,6 @@ function fk.GetMicroSecond()
   -- return date.tv_sec * 1000000 + date.tv_usec
   return socket.gettime() * 1000 * 1000;
 end
-
-fk.QRandomGenerator = qrandom.new
 
 function fk.qDebug(fmt, ...)
   callRpc("qDebug", { string.format(fmt, ...) })
