@@ -227,9 +227,8 @@ end
 
 function GameLogic:prepareDrawPile()
   local room = self.room
-  local seed = math.random(2 << 32 - 1)
-  room:prepareDrawPile(seed)
-  room:doBroadcastNotify("PrepareDrawPile", seed)
+  room:prepareDrawPile()
+  room:doBroadcastNotify("PrepareDrawPile", room.draw_pile)
   room:doBroadcastNotify("UpdateDrawPile", #room.draw_pile)
 end
 

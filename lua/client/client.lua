@@ -1298,13 +1298,11 @@ fk.client_callback["Observe"] = function(self, data)
 end
 
 fk.client_callback["PrepareDrawPile"] = function(self, data)
-  local seed = tonumber(data)
-  self:prepareDrawPile(seed)
+  self:prepareDrawPile(data)
 end
 
 fk.client_callback["ShuffleDrawPile"] = function(self, data)
-  local seed = tonumber(data)
-  self:shuffleDrawPile(seed)
+  self:shuffleDrawPile(data)
 end
 
 fk.client_callback["SyncDrawPile"] = function(self, data)

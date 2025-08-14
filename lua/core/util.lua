@@ -341,18 +341,15 @@ end
 
 ---@generic T
 ---@param self T[]
----@param seed integer?
-function table.shuffle(self, seed)
-  seed = seed or math.random(2 << 32 - 1)
-  local rnd = fk.QRandomGenerator(seed)
+function table.shuffle(self)
   if #self == 2 then
-    if rnd:random() < 0.5 then
+    if math.random() < 0.5 then
       self[1], self[2] = self[2], self[1]
     end
   else
     for i = #self, 2, -1 do
-        local j = rnd:random(i)
-        self[i], self[j] = self[j], self[i]
+      local j = math.random(i)
+      self[i], self[j] = self[j], self[i]
     end
   end
 end
