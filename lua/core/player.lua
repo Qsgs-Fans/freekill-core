@@ -784,11 +784,13 @@ end
 --- 获取上家。
 ---@param ignoreRemoved? boolean @ 忽略被移除
 ---@param num? integer @ 第几个，默认1
+---@param ignoreRest? boolean @ 是否忽略休整
 ---@return Player
-function Player:getLastAlive(ignoreRemoved, num)
+function Player:getLastAlive(ignoreRemoved, num, ignoreRest)
   num = num or 1
-  local index = (ignoreRemoved and #Fk:currentRoom().alive_players or #table.filter(Fk:currentRoom().alive_players, function(p) return not p:isRemoved() end)) - num
-  return self:getNextAlive(ignoreRemoved, index)
+  local alive_players = table.filter(Fk:currentRoom().players, function(p) return (not p.dead or (p.rest > 0 and ignoreRest)) and (ignoreRemoved or not p:isRemoved()) end)
+  local index = #alive_players - num
+  return self:getNextAlive(ignoreRemoved, index, ignoreRest)
 end
 
 --- 增加玩家使用特定牌的历史次数。
