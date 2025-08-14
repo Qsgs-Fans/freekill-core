@@ -188,10 +188,15 @@ function CardManager:showCards(cards, from)
     return c
   end)
 
+  local n = 0
+  if self.logic:getCurrentEvent().event == GameEvent.SkillEffect then
+    n = self.logic:getCurrentEvent().id
+  end
+
   self:showVirtualCard(UICards, from, {
     type = "##ShowCard",
     from = src,
-  }, self.logic:getCurrentEvent().id)
+  }, n)
 
   self.logic:trigger(fk.CardShown, from, { cardIds = cards })
 end
