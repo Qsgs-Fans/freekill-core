@@ -261,7 +261,7 @@ function CardManager:shuffleDrawPile(new_draw_pile)
     table.insertTable(self.draw_pile, self.discard_pile)
   end
   self.discard_pile = {}
-  for _, id in ipairs(self.discard_pile) do
+  for _, id in ipairs(self.draw_pile) do
     self:setCardArea(id, Card.DrawPile, nil)
   end
 end
