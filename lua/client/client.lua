@@ -352,7 +352,7 @@ function Client:enterRoom(_data)
   self.settings = data
   table.insertTableIfNeed(
     data.disabledPack,
-    Fk.game_mode_disabled[data.gameMode]
+    Fk.game_mode_disabled[data.gameMode] or Util.DummyTable
   )
   self.disabled_packs = data.disabledPack
   self.disabled_generals = data.disabledGenerals
