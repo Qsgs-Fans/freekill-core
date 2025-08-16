@@ -1329,7 +1329,8 @@ function Room:askToYiji(player, params)
     max_num = maxNum,
     targets = targets,
     residued_list = residueMap,
-    expand_pile = expand_pile
+    expand_pile = expand_pile,
+    skillName = skillName,
   }
 
   while maxNum > 0 and #_cards > 0 do
@@ -2543,6 +2544,7 @@ function Room:askToNumber(player, params)
     extra_data = {
       min = params.min,
       max = params.max,
+      skillName = params.skill_name,
     },
   })
   if dat then
