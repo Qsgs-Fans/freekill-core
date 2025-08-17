@@ -93,6 +93,55 @@ function ViewAsSkill:viewAs(player, cards)
   return nil
 end
 
+-- 判断一名角色是否可被此转化技选中
+---@param player Player @ 使用者
+---@param to_select Player @ 待选目标
+---@param selected Player[] @ 已选目标
+---@param selected_cards integer[] @ 已选牌
+---@param card? Card @ 牌
+---@param extra_data? UseExtraData @ 额外数据
+---@return boolean?
+function ViewAsSkill:targetFilter(player, to_select, selected, selected_cards, card, extra_data)
+  return false
+end
+
+-- 判断一个转化技是否可发动（也就是确认键是否可点击）
+-- 警告：没啥事别改
+---@param player Player @ 使用者
+---@param targets Player[] @ 已选目标
+---@param selected_cards integer[] @ 已选牌
+---@param card? Card @ 牌
+---@return boolean
+function ViewAsSkill:feasible(player, targets, selected_cards, card)
+  return false
+end
+
+---@param room Room
+---@param cardUseEvent SkillUseData
+---@param params? handleUseCardParams
+---@return UseCardDataSpec|string
+function ViewAsSkill:onUse(room, cardUseEvent, params)
+  local player = cardUseEvent.from
+  local targets = cardUseEvent.tos
+  local selected_cards = cardUseEvent.cards
+  local card = self:viewAs(player, selected_cards)
+  if card == nil then return "" end
+  ---@type UseCardDataSpec
+  local use = {
+    from = cardUseEvent.from,
+    tos = targets,
+    card = card,
+  }
+
+  local rejectSkillName = self:beforeUse(player, use)
+
+  if type(rejectSkillName) == "string" then
+    return rejectSkillName
+  end
+
+  return use
+end
+
 -- For extra judgement, like mark or HP
 
 ---@param player Player
@@ -106,18 +155,18 @@ function ViewAsSkill:enabledAtResponse(player, cardResponsing)
   return self:isEffectable(player)
 end
 
---- 使用转换技使用/打出牌前执行的操作，注意此时牌未被使用/打出
+--- 使用转化技使用/打出牌前执行的操作，注意此时牌未被使用/打出
 ---@param player Player
 ---@param cardUseStruct UseCardDataSpec
 ---@return any @ 若返回字符串，则取消本次使用
 function ViewAsSkill:beforeUse(player, cardUseStruct) end
 
---- 使用转换技使用牌后执行的操作
+--- 使用转化技使用牌后执行的操作
 ---@param player Player
 ---@param cardUseStruct UseCardData
 function ViewAsSkill:afterUse(player, cardUseStruct) end
 
---- 使用转换技打出牌后执行的操作
+--- 使用转化技打出牌后执行的操作
 ---@param player Player
 ---@param response RespondCardData
 function ViewAsSkill:afterResponse(player, response) end

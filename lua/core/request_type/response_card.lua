@@ -81,6 +81,16 @@ function ReqResponseCard:cardValidity(cid)
   return not not self:cardFeasible(card)
 end
 
+function ReqResponseCard:targetValidity(pid)
+  local skill = Fk.skills[self.skill_name]---@type ViewAsSkill
+  if skill and skill:viewAs(self.player, self.pendings) == nil then
+    local p = Fk:currentRoom():getPlayerById(pid)
+    local selected = table.map(self.selected_targets, Util.Id2PlayerMapper)
+    return not not skill:targetFilter(self.player, p, selected, self.pendings, nil, self.extra_data)
+  end
+  return false
+end
+
 function ReqResponseCard:cardFeasible(card)
   local exp = Exppattern:Parse(self.pattern)
   local player = self.player
@@ -92,6 +102,10 @@ function ReqResponseCard:feasible()
   local card = self.selected_card
   if skill then
     card = skill:viewAs(self.player, self.pendings)
+    if card == nil then
+      local selected = table.map(self.selected_targets, Util.Id2PlayerMapper)
+      return skill:feasible(self.player, selected, self.pendings)
+    end
   end
   return (card ~= nil) and self:cardFeasible(card)
 end

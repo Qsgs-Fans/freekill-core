@@ -2187,11 +2187,16 @@ function Room:findGenerals(func, n)
   return ret
 end
 
+---@class handleUseCardParams: AskToUseCardParams
+---@field is_response? boolean
+
 --- 将从Request获得的数据转化为UseCardData，或执行主动技的onUse部分
 --- 一般DIY用不到的内部函数
 ---@param player ServerPlayer
+---@param data any
+---@param params? handleUseCardParams
 ---@return UseCardDataSpec|string? @ 返回字符串则取消使用，若返回技能名，在当前询问中禁用此技能
-function Room:handleUseCardReply(player, data)
+function Room:handleUseCardReply(player, data, params)
   local card = data.card
   local targets = data.targets or {}
   if type(card) == "table" then
@@ -2211,30 +2216,25 @@ function Room:handleUseCardReply(player, data)
       return nil
     elseif skill:isInstanceOf(ViewAsSkill) then
       ---@cast skill ViewAsSkill
-      Self = player
-      local c = skill:viewAs(player, selected_cards)
-      if c then
-        ---@type UseCardDataSpec
-        local use = {
+      --Self = player
+      local useResult
+      self:useSkill(player, skill, function()
+        useResult = skill:onUse(self, SkillUseData:new {
           from = player,
-          tos = {},
-          card = c,
-        }
-        for _, targetId in ipairs(targets) do
-          table.insert(use.tos, self:getPlayerById(targetId))
+          cards = selected_cards,
+          tos = table.map(targets, Util.Id2PlayerMapper),
+        }, params)
+        if type(useResult) == "table" then
+          if params == nil then
+            player.room:useCard(useResult)
+            skill:afterUse(player, useResult)
+            useResult = nil
+          else
+            useResult.attachedSkillAndUser = { skillName = skill.name, user = player.id, muteCard = skill.mute_card }
+          end
         end
-
-        local skillEventData = self:useSkill(player, skill, Util.DummyFunc)
-        if skillEventData.prevented then return nil end
-        use.attachedSkillAndUser = { skillName = skill.name, user = player.id, muteCard = skill.mute_card }
-
-        local rejectSkillName = skill:beforeUse(player, use)
-        if type(rejectSkillName) == "string" then
-          return rejectSkillName
-        end
-
-        return use
-      end
+      end, {tos = table.map(targets, Util.Id2PlayerMapper), cards = selected_cards, cost_data = {}})
+      return useResult
     end
   else
     if data.special_skill then
@@ -2637,7 +2637,14 @@ function Room:askToUseCard(player, params)
       Fk.currentResponsePattern = nil
 
       if result ~= "" then
-        useResult = self:handleUseCardReply(player, result)
+        useResult = self:handleUseCardReply(player, result, {
+          skill_name = skillName,
+          prompt = prompt,
+          pattern = pattern,
+          cancelable = cancelable,
+          extra_data = extra_data,
+          event_data = event_data,
+        })
 
         if type(useResult) == "string" and useResult ~= "" then
           table.insertIfNeed(disabledSkillNames, useResult)
@@ -2721,7 +2728,15 @@ function Room:askToResponse(player, params)
       Fk.currentResponsePattern = nil
 
       if result ~= "" then
-        responseResult = self:handleUseCardReply(player, result)
+        responseResult = self:handleUseCardReply(player, result, {
+          skill_name = skillName,
+          prompt = prompt,
+          pattern = pattern,
+          cancelable = cancelable,
+          extra_data = extra_data,
+          event_data = event_data,
+          is_response = true
+        })
 
         if type(responseResult) == "string" and responseResult ~= "" then
           table.insertIfNeed(disabledSkillNames, responseResult)
@@ -2797,7 +2812,14 @@ function Room:askToNullification(players, params)
 
     if winner then
       local result = req:getResult(winner)
-      useResult = self:handleUseCardReply(winner, result)
+      useResult = self:handleUseCardReply(winner, result, {
+        skill_name = card_name,
+        prompt = prompt,
+        pattern = pattern,
+        cancelable = cancelable,
+        extra_data = extra_data,
+        event_data = event_data,
+      })
 
       if type(useResult) == "string" and useResult ~= "" then
         table.insertIfNeed(disabledSkillNames, useResult)

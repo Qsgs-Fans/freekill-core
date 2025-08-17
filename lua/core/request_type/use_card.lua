@@ -60,6 +60,10 @@ function ReqUseCard:feasible()
   local card = self.selected_card
   if skill then
     card = skill:viewAs(self.player, self.pendings)
+    if card == nil then
+      local selected = table.map(self.selected_targets, Util.Id2PlayerMapper)
+      return skill:feasible(self.player, selected, self.pendings)
+    end
   end
   local ret = false
   if card and self:cardFeasible(card) then
