@@ -44,9 +44,12 @@ function ReqActiveSkill:initialize(player, data)
   end
 end
 
+--- 初始化所有信息
+---@param ignoreInteraction? boolean @ 是否不初始化Interaction，继承原数据
 function ReqActiveSkill:setup(ignoreInteraction)
   local scene = self.scene
 
+  local old_pendings = table.simpleClone(self.pendings or {})
   self.pendings = {}
   self.selected_targets = {}
 
@@ -73,7 +76,15 @@ function ReqActiveSkill:setup(ignoreInteraction)
 
   self:retractAllPiles()
   self:expandPiles()
+
   scene:unselectAllCards()
+  if ignoreInteraction then -- 修改Interaction时重新筛选一次原选择牌
+    for _, cid in ipairs(old_pendings) do
+      local ret = self:cardValidity(cid)
+      if ret then table.insert(self.pendings, cid) end
+      scene:update("CardItem", cid, { selected = not not ret })
+    end
+  end
 
   scene:unselectAllTargets()
 
@@ -122,7 +133,7 @@ function ReqActiveSkill:updatePrompt()
 end
 
 function ReqActiveSkill:setupInteraction()
-  local skill = Fk.skills[self.skill_name]
+  local skill = Fk.skills[self.skill_name]---@type ActiveSkill
   if skill and skill.interaction then
     skill.interaction.data = nil
     local interaction = skill:interaction(self.player)
