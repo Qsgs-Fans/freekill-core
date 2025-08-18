@@ -2218,12 +2218,13 @@ function Room:handleUseCardReply(player, data, params)
       ---@cast skill ViewAsSkill
       --Self = player
       local useResult
+      local c = skill:viewAs(player, selected_cards)
       self:useSkill(player, skill, function()
         useResult = skill:onUse(self, SkillUseData:new {
           from = player,
           cards = selected_cards,
           tos = table.map(targets, Util.Id2PlayerMapper),
-        }, params)
+        }, c, params)
         if type(useResult) == "table" then
           if params == nil then
             player.room:useCard(useResult)

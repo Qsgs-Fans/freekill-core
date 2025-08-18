@@ -120,20 +120,16 @@ end
 ---@param cardUseEvent SkillUseData
 ---@param params? handleUseCardParams
 ---@return UseCardDataSpec|string
-function ViewAsSkill:onUse(room, cardUseEvent, params)
-  local player = cardUseEvent.from
-  local targets = cardUseEvent.tos
-  local selected_cards = cardUseEvent.cards
-  local card = self:viewAs(player, selected_cards)
+function ViewAsSkill:onUse(room, cardUseEvent, card, params)
   if card == nil then return "" end
   ---@type UseCardDataSpec
   local use = {
     from = cardUseEvent.from,
-    tos = targets,
+    tos = cardUseEvent.tos,
     card = card,
   }
 
-  local rejectSkillName = self:beforeUse(player, use)
+  local rejectSkillName = self:beforeUse(cardUseEvent.from, use)
 
   if type(rejectSkillName) == "string" then
     return rejectSkillName
