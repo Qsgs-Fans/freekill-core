@@ -1508,7 +1508,7 @@ end
 
 --- Player是否可看到某card
 --- @param cardId integer
----@param move? CardsMoveStruct @ 移动数据，注意涉及Player全是id
+---@param move? MoveCardsData @ 移动数据，注意涉及Player全是id
 ---@return boolean
 function Player:cardVisible(cardId, move)
   local room = Fk:currentRoom()
@@ -1529,6 +1529,10 @@ function Player:cardVisible(cardId, move)
   local falsy = true -- 当难以决定时是否要选择暗置？
   local oldarea, oldspecial, oldowner
   if move then
+    move = table.simpleClone(move)
+    -- 把playerId转为Player
+    if type(move.to) == "number" then move.to = room:getPlayerById(move.to) end
+    if type(move.from) == "number" then move.from = room:getPlayerById(move.from) end
     ---@type MoveInfo
     local info = table.find(move.moveInfo, function(info) return info.cardId == cardId end)
     if info then
@@ -1541,7 +1545,7 @@ function Player:cardVisible(cardId, move)
 
       oldarea = info.fromArea
       oldspecial = info.fromSpecialName
-      oldowner = move.from and room:getPlayerById(move.from)
+      oldowner = move.from
       if move.moveVisible or move.specialVisible then return true end
       if move.visiblePlayers then
         local visiblePlayers = move.visiblePlayers
