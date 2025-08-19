@@ -3,6 +3,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Fk
 import Fk.Pages
 
 Rectangle {
@@ -75,14 +76,14 @@ Rectangle {
       delegate: ItemDelegate {
         width: soundSelector.width
         height: 30
-        text: luatr("$" + name + (idx ? idx.toString() : ""))
+        text: Lua.tr("$" + name + (idx ? idx.toString() : ""))
 
         onClicked: {
           opTimer.start();
           const general = roomScene.getPhoto(Self.id).general;
           let skill = "fastchat_m";
           if (general !== "") {
-            const data = lcall("GetGeneralDetail", general);
+            const data = Lua.call("GetGeneralDetail", general);
             const gender = data.gender;
             if (gender !== 1) {
               skill = "fastchat_f";

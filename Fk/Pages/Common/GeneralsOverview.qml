@@ -3,10 +3,10 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+
 import Fk
-import Fk.RoomElement
+import Fk.Components.LunarLTK
 import Fk.Widgets as W
-// import "RoomLogic.js" as RoomLogic
 
 Item {
   id: root
@@ -46,7 +46,7 @@ Item {
       height: 40
 
       Text {
-        text: luatr(name)
+        text: Lua.tr(name)
         color: modList.currentIndex === index ? "black" : "white"
         anchors.centerIn: parent
       }
@@ -75,15 +75,15 @@ Item {
       height: 40
 
       Text {
-        text: luatr(modelData)
-        color: !config.curScheme.banPkg[modelData] ? "black" : "grey"
+        text: Lua.tr(modelData)
+        color: !Config.curScheme.banPkg[modelData] ? "black" : "grey"
         Behavior on color { ColorAnimation { duration: 200 } }
         anchors.centerIn: parent
       }
 
       Image {
         source: AppPath + "/image/button/skill/locked.png"
-        opacity: !config.curScheme.banPkg[modelData] ? 0 : 1
+        opacity: !Config.curScheme.banPkg[modelData] ? 0 : 1
         Behavior on opacity { NumberAnimation { duration: 200 } }
         anchors.centerIn: parent
         scale: 0.8
@@ -93,7 +93,7 @@ Item {
         onTapped: {
           if (stat === 1) {
             const name = modelData;
-            let s = config.curScheme;
+            let s = Config.curScheme;
             if (s.banPkg[name]) {
               delete s.banPkg[name];
               delete s.normalPkg[name];
@@ -101,7 +101,7 @@ Item {
               delete s.normalPkg[name];
               s.banPkg[name] = [];
             }
-            config.curSchemeChanged();
+            Config.curSchemeChanged();
           } else {
             pkgList.currentIndex = index;
           }
@@ -131,9 +131,9 @@ Item {
       Label {
         text: {
           switch (stat) {
-            case 0: return luatr("Generals Overview");
-            case 1: return luatr("$BanPkgHelp");
-            case 2: return luatr("$BanCharaHelp");
+            case 0: return Lua.tr("Generals Overview");
+            case 1: return Lua.tr("$BanPkgHelp");
+            case 2: return Lua.tr("$BanCharaHelp");
           }
         }
         elide: Label.ElideLeft
@@ -169,7 +169,7 @@ Item {
       }
 
       ToolButton {
-        text: luatr("Filter")
+        text: Lua.tr("Filter")
         font.pixelSize: 20
         onClicked: {
           lobby_dialog.sourceComponent = Qt.createComponent("../Pages/GeneralFilter.qml");
@@ -185,7 +185,7 @@ Item {
           delay: 1500
 
           contentItem: Text{
-            text: luatr("FilterHelp")
+            text: Lua.tr("FilterHelp")
             font.pixelSize: 20
             color: "white"
           }
@@ -193,7 +193,7 @@ Item {
       }
 
       ToolButton {
-        text: luatr("Revert Selection")
+        text: Lua.tr("Revert Selection")
         enabled: stat === 2
         font.pixelSize: 20
         onClicked: {
@@ -207,8 +207,8 @@ Item {
         id: banButton
         font.pixelSize: 20
         text: {
-          if (stat === 2) return luatr("OK");
-          return luatr("BanGeneral");
+          if (stat === 2) return Lua.tr("OK");
+          return Lua.tr("BanGeneral");
         }
         enabled: stat !== 1
         visible: mainStack.currentItem.objectName === "GeneralsOverview"
@@ -225,8 +225,8 @@ Item {
         id: banPkgButton
         font.pixelSize: 20
         text: {
-          if (stat === 1) return luatr("OK");
-          return luatr("BanPackage");
+          if (stat === 1) return Lua.tr("OK");
+          return Lua.tr("BanPackage");
         }
         enabled: stat !== 2
         visible: mainStack.currentItem.objectName === "GeneralsOverview"
@@ -240,12 +240,12 @@ Item {
       }
 
       ToolButton {
-        text: luatr("Quit")
+        text: Lua.tr("Quit")
         font.pixelSize: 20
         visible: mainStack.currentItem.objectName === "GeneralsOverview"
         onClicked: {
-          mainStack.pop();
-          config.saveConf();
+          App.quitPage();
+          Config.saveConf();
         }
       }
     }
@@ -279,8 +279,8 @@ Item {
         anchors.fill: parent
         color: "black"
         opacity: {
-          const s = config.curScheme;
-          const gdata = lcall("GetGeneralData", modelData);
+          const s = Config.curScheme;
+          const gdata = Lua.call("GetGeneralData", modelData);
           const pack = gdata.package;
           if (s.banPkg[pack]) {
             if (!s.banPkg[pack].includes(modelData)) return 0.5;
@@ -297,8 +297,8 @@ Item {
       GlowText {
         id: banText
         visible: {
-          const s = config.curScheme;
-          const gdata = lcall("GetGeneralData", modelData);
+          const s = Config.curScheme;
+          const gdata = Lua.call("GetGeneralData", modelData);
           const pack = gdata.package;
           if (s.banPkg[pack]) {
             return s.banPkg[pack].includes(modelData);
@@ -308,13 +308,13 @@ Item {
         }
         text: {
           if (!visible) return '';
-          const s = config.curScheme;
-          const gdata = lcall("GetGeneralData", modelData);
+          const s = Config.curScheme;
+          const gdata = Lua.call("GetGeneralData", modelData);
           const pack = gdata.package;
           if (s.banPkg[pack]) {
-            if (s.banPkg[pack].includes(modelData)) return luatr('Enable');
+            if (s.banPkg[pack].includes(modelData)) return Lua.tr('Enable');
           } else {
-            if (!!s.normalPkg[pack]?.includes(modelData)) return luatr('Prohibit');
+            if (!!s.normalPkg[pack]?.includes(modelData)) return Lua.tr('Prohibit');
           }
         }
         anchors.centerIn: parent
@@ -362,12 +362,12 @@ Item {
     }
     onFinished: {
       if (filtering) {
-        generals = lcall("FilterAllGenerals", filter);
+        generals = Lua.call("FilterAllGenerals", filter);
         filtering = false;
       } else if (word.text !== "") {
-        generals = lcall("SearchAllGenerals", word.text);
+        generals = Lua.call("SearchAllGenerals", word.text);
       } else {
-        generals = lcall("SearchGenerals",
+        generals = Lua.call("SearchGenerals",
         pkgList.model[pkgList.currentIndex], word.text);
       }
       word.text = "";
@@ -459,12 +459,12 @@ Item {
 
   function loadPackages() {
     if (loaded) return;
-    const _mods = lcall("GetAllModNames");
-    const modData = lcall("GetAllMods");
-    const packs = lcall("GetAllGeneralPack");
+    const _mods = Lua.call("GetAllModNames");
+    const modData = Lua.call("GetAllMods");
+    const packs = Lua.call("GetAllGeneralPack");
     _mods.forEach(name => {
       const pkgs = modData[name].filter(p => packs.includes(p)
-        && !config.serverHiddenPacks.includes(p));
+        && !Config.serverHiddenPacks.includes(p));
       if (pkgs.length > 0)
         mods.append({ name: name, pkgs: JSON.stringify(pkgs) });
     });
@@ -472,8 +472,8 @@ Item {
   }
 
   function doBanGeneral(name) {
-    const s = config.curScheme;
-    const gdata = lcall("GetGeneralData", name);
+    const s = Config.curScheme;
+    const gdata = Lua.call("GetGeneralData", name);
     const pack = gdata.package;
     let arr;
     if (s.banPkg[pack]) {
@@ -491,6 +491,10 @@ Item {
     } else {
       arr.push(name);
     }
-    config.curSchemeChanged();
+    Config.curSchemeChanged();
+  }
+
+  Component.onCompleted: {
+    loadPackages();
   }
 }

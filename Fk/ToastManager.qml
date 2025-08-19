@@ -9,7 +9,7 @@ ListView {
     if (duration === undefined) {
       duration = 3000;
     }
-    model.insert(0, {text: text, duration: duration});
+    model.insert(0, {text: text, duration: duration, listmodel: listmodel});
   }
 
   id: root
@@ -33,11 +33,11 @@ ListView {
   delegate: Toast {
     required property string text
     required property real duration
-    required property var model
     required property int index
+    required property var listmodel
 
     onFinish: {
-      model.remove(index);
+      listmodel.remove(index);
     }
 
     Component.onCompleted: {
@@ -45,5 +45,5 @@ ListView {
     }
   }
 
-  model: ListModel {id: model}
+  model: ListModel {id: listmodel}
 }

@@ -1,4 +1,6 @@
 import QtQuick
+
+import Fk
 import Fk.Widgets as W
 
 Item {
@@ -160,10 +162,10 @@ Item {
 
       onClicked: {
         if (root.needRestart) {
-          config.saveConf();
+          Config.saveConf();
           Qt.quit();
         } else {
-          mainStack.pop();
+          App.quitPage();
         }
       }
     }

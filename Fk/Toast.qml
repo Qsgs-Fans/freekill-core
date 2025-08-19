@@ -36,7 +36,8 @@ Rectangle {
     running: false
 
     NumberAnimation {
-      target: root.opacity
+      target: root
+      property: "opacity"
       to: .9
       duration: root.fadeTime
     }
@@ -46,7 +47,8 @@ Rectangle {
     }
 
     NumberAnimation {
-      target: root.opacity
+      target: root
+      property: "opacity"
       to: 0
       duration: root.fadeTime
     }

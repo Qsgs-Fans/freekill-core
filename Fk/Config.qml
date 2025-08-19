@@ -9,6 +9,7 @@ QtObject {
   property real winY
   property real winWidth
   property real winHeight
+  property real winScale
   property var conf: ({})
   property string lastLoginServer
   //property var savedPassword: ({})

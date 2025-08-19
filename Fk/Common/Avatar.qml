@@ -32,7 +32,7 @@ Image {
     opacity: 0.8
 
     Text {
-      text: luatr(pkgName)
+      text: Lua.tr(pkgName)
       x: 2; y: 1
       font.family: fontLibian.name
       font.pixelSize: 14
@@ -52,7 +52,7 @@ Image {
     opacity: 0.8
 
     Text {
-      text: luatr(root.general)
+      text: Lua.tr(root.general)
       x: 2; y: 1
       font.family: fontLibian.name
       font.pixelSize: 14

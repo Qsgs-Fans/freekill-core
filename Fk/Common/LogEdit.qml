@@ -2,6 +2,7 @@
 
 import QtQuick
 import QtQuick.Controls
+import Fk
 import Fk.Widgets as W
 
 ListView {
@@ -41,7 +42,7 @@ ListView {
   }
 
   Button {
-    text: luatr("Return to Bottom")
+    text: Lua.tr("Return to Bottom")
     visible: root.currentIndex !== logModel.count - 1
     onClicked: root.currentIndex = logModel.count - 1;
   }

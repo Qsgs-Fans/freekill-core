@@ -4,6 +4,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import Fk
+
 Item {
   id: root
 
@@ -41,7 +43,7 @@ Item {
               anchors.left: parent.left
               anchors.leftMargin: 8
               anchors.verticalCenter: parent.verticalCenter
-              source: AppPath + "/image/logo/" + dest
+              source: Cpp.path + "/image/logo/" + dest
               width: parent.width * 0.3
               fillMode: Image.PreserveAspectFit
             }
@@ -50,11 +52,11 @@ Item {
               anchors.left: logo.right
               anchors.leftMargin: 16
               width: parent.width * 0.65
-              text: luatr("about_" + dest + "_description")
+              text: Lua.tr("about_" + dest + "_description")
               wrapMode: Text.WordWrap
               textFormat: Text.MarkdownText
               font.pixelSize: 18
-              onLinkActivated: Qt.openUrlExternally(link);
+              onLinkActivated: (link) => Qt.openUrlExternally(link);
             }
           }
         }
@@ -73,11 +75,11 @@ Item {
   }
 
   Button {
-    text: luatr("Quit")
+    text: Lua.tr("Quit")
     anchors.right: parent.right
     onClicked: {
       swipe.opacity = 0;
-      mainStack.pop();
+      App.quitPage();
     }
   }
 

@@ -10,6 +10,6 @@ SpinBox {
   // from, to
 
   onValueChanged: {
-    lcall("UpdateRequestUI", "Interaction", "1", "update", value);
+    Lua.call("UpdateRequestUI", "Interaction", "1", "update", value);
   }
 }

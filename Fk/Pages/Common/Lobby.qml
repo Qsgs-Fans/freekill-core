@@ -4,17 +4,24 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Window
 import QtQuick.Layouts
-import Fk.LobbyElement
-import Fk.Common
-import Fk.Widgets as W
-import "Logic.js" as Logic
 
-Item {
+import Fk
+import Fk.Components.Lobby
+import Fk.Common
+import Fk.Pages
+import Fk.Widgets as W
+
+W.PageBase {
   id: root
   property alias roomModel: roomModel
   property var roomInfoCache: ({})
 
   property string password
+
+  property int lobbyPlayerNum: 0
+  property int serverPlayerNum: 0
+
+  property bool filtering: false // 筛选状态，用于刷新房间按钮
 
   Component {
     id: roomDelegate
@@ -31,7 +38,7 @@ Item {
         color: outdated ? "#CCCCCC" : "#D4E5F6"
         Text {
           x: 4; y: -1
-          text: luatr(gameMode) + ' #' + roomId
+          text: Lua.tr(gameMode) + ' #' + roomId
           font.strikeout: outdated
         }
       }
@@ -65,7 +72,7 @@ Item {
         }
 
         Image {
-          source: AppPath + "/image/button/skill/locked.png"
+          source: Cpp.path + "/image/button/skill/locked.png"
           visible: hasPassword
           scale: 0.8
           anchors.top: parent.top
@@ -100,7 +107,7 @@ Item {
 
         ToolButton {
           id: enterButton
-          text: (playerNum < capacity) ? luatr("Enter") : luatr("Observe")
+          text: (playerNum < capacity) ? Lua.tr("Enter") : Lua.tr("Observe")
           enabled: !outdated && !opTimer.running
           font.pixelSize: 16
           font.bold: true
@@ -129,8 +136,6 @@ Item {
     interval: 1000
   }
 
-  property bool filtering: false // 筛选状态，用于刷新房间按钮
-
   ColumnLayout {
     id: roomListLayout
     height: root.height - 72
@@ -156,24 +161,24 @@ Item {
           anchors.centerIn: parent
           id: autoFilterRoomCheck
           checked: true
-          text: luatr("Automatically Filter Room List")
+          text: Lua.tr("Automatically Filter Room List")
         }
       }
       Button {
         Layout.alignment: Qt.AlignRight
-        text: luatr("Refresh Room List").arg(roomModel.count)
+        text: Lua.tr("Refresh Room List").arg(roomModel.count)
         enabled: !opTimer.running
         onClicked: { // 刷新，筛选
           opTimer.start();
-          filtering = autoFilterRoomCheck.checked;
-          ClientInstance.notifyServer("RefreshRoomList", "");
+          root.filtering = autoFilterRoomCheck.checked;
+          Cpp.notifyServer("RefreshRoomList", "");
         }
         // onPressAndHold: { // 取消筛选，刷新，但不清除筛选
         //   opTimer.start();
         //   ClientInstance.notifyServer("RefreshRoomList", "");
         // }
         // ToolTip {
-        //   text: luatr("RefreshRoomHelp")
+        //   text: Lua.tr("RefreshRoomHelp")
         //   visible: parent.hovered
         //   delay: 1000
         //   x: parent.width / 2 - 16
@@ -181,39 +186,22 @@ Item {
         // }
       }
       Button {
-        text: luatr("Filter")
+        text: Lua.tr("Filter")
         onClicked: { // 打开筛选框，在框内完成筛选，不刷新
           lobby_drawer.sourceComponent = Qt.createComponent("../LobbyElement/FilterRoom.qml"); //roomFilterDialog;
           lobby_drawer.open();
         }
-        // onPressAndHold: { // 清除筛选，刷新（等于筛选框里的清除）
-        //   config.preferredFilter = { // 清空
-        //     name: "", // 房间名
-        //     id: "", // 房间ID
-        //     modes : [], // 游戏模式
-        //     full : 2, // 满员，0满，1未满，2不限
-        //     hasPassword : 2, // 密码，0有，1无，2不限
-        //   };
-        //   config.preferredFilterChanged();
-        //   opTimer.start();
-        //   ClientInstance.notifyServer("RefreshRoomList", "");
-        // }
-        // ToolTip {
-        //   text: luatr("FilterHelp")
-        //   visible: parent.hovered
-        //   delay: 1000
-        //   x: parent.width / 2 - 16
-        //   y: parent.height - 16
-        // }
       }
       Button {
-        text: luatr("Create Room")
+        text: Lua.tr("Create Room")
         onClicked: {
-          lobby_drawer.sourceComponent =
-            Qt.createComponent("../LobbyElement/CreateRoom.qml");
-          lobby_drawer.open();
-          config.observing = false;
-          config.replaying = false;
+          // lobby_drawer.sourceComponent =
+          //   Qt.createComponent("../LobbyElement/CreateRoom.qml");
+          // lobby_drawer.open();
+          Config.observing = false;
+          Config.replaying = false;
+
+          App.enterNewPage("Fk.Pages.Common", "CreateRoom");
         }
       }
     }
@@ -225,7 +213,8 @@ Item {
       Layout.fillHeight: true
       Layout.fillWidth: true
       ScrollBar.vertical: ScrollBar {}
-      delegate: roomDelegate
+      delegate: RoomDelegate {
+      }
       clip: true
       model: roomModel
     }
@@ -259,8 +248,8 @@ Item {
         width: parent.width
         wrapMode: TextEdit.WordWrap
         textFormat: Text.MarkdownText
-        text: config.serverMotd + "\n\n___\n\n" + luatr('Bulletin Info')
-        onLinkActivated: Qt.openUrlExternally(link);
+        text: Config.serverMotd + "\n\n___\n\n" + Lua.tr('Bulletin Info')
+        onLinkActivated: (link) => Qt.openUrlExternally(link);
       }
     }
 
@@ -303,7 +292,7 @@ Item {
       Text {
         x: 16; y: 4
         font.pixelSize: 16
-        text: luatr("$OnlineInfo")
+        text: Lua.tr("$OnlineInfo")
           .arg(lobbyPlayerNum).arg(serverPlayerNum) + "\n"
           + "Powered by FreeKill " + FkVersion
       }
@@ -311,35 +300,33 @@ Item {
 
     Item { Layout.fillWidth: true }
     Button {
-      text: luatr("Generals Overview")
+      text: Lua.tr("Generals Overview")
       onClicked: {
-        mainStack.push(mainWindow.generalsOverviewPage);
-        mainStack.currentItem.loadPackages();
+        App.enterNewPage("Fk.Pages.Common", "GeneralsOverview");
       }
     }
     Button {
-      text: luatr("Cards Overview")
+      text: Lua.tr("Cards Overview")
       onClicked: {
-        mainStack.push(mainWindow.cardsOverviewPage);
-        mainStack.currentItem.loadPackages();
+        App.enterNewPage("Fk.Pages.Common", "CardsOverview");
       }
     }
     Button {
-      text: luatr("Modes Overview")
+      text: Lua.tr("Modes Overview")
       onClicked: {
-        mainStack.push(mainWindow.modesOverviewPage);
+        App.enterNewPage("Fk.Pages.Common", "ModesOverview");
       }
     }
     Button {
-      text: luatr("Replay")
+      text: Lua.tr("Replay")
       onClicked: {
-        mainStack.push(mainWindow.replayPage);
+        App.enterNewPage("Fk.Pages.Common", "Replay");
       }
     }
     Button {
-      text: luatr("About")
+      text: Lua.tr("About")
       onClicked: {
-        mainStack.push(mainWindow.aboutPage);
+        App.enterNewPage("Fk.Pages.Common", "About");
       }
     }
   }
@@ -347,68 +334,49 @@ Item {
   Button {
     id: exitButton
     anchors.right: parent.right
-    text: luatr("Exit Lobby")
+    text: Lua.tr("Exit Lobby")
     display: AbstractButton.TextBesideIcon
     icon.name: "application-exit"
     onClicked: {
-      toast.show("Goodbye.");
-      mainStack.pop();
-      config.saveConf();
-      Backend.quitLobby();
+      App.showToast("Goodbye.");
+      App.quitPage();
+      Config.saveConf();
+      Cpp.quitLobby();
     }
   }
 
   W.PopupLoader {
     id: lobby_drawer
     padding: 0
-    width: realMainWin.width * 0.80
-    height: realMainWin.height * 0.95
+    width: Config.winWidth * 0.80
+    height: Config.winHeight * 0.95
     anchors.centerIn: parent
   }
 
   function enterRoom(roomId, playerNum, capacity, pw) {
-    config.replaying = false;
+    Config.replaying = false;
     if (playerNum < capacity) {
-      config.observing = false;
+      Config.observing = false;
       mainWindow.busy = true;
-      ClientInstance.notifyServer(
-        "EnterRoom",
-        [roomId, pw]
-      );
+      Cpp.notifyServer("EnterRoom", [roomId, pw]);
     } else {
-      config.observing = true;
+      Config.observing = true;
       mainWindow.busy = true;
-      ClientInstance.notifyServer(
-        "ObserveRoom",
-        [roomId, pw]
-      );
+      Cpp.notifyServer("ObserveRoom", [roomId, pw]);
     }
   }
-
-  property int lobbyPlayerNum: 0
-  property int serverPlayerNum: 0
-
-  /*
-  function updateOnlineInfo() {
-  }
-
-  onLobbyPlayerNumChanged: updateOnlineInfo();
-  onServerPlayerNumChanged: updateOnlineInfo();
-
-  /*
-  */
 
   Danmaku {
     id: danmaku
     width: parent.width
   }
 
-  function addToChat(pid, raw, msg) {
+  function addToChat(pid, raw: var, msg: var) {
     if (raw.type !== 1) return;
     msg = msg.replace(/\{emoji([0-9]+)\}/g,
-      `<img src="${AppPath}/image/emoji/$1.png" height="24" width="24" />`);
+      `<img src="${Cpp.path}/image/emoji/$1.png" height="24" width="24" />`);
     raw.msg = raw.msg.replace(/\{emoji([0-9]+)\}/g,
-      `<img src="${AppPath}/image/emoji/$1.png" height="24" width="24" />`);
+      `<img src="${Cpp.path}/image/emoji/$1.png" height="24" width="24" />`);
     lobbyChat.append(msg);
     danmaku.sendLog("<b>" + raw.userName + "</b>: " + raw.msg);
   }
@@ -418,7 +386,56 @@ Item {
     lobbyChat.append(msg);
   }
 
+  function updateRoomList(sender, data: var) {
+    roomModel.clear();
+    data.forEach(room => {
+      const [roomId, roomName, gameMode, playerNum, capacity, hasPassword,
+        outdated] = room;
+      if (filtering) { // 筛选
+        const f = Config.preferredFilter;
+        if ((f.name !== '' && !roomName.includes(f.name))
+          || (f.id !== '' && !roomId.toString().includes(f.id))
+          || (f.modes.length > 0 && !f.modes.includes(Lua.tr(gameMode)))
+          || (f.full !== 2 &&
+            (f.full === 0 ? playerNum < capacity : playerNum >= capacity))
+          || (f.hasPassword !== 2 &&
+            (f.hasPassword === 0 ? !hasPassword : hasPassword))
+          // || (capacityList.length > 0 && !capacityList.includes(capacity))
+        ) return;
+      }
+      roomModel.append({
+        roomId, roomName, gameMode, playerNum, capacity,
+        hasPassword, outdated,
+      });
+    });
+    filtering = false;
+  }
+
+  function updatePlayerNum(sender, data) {
+    const l = data[0];
+    const s = data[1];
+    lobbyPlayerNum = l;
+    serverPlayerNum = s;
+  }
+
+  function handleEnterRoom(sender, data) {
+    // jsonData: int capacity, int timeout
+    Config.roomCapacity = data[0];
+    Config.roomTimeout = data[1] - 1;
+    const roomSettings = data[2];
+    Config.enableFreeAssign = roomSettings.enableFreeAssign;
+    Config.heg = roomSettings.gameMode.includes('heg_mode');
+    App.enterNewPage("Fk.Pages.LunarLTK", "Room");
+    // mainStack.push(room);
+    mainWindow.busy = false;
+  }
+
   Component.onCompleted: {
-    toast.show(luatr("$WelcomeToLobby"));
+    addCallback(Command.UpdateRoomList, updateRoomList);
+    addCallback(Command.UpdatePlayerNum, updatePlayerNum);
+
+    addCallback(Command.EnterRoom, handleEnterRoom);
+
+    App.showToast(Lua.tr("$WelcomeToLobby"));
   }
 }

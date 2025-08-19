@@ -3,10 +3,11 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+
 import Fk
 import Fk.Widgets as W
 
-Item {
+W.PageBase {
   id: root
   property alias serverDialog: serverDialogLoader
 
@@ -89,7 +90,7 @@ Item {
           Layout.fillWidth: true
           text: qsTr("PackageManage")
           onClicked: {
-            Mediator.notify(root, Command.PushPage, Qt.createComponent("Fk.Pages.Common", "PackageManage"))
+            App.enterNewPage("Fk.Pages.Common", "PackageManage")
           }
         }
 
@@ -97,7 +98,7 @@ Item {
           Layout.fillWidth: true
           text: qsTr("管理资源包")
           onClicked: {
-            Mediator.notify(root, Command.PushPage, Qt.createComponent("Fk.Pages.Common", "ResourcePackManage"))
+            App.enterNewPage("Fk.Pages.Common", "ResourcePackManage")
           }
         }
 
@@ -217,10 +218,20 @@ Item {
   }
 
   function downloadComplete() {
-    toast.show(qsTr("updated packages for md5"));
+    App.showToast(qsTr("updated packages for md5"));
+  }
+
+  function enterLobby(sender, data) {
+    Config.lastLoginServer = Config.serverAddr;
+    App.enterNewPage("Fk.Pages.Common", "Lobby")
+    mainWindow.busy = false;
+    Cpp.notifyServer("RefreshRoomList", "");
+    Config.saveConf();
   }
 
   Component.onCompleted: {
     lady.source = Config.ladyImg;
+
+    addCallback(Command.EnterLobby, enterLobby);
   }
 }

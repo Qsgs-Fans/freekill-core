@@ -5,7 +5,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import Fk
 import Fk.Widgets as W
-import Fk.RoomElement
+import Fk.Components.LunarLTK
 
 Item {
   id: root
@@ -38,7 +38,7 @@ Item {
       height: 40
 
       Text {
-        text: luatr(name)
+        text: Lua.tr(name)
         anchors.centerIn: parent
       }
 
@@ -120,8 +120,8 @@ Item {
     }
     onFinished: {
       const pkg = listView.model.get(listView.currentIndex).name;
-      const idList = lcall("GetCards", pkg);
-      const cardList = idList.map(id => lcall("GetCardData", id));
+      const idList = Lua.call("GetCards", pkg);
+      const cardList = idList.map(id => Lua.call("GetCardData", id));
 
       const groupedCardList = [];
       let groupedCards = {};
@@ -197,7 +197,7 @@ Item {
     property int cid: 1
     property var cards
     function updateCard() {
-      const data = lcall("GetCardData", cid);
+      const data = Lua.call("GetCardData", cid);
       detailFlickable.contentY = 0; // 重置滚动条
       const suitTable = {
         spade: "♠", heart: '<font color="red">♥</font>',
@@ -218,19 +218,19 @@ Item {
       cardText.clear();
       cardText.clearSavedText();
       audioRow.clear();
-      cardText.append(luatr(":" + data.name));
+      cardText.append(Lua.tr(":" + data.name));
       addCardAudio(data)
-      const skills = lcall("GetCardSpecialSkills", cid);
+      const skills = Lua.call("GetCardSpecialSkills", cid);
       if (skills.length > 0) {
-        cardText.append("<br/>" + luatr("Special card skills:"));
+        cardText.append("<br/>" + Lua.tr("Special card skills:"));
         skills.forEach(t => {
-          cardText.append("<b>" + luatr(t) + "</b>: "
-            + luatr(":" + t));
+          cardText.append("<b>" + Lua.tr(t) + "</b>: "
+            + Lua.tr(":" + t));
         });
       }
 
       if (cards) {
-        cardText.append("<br/>" + luatr("Every suit & number:"));
+        cardText.append("<br/>" + Lua.tr("Every suit & number:"));
         cardText.append(cards.map(c => {
           return (suitTable[c.suit] + Util.convertNumber(c.number))
         }).join(", "));
@@ -288,7 +288,7 @@ Item {
               text = savedtext.pop();
             } else {
               savedtext.push(text);
-              text = '<a href="back">' + luatr("Click to back") + '</a><br>' + luatr(link);
+              text = '<a href="back">' + Lua.tr("Click to back") + '</a><br>' + Lua.tr(link);
             }
           }
         }
@@ -307,19 +307,19 @@ Item {
                 verticalAlignment: Text.AlignVCenter
                 text: {
                   if (audioType === "male") {
-                    return luatr("Male Audio");
+                    return Lua.tr("Male Audio");
                   } else if (audioType === "female") {
-                    return luatr("Female Audio");
+                    return Lua.tr("Female Audio");
                   } else if (audioType === "equip_effect")  {
-                    return luatr("Equip Effect Audio");
+                    return Lua.tr("Equip Effect Audio");
                   } {
-                    return luatr("Equip Use Audio");
+                    return Lua.tr("Equip Use Audio");
                   }
                 }
                 font.pixelSize: 14
               }
               onClicked: {
-                const data = lcall("GetCardData", cardDetail.cid);
+                const data = Lua.call("GetCardData", cardDetail.cid);
                 let path;
                 if (audioType === "male" || audioType === "female") {
                   path = SkinBank.getAudio(data.name, extension, "card/" + audioType);
@@ -341,11 +341,11 @@ Item {
   }
 
   Button {
-    text: luatr("Quit")
+    text: Lua.tr("Quit")
     anchors.right: parent.right
     visible: mainStack.currentItem.objectName === "CardsOverview"
     onClicked: {
-      mainStack.pop();
+      App.quitPage();
     }
   }
 
@@ -369,7 +369,7 @@ Item {
 
   function addCardAudio(card) {
     const extension = card.extension;
-    const orig_extension = lcall("GetCardExtensionByName", card.name);
+    const orig_extension = Lua.call("GetCardExtensionByName", card.name);
     loadAudio(card.name, "male", extension, orig_extension);
     loadAudio(card.name, "female", extension, orig_extension);
     if (audioRow.count === 0 && card.type === 3) {
@@ -390,12 +390,16 @@ Item {
 
   function loadPackages() {
     if (loaded) return;
-    const packs = lcall("GetAllCardPack");
+    const packs = Lua.call("GetAllCardPack");
     packs.forEach(name => {
-      if (!config.serverHiddenPacks.includes(name)) {
+      if (!Config.serverHiddenPacks.includes(name)) {
         packages.append({ name: name });
       }
     });
     loaded = true;
+  }
+
+  Component.onCompleted: {
+    loadPackages();
   }
 }

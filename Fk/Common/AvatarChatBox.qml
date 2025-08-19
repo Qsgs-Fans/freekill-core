@@ -6,7 +6,7 @@ import QtQuick.Layouts
 import Fk.Pages
 import Fk.Widgets as W
 import Fk
-import Fk.RoomElement
+import Fk.Components.LunarLTK
 
 Rectangle {
   color: "transparent"
@@ -34,13 +34,13 @@ Rectangle {
 
   function loadGeneralSkillAudios(general) {
     if (general === "") return;
-    const sks = lcall("GetGeneralDetail", general).skill;
+    const sks = Lua.call("GetGeneralDetail", general).skill;
     sks.forEach(t => {
       if (!t.name.startsWith('#')) {
-        //generalText.append((t.is_related_skill ? "<font color=\"purple\"><b>" : "<b>") + luatr(t.name) +
+        //generalText.append((t.is_related_skill ? "<font color=\"purple\"><b>" : "<b>") + Lua.tr(t.name) +
         //"</b>: " + t.description + (t.is_related_skill ? "</font>" : ""));
 
-        const gdata = lcall("GetGeneralData", general);
+        const gdata = Lua.call("GetGeneralData", general);
         const extension = gdata.extension;
         let ret = false;
         for (let i = 0; i < 999; i++) {
@@ -54,7 +54,7 @@ Rectangle {
           }
         }
         if (!ret) {
-          const skilldata = lcall("GetSkillData", t.name);
+          const skilldata = Lua.call("GetSkillData", t.name);
           if (!skilldata) return;
           const extension = skilldata.extension;
           for (let i = 0; i < 999; i++) {
@@ -73,7 +73,7 @@ Rectangle {
 
   function findWinDeathAudio(general, isWin) {
     if (general === "") return;
-    const extension = lcall("GetGeneralData", general).extension;
+    const extension = Lua.call("GetGeneralData", general).extension;
     const fname = SkinBank.getAudioRealPath(general, extension, isWin ? "win" : "death");
     if (Backend.exists(fname)) {
       skills.append({ name: (isWin ? "!" : "~") + general });
@@ -126,7 +126,7 @@ Rectangle {
         anchors.right: !isSelf ? undefined : avatarPic.left
         anchors.margins: 6
         font.pixelSize: 14
-        text: userName + (general ? (" (" + luatr(general) + ")") : "")
+        text: userName + (general ? (" (" + Lua.tr(general) + ")") : "")
           + ' <font color="grey">[' + time + "]</font>"
       }
 
@@ -227,7 +227,7 @@ Rectangle {
             ret = `$${name}${specific ? '_' + general : ""}${idx ? idx.toString() : ""}`;
           }
 
-          return luatr(ret);
+          return Lua.tr(ret);
         }
 
         onClicked: {
@@ -235,7 +235,7 @@ Rectangle {
           const general = roomScene.getPhoto(Self.id).general;
           if ( name === "fastchat_m" ) {
             if (general !== "") {
-              const data = lcall("GetGeneralDetail", general);
+              const data = Lua.call("GetGeneralDetail", general);
               const gender = data.gender;
               if (gender !== 1) {
                 name = "fastchat_f";

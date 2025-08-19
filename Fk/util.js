@@ -15,27 +15,27 @@ function convertNumber(number) {
 function getPlayerStr(playerid) {
   const photo = getPhoto(playerid);
   if (photo.general === "anjiang" && (photo.deputyGeneral === "anjiang" || !photo.deputyGeneral)) {
-    let ret = luatr("seat#" + photo.seatNumber);
+    let ret = Lua.tr("seat#" + photo.seatNumber);
     if (playerid == Self.id) {
-      ret = ret + luatr("playerstr_self")
+      ret = ret + Lua.tr("playerstr_self")
     }
-    return luatr(ret);
+    return Lua.tr(ret);
   }
 
   let ret = photo.general;
-  ret = luatr(ret);
+  ret = Lua.tr(ret);
   if (photo.deputyGeneral && photo.deputyGeneral !== "") {
-    ret = ret + "/" + luatr(photo.deputyGeneral);
+    ret = ret + "/" + Lua.tr(photo.deputyGeneral);
   }
   if (playerid == Self.id) {
-    ret = ret + luatr("playerstr_self")
+    ret = ret + Lua.tr("playerstr_self")
   }
   return ret;
 }
 
 function processPrompt(prompt) {
   const data = prompt.split(":");
-  let raw = luatr(data[0]);
+  let raw = Lua.tr(data[0]);
   const src = parseInt(data[1]);
   const dest = parseInt(data[2]);
   if (raw.match("%src"))
@@ -45,10 +45,10 @@ function processPrompt(prompt) {
 
   if (data.length > 3) {
     for (let i = 4; i < data.length; i++) {
-      raw = raw.replace(new RegExp("%arg" + (i - 2), "g"), luatr(data[i]));
+      raw = raw.replace(new RegExp("%arg" + (i - 2), "g"), Lua.tr(data[i]));
     }
 
-    raw = raw.replace(new RegExp("%arg", "g"), luatr(data[3]));
+    raw = raw.replace(new RegExp("%arg", "g"), Lua.tr(data[3]));
   }
   return raw;
 }

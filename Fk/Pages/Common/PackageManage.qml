@@ -4,6 +4,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import Fk
+
 Item {
   id: root
 
@@ -14,7 +16,7 @@ Item {
       anchors.fill: parent
       ToolButton {
         icon.source: AppPath + "/image/modmaker/back"
-        onClicked: mainStack.pop();
+        onClicked: App.quitPage();
       }
       Label {
         text: qsTr("Package Manager")

@@ -256,7 +256,7 @@ function sortHandcards(sortMethods) {
 
   const others = [];
   const hands = [];
-  const orignal_hands = lcall("GetPlayerHandcards", Self.id); // 不计入expand_pile
+  const orignal_hands = Lua.call("GetPlayerHandcards", Self.id); // 不计入expand_pile
 
   dashboard.handcardArea.cards.forEach(c => {
     if (orignal_hands.includes(c.cid)) {
@@ -523,7 +523,7 @@ callbacks["ShowVirtualCard"] = (data) => {
 
   const items = [];
   for (let i = 0; i < card_data.length; i++) {
-    const dat = lcall("ToQml", card_data[i]);
+    const dat = Lua.call("ToQml", card_data[i]);
     let component = Qt.createComponent(dat.moduleUri, dat.typeName);
     let state = dat.properties;
     const parentPos = roomScene.mapFromItem(from, 0, 0);
@@ -609,27 +609,27 @@ function doIndicate(from, tos) {
 function getPlayerStr(playerid) {
   const photo = getPhoto(playerid);
   if (photo.general === "anjiang" && (photo.deputyGeneral === "anjiang" || !photo.deputyGeneral)) {
-    let ret = luatr("seat#" + photo.seatNumber);
+    let ret = Lua.tr("seat#" + photo.seatNumber);
     if (playerid == Self.id) {
-      ret = ret + luatr("playerstr_self")
+      ret = ret + Lua.tr("playerstr_self")
     }
-    return luatr(ret);
+    return Lua.tr(ret);
   }
 
   let ret = photo.general;
-  ret = luatr(ret);
+  ret = Lua.tr(ret);
   if (photo.deputyGeneral && photo.deputyGeneral !== "") {
-    ret = ret + "/" + luatr(photo.deputyGeneral);
+    ret = ret + "/" + Lua.tr(photo.deputyGeneral);
   }
   if (playerid == Self.id) {
-    ret = ret + luatr("playerstr_self")
+    ret = ret + Lua.tr("playerstr_self")
   }
   return ret;
 }
 
 function processPrompt(prompt) {
   const data = prompt.split(":");
-  let raw = luatr(data[0]);
+  let raw = Lua.tr(data[0]);
   const src = parseInt(data[1]);
   const dest = parseInt(data[2]);
   if (raw.match("%src"))
@@ -639,10 +639,10 @@ function processPrompt(prompt) {
 
   if (data.length > 3) {
     for (let i = data.length - 1; i > 3; i--) {
-      raw = raw.replace(new RegExp("%arg" + (i - 2), "g"), luatr(data[i]));
+      raw = raw.replace(new RegExp("%arg" + (i - 2), "g"), Lua.tr(data[i]));
     }
 
-    raw = raw.replace(new RegExp("%arg", "g"), luatr(data[3]));
+    raw = raw.replace(new RegExp("%arg", "g"), Lua.tr(data[3]));
   }
   return raw;
 }
@@ -776,7 +776,7 @@ callbacks["PropertyUpdate"] = (data) => {
 
 callbacks["UpdateHandcard"] = (j) => {
   const id = parseInt(j);
-  const sortable = lcall("CanSortHandcards", Self.id);
+  const sortable = Lua.call("CanSortHandcards", Self.id);
   let card;
 
   roomScene.dashboard.handcardArea.cards.forEach((v) => {
@@ -790,8 +790,8 @@ callbacks["UpdateHandcard"] = (j) => {
     return;
   }
 
-  card.setData(lcall("GetCardData", id));
-  card.known = lcall("CardVisibility", id);
+  card.setData(Lua.call("GetCardData", id));
+  card.known = Lua.call("CardVisibility", id);
   card.draggable = sortable;
 }
 
@@ -818,18 +818,18 @@ callbacks["UpdateCard"] = (j) => {
     return;
   }
 
-  card.setData(lcall("GetCardData", id));
+  card.setData(Lua.call("GetCardData", id));
 }
 
 callbacks["UpdateSkill"] = (j) => {
-  const sortable = lcall("CanSortHandcards", Self.id);
+  const sortable = Lua.call("CanSortHandcards", Self.id);
   dashboard.sortable = sortable;
   dashboard.handcardArea.sortable = sortable;
   const all_skills = [roomScene.dashboard.skillButtons, roomScene.dashboard.notActiveButtons];
   for (const skills of all_skills) {
     for (let i = 0; i < skills.count; i++) {
       const item = skills.itemAt(i);
-      const dat = lcall("GetSkillStatus", item.orig);
+      const dat = Lua.call("GetSkillStatus", item.orig);
       item.locked = dat.locked;
       item.times = dat.times;
     }
@@ -882,7 +882,7 @@ callbacks["MoveFocus"] = (data) => {
   cancelAllFocus();
   const focuses = data[0];
   const command = data[1];
-  const timeout = data[2] ?? (config.roomTimeout * 1000);
+  const timeout = data[2] ?? (Config.roomTimeout * 1000);
 
   let item, model;
   for (let i = 0; i < playerNum; i++) {
@@ -891,8 +891,8 @@ callbacks["MoveFocus"] = (data) => {
       item = photos.itemAt(i);
       item.progressBar.duration = timeout;
       item.progressBar.visible = true;
-      item.progressTip = luatr(command)
-        + luatr(" thinking...");
+      item.progressTip = Lua.tr(command)
+        + Lua.tr(" thinking...");
     }
   }
 }
@@ -918,7 +918,7 @@ callbacks["AskForGeneral"] = (data) => {
   const rule = data[4];
   const extra_data = data[5];
 
-  roomScene.setPrompt(luatr("#AskForGeneral"), true);
+  roomScene.setPrompt(Lua.tr("#AskForGeneral"), true);
   roomScene.activate();
   roomScene.popupBox.sourceComponent =
     Qt.createComponent("../RoomElement/ChooseGeneralBox.qml");
@@ -943,7 +943,7 @@ callbacks["AskForSkillInvoke"] = (data) => {
   const skill = data[0];
   const prompt = data[1];
   roomScene.promptText = prompt ? processPrompt(prompt)
-                              : luatr("#AskForSkillInvoke").arg(luatr(skill));
+                              : Lua.tr("#AskForSkillInvoke").arg(Lua.tr(skill));
   // roomScene.activate();
   // roomScene.okCancel.visible = true;
   // roomScene.okButton.enabled = true;
@@ -958,7 +958,7 @@ callbacks["AskForArrangeCards"] = (data) => {
   const box = roomScene.popupBox.item;
   const cards = data.cards;
   box.cards = cards.reduce((newArray, elem) => {
-    return newArray.concat(elem.map(cid => lcall("GetCardData", cid)));
+    return newArray.concat(elem.map(cid => Lua.call("GetCardData", cid)));
   }, []);
   box.org_cards = cards;
   box.prompt = data.prompt;
@@ -992,21 +992,21 @@ callbacks["AskForGuanxing"] = (data) => {
   if (max_top_cards === 0) {
     box.areaCapacities = [max_bottom_cards];
     box.areaLimits = [min_bottom_cards];
-    box.areaNames = [luatr(bottom_area_name)];
+    box.areaNames = [Lua.tr(bottom_area_name)];
   } else {
     if (max_bottom_cards === 0) {
       box.areaCapacities = [max_top_cards];
       box.areaLimits = [min_top_cards];
-      box.areaNames = [luatr(top_area_name)];
+      box.areaNames = [Lua.tr(top_area_name)];
     } else {
       box.areaCapacities = [max_top_cards, max_bottom_cards];
       box.areaLimits = [min_top_cards, min_bottom_cards];
-      box.areaNames = [luatr(top_area_name), luatr(bottom_area_name)];
+      box.areaNames = [Lua.tr(top_area_name), Lua.tr(bottom_area_name)];
     }
   }
   box.org_cards = cards;
   box.cards = cards.reduce((newArray, elem) => {
-    return newArray.concat(elem.map(cid => lcall("GetCardData", cid)));
+    return newArray.concat(elem.map(cid => Lua.call("GetCardData", cid)));
   }, []);
   box.initializeCards();
   box.accepted.connect(() => {
@@ -1027,10 +1027,10 @@ callbacks["AskForExchange"] = (data) => {
   box.org_cards = data.piles;
   data.piles.forEach(ids => {
     if (ids.length > 0) {
-      ids.forEach(id => cards.push(lcall("GetCardData", id)));
+      ids.forEach(id => cards.push(Lua.call("GetCardData", id)));
       capacities.push(ids.length);
       limits.push(0);
-      cards_name.push(luatr(data.piles_name[for_i]));
+      cards_name.push(Lua.tr(data.piles_name[for_i]));
       for_i ++;
     }
   });
@@ -1053,8 +1053,8 @@ callbacks["AskForChoice"] = (data) => {
   const prompt = data[3];
   const detailed = data[4];
   if (prompt === "") {
-    roomScene.promptText = luatr("#AskForChoice")
-      .arg(luatr(skill_name));
+    roomScene.promptText = Lua.tr("#AskForChoice")
+      .arg(Lua.tr(skill_name));
   } else {
     roomScene.setPrompt(processPrompt(prompt), true);
   }
@@ -1087,8 +1087,8 @@ callbacks["AskForChoices"] = (data) => {
   const prompt = data[5];
   const detailed = data[6];
   if (prompt === "") {
-    roomScene.promptText = luatr("#AskForChoices")
-      .arg(luatr(skill_name));
+    roomScene.promptText = Lua.tr("#AskForChoices")
+      .arg(Lua.tr(skill_name));
   } else {
     roomScene.setPrompt(processPrompt(prompt), true);
   }
@@ -1122,8 +1122,8 @@ callbacks["AskForCardChosen"] = (data) => {
   const reason = data._reason;
   const prompt = data._prompt;
   if (prompt === "") {
-    roomScene.promptText = luatr(processPrompt("#AskForChooseCard:" + data._id))
-      .arg(luatr(reason));
+    roomScene.promptText = Lua.tr(processPrompt("#AskForChooseCard:" + data._id))
+      .arg(Lua.tr(reason));
   } else {
     roomScene.setPrompt(processPrompt(prompt), true);
   }
@@ -1138,7 +1138,7 @@ callbacks["AskForCardChosen"] = (data) => {
     const arr = [];
     const ids = d[1];
 
-    ids.forEach(id => arr.push(lcall("GetCardData", id)));
+    ids.forEach(id => arr.push(Lua.call("GetCardData", id)));
     box.addCustomCards(d[0], arr);
   }
 
@@ -1154,8 +1154,8 @@ callbacks["AskForCardsChosen"] = (data) => {
   const reason = data._reason;
   const prompt = data._prompt;
   if (prompt === "") {
-    roomScene.promptText = luatr(processPrompt("#AskForChooseCards:" + data._id))
-    .arg(luatr(reason)).arg(min).arg(max);
+    roomScene.promptText = Lua.tr(processPrompt("#AskForChooseCards:" + data._id))
+    .arg(Lua.tr(reason)).arg(min).arg(max);
   } else {
     roomScene.setPrompt(processPrompt(prompt), true);
   }
@@ -1173,7 +1173,7 @@ callbacks["AskForCardsChosen"] = (data) => {
     const arr = [];
     const ids = d[1];
 
-    ids.forEach(id => arr.push(lcall("GetCardData", id)));
+    ids.forEach(id => arr.push(Lua.call("GetCardData", id)));
     box.addCustomCards(d[0], arr);
   }
 
@@ -1198,7 +1198,7 @@ callbacks["AskForPoxi"] = (dat) => {
     const arr = [];
     const ids = d[1];
 
-    ids.forEach(id => arr.push(lcall("GetCardData", id)));
+    ids.forEach(id => arr.push(Lua.call("GetCardData", id)));
     box.addCustomCards(d[0], arr);
   }
   box.refreshPrompt();
@@ -1219,7 +1219,7 @@ callbacks["AskForMoveCardInBoard"] = (data) => {
   const boxCards = [];
   cards.forEach(id => {
     const cardPos = cardsPosition[cards.findIndex(cid => cid === id)];
-    const d = lcall("GetCardData", id, playerIds[cardPos]);
+    const d = Lua.call("GetCardData", id, playerIds[cardPos]);
     boxCards.push(d);
   });
 
@@ -1230,9 +1230,9 @@ callbacks["AskForMoveCardInBoard"] = (data) => {
   box.generalNames = generalNames.map(name => {
     const namesSplit = name.split('/');
     if (namesSplit.length > 1) {
-      return namesSplit.map(nameSplit => luatr(nameSplit)).join('/');
+      return namesSplit.map(nameSplit => Lua.tr(nameSplit)).join('/');
     }
-    return luatr(name);
+    return Lua.tr(name);
   });
 
   box.arrangeCards();
@@ -1251,7 +1251,7 @@ callbacks["AskForCardsAndChoice"] = (data) => {
     Qt.createComponent("../RoomElement/ChooseCardsAndChoiceBox.qml");
 
   const boxCards = [];
-  cards.forEach(id => boxCards.push(lcall("GetCardData", id)));
+  cards.forEach(id => boxCards.push(Lua.call("GetCardData", id)));
 
   const box = roomScene.popupBox.item;
   box.cards = boxCards;
@@ -1313,8 +1313,8 @@ callbacks["AskForUseActiveSkill"] = (data) => {
   const cancelable = data[2];
   const extra_data = data[3] ?? {};
   if (prompt === "") {
-    roomScene.promptText = luatr("#AskForUseActiveSkill")
-      .arg(luatr(skill_name));
+    roomScene.promptText = Lua.tr("#AskForUseActiveSkill")
+      .arg(Lua.tr(skill_name));
   } else {
     roomScene.setPrompt(processPrompt(prompt), true);
   }
@@ -1340,8 +1340,8 @@ callbacks["AskForUseCard"] = (data) => {
   const disabledSkillNames = data[5];
 
   if (prompt === "") {
-    roomScene.promptText = luatr("#AskForUseCard")
-      .arg(luatr(cardname));
+    roomScene.promptText = Lua.tr("#AskForUseCard")
+      .arg(Lua.tr(cardname));
   } else {
     roomScene.setPrompt(processPrompt(prompt), true);
   }
@@ -1350,9 +1350,9 @@ callbacks["AskForUseCard"] = (data) => {
   if (extra_data != null) {
     if ((extra_data.effectTo !== Self.id && // 忽略本轮无懈可击，但目标是自己时不忽略
         roomScene.skippedUseEventId.find(id => id === extra_data.useEventId)) ||
-        (config.noSelfNullification && extra_data.effectFrom === Self.id &&
-        !lcall("GetCardData", extra_data.effectCardId).multiple_targets)) { // 不对自己使用的单目标锦囊牌无懈
-      lcall("UpdateRequestUI", "Button", "Cancel");
+        (Config.noSelfNullification && extra_data.effectFrom === Self.id &&
+        !Lua.call("GetCardData", extra_data.effectCardId).multiple_targets)) { // 不对自己使用的单目标锦囊牌无懈
+      Lua.call("UpdateRequestUI", "Button", "Cancel");
       return;
     } else {
       roomScene.extra_data = extra_data;
@@ -1373,8 +1373,8 @@ callbacks["AskForResponseCard"] = (data) => {
   const disabledSkillNames = data[5];
 
   if (prompt === "") {
-    roomScene.promptText = luatr("#AskForResponseCard")
-      .arg(luatr(cardname));
+    roomScene.promptText = Lua.tr("#AskForResponseCard")
+      .arg(Lua.tr(cardname));
   } else {
     roomScene.setPrompt(processPrompt(prompt), true);
   }
@@ -1384,7 +1384,7 @@ callbacks["AskForResponseCard"] = (data) => {
 
 const getMarkValue = function(value) {
   if (value instanceof ArrayBuffer) {
-    return lcall("ToUIString", value);
+    return Lua.call("ToUIString", value);
   } else if (!(value instanceof Object)) {
     return value.toString();
   } else {
@@ -1454,7 +1454,7 @@ callbacks["Animate"] = (data) => {
       }
 
       const animation = component.createObject(photo, {
-        skill_name: luatr(data.name),
+        skill_name: Lua.tr(data.name),
         skill_type: (data.skill_type ? data.skill_type : "special"),
       });
       animation.anchors.centerIn = photo;
@@ -1510,7 +1510,7 @@ callbacks["LogEvent"] = (data) => {
       let dat;
       const tryPlaySound = (general) => {
         if (general) {
-          const dat = lcall("GetGeneralData", general);
+          const dat = Lua.call("GetGeneralData", general);
           const extension = dat.extension;
           const path = SkinBank.getAudio(skill + "_" + general, extension, "skill");
           if (path !== undefined) {
@@ -1527,7 +1527,7 @@ callbacks["LogEvent"] = (data) => {
       }
 
       // finally normal skill
-      dat = lcall("GetSkillData", skill);
+      dat = Lua.call("GetSkillData", skill);
       extension = dat.extension;
       path = SkinBank.getAudio(skill, extension, "skill");
       Backend.playSound(path, data.i);
@@ -1540,7 +1540,7 @@ callbacks["LogEvent"] = (data) => {
     }
     case "Death": {
       const item = getPhoto(data.to);
-      const extension = lcall("GetGeneralData", item.general).extension;
+      const extension = Lua.call("GetGeneralData", item.general).extension;
       const path = SkinBank.getAudio(item.general, extension, "death");
       Backend.playSound(path);
       break;
@@ -1576,7 +1576,7 @@ callbacks["TakeAG"] = (data) => {
   const pid = data[0];
   const cid = data[1];
   const item = getPhoto(pid);
-  const general = luatr(item.general);
+  const general = Lua.tr(item.general);
 
   // the item should be AG box
   roomScene.manualBox.item.takeAG(general, cid);
@@ -1597,7 +1597,7 @@ callbacks["CustomDialog"] = (data) => {
 callbacks["MiniGame"] = (data) => {
   const game = data.type;
   const dat = data.data;
-  const gdata = lcall("GetMiniGame", game, Self.id, JSON.stringify(dat));
+  const gdata = Lua.call("GetMiniGame", game, Self.id, JSON.stringify(dat));
   roomScene.activate();
   roomScene.popupBox.source = AppPath + "/" + gdata.qml_path + ".qml";
   if (dat) {

@@ -3,7 +3,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Fk.RoomElement
+import Fk.Components.LunarLTK
 
 Item {
   id: root
@@ -28,13 +28,13 @@ Item {
         ColumnLayout {
           Text {
             color: "#E4D5A0"
-            text: luatr(gname)
+            text: Lua.tr(gname)
           }
           GridLayout {
             columns: 6
 
             Repeater {
-              model: lcall("GetSameGenerals", gname)
+              model: Lua.call("GetSameGenerals", gname)
 
               GeneralCardItem {
                 name: modelData

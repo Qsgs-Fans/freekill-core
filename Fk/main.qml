@@ -24,6 +24,7 @@ Window {
     scale: parent.width / width
     anchors.centerIn: parent
 
+    onScaleChanged: Config.winScale = scale;
     onConfLoaded: {
       if (Cpp.os != "Android") {
         root.width = Config.winWidth;
@@ -58,23 +59,5 @@ Window {
       closeEvent.accepted = false;
       exitMessageDialog.open();
     }
-  }
-
-  // 唉兼容
-  property var config: Config
-  function lcall(funcName, ...params) {
-    return Lua.call(funcName, ...params);
-  }
-
-  function leval(lua) {
-    return Lua.evaluate(lua);
-  }
-
-  function luatr(src) {
-    return Lua.tr(src);
-  }
-
-  function sqlquery(s) {
-    return Cpp.sqlquery(s);
   }
 }

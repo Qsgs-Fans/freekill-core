@@ -3,7 +3,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Fk.RoomElement
+import Fk.Components.LunarLTK
 
 Flickable {
   id: root
@@ -57,7 +57,7 @@ Flickable {
             text = savedtext.pop();
           } else {
             savedtext.push(text);
-            text = '<a href="back">' + luatr("Click to back") + '</a><br>' + luatr(link);
+            text = '<a href="back">' + Lua.tr("Click to back") + '</a><br>' + Lua.tr(link);
           }
         }
       }
@@ -69,7 +69,7 @@ Flickable {
     if (!card) return;
     cardPic.setData(card.toData());
     const name = card.virt_name ? card.virt_name : card.name;
-    screenName.text = luatr(name);
-    skillDesc.text = luatr(":" + name);
+    screenName.text = Lua.tr(name);
+    skillDesc.text = Lua.tr(":" + name);
   }
 }

@@ -143,15 +143,56 @@ W.PageBase {
     toast.show(data);
   }
 
+  function errorMessage(sender, data) {
+    let log;
+    try {
+      const a = JSON.parse(data);
+      log = qsTr(a[0]).arg(a[1]);
+    } catch (e) {
+      log = qsTr(data);
+    }
+
+    console.log("ERROR: " + log);
+    toast.show(log, 5000);
+    busy = false;
+  }
+
+  function errorDialog(sender, data) {
+    let log;
+    try {
+      const a = JSON.parse(data);
+      log = qsTr(a[0]).arg(a[1]);
+    } catch (e) {
+      log = qsTr(data);
+    }
+
+    console.log("ERROR: " + log);
+    Cpp.showDialog("warning", log, data);
+    busy = false;
+  }
+
+  function setServerSettings(sender, data) {
+    const [ motd, hiddenPacks, enableBots ] = data;
+    Config.serverMotd = motd;
+    Config.serverHiddenPacks = hiddenPacks;
+    Config.serverEnableBot = enableBots;
+  }
+
+
   Component.onCompleted: {
     Config.loadConf();
     confLoaded();
 
     tipList = Cpp.loadTips();
 
-    addCallback(Command.PushPage, pushPage)
-    addCallback(Command.PopPage, popPage)
-    addCallback(Command.ShowToast, showToast)
+    addCallback(Command.PushPage, pushPage);
+    addCallback(Command.PopPage, popPage);
+    addCallback(Command.ShowToast, showToast);
+
+    addCallback(Command.ErrorMsg, errorMessage);
+    addCallback(Command.ErrorDlg, errorDialog);
+
+    addCallback(Command.SetServerSettings, setServerSettings);
 
     mainStack.push(Qt.createComponent("Fk.Pages.Common", "Init"));
   }

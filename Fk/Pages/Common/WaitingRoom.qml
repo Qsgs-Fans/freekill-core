@@ -7,8 +7,8 @@ import QtQuick.Layouts
 import QtMultimedia
 import Fk
 import Fk.Common
-import Fk.RoomElement
-import Fk.PhotoElement as PhotoElement
+import Fk.Components.LunarLTK
+import Fk.Components.LunarLTK.Photo as PhotoElement
 import Fk.Widgets as W
 import Fk.LobbyElement as L
 

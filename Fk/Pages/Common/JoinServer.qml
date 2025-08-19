@@ -3,6 +3,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+
 import Fk
 import Fk.Widgets as W
 
@@ -249,20 +250,20 @@ Item {
         const _port = parseInt(portEdit.text);
         const _username = usernameEdit.text;
         const _password = passwordEdit.text;
-        config.screenName = _username;
-        config.password = _password;
+        Config.screenName = _username;
+        Config.password = _password;
         mainWindow.busy = true;
-        config.serverAddr = _addr;
-        config.serverPort = _port;
+        Config.serverAddr = _addr;
+        Config.serverPort = _port;
         let name = selectedServer?.name;
         if (_addr !== selectedServer?.addr || _port !== selectedServer?.port) {
           name = "";
         }
-        addFavorite(config.serverAddr, config.serverPort, name,
-          config.screenName, config.password);
+        addFavorite(Config.serverAddr, Config.serverPort, name,
+          Config.screenName, Config.password);
 
         Backend.joinServer(_addr, _port);
-        ClientInstance.setLoginInfo(config.screenName, config.password);
+        ClientInstance.setLoginInfo(Config.screenName, Config.password);
       }
     }
     Button {
@@ -295,7 +296,7 @@ Item {
   }
 
   function addFavorite(addr, port, name, username, password) {
-    const newItem = config.addFavorite(addr, port, name, username, password);
+    const newItem = Config.addFavorite(addr, port, name, username, password);
     if (!newItem) {
       for (let i = 0; i < serverModel.count; i++) {
         const s = serverModel.get(i);
@@ -323,7 +324,7 @@ Item {
   }
 
   function removeFavorite(addr, port) {
-    config.removeFavorite(addr, port);
+    Config.removeFavorite(addr, port);
     for (let i = 0; i < serverModel.count; i++) {
       const s = serverModel.get(i);
       if (s.addr === addr && s.port === port && s.favorite) {
@@ -336,7 +337,7 @@ Item {
 
   function addLANServer(addr) {
     const port = 9527;
-    if (config.findFavorite(addr, port)) return;
+    if (Config.findFavorite(addr, port)) return;
     for (let i = 0; i < serverModel.count; i++) {
       const s = serverModel.get(i);
       if (s.addr === addr && s.port === port && s.lan) {
@@ -403,14 +404,14 @@ Item {
   function loadConfig() {
     if (serverModel.count > 0) { return; }
     const serverList = JSON.parse(Backend.getPublicServerList());
-    serverList.unshift(...config.favoriteServers);
+    serverList.unshift(...Config.favoriteServers);
     for (const server of serverList) {
       let { addr, port, name, username, password } = server;
       name = name ?? "";
       username = username ?? "";
       password = password ?? "";
       if (port === -1) break;
-      if (!password && config.findFavorite(addr, port)) continue;
+      if (!password && Config.findFavorite(addr, port)) continue;
       serverModel.append({
         addr, port, name, username, password,
         misMatchMsg: "",

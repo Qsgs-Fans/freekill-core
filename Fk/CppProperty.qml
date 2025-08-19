@@ -11,6 +11,18 @@ QtObject {
   property string locale: SysLocale
   property bool debug: Debugging
 
+  function notifyServer(command, data) {
+    ClientInstance.notifyServer(command, data);
+  }
+
+  function replyToServer(data) {
+    ClientInstance.replyToServer("", data);
+  }
+
+  function showDialog(type, log, data) {
+    Backend.showDialog(type, log, data);
+  }
+
   function quitLobby(v) {
     Backend.quitLobby(v);
   }
@@ -36,7 +48,7 @@ QtObject {
     return Backend.volume;
   }
 
-  function sqlquery(s: string): list {
+  function sqlquery(s: string): list<var> {
     return ClientInstance.execSql(s);
   }
 }

@@ -3,6 +3,8 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+
+import Fk
 import Fk.Widgets as W
 
 Item {
@@ -63,7 +65,7 @@ Item {
           id: modeDesc
           width: parent.width - 16
           wrapMode: Text.WordWrap
-          text: luatr(":" + modeList.get(listView.currentIndex).orig_name)
+          text: Lua.tr(":" + modeList.get(listView.currentIndex).orig_name)
           textFormat: Text.MarkdownText
           font.pixelSize: 16
         }
@@ -72,16 +74,16 @@ Item {
   }
 
   Button {
-    text: luatr("Quit")
+    text: Lua.tr("Quit")
     anchors.bottom: parent.bottom
     visible: mainStack.currentItem.objectName === "ModesOverview"
     onClicked: {
-      mainStack.pop();
+      App.quitPage();
     }
   }
 
   Component.onCompleted: {
-    const mode_data = lcall("GetGameModes");
+    const mode_data = Lua.call("GetGameModes");
     for (let d of mode_data) {
       modeList.append(d);
     }

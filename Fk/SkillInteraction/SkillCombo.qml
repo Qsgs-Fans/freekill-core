@@ -17,7 +17,7 @@ MetroButton {
 
   onAnswerChanged: {
     if (!answer) return;
-    lcall("UpdateRequestUI", "Interaction", "1", "update", answer);
+    Lua.call("UpdateRequestUI", "Interaction", "1", "update", answer);
   }
 
   onClicked: {

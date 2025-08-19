@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
+import Fk
 
 Item {
   id: root
@@ -24,7 +25,7 @@ Item {
       }
       return Backend.isDir(full_dir);
     });
-    currentEnabled = config.enabledResourcePacks || [];
+    currentEnabled = Config.enabledResourcePacks || [];
     let enabledSet = new Set(currentEnabled.filter(p => allPacks.indexOf(p) !== -1));
     let available = allPacks.filter(p => !enabledSet.has(p));
     currentEnabled.forEach(p => { if (allPacks.indexOf(p) !== -1) enabledPackModel.append({ name: p }); });
@@ -46,7 +47,7 @@ Item {
           let isSame = enabledList.length === currentEnabled.length &&
           enabledList.every((v, i) => v === currentEnabled[i]);
           if (isSame) {
-            mainStack.pop();
+            App.quitPage();
           } else {
             quitDialog.open();
           }
@@ -72,7 +73,7 @@ Item {
     onButtonClicked: function (button) {
       switch (button) {
         case MessageDialog.Ok: {
-          mainStack.pop();
+          App.quitPage();
           break;
         }
         case MessageDialog.Cancel: {
@@ -267,9 +268,9 @@ Item {
         for (let i = 0; i < enabledPackModel.count; ++i) {
           enabledList.push(enabledPackModel.get(i).name);
         }
-        config.enabledResourcePacks = enabledList;
-        config.saveConf();
-        if (mainStack) mainStack.pop();
+        Config.enabledResourcePacks = enabledList;
+        Config.saveConf();
+        App.quitPage();
       }
     }
   }

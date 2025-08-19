@@ -42,7 +42,7 @@ Item {
 
     Text {
       id: favorBar
-      text: luatr("Favorite Generals")
+      text: Lua.tr("Favorite Generals")
       font.pixelSize: 18
       anchors.horizontalCenter: parent.horizontalCenter
     }
@@ -53,7 +53,7 @@ Item {
       width: parent.width; height: parent.height - favorBar.height
       anchors.top: favorBar.bottom
       cellWidth: 68; cellHeight: 68
-      model: config.favoriteGenerals
+      model: Config.favoriteGenerals
       delegate: Item {
         width: 64; height: 64
         Avatar {
@@ -98,24 +98,24 @@ Item {
       Layout.alignment: Qt.AlignHCenter
       font.pixelSize: 18
       horizontalAlignment: Text.AlignHCenter
-      text: luatr("%1 generals are enabled in this room").arg(root.generalCount);
+      text: Lua.tr("%1 generals are enabled in this room").arg(root.generalCount);
     }
 
     Switch {
       id: showByPkg
       checked: true
-      text: luatr("Show general pool by packages")
+      text: Lua.tr("Show general pool by packages")
     }
 
     Button {
-      text: luatr("Copy as ban scheme")
+      text: Lua.tr("Copy as ban scheme")
       onClicked: {
-        const disabledGenerals = leval("ClientInstance.disabled_generals");
-        const disabledPack = leval("ClientInstance.disabled_packs");
-        const allPack = lcall("GetAllGeneralPack");
+        const disabledGenerals = Lua.eval("ClientInstance.disabled_generals");
+        const disabledPack = Lua.eval("ClientInstance.disabled_packs");
+        const allPack = Lua.call("GetAllGeneralPack");
         const scheme = {
           name: (new Date).toJSON(),
-          banCardPkg: lcall("GetAllCardPack").filter(p => disabledPack.includes(p)),
+          banCardPkg: Lua.call("GetAllCardPack").filter(p => disabledPack.includes(p)),
           banPkg: {},
           normalPkg: {},
         };
@@ -124,7 +124,7 @@ Item {
             scheme.banPkg[pkname] = [];
             continue;
           }
-          let generals = lcall("GetGenerals", pkname);
+          let generals = Lua.call("GetGenerals", pkname);
           let enabled_generals = generals.filter(g => !disabledGenerals.includes(g));
           let disabled_generals = generals.filter(g => !enabled_generals.includes(g));
           if (enabled_generals.length > generals.length * 0.4) {
@@ -136,7 +136,7 @@ Item {
           }
         }
         Backend.copyToClipboard(JSON.stringify(scheme));
-        toast.show(luatr("Export Success"));
+        toast.show(Lua.tr("Export Success"));
       }
     }
   }
@@ -158,7 +158,7 @@ Item {
       width: listView.width
 
       Text {
-        text: luatr(pkname)
+        text: Lua.tr(pkname)
         font.pixelSize: 16
         textFormat: Text.RichText
         wrapMode: Text.WrapAnywhere
@@ -194,11 +194,11 @@ Item {
   }
 
   Button {
-    text: luatr("Quit")
+    text: Lua.tr("Quit")
     anchors.bottom: parent.bottom
     visible: mainStack.currentItem.objectName === "ModesOverview"
     onClicked: {
-      mainStack.pop();
+      App.quitPage();
     }
   }
 
@@ -227,15 +227,15 @@ Item {
 
 
   Component.onCompleted: {
-    const disabledGenerals = leval("ClientInstance.disabled_generals");
-    const disabledPack = leval("ClientInstance.disabled_packs");
-    const allPack = lcall("GetAllGeneralPack");
+    const disabledGenerals = Lua.eval("ClientInstance.disabled_generals");
+    const disabledPack = Lua.eval("ClientInstance.disabled_packs");
+    const allPack = Lua.call("GetAllGeneralPack");
     pkgModel.clear();
     const allGenerals = [];
     for (let pkname of allPack) {
       if (disabledPack.includes(pkname)) continue;
-      let generals = lcall("GetGenerals", pkname);
-      generals = generals.filter(g => !leval(`Fk.generals['${g}'].hidden`));
+      let generals = Lua.call("GetGenerals", pkname);
+      generals = generals.filter(g => !Lua.eval(`Fk.generals['${g}'].hidden`));
       generals = generals.filter(g => !disabledGenerals.includes(g));
       if (generals.length === 0) continue;
       pkgModel.append({

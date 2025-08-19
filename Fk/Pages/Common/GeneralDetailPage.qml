@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import Fk
-import Fk.RoomElement
+import Fk.Components.LunarLTK
 
 Item {
   id: root
@@ -10,7 +10,7 @@ Item {
   property string general: "caocao"
   property bool isFavor: {
     const g = root.general;
-    const fav = config.favoriteGenerals;
+    const fav = Config.favoriteGenerals;
     return fav.includes(g);
   }
 
@@ -18,11 +18,11 @@ Item {
     generalText.clear();
     generalText.clearSavedText();
     root.updateGeneral();
-    isFavor = config.favoriteGenerals.includes(general);
+    isFavor = Config.favoriteGenerals.includes(general);
   }
 
   function addSpecialSkillAudio(skill) {
-    const gdata = lcall("GetGeneralData", general);
+    const gdata = Lua.call("GetGeneralData", general);
     const extension = gdata.extension;
     let ret = false;
     for (let i = 0; i < 999; i++) {
@@ -40,7 +40,7 @@ Item {
 
   function addSkillAudio(skill) {
     if (addSpecialSkillAudio(skill)) return;
-    const skilldata = lcall("GetSkillData", skill);
+    const skilldata = Lua.call("GetSkillData", skill);
     if (!skilldata) return;
     const extension = skilldata.extension;
     for (let i = 0; i < 999; i++) {
@@ -55,13 +55,13 @@ Item {
   }
 
   function findWinAudio(general) {
-    const extension = lcall("GetGeneralData", general).extension;
+    const extension = Lua.call("GetGeneralData", general).extension;
     const fname = SkinBank.getAudioRealPath(general, extension, "win");
     audioWin.visible = Backend.exists(fname);
   }
 
   function findDeathAudio(general) {
-    const extension = lcall("GetGeneralData", general).extension;
+    const extension = Lua.call("GetGeneralData", general).extension;
     const fname = SkinBank.getAudioRealPath(general, extension, "death");
     audioDeath.visible = Backend.exists(fname);
   }
@@ -69,22 +69,22 @@ Item {
   function updateGeneral() {
     detailGeneralCard.name = general;
     detailFlickable.contentY = 0; // 重置滚动条
-    const data = lcall("GetGeneralDetail", general);
+    const data = Lua.call("GetGeneralDetail", general);
     generalText.clear();
     generalText.clearSavedText();
     audioModel.clear();
 
-    if (data.headnote !== "") generalText.append("<font color=\"lightslategrey\">" + luatr(data.headnote) + "</font>");
+    if (data.headnote !== "") generalText.append("<font color=\"lightslategrey\">" + Lua.tr(data.headnote) + "</font>");
 
     if (data.companions.length > 0){
-      let ret = "<font color=\"slategrey\"><b>" + luatr("Companions") + "</b>: ";
-      ret += data.companions.map(luatr).join(" ");
+      let ret = "<font color=\"slategrey\"><b>" + Lua.tr("Companions") + "</b>: ";
+      ret += data.companions.map(Lua.tr).join(" ");
       generalText.append(ret);
     }
 
     data.skill.forEach(t => {
       if (!t.name.startsWith('#')) {
-        generalText.append((t.is_related_skill ? "<font color=\"purple\"><b>" : "<b>") + luatr(t.name) +
+        generalText.append((t.is_related_skill ? "<font color=\"purple\"><b>" : "<b>") + Lua.tr(t.name) +
         "</b>: " + t.description + (t.is_related_skill ? "</font>" : ""));
 
         addSkillAudio(t.name);
@@ -93,7 +93,7 @@ Item {
     findWinAudio(general);
     findDeathAudio(general);
 
-    if (data.endnote !== "") generalText.append("<font color=\"lightslategrey\">" + luatr(data.endnote) + "</font>");
+    if (data.endnote !== "") generalText.append("<font color=\"lightslategrey\">" + Lua.tr(data.endnote) + "</font>");
   }
 
   Component {
@@ -105,9 +105,9 @@ Item {
           Layout.fillWidth: true
           text: {
             /* if (name.endsWith("_win_audio")) {
-              return luatr("Win audio");
+              return Lua.tr("Win audio");
             } */
-            return luatr(name) + (idx ? " (" + idx.toString() + ")"
+            return Lua.tr(name) + (idx ? " (" + idx.toString() + ")"
               : "");
           }
           font.bold: true
@@ -118,7 +118,7 @@ Item {
           text: {
             const orig = '$' + name + (specific ? '_' + detailGeneralCard.name : "")
               + (idx ? idx.toString() : "");
-            const orig_trans = luatr(orig);
+            const orig_trans = Lua.tr(orig);
 
             if (orig_trans !== orig) {
               return orig_trans;
@@ -139,7 +139,7 @@ Item {
 
         // try main general
         if (general) {
-          dat = lcall("GetGeneralData", general);
+          dat = Lua.call("GetGeneralData", general);
           extension = dat.extension;
           path = SkinBank.getAudio(skill + "_" + general, extension, "skill");
           //path = "./packages/" + extension + "/audio/skill/" + skill + "_" + general;
@@ -150,7 +150,7 @@ Item {
         }
 
         // finally normal skill
-        dat = lcall("GetSkillData", skill);
+        dat = Lua.call("GetSkillData", skill);
         extension = dat.extension;
         path = SkinBank.getAudio(skill, extension, "skill");
         Backend.playSound(path, idx);
@@ -159,7 +159,7 @@ Item {
       onPressAndHold: {
         Backend.copyToClipboard('$' + name + ':' + (idx ? idx.toString() : "")
           + (specific ? ':' + detailGeneralCard.name : ""));
-        toast.show(luatr("Audio Code Copy Success"));
+        toast.show(Lua.tr("Audio Code Copy Success"));
       }
 
       ToolButton {
@@ -179,19 +179,19 @@ Item {
         Menu {
           id: skillAudioMenu
           MenuItem {
-            text: luatr("Copy Audio Code")
+            text: Lua.tr("Copy Audio Code")
             onTriggered: {
               Backend.copyToClipboard('$' + name + ':' + (idx ? idx.toString() : "")
                 + (specific ? ':' + detailGeneralCard.name : ""));
-              toast.show(luatr("Audio Code Copy Success"));
+              toast.show(Lua.tr("Audio Code Copy Success"));
             }
           }
           MenuItem {
-            text: luatr("Copy Audio Text")
+            text: Lua.tr("Copy Audio Text")
             onTriggered: {
-              Backend.copyToClipboard(luatr('$' + name + (specific ? '_' + detailGeneralCard.name : "")
+              Backend.copyToClipboard(Lua.tr('$' + name + (specific ? '_' + detailGeneralCard.name : "")
               + (idx ? idx.toString() : "")));
-              toast.show(luatr("Audio Text Copy Success"));
+              toast.show(Lua.tr("Audio Text Copy Success"));
             }
           }
         }
@@ -220,24 +220,24 @@ Item {
       lineHeight: 21
       lineHeightMode: Text.FixedHeight
       function trans(str) {
-        const ret = luatr(str);
+        const ret = Lua.tr(str);
         if (ret === str) {
-          return luatr("Official");
+          return Lua.tr("Official");
         }
         return ret;
       }
       text: {
         const general = root.general;
-        const gdata = lcall("GetGeneralData", general);
+        const gdata = Lua.call("GetGeneralData", general);
         let ret = [
-          luatr(gdata.package),
-          luatr("Title") + ": " + trans("#" + general),
-          luatr("Designer") + ": " + trans("designer:" + general),
-          luatr("Voice Actor") + ": " + trans("cv:" + general),
-          luatr("Illustrator") + ": " + trans("illustrator:" + general),
+          Lua.tr(gdata.package),
+          Lua.tr("Title") + ": " + trans("#" + general),
+          Lua.tr("Designer") + ": " + trans("designer:" + general),
+          Lua.tr("Voice Actor") + ": " + trans("cv:" + general),
+          Lua.tr("Illustrator") + ": " + trans("illustrator:" + general),
         ].join("<br>");
         if (gdata.hidden) {
-          ret += "<br><font color=\"grey\">" + luatr("Hidden General") + "</font>";
+          ret += "<br><font color=\"grey\">" + Lua.tr("Hidden General") + "</font>";
         }
         return ret;
       }
@@ -249,7 +249,7 @@ Item {
     }
 
     MetroButton {
-      text: luatr("Set as Avatar")
+      text: Lua.tr("Set as Avatar")
       visible: mainStack.currentItem.objectName === "GeneralsOverview"
       enabled: detailGeneralCard.name !== "" && !opTimer.running
       && Self.avatar !== detailGeneralCard.name
@@ -264,10 +264,10 @@ Item {
     }
 
     MetroButton {
-      text: root.isFavor ? luatr("Remove from Favorite") : luatr("Set as Favorite")
+      text: root.isFavor ? Lua.tr("Remove from Favorite") : Lua.tr("Set as Favorite")
       onClicked: {
         const g = root.general;
-        const fav = config.favoriteGenerals;
+        const fav = Config.favoriteGenerals;
         root.isFavor = fav.includes(g);
         if (root.isFavor) {
           fav.splice(fav.indexOf(g), 1);
@@ -313,7 +313,7 @@ Item {
             text = savedtext.pop();
           } else {
             savedtext.push(text);
-            text = '<a href="back">' + luatr("Click to back") + '</a><br>' + luatr(link);
+            text = '<a href="back">' + Lua.tr("Click to back") + '</a><br>' + Lua.tr(link);
           }
         }
       }
@@ -335,7 +335,7 @@ Item {
         contentItem: ColumnLayout {
           Text {
             Layout.fillWidth: true
-            text: luatr("Win audio")
+            text: Lua.tr("Win audio")
             font.bold: true
             font.pixelSize: 14
           }
@@ -343,7 +343,7 @@ Item {
             Layout.fillWidth: true
             text: {
               const orig = "!" + root.general;
-              const tr = luatr(orig);
+              const tr = Lua.tr(orig);
               if (tr === orig) {
                 return "";
               }
@@ -355,7 +355,7 @@ Item {
 
         onClicked: {
           const general = root.general
-          const extension = lcall("GetGeneralData", general).extension;
+          const extension = Lua.call("GetGeneralData", general).extension;
           const path = SkinBank.getAudio(general, extension, "win");
           if (path !== undefined) {
             Backend.playSound(path);
@@ -364,7 +364,7 @@ Item {
 
         onPressAndHold: {
           Backend.copyToClipboard("$!" + root.general);
-          toast.show(luatr("Audio Code Copy Success"));
+          toast.show(Lua.tr("Audio Code Copy Success"));
         }
 
         ToolButton {
@@ -384,17 +384,17 @@ Item {
           Menu {
             id: winAudioMenu
             MenuItem {
-              text: luatr("Copy Audio Code")
+              text: Lua.tr("Copy Audio Code")
               onTriggered: {
                 Backend.copyToClipboard("$~" + root.general);
-                toast.show(luatr("Audio Code Copy Success"));
+                toast.show(Lua.tr("Audio Code Copy Success"));
               }
             }
             MenuItem {
-              text: luatr("Copy Audio Text")
+              text: Lua.tr("Copy Audio Text")
               onTriggered: {
-                Backend.copyToClipboard(luatr("~" + root.general));
-                toast.show(luatr("Audio Text Copy Success"));
+                Backend.copyToClipboard(Lua.tr("~" + root.general));
+                toast.show(Lua.tr("Audio Text Copy Success"));
               }
             }
           }
@@ -407,7 +407,7 @@ Item {
         contentItem: ColumnLayout {
           Text {
             Layout.fillWidth: true
-            text: luatr("Death audio")
+            text: Lua.tr("Death audio")
             font.bold: true
             font.pixelSize: 14
           }
@@ -415,7 +415,7 @@ Item {
             Layout.fillWidth: true
             text: {
               const orig = "~" + root.general;
-              const tr = luatr(orig);
+              const tr = Lua.tr(orig);
               if (tr === orig) {
                 return "";
               }
@@ -427,7 +427,7 @@ Item {
 
         onClicked: {
           const general = root.general
-          const extension = lcall("GetGeneralData", general).extension;
+          const extension = Lua.call("GetGeneralData", general).extension;
           const path = SkinBank.getAudio(general, extension, "death");
           if (path !== undefined) {
             Backend.playSound(path);
@@ -436,7 +436,7 @@ Item {
 
         onPressAndHold: {
           Backend.copyToClipboard("$~" + root.general);
-          toast.show(luatr("Audio Code Copy Success"));
+          toast.show(Lua.tr("Audio Code Copy Success"));
         }
 
         ToolButton {
@@ -456,17 +456,17 @@ Item {
           Menu {
             id: deathAudioMenu
             MenuItem {
-              text: luatr("Copy Audio Code")
+              text: Lua.tr("Copy Audio Code")
               onTriggered: {
                 Backend.copyToClipboard("$~" + root.general);
-                toast.show(luatr("Audio Code Copy Success"));
+                toast.show(Lua.tr("Audio Code Copy Success"));
               }
             }
             MenuItem {
-              text: luatr("Copy Audio Text")
+              text: Lua.tr("Copy Audio Text")
               onTriggered: {
-                Backend.copyToClipboard(luatr("~" + root.general));
-                toast.show(luatr("Audio Text Copy Success"));
+                Backend.copyToClipboard(Lua.tr("~" + root.general));
+                toast.show(Lua.tr("Audio Text Copy Success"));
               }
             }
           }

@@ -30,8 +30,8 @@ const searchPkgResource = function (path, name, suffix) {
     !Pacman.getDisabledPacks().includes(dir) &&
     !dir.endsWith(".disabled")
   );
-  if (typeof config !== "undefined" && config.enabledResourcePacks) {
-    for (const packName of config.enabledResourcePacks) {
+  if (typeof config !== "undefined" && Config.enabledResourcePacks) {
+    for (const packName of Config.enabledResourcePacks) {
       for (const dir of dirs) {
         const resPath = AppPath + "/resource_pak/" + packName + "/packages/" + dir + path + name + suffix;
         if (Backend.exists(resPath)) return resPath;
@@ -48,8 +48,8 @@ const searchPkgResource = function (path, name, suffix) {
 
 const searchPkgResourceWithExtension = function (extension, path, name, suffix) {
   suffix = suffix ?? ".png";
-  if (typeof config !== "undefined" && config.enabledResourcePacks) {
-    for (const packName of config.enabledResourcePacks) {
+  if (typeof config !== "undefined" && Config.enabledResourcePacks) {
+    for (const packName of Config.enabledResourcePacks) {
       const resPath = AppPath + "/resource_pak/" + packName + "/packages/" + extension + path + name + suffix;
       if (Backend.exists(resPath)) return resPath;
     }
@@ -61,8 +61,8 @@ const searchPkgResourceWithExtension = function (extension, path, name, suffix) 
 
 // 尝试在资源包中查找武将技能语音
 const searchAudioResourceWithExtension = function (extension, path, name, suffix = ".mp3") {
-  if (typeof config !== "undefined" && config.enabledResourcePacks) {
-    for (const packName of config.enabledResourcePacks) {
+  if (typeof config !== "undefined" && Config.enabledResourcePacks) {
+    for (const packName of Config.enabledResourcePacks) {
       const resPath = `${AppPath}/resource_pak/${packName}/packages/${extension}${path}${name}${suffix}`;
       if (Backend.exists(resPath)) {
         return `./resource_pak/${packName}/packages/${extension}${path}${name}`;
@@ -78,8 +78,8 @@ const searchAudioResourceWithExtension = function (extension, path, name, suffix
 
 // 尝试在资源包中根据路径查找音效
 const searchAudioResourceByPath = function (path) {
-  if (typeof config !== "undefined" && config.enabledResourcePacks) {
-    for (const packName of config.enabledResourcePacks) {
+  if (typeof config !== "undefined" && Config.enabledResourcePacks) {
+    for (const packName of Config.enabledResourcePacks) {
       const resPath = `${AppPath}/resource_pak/${packName}${path}`;
       if (Backend.exists(resPath)) {
         return `./resource_pak/${packName}${path}`;
@@ -95,8 +95,8 @@ const searchAudioResourceByPath = function (path) {
 
 function searchBuiltinPic(path, name, suffix) {
   suffix = suffix ?? ".png";
-  if (typeof config !== "undefined" && config.enabledResourcePacks) {
-    for (const packName of config.enabledResourcePacks) {
+  if (typeof config !== "undefined" && Config.enabledResourcePacks) {
+    for (const packName of Config.enabledResourcePacks) {
       const resPath = AppPath + "/resource_pak/" + packName + path + name + suffix;
       if (Backend.exists(resPath)) return resPath;
     }
@@ -106,14 +106,14 @@ function searchBuiltinPic(path, name, suffix) {
 }
 
 function getGeneralExtraPic(name, extra) {
-  const data = lcall("GetGeneralData", name);
+  const data = Lua.call("GetGeneralData", name);
   const extension = data.extension;
   const ret = searchPkgResourceWithExtension(extension, "/image/generals/" + extra, name, ".jpg");
   return ret;
 }
 
 function getGeneralPicture(name) {
-  const data = lcall("GetGeneralData", name);
+  const data = Lua.call("GetGeneralData", name);
   const extension = data.extension;
   const ret = searchPkgResourceWithExtension(extension, "/image/generals/", name, ".jpg");
 
@@ -126,9 +126,9 @@ function getCardPicture(cidOrName) {
   let name = "unknown";
   if (typeof cidOrName === 'string') {
     name = cidOrName;
-    extension = lcall("GetCardExtensionByName", cidOrName);
+    extension = Lua.call("GetCardExtensionByName", cidOrName);
   } else {
-    const data = lcall("GetCardData", cidOrName);
+    const data = Lua.call("GetCardData", cidOrName);
     extension = data.extension;
     name = data.name;
   }
@@ -143,7 +143,7 @@ function getCardPicture(cidOrName) {
 }
 
 function getDelayedTrickPicture(name) {
-  const extension = lcall("GetCardExtensionByName", name);
+  const extension = Lua.call("GetCardExtensionByName", name);
   let ret = searchPkgResourceWithExtension(extension, "/image/card/delayedTrick/", name);
   if (!ret) {
     ret = searchPkgResource("/image/card/delayedTrick/", name);
@@ -155,7 +155,7 @@ function getDelayedTrickPicture(name) {
 
 
 function getEquipIcon(cid, icon) {
-  const data = lcall("GetCardData", cid);
+  const data = Lua.call("GetCardData", cid);
   const extension = data.extension;
   const name = icon || data.name;
   let ret = searchPkgResourceWithExtension(extension, "/image/card/equipIcon/", name);

@@ -44,34 +44,6 @@ callbacks["GetServerDetail"] = (j) => {
   }
 }
 
-callbacks["ErrorMsg"] = (jsonData) => {
-  let log;
-  try {
-    const a = JSON.parse(jsonData);
-    log = qsTr(a[0]).arg(a[1]);
-  } catch (e) {
-    log = qsTr(jsonData);
-  }
-
-  console.log("ERROR: " + log);
-  toast.show(log, 5000);
-  mainWindow.busy = false;
-}
-
-callbacks["ErrorDlg"] = (jsonData) => {
-  let log;
-  try {
-    const a = JSON.parse(jsonData);
-    log = qsTr(a[0]).arg(a[1]);
-  } catch (e) {
-    log = qsTr(jsonData);
-  }
-
-  console.log("ERROR: " + log);
-  Backend.showDialog("warning", log, jsonData);
-  mainWindow.busy = false;
-}
-
 callbacks["UpdatePackage"] = (jsonData) => sheduled_download = jsonData;
 
 callbacks["UpdateBusyText"] = (jsonData) => {
@@ -106,83 +78,14 @@ callbacks["BackToStart"] = (jsonData) => {
   tryUpdatePackage();
 }
 
-callbacks["SetServerSettings"] = (data) => {
-  const [ motd, hiddenPacks, enableBots ] = data;
-  config.serverMotd = motd;
-  config.serverHiddenPacks = hiddenPacks;
-  config.serverEnableBot = enableBots;
-};
-
 callbacks["EnterLobby"] = (jsonData) => {
-  // depth == 1 means the lobby page is not present in mainStack
-  // createClientPages();
   if (mainStack.depth === 1) {
-    // we enter the lobby successfully, so save password now.
-    config.lastLoginServer = config.serverAddr;
-    // config.savedPassword[config.serverAddr] = {
-    //   username: config.screenName,
-    //   password: config.cipherText,
-    //   key: config.aeskey,
-    //   shorten_password: config.cipherText.slice(0, 8)
-    // }
-    mainStack.push(lobby);
   } else {
     mainStack.pop();
   }
   mainWindow.busy = false;
   ClientInstance.notifyServer("RefreshRoomList", "");
-  config.saveConf();
-}
-
-callbacks["EnterRoom"] = (data) => {
-  // jsonData: int capacity, int timeout
-  config.roomCapacity = data[0];
-  config.roomTimeout = data[1] - 1;
-  const roomSettings = data[2];
-  config.enableFreeAssign = roomSettings.enableFreeAssign;
-  config.heg = roomSettings.gameMode.includes('heg_mode');
-  // mainStack.push(room);
-  mainStack.push(waitingRoom);
-  mainWindow.busy = false;
-}
-
-callbacks["UpdateRoomList"] = (data) => {
-  const current = mainStack.currentItem;  // should be lobby
-  if (mainStack.depth === 2) {
-    current.roomModel.clear();
-    const filtering = current.filtering;
-    data.forEach(room => {
-      const [roomId, roomName, gameMode, playerNum, capacity, hasPassword,
-        outdated] = room;
-      if (filtering) { // 筛选
-        const f = config.preferredFilter;
-        if ((f.name !== '' && !roomName.includes(f.name))
-          || (f.id !== '' && !roomId.toString().includes(f.id))
-          || (f.modes.length > 0 && !f.modes.includes(luatr(gameMode)))
-          || (f.full !== 2 &&
-            (f.full === 0 ? playerNum < capacity : playerNum >= capacity))
-          || (f.hasPassword !== 2 &&
-            (f.hasPassword === 0 ? !hasPassword : hasPassword))
-          // || (capacityList.length > 0 && !capacityList.includes(capacity))
-        ) return;
-      }
-      current.roomModel.append({
-        roomId, roomName, gameMode, playerNum, capacity,
-        hasPassword, outdated,
-      });
-    });
-    current.filtering = false;
-  }
-}
-
-callbacks["UpdatePlayerNum"] = (data) => {
-  const current = mainStack.currentItem;  // should be lobby
-  if (mainStack.depth === 2) {
-    const l = data[0];
-    const s = data[1];
-    current.lobbyPlayerNum = l;
-    current.serverPlayerNum = s;
-  }
+  Config.saveConf();
 }
 
 callbacks["Chat"] = (data) => {
@@ -190,11 +93,11 @@ callbacks["Chat"] = (data) => {
   const current = mainStack.currentItem;  // lobby or room
   const pid = data.sender;
   const userName = data.userName;
-  const general = luatr(data.general);
+  const general = Lua.tr(data.general);
   const time = data.time;
   const msg = data.msg;
 
-  if (config.blockedUsers.indexOf(userName) !== -1) {
+  if (Config.blockedUsers.indexOf(userName) !== -1) {
     return;
   }
 
@@ -213,5 +116,5 @@ callbacks["ServerMessage"] = (jsonData) => {
 }
 
 callbacks["AddTotalGameTime"] = (jsonData) => {
-  config.totalTime++;
+  Config.totalTime++;
 }

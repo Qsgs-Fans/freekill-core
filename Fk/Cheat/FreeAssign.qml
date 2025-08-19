@@ -3,7 +3,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Fk.RoomElement
+import Fk.Components.LunarLTK
 
 Item {
   id: root
@@ -21,12 +21,12 @@ Item {
       ToolButton {
         opacity: stack.depth > 1 ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 100 } }
-        text: luatr("Back")
+        text: Lua.tr("Back")
         onClicked: stack.pop()
       }
 
       Label {
-        text: luatr("Enable free assign")
+        text: Lua.tr("Enable free assign")
         elide: Label.ElideRight
         horizontalAlignment: Qt.AlignHCenter
         verticalAlignment: Qt.AlignVCenter
@@ -47,7 +47,7 @@ Item {
         onEditingFinished: {
           if (text !== "") {
             if (stack.depth > 1) stack.pop();
-            generalModel = lcall("SearchAllGenerals", word.text);
+            generalModel = Lua.call("SearchAllGenerals", word.text);
             stack.push(generalList);
             word.text = "";
           }
@@ -55,11 +55,11 @@ Item {
       }
 
       ToolButton {
-        text: luatr("Search")
+        text: Lua.tr("Search")
         enabled: word.text !== ""
         onClicked: {
           if (stack.depth > 1) stack.pop();
-          generalModel = lcall("SearchAllGenerals", word.text);
+          generalModel = Lua.call("SearchAllGenerals", word.text);
           stack.push(generalList);
           word.text = "";
         }
@@ -96,13 +96,13 @@ Item {
         height: 40
 
         Text {
-          text: luatr(name)
+          text: Lua.tr(name)
           color: "#E4D5A0"
           anchors.centerIn: parent
         }
 
         onClicked: {
-          generalModel = lcall("GetGenerals", packages.get(index).name);
+          generalModel = Lua.call("GetGenerals", packages.get(index).name);
           stack.push(generalList);
         }
       }
@@ -141,7 +141,7 @@ Item {
   }
 
   function load() {
-    const packs = lcall("GetAllGeneralPack");
+    const packs = Lua.call("GetAllGeneralPack");
     packs.forEach((name) => packages.append({ name: name }));
   }
 

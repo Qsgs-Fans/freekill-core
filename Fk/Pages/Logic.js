@@ -3,13 +3,13 @@
 callbacks["UpdateAvatar"] = (jsonData) => {
   mainWindow.busy = false;
   Self.avatar = jsonData;
-  toast.show(luatr("Update avatar done."));
+  toast.show(Lua.tr("Update avatar done."));
 }
 
 callbacks["UpdatePassword"] = (jsonData) => {
   mainWindow.busy = false;
   if (jsonData === "1")
-    toast.show(luatr("Update password done."));
+    toast.show(Lua.tr("Update password done."));
   else
-    toast.show(luatr("Old password wrong!"), 5000);
+    toast.show(Lua.tr("Old password wrong!"), 5000);
 }

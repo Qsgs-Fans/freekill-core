@@ -2,10 +2,9 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Layouts
-import QtQuick.Dialogs
-import Fk.ReplayElement
-import Fk.Common
+
+import Fk
+import Fk.Components.Replay
 import Fk.Widgets as W
 
 Item {
@@ -23,7 +22,7 @@ Item {
       height: 40
 
       Text {
-        text: luatr(modelData)
+        text: Lua.tr(modelData)
         anchors.centerIn: parent
         font.pixelSize: 20
       }
@@ -49,11 +48,11 @@ Item {
   }
 
   Button {
-    text: luatr("Quit")
+    text: Lua.tr("Quit")
     anchors.top: parent.top
     anchors.right: parent.right
     onClicked: {
-      mainStack.pop();
+      App.quitPage();
     }
   }
 }

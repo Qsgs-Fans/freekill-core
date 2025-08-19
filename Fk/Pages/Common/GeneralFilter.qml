@@ -3,6 +3,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Fk
 
 Flickable {
   id: root
@@ -41,7 +42,7 @@ Flickable {
         anchors.rightMargin: 8
         spacing: 16
         Text {
-          text: luatr("Name")
+          text: Lua.tr("Name")
           font.bold: true
           font.pixelSize: 14
         }
@@ -51,7 +52,7 @@ Flickable {
           font.pixelSize: 18
           Layout.rightMargin: 16
           Layout.fillWidth: true
-          text: config.preferredFilter.name
+          text: Config.preferredFilter.name
         }
       }
 
@@ -60,7 +61,7 @@ Flickable {
         anchors.rightMargin: 8
         spacing: 16
         Text {
-          text: luatr("Title")
+          text: Lua.tr("Title")
           font.bold: true
           font.pixelSize: 14
         }
@@ -70,7 +71,7 @@ Flickable {
           font.pixelSize: 18
           Layout.rightMargin: 16
           Layout.fillWidth: true
-          text: config.preferredFilter.id
+          text: Config.preferredFilter.id
         }
       }
     }
@@ -90,7 +91,7 @@ Flickable {
         height: kingdomColumn.kingdomShown ? 32 : 36
         CheckBox {
           id: parentKingdomBox
-          text: luatr("Kingdom")
+          text: Lua.tr("Kingdom")
           font.bold: true
           checkState: childKingdom.checkState
           Layout.minimumWidth: 100
@@ -119,7 +120,7 @@ Flickable {
           id: kingdomStates
 
           CheckBox {
-            text: luatr(modelData)
+            text: Lua.tr(modelData)
             leftPadding: indicator.width
             ButtonGroup.group: childKingdom
           }
@@ -142,7 +143,7 @@ Flickable {
         height: maxHpColumn.maxHpShown ? 32 : 36
         CheckBox {
           id: parentMaxHpBox
-          text: luatr("MaxHp")
+          text: Lua.tr("MaxHp")
           font.bold: true
           checkState: childMaxHp.checkState
           Layout.minimumWidth: 100
@@ -194,7 +195,7 @@ Flickable {
         height: hpColumn.hpShown ? 32 : 36
         CheckBox {
           id: parentHpBox
-          text: luatr("Hp")
+          text: Lua.tr("Hp")
           font.bold: true
           checkState: childHp.checkState
           Layout.minimumWidth: 100
@@ -246,7 +247,7 @@ Flickable {
         height: genderColumn.genderShown ? 32 : 36
         CheckBox {
           id: parentGenderBox
-          text: luatr("Gender")
+          text: Lua.tr("Gender")
           font.bold: true
           checkState: childGender.checkState
           Layout.minimumWidth: 100
@@ -276,7 +277,7 @@ Flickable {
           model: ["male", "female", "bigender", "agender"]
 
           CheckBox {
-            text: luatr(modelData)
+            text: Lua.tr(modelData)
             leftPadding: indicator.width
             ButtonGroup.group: childGender
           }
@@ -293,7 +294,7 @@ Flickable {
         anchors.rightMargin: 8
         spacing: 16
         Text {
-          text: luatr("Skill Name")
+          text: Lua.tr("Skill Name")
           font.bold: true
           font.pixelSize: 14
         }
@@ -303,7 +304,7 @@ Flickable {
           font.pixelSize: 18
           Layout.rightMargin: 16
           Layout.fillWidth: true
-          text: config.preferredFilter.name
+          text: Config.preferredFilter.name
         }
       }
 
@@ -312,7 +313,7 @@ Flickable {
         anchors.rightMargin: 8
         spacing: 16
         Text {
-          text: luatr("Skill Description")
+          text: Lua.tr("Skill Description")
           font.bold: true
           font.pixelSize: 14
         }
@@ -322,7 +323,7 @@ Flickable {
           font.pixelSize: 18
           Layout.rightMargin: 16
           Layout.fillWidth: true
-          text: config.preferredFilter.id
+          text: Config.preferredFilter.id
         }
       }
     }
@@ -335,7 +336,7 @@ Flickable {
         anchors.rightMargin: 8
         spacing: 8
         Text {
-          text: luatr("Designer")
+          text: Lua.tr("Designer")
           font.bold: true
           font.pixelSize: 14
         }
@@ -345,7 +346,7 @@ Flickable {
           font.pixelSize: 18
           Layout.rightMargin: 16
           Layout.fillWidth: true
-          text: config.preferredFilter.name
+          text: Config.preferredFilter.name
         }
       }
 
@@ -354,7 +355,7 @@ Flickable {
         anchors.rightMargin: 8
         spacing: 8
         Text {
-          text: luatr("Voice Actor")
+          text: Lua.tr("Voice Actor")
           font.bold: true
           font.pixelSize: 14
         }
@@ -364,7 +365,7 @@ Flickable {
           font.pixelSize: 18
           Layout.rightMargin: 16
           Layout.fillWidth: true
-          text: config.preferredFilter.name
+          text: Config.preferredFilter.name
         }
       }
 
@@ -373,7 +374,7 @@ Flickable {
         anchors.rightMargin: 8
         spacing: 8
         Text {
-          text: luatr("Illustrator")
+          text: Lua.tr("Illustrator")
           font.bold: true
           font.pixelSize: 14
         }
@@ -383,7 +384,7 @@ Flickable {
           font.pixelSize: 18
           Layout.rightMargin: 16
           Layout.fillWidth: true
-          text: config.preferredFilter.name
+          text: Config.preferredFilter.name
         }
       }
 
@@ -392,7 +393,7 @@ Flickable {
         anchors.rightMargin: 8
         spacing: 8
         Text {
-          text: luatr("Audio Text")
+          text: Lua.tr("Audio Text")
           font.bold: true
           font.pixelSize: 14
         }
@@ -402,7 +403,7 @@ Flickable {
           font.pixelSize: 18
           Layout.rightMargin: 16
           Layout.fillWidth: true
-          text: config.preferredFilter.id
+          text: Config.preferredFilter.id
         }
       }
     }
@@ -414,14 +415,14 @@ Flickable {
       // Layout.fillWidth: true
 
       Button {
-        text: luatr("Clear")
+        text: Lua.tr("Clear")
         onClicked: {
           root.finished(false);
         }
       }
 
       Button {
-        text: luatr("OK")
+        text: Lua.tr("OK")
         onClicked: {
           root.finished(output());
         }
@@ -429,7 +430,7 @@ Flickable {
     }
 
     Component.onCompleted: {
-      const properties = lcall("GetAllProperties");
+      const properties = Lua.call("GetAllProperties");
       kingdomStates.model = properties.kingdoms;
       maxHpStates.model = properties.maxHps;
       hpStates.model = properties.hps;

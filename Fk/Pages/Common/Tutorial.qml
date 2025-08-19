@@ -2,7 +2,8 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Layouts
+
+import Fk
 
 Rectangle {
   id: root
@@ -54,7 +55,7 @@ Rectangle {
 
     Button {
       text: qsTr("Skip")
-      onClicked: mainStack.pop();
+      onClicked: App.quitPage();
     }
 
     Button {
@@ -68,7 +69,7 @@ Rectangle {
       enabled: view.currentIndex + 1 <= total
       onClicked: {
         if (view.currentIndex + 1 == total) {
-          mainStack.pop();
+          App.quitPage();
         } else {
           view.currentIndex++
         }
