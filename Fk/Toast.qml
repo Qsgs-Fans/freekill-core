@@ -23,34 +23,37 @@ Rectangle {
 
   opacity: 0
 
+  signal finish()
+
   Text {
     id: message
     horizontalAlignment: Text.AlignHCenter
     anchors.centerIn: parent
   }
 
-  SequentialAnimation on opacity {
+  SequentialAnimation {
     id: animation
     running: false
 
-
     NumberAnimation {
+      target: root.opacity
       to: .9
-      duration: fadeTime
+      duration: root.fadeTime
     }
 
     PauseAnimation {
-      duration: time - 2 * fadeTime
+      duration: root.time - 2 * root.fadeTime
     }
 
     NumberAnimation {
+      target: root.opacity
       to: 0
-      duration: fadeTime
+      duration: root.fadeTime
     }
 
     onRunningChanged: {
       if (!running) {
-        toast.model.remove(index);
+        root.finish();
       }
     }
   }

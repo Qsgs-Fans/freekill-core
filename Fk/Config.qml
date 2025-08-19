@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+pragma Singleton
 import QtQuick
 
 QtObject {
@@ -72,9 +73,9 @@ QtObject {
   property list<string> blockedUsers: []
   property int totalTime: 0 // FIXME: only for notifying
 
-  onObservingChanged: lcall("SetObserving", observing);
-  onReplayingChanged: lcall("SetReplaying", replaying);
-  onReplayingShowCardsChanged: lcall("SetReplayingShowCards", replayingShowCards);
+  onObservingChanged: Lua.call("SetObserving", observing);
+  onReplayingChanged: Lua.call("SetReplaying", replaying);
+  onReplayingShowCardsChanged: Lua.call("SetReplayingShowCards", replayingShowCards);
 
   // onDisabledGeneralsChanged: {
   //   disableGeneralSchemes[disableSchemeIdx] = disabledGenerals;
@@ -116,21 +117,20 @@ QtObject {
     return true;
   }
 
-
   function loadConf() {
-    conf = JSON.parse(Backend.loadConf());
+    conf = JSON.parse(Cpp.loadConf());
     winX = conf.winX ?? 100;
     winY = conf.winY ?? 100;
-    winWidth = conf.winWidth ?? 960;
-    winHeight = conf.winHeight ?? 540;
+    winWidth = conf.winWidth || 960;
+    winHeight = conf.winHeight || 540;
     lastLoginServer = conf.lastLoginServer ?? "127.0.0.1";
     //savedPassword = conf.savedPassword ?? {};
     favoriteServers = conf.favoriteServers ?? [];
-    lobbyBg = conf.lobbyBg ?? AppPath + "/image/background";
-    roomBg = conf.roomBg ?? AppPath + "/image/gamebg";
-    bgmFile = conf.bgmFile ?? AppPath + "/audio/system/bgm.mp3";
+    lobbyBg = conf.lobbyBg ?? Cpp.path + "/image/background";
+    roomBg = conf.roomBg ?? Cpp.path + "/image/gamebg";
+    bgmFile = conf.bgmFile ?? Cpp.path + "/audio/system/bgm.mp3";
     language = conf.language ?? (() => {
-      let ret = SysLocale;
+      let ret = Cpp.locale;
       if (ret.startsWith('zh_')) {
         return 'zh_CN';
       } else if (ret.startsWith('vi_')) {
@@ -150,8 +150,8 @@ QtObject {
       full : 2, // 满员，0满，1未满，2不限
       hasPassword : 2, // 密码，0有，1无，2不限
     };
-    ladyImg = conf.ladyImg ?? AppPath + "/image/lady";
-    Backend.volume = conf.effectVolume ?? 50.;
+    ladyImg = conf.ladyImg ?? Cpp.path + "/image/lady";
+    Cpp.setVolume(conf.effectVolume ?? 50.);
     bgmVolume = conf.bgmVolume ?? 50.;
     disableMsgAudio = conf.disableMsgAudio ?? false;
     disableGameOverAudio = conf.disableGameOverAudio ?? false;
@@ -186,10 +186,8 @@ QtObject {
   }
 
   function saveConf() {
-    conf.winX = realMainWin.x;
-    conf.winY = realMainWin.y;
-    conf.winWidth = realMainWin.width;
-    conf.winHeight = realMainWin.height;
+    conf.winWidth = winWidth;
+    conf.winHeight = winHeight;
     conf.lastLoginServer = lastLoginServer;
     //conf.savedPassword = savedPassword;
     conf.favoriteServers = favoriteServers;
@@ -203,7 +201,7 @@ QtObject {
     conf.preferredFilter = preferredFilter;
     conf.ladyImg = ladyImg;
     conf.preferredGeneralNum = preferredGeneralNum;
-    conf.effectVolume = Backend.volume;
+    conf.effectVolume = Cpp.volume();
     conf.bgmVolume = bgmVolume;
     conf.disableMsgAudio = disableMsgAudio;
     conf.disableGameOverAudio = disableGameOverAudio;
@@ -231,6 +229,6 @@ QtObject {
     conf.blockedUsers = blockedUsers;
     conf.enabledResourcePacks = enabledResourcePacks;
 
-    Backend.saveConf(JSON.stringify(conf, undefined, 2));
+    Cpp.saveConf(JSON.stringify(conf, undefined, 2));
   }
 }

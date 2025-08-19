@@ -31,6 +31,15 @@ ListView {
   }
 
   delegate: Toast {
+    required property string text
+    required property real duration
+    required property var model
+    required property int index
+
+    onFinish: {
+      model.remove(index);
+    }
+
     Component.onCompleted: {
       show(text, duration);
     }
