@@ -1,0 +1,3 @@
+module Fk.BoardWidgets
+
+PageBase 1.0 PageBase.qml

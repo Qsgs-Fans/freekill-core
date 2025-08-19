@@ -12,5 +12,6 @@ PackageManage 1.0 PackageManage.qml
 PackageDownload 1.0 PackageDownload.qml
 ResourcePackManage 1.0 ResourcePackManage.qml
 Room 1.0 Room.qml
+WaitingRoom 1.0 WaitingRoom.qml
 Replay 1.0 Replay.qml
 TileButton 1.0 TileButton.qml

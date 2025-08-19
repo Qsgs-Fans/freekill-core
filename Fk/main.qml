@@ -27,5 +27,4 @@ Window {
   function sqlquery(s) {
     return Cpp.sqlquery(s);
   }
-
 }

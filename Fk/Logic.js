@@ -141,7 +141,8 @@ callbacks["EnterRoom"] = (data) => {
   const roomSettings = data[2];
   config.enableFreeAssign = roomSettings.enableFreeAssign;
   config.heg = roomSettings.gameMode.includes('heg_mode');
-  mainStack.push(room);
+  // mainStack.push(room);
+  mainStack.push(waitingRoom);
   mainWindow.busy = false;
 }
 
