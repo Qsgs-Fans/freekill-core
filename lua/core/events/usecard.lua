@@ -711,12 +711,15 @@ function CardEffectData:setUnoffsetable(target)
 end
 
 --- 令此牌对一名角色无效
----@param target? ServerPlayer|ServerPlayer[]
+---@param target? ServerPlayer|ServerPlayer[] @ 无效目标，不填则为当前目标
 function CardEffectData:setNullified(target)
-  if self.use == nil then return end
   target = target or { self.to }
   if (not target[1]) and target.class then target = { target } end
   if #target == 0 then return end
+  if target[1] == self.to then -- for delayedTrick that has no use parent
+    self.nullified = true
+  end
+  if self.use == nil then return end
   self.use.nullifiedTargets = self.use.nullifiedTargets or {}
   table.insertTableIfNeed(self.use.nullifiedTargets, target)
 end
