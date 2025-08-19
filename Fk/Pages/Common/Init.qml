@@ -3,6 +3,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import Fk
 import Fk.Widgets as W
 
 Item {
@@ -30,7 +31,7 @@ Item {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 12
         width: parent.width
-        source: AppPath + "/image/widelogo"
+        source: Cpp.path + "/image/widelogo"
       }
     }
 
@@ -60,19 +61,18 @@ Item {
           Layout.fillWidth: true
           text: qsTr("Console start")
           onClicked: {
-            config.serverAddr = "127.0.0.1";
-            config.serverPort = 9527;
-            // const serverCfg = config.savedPassword["127.0.0.1"] ?? {};
-            const serverCfg = config.findFavorite("127.0.0.1", 9527);
-            config.screenName = serverCfg?.username ?? "player";
-            config.password = serverCfg?.password ?? "1234";
+            Config.serverAddr = "127.0.0.1";
+            Config.serverPort = 9527;
+            const serverCfg = Config.findFavorite("127.0.0.1", 9527);
+            Config.screenName = serverCfg?.username ?? "player";
+            Config.password = serverCfg?.password ?? "1234";
             mainWindow.busy = true;
-            config.addFavorite(config.serverAddr, config.serverPort, "",
-              config.screenName, config.password);
+            Config.addFavorite(Config.serverAddr, Config.serverPort, "",
+              Config.screenName, Config.password);
             Backend.startServer(9527);
 
             Backend.joinServer("127.0.0.1", 9527);
-            ClientInstance.setLoginInfo(config.screenName, config.password);
+            ClientInstance.setLoginInfo(Config.screenName, Config.password);
           }
         }
 
@@ -89,7 +89,7 @@ Item {
           Layout.fillWidth: true
           text: qsTr("PackageManage")
           onClicked: {
-            mainStack.push(packageManage);
+            Mediator.notify(root, Command.PushPage, Qt.createComponent("Fk.Pages.Common", "PackageManage"))
           }
         }
 
@@ -97,8 +97,7 @@ Item {
           Layout.fillWidth: true
           text: qsTr("管理资源包")
           onClicked: {
-            mainStack.push(resourcePackManage);
-            // 资源包管理界面后续实现
+            Mediator.notify(root, Command.PushPage, Qt.createComponent("Fk.Pages.Common", "ResourcePackManage"))
           }
         }
 
@@ -106,7 +105,7 @@ Item {
           Layout.fillWidth: true
           text: qsTr("Quit Game")
           onClicked: {
-            config.saveConf();
+            Config.saveConf();
             Qt.quit();
           }
         }
@@ -117,7 +116,7 @@ Item {
         anchors.bottom: parent.bottom
         anchors.leftMargin: 12
         anchors.bottomMargin: 12
-        text: qsTr("FreeKill") + " v" + FkVersion
+        text: qsTr("FreeKill") + " v" + Cpp.version
         font.pixelSize: 16
         font.bold: true
       }
@@ -135,8 +134,7 @@ Item {
 
         W.TapHandler {
           onTapped: {
-            mainStack.push(Qt.createComponent("../Tutorial.qml")
-                           .createObject());
+            Mediator.notify(root, Command.PushPage, Qt.createComponent("Fk.Pages.Common", "Tutorial"))
           }
         }
       }
@@ -223,8 +221,6 @@ Item {
   }
 
   Component.onCompleted: {
-    config.loadConf();
-
-    lady.source = config.ladyImg;
+    lady.source = Config.ladyImg;
   }
 }

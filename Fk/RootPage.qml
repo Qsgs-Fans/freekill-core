@@ -29,31 +29,8 @@ W.PageBase {
   StackView {
     id: mainStack
     visible: !root.busy
-    // If error occurs during loading initialItem
-    //   the program will fall into "polish()" loop
-    // initialItem: init
     anchors.fill: parent
   }
-
-  /*
-  Component { id: init; Init {} }
-  Component { id: packageDownload; PackageDownload {} }
-  Component { id: packageManage; PackageManage {} }
-  Component { id: resourcePackManage; ResourcePackManage {} }
-  Component { id: lobby; Lobby {} }
-  Component { id: generalsOverview; GeneralsOverview {} }
-  Component { id: cardsOverview; CardsOverview {} }
-  Component { id: modesOverview; ModesOverview {} }
-  Component { id: replay; Replay {} }
-  Component { id: room; Room {} }
-  Component { id: aboutPage; About {} }
-
-  property alias generalsOverviewPage: generalsOverview
-  property alias cardsOverviewPage: cardsOverview
-  property alias modesOverviewPage: modesOverview
-  property alias aboutPage: aboutPage
-  property alias replayPage: replay
-  */
 
   BusyIndicator {
     id: busyIndicator
@@ -130,27 +107,40 @@ W.PageBase {
     }
   }
 
-  ToastManager {}
+  ToastManager {
+    id: toast
+  }
 
   Connections {
-    target: Backend
-    function onNotifyUI(command, jsonData) {
-      if (command === "ErrorDialog") {
-        errDialog.txt = jsonData;
-        errDialog.open();
+    target: Mediator
+    function onCommandGot(sender, command, data) {
+      for (let i = 0; i < mainStack.depth; i++) {
+        const page = mainStack.get(i, StackView.DontLoad) as W.PageBase;
+        if (!page) continue;
+        if (page.canHandleCommand(command)) {
+          page.handleCommand(sender, command, data);
+          return;
+        }
+      }
+
+      if (root.canHandleCommand(command)) {
+        root.handleCommand(sender, command, data);
         return;
       }
-      root.handleMessage(command, jsonData);
+      console.warn("Unknown command " + command + "!");
     }
   }
 
-  function handleMessage(command, jsonData) {
-    const cb = callbacks[command]
-    if (typeof(cb) === "function") {
-      cb(jsonData);
-    } else {
-      callbacks["ErrorMsg"]("Unknown command " + command + "!");
-    }
+  function pushPage(sender, data) {
+    mainStack.push(data);
+  }
+
+  function popPage(sender, data) {
+    mainStack.pop();
+  }
+
+  function showToast(sender, data) {
+    toast.show(data);
   }
 
   Component.onCompleted: {
@@ -158,5 +148,11 @@ W.PageBase {
     confLoaded();
 
     tipList = Cpp.loadTips();
+
+    addCallback(Command.PushPage, pushPage)
+    addCallback(Command.PopPage, popPage)
+    addCallback(Command.ShowToast, showToast)
+
+    mainStack.push(Qt.createComponent("Fk.Pages.Common", "Init"));
   }
 }

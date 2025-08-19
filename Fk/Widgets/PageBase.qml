@@ -22,7 +22,7 @@ Item {
     return cmd in priv.callbacks;
   }
 
-  function handleCommand(cmd, data) {
-    priv.callbacks[cmd](root, data);
+  function handleCommand(sender, cmd, data) {
+    priv.callbacks[cmd](sender, data);
   }
 }

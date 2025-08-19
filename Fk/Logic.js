@@ -212,8 +212,6 @@ callbacks["ServerMessage"] = (jsonData) => {
   current.sendDanmaku('<font color="grey"><b>[Server] </b></font>' + jsonData);
 }
 
-callbacks["ShowToast"] = (j) => toast.show(j);
-
 callbacks["AddTotalGameTime"] = (jsonData) => {
   config.totalTime++;
 }

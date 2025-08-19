@@ -17,7 +17,7 @@ Window {
   onHeightChanged: Config.winHeight = height;
 
   RootPage {
-    id: rootPage
+    id: mainWindow
 
     width: (parent.width / parent.height < 1200 / 540) ? 1200 : 540 * parent.width / parent.height
     height: (parent.width / parent.height > 1200 / 540) ? 540 : 1200 * parent.height / parent.width
@@ -40,7 +40,7 @@ Window {
     onButtonClicked: function (button, role) {
       switch (button) {
         case MessageDialog.Ok: {
-          rootPage.closing = true;
+          mainWindow.closing = true;
           Config.saveConf();
           Cpp.quitLobby(false);
           root.close();
@@ -54,13 +54,14 @@ Window {
   }
 
   onClosing: (closeEvent) => {
-    if (!rootPage.closing) {
+    if (!mainWindow.closing) {
       closeEvent.accepted = false;
       exitMessageDialog.open();
     }
   }
 
   // 唉兼容
+  property var config: Config
   function lcall(funcName, ...params) {
     return Lua.call(funcName, ...params);
   }

@@ -1,5 +1,6 @@
 pragma Singleton
 import QtQuick
+import Fk
 
 // 这个文件的警告就别管了。本身就是给C++乱用contextProperty擦屁股
 
