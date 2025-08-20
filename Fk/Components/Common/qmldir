@@ -1,4 +1,5 @@
-module Fk.Common
+# 权宜之计 后面杀了
+module Fk.Components.Common
 ChatBox 1.0 ChatBox.qml
 LogEdit 1.0 LogEdit.qml
 Avatar 1.0 Avatar.qml

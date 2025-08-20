@@ -7,7 +7,7 @@ import QtQuick.Layouts
 
 import Fk
 import Fk.Components.Lobby
-import Fk.Common
+import Fk.Components.Common
 import Fk.Pages
 import Fk.Widgets as W
 

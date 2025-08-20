@@ -6,7 +6,7 @@ import QtQuick.Controls
 import Qt.labs.qmlmodels
 import Fk
 import Fk.Pages
-import Fk.Common
+import Fk.Components.Common
 
 GraphicsBox {
   property string winner: "tobechanged"

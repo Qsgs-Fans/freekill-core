@@ -4,7 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import Fk
-import Fk.Common
+import Fk.Components.Common
 import Fk.Widgets as W
 
 Item {

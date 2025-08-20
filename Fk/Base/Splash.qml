@@ -2,6 +2,8 @@
 
 import QtQuick
 import QtQuick.Layouts
+/
+import Fk
 
 Rectangle {
   id: splash
@@ -25,7 +27,7 @@ Rectangle {
 
     Image {
       id: logo
-      source: AppPath + "/image/icon.png"
+      source: Cpp.path + "/image/icon.png"
       width: 96
       height: width
       opacity: 0

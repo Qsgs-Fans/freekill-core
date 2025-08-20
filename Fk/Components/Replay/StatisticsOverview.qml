@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import Fk
-import Fk.Common
+import Fk.Components.Common
 
 Item {
   id: root

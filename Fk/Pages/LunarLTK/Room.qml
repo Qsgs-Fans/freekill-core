@@ -7,7 +7,7 @@ import QtQuick.Layouts
 import QtMultimedia
 import Fk
 import Fk.Pages
-import Fk.Common
+import Fk.Components.Common
 import Fk.Components.LunarLTK
 import Fk.Components.LunarLTK.Photo as PhotoElement
 import Fk.Widgets as W
@@ -1297,7 +1297,7 @@ W.PageBase {
         case "Flower": {
           const fromId = pid;
           const toId = parseInt(splited[1]);
-          const component = Qt.createComponent("../ChatAnim/" + type + ".qml");
+          const component = Qt.createComponent("Fk.Components.LunarLTK.ChatAnim", type);
           //if (component.status !== Component.Ready)
           //  return false;
 
@@ -1404,7 +1404,7 @@ W.PageBase {
   }
 
   function startCheat(type, data) {
-    cheatLoader.sourceComponent = Qt.createComponent(`../Cheat/${type}.qml`);
+    cheatLoader.sourceComponent = Qt.createComponent("Fk.Components.LunarLTK.Cheat", type);
     cheatLoader.item.extra_data = data;
     cheatLoader.open();
   }
@@ -1527,7 +1527,7 @@ W.PageBase {
         switch (data.type) {
         case "combo":
           skillInteraction.sourceComponent =
-            Qt.createComponent("../SkillInteraction/SkillCombo.qml");
+            Qt.createComponent("Fk.Components.LunarLTK.SkillInteraction", "SkillCombo");
           skillInteraction.item.skill = skill_name;
           skillInteraction.item.default_choice = data["default"];
           skillInteraction.item.choices = data.choices;
@@ -1537,7 +1537,7 @@ W.PageBase {
           break;
         case "spin":
           skillInteraction.sourceComponent =
-            Qt.createComponent("../SkillInteraction/SkillSpin.qml");
+            Qt.createComponent("Fk.Components.LunarLTK.SkillInteraction", "SkillSpin");
           skillInteraction.item.skill = skill_name;
           skillInteraction.item.from = data.from;
           skillInteraction.item.to = data.to;

@@ -1,22 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-/*
-var generalsOverviewPage, cardsOverviewPage;
-var clientPageCreated = false;
-function createClientPages() {
-  if (!clientPageCreated) {
-    clientPageCreated = true;
-
-    generalsOverviewPage = generalsOverview.createObject(mainWindow);
-    cardsOverviewPage = cardsOverview.createObject(mainWindow);
-
-    mainWindow.generalsOverviewPage = generalsOverviewPage;
-    mainWindow.cardsOverviewPage = cardsOverviewPage;
-  }
-}
-*/
-
-var callbacks = {};
+let callbacks = {};
 
 callbacks["ServerDetected"] = (j) => {
   const serverDialog = mainStack.currentItem.serverDialog;

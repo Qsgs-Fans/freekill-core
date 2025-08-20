@@ -3,7 +3,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Fk.Common
+import Fk.Components.Common
 import Fk.Pages
 import Fk.Components.LunarLTK
 

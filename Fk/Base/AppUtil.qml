@@ -1,5 +1,6 @@
 pragma Singleton
 import QtQuick
+import Fk
 
 // 一些Qml代码可能常用到的封装函数 省得写一堆notify
 

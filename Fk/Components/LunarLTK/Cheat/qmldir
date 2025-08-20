@@ -1,4 +1,4 @@
-module Fk.Cheat
+module Fk.Components.LunarLTK.Cheat
 CardDetail 1.0 CardDetail.qml
 FreeAssign 1.0 FreeAssign.qml
 GeneralDetail 1.0 GeneralDetail.qml

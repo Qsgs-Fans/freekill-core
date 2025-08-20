@@ -1,0 +1,9 @@
+module Fk.Base
+
+singleton Config 1.0 Config.qml
+singleton Mediator 1.0 Mediator.qml
+singleton App 1.0 AppUtil.qml
+
+RootPage 1.0 RootPage.qml
+ToastManager 1.0 ToastManager.qml
+Toast 1.0 Toast.qml

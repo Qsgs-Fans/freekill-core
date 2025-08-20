@@ -1,15 +1,10 @@
 module Fk
 
-singleton Config 1.0 Config.qml
-singleton Mediator 1.0 Mediator.qml
-singleton App 1.0 AppUtil.qml
+import Fk.Base auto
 
-Cpp 1.0 cpp-util.js
-Lua 1.0 lua-util.js
-SkinBank 1.0 skin-bank.js
-Command 1.0 command.mjs
-Util 1.0 util.js
-
-internal RootPage RootPage.qml
-internal ToastManager ToastManager.qml
-internal Toast Toast.qml
+# 这是个Qt Bug *.mjs文件必须在根目录（至少得在根目录的qmldir下） 挺sb的
+Command 1.0 Base/command.mjs
+Cpp 1.0 Base/cpp-util.js
+Lua 1.0 Base/lua-util.js
+SkinBank 1.0 Base/skin-bank.js
+Util 1.0 Base/util.js
