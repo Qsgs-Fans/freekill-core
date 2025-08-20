@@ -209,9 +209,15 @@ function ReqPlayCard:selectSkill(skill, data)
 end
 
 function ReqPlayCard:update(elemType, id, action, data)
-  if elemType == "Button" and id == "End" then
-    self:doEndButton()
-    return true
+  if elemType == "Button" then
+    if id == "End" then
+      self:doEndButton()
+      return true
+    end
+    if id == "Cancel" then
+      self:doCancelButton()
+      return false
+    end
   elseif elemType == "SpecialSkills" then
     self:selectSpecialUse(data)
   end
