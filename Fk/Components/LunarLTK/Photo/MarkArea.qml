@@ -2,6 +2,7 @@
 
 import QtQuick
 import QtQuick.Layouts
+import Fk
 import Fk.Widgets as W
 
 Item {
@@ -44,7 +45,7 @@ Item {
           }
           return `${name} ${value}`;
         }
-        font.family: fontLibian.name
+        font.family: Config.libianName
         font.pixelSize: 22
         font.letterSpacing: -0.6
         color: "white"

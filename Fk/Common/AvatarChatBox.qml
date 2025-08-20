@@ -144,7 +144,7 @@ Rectangle {
           x: 6; y: 6
           text: msg
           wrapMode: Text.WrapAnywhere
-          font.family: fontLibian.name
+          font.family: Config.libianName
           font.pixelSize: 16
         }
       }

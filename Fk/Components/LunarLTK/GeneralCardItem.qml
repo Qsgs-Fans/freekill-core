@@ -181,7 +181,7 @@ CardItem {
     text: name !== "" ? Lua.tr(name) : "nil"
     visible: Lua.tr(name).replace(/<\/?[^>]+(>|$)/g, "").length <= 6 && detailed && known
     color: "white"
-    font.family: fontLibian.name
+    font.family: Config.libianName
     font.pixelSize: 18
     lineHeight: Math.max(1.4 - lineCount / 8, 0.6)
     style: Text.Outline
@@ -196,7 +196,7 @@ CardItem {
     text: Lua.tr(name)
     visible: Lua.tr(name).replace(/<\/?[^>]+(>|$)/g, "").length > 6 && detailed && known
     color: "white"
-    font.family: fontLibian.name
+    font.family: Config.libianName
     font.pixelSize: 18
     style: Text.Outline
   }
@@ -218,7 +218,7 @@ CardItem {
     Text {
       text: Lua.tr(pkgName)
       x: 2; y: 1
-      font.family: fontLibian.name
+      font.family: Config.libianName
       font.pixelSize: 14
       color: "white"
       style: Text.Outline

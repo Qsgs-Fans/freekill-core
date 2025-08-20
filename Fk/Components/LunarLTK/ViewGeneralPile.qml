@@ -2,6 +2,7 @@
 
 import QtQuick
 import QtQuick.Layouts
+import Fk
 
 ColumnLayout {
   id: root

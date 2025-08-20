@@ -25,7 +25,7 @@ callbacks["ServerDetected"] = (j) => {
   }
   const item = serverDialog.item;
   if (item) {
-    // toast.show(qsTr("Detected Server %1").arg(j.slice(7)), 10000);
+    // App.showToast(qsTr("Detected Server %1").arg(j.slice(7)), 10000);
     item.addLANServer(j.slice(7))
   }
 }
@@ -51,7 +51,7 @@ callbacks["UpdateBusyText"] = (jsonData) => {
 }
 
 callbacks["DownloadComplete"] = () => {
-  mainWindow.busy = false;
+  App.setBusy(false);
   mainStack.currentItem.downloadComplete(); // should be pacman page
 }
 
@@ -72,20 +72,10 @@ callbacks["PackageTransferProgress"] = (data) => {
 
 callbacks["BackToStart"] = (jsonData) => {
   while (mainStack.depth > 1) {
-    mainStack.pop();
+    App.quitPage();
   }
 
   tryUpdatePackage();
-}
-
-callbacks["EnterLobby"] = (jsonData) => {
-  if (mainStack.depth === 1) {
-  } else {
-    mainStack.pop();
-  }
-  mainWindow.busy = false;
-  ClientInstance.notifyServer("RefreshRoomList", "");
-  Config.saveConf();
 }
 
 callbacks["Chat"] = (data) => {
@@ -112,9 +102,5 @@ callbacks["Chat"] = (data) => {
 
 callbacks["ServerMessage"] = (jsonData) => {
   const current = mainStack.currentItem;  // lobby or room
-  current.sendDanmaku('<font color="grey"><b>[Server] </b></font>' + jsonData);
-}
-
-callbacks["AddTotalGameTime"] = (jsonData) => {
-  Config.totalTime++;
+  current.sendDanmu('<font color="grey"><b>[Server] </b></font>' + jsonData);
 }

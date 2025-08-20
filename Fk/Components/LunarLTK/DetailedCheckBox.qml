@@ -3,6 +3,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import Fk
 import Fk.Pages
 
 GraphicsBox {

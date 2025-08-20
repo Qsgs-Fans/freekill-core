@@ -5,8 +5,9 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import Fk
+import Fk.Widgets as W
 
-Item {
+W.PageBase {
   id: root
 
   ToolBar {
@@ -150,7 +151,7 @@ Item {
 
         onClicked: {
           Backend.copyToClipboard(pkgURL);
-          toast.show(qsTr("Copied %1.").arg(pkgURL));
+          App.showToast(qsTr("Copied %1.").arg(pkgURL));
         }
       }
     }
@@ -177,7 +178,7 @@ Item {
         enabled: urlEdit.text !== ""
         onClicked: {
           const url = urlEdit.text;
-          mainWindow.busy = true;
+          App.setBusy(true);
           Pacman.downloadNewPack(url, true);
         }
       }

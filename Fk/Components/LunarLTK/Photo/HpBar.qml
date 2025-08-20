@@ -59,7 +59,7 @@ Column {
         }
         return root.colors[idx];
       }
-      font.family: fontLibian.name
+      font.family: Config.libianName
       font.pixelSize: 22
       font.bold: true
       horizontalAlignment: Text.AlignHCenter
@@ -78,7 +78,7 @@ Column {
       z: -10
       rotation: 40
       color: hpItem.color
-      font.family: fontLibian.name
+      font.family: Config.libianName
       font.pixelSize: 14
       font.bold: true
       horizontalAlignment: hpItem.horizontalAlignment

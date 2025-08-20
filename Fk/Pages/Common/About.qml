@@ -5,8 +5,9 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import Fk
+import Fk.Widgets as W
 
-Item {
+W.PageBase {
   id: root
 
   ListModel {

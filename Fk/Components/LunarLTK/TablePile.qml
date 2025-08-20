@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import QtQuick
+import Fk
 
 Item {
   property var discardedCards: []
@@ -19,7 +20,7 @@ Item {
 
   // FIXME: 重构需要
   function inTable(cid) {
-    return Lua.eval(`(function()
+    return Lua.evaluate(`(function()
       local client = Fk:currentRoom()
       if table.contains(client.processing_area, ${cid}) then
         return true

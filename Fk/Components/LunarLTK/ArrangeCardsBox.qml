@@ -57,7 +57,7 @@ GraphicsBox {
             height: 100
             text: areaName
             color: "white"
-            font.family: fontLibian.name
+            font.family: Config.libianName
             font.pixelSize: 18
             style: Text.Outline
             wrapMode: Text.WordWrap

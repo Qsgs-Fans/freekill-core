@@ -6,14 +6,15 @@ import QtQuick.Dialogs
 import QtQuick.Layouts
 import QtMultimedia
 import Fk
+import Fk.Pages
 import Fk.Common
 import Fk.Components.LunarLTK
 import Fk.Components.LunarLTK.Photo as PhotoElement
 import Fk.Widgets as W
-import Fk.LobbyElement as L
+import Fk.Components.Lobby as L
 import "RoomLogic.js" as Logic
 
-Item {
+W.PageBase {
   id: roomScene
 
   property int playerNum: 0
@@ -110,11 +111,11 @@ Item {
       MenuItem {
         id: quitButton
         text: Lua.tr("Quit")
-        icon.source: AppPath + "/image/modmaker/back"
+        icon.source: Cpp.path + "/image/modmaker/back"
         onClicked: {
           if (Config.replaying) {
             Backend.controlReplayer("shutdown");
-            mainStack.pop();
+            App.quitPage();
           } else if (Config.observing) {
             ClientInstance.notifyServer("QuitRoom", "");
           } else {
@@ -126,22 +127,23 @@ Item {
       MenuItem {
         id: volumeButton
         text: Lua.tr("Settings")
-        icon.source: AppPath + "/image/button/tileicon/configure"
+        icon.source: Cpp.path + "/image/button/tileicon/configure"
         onClicked: {
           settingsDialog.open();
         }
       }
 
+      /*
       Menu {
         title: Lua.tr("Overview")
-        icon.source: AppPath + "/image/button/tileicon/rule_summary"
+        icon.source: Cpp.path + "/image/button/tileicon/rule_summary"
         icon.width: 24
         icon.height: 24
         icon.color: palette.windowText
         MenuItem {
           id: generalButton
           text: Lua.tr("Generals Overview")
-          icon.source: AppPath + "/image/button/tileicon/general_overview"
+          icon.source: Cpp.path + "/image/button/tileicon/general_overview"
           onClicked: {
             overviewLoader.overviewType = "Generals";
             overviewDialog.open();
@@ -151,7 +153,7 @@ Item {
         MenuItem {
           id: cardslButton
           text: Lua.tr("Cards Overview")
-          icon.source: AppPath + "/image/button/tileicon/card_overview"
+          icon.source: Cpp.path + "/image/button/tileicon/card_overview"
           onClicked: {
             overviewLoader.overviewType = "Cards";
             overviewDialog.open();
@@ -161,17 +163,19 @@ Item {
         MenuItem {
           id: modesButton
           text: Lua.tr("Modes Overview")
-          icon.source: AppPath + "/image/misc/paper"
+          icon.source: Cpp.path + "/image/misc/paper"
           onClicked: {
             overviewLoader.overviewType = "Modes";
             overviewDialog.open();
           }
         }
       }
+      */
+
       MenuItem {
         id: banSchemaButton
         text: Lua.tr("Ban List")
-        icon.source: AppPath + "/image/button/tileicon/create_room"
+        icon.source: Cpp.path + "/image/button/tileicon/create_room"
         onClicked: {
           overviewLoader.overviewType = "GeneralPool";
           overviewDialog.open();
@@ -182,7 +186,7 @@ Item {
         id: surrenderButton
         enabled: !Config.observing && !Config.replaying && isStarted
         text: Lua.tr("Surrender")
-        icon.source: AppPath + "/image/misc/surrender"
+        icon.source: Cpp.path + "/image/misc/surrender"
         onClicked: {
           const photo = getPhoto(Self.id);
           if (isStarted && !(photo.dead && photo.rest <= 0)) {
@@ -706,7 +710,7 @@ Item {
       z: 1
       color: "#F0E5DA"
       font.pixelSize: 16
-      font.family: fontLibian.name
+      font.family: Config.libianName
       style: Text.Outline
       styleColor: "#3D2D1C"
       textFormat: TextEdit.RichText
@@ -914,24 +918,24 @@ Item {
 
   W.PopupLoader {
     id: roomDrawer
-    width: realMainWin.width * 0.4
-    height: realMainWin.height * 0.95
-    x: realMainWin.height * 0.025
-    y: realMainWin.height * 0.025
+    width: Config.winWidth * 0.4
+    height: Config.winHeight * 0.95
+    x: Config.winHeight * 0.025
+    y: Config.winHeight * 0.025
 
     property int rememberedIdx: 0
 
     background: Rectangle {
-      radius: 12 * mainWindow.scale
+      radius: 12 * Config.winScale
       color: "#FAFAFB"
       opacity: 0.9
     }
 
     ColumnLayout {
       // anchors.fill: parent
-      width: parent.width / mainWindow.scale
-      height: parent.height / mainWindow.scale
-      scale: mainWindow.scale
+      width: parent.width / Config.winScale
+      height: parent.height / Config.winScale
+      scale: Config.winScale
       transformOrigin: Item.TopLeft
 
       W.ViewSwitcher {
@@ -1007,8 +1011,8 @@ Item {
 
   W.PopupLoader {
     id: cheatLoader
-    width: realMainWin.width * 0.60
-    height: realMainWin.height * 0.8
+    width: Config.winWidth * 0.60
+    height: Config.winHeight * 0.8
     anchors.centerIn: parent
     background: Rectangle {
       color: "#CC2E2C27"
@@ -1071,8 +1075,8 @@ Item {
   W.PopupLoader {
     id: settingsDialog
     padding: 0
-    width: realMainWin.width * 0.6
-    height: realMainWin.height * 0.6
+    width: Config.winWidth * 0.6
+    height: Config.winHeight * 0.6
     anchors.centerIn: parent
     background: Rectangle {
       color: "#EEEEEEEE"
@@ -1106,8 +1110,8 @@ Item {
 
   W.PopupLoader {
     id: overviewDialog
-    width: realMainWin.width * 0.75
-    height: realMainWin.height * 0.75
+    width: Config.winWidth * 0.75
+    height: Config.winHeight * 0.75
     anchors.centerIn: parent
     background: Rectangle {
       color: "#EEEEEEEE"
@@ -1117,12 +1121,12 @@ Item {
     }
     Loader {
       id: overviewLoader
-      property string overviewType: "Generals"
+      property string overviewType: "GeneralPool"
       anchors.centerIn: parent
-      width: parent.width / mainWindow.scale
-      height: parent.height / mainWindow.scale
-      scale: mainWindow.scale
-      source: overviewType + "Overview.qml"
+      width: parent.width / Config.winScale
+      height: parent.height / Config.winScale
+      scale: Config.winScale
+      source: "../Common/" + overviewType + "Overview.qml"
     }
   }
 
@@ -1131,7 +1135,7 @@ Item {
     visible: Logic.getPhoto(Self.id).rest > 0 && !Config.observing
     text: Lua.tr("Resting, don't leave!")
     color: "#DBCC69"
-    font.family: fontLibian.name
+    font.family: Config.libianName
     font.pixelSize: 28
     glow.color: "#2E200F"
     glow.spread: 0.6
@@ -1145,7 +1149,7 @@ Item {
       anchors.centerIn: parent
       text: Lua.tr("Observing ...")
       color: "#4B83CD"
-      font.family: fontLi2.name
+      font.family: Config.li2Name
       font.pixelSize: 48
     }
   }
@@ -1167,8 +1171,8 @@ Item {
     bgColor: "#BB838AEA"
   }
 
-  Danmaku {
-    id: danmaku
+  Danmu {
+    id: danmu
     width: parent.width
   }
 
@@ -1252,9 +1256,9 @@ Item {
       return;
 
     msg = msg.replace(/\{emoji([0-9]+)\}/g,
-      `<img src="${AppPath}/image/emoji/$1.png" height="24" width="24" />`);
+      `<img src="${Cpp.path}/image/emoji/$1.png" height="24" width="24" />`);
     raw.msg = raw.msg.replace(/\{emoji([0-9]+)\}/g,
-      `<img src="${AppPath}/image/emoji/$1.png" height="24" width="24" />`);
+      `<img src="${Cpp.path}/image/emoji/$1.png" height="24" width="24" />`);
 
     if (raw.msg.startsWith("$")) {
       if (specialChat(pid, raw, raw.msg.slice(1))) return; // 蛋花、语音
@@ -1264,7 +1268,7 @@ Item {
     if (photo === undefined) {
       const user = raw.userName;
       const m = raw.msg;
-      danmaku.sendLog(`${user}: ${m}`);
+      danmu.sendLog(`${user}: ${m}`);
       return;
     }
     photo.chat(raw.msg);
@@ -1332,7 +1336,7 @@ Item {
 
       const photo = Logic.getPhoto(pid);
       if (photo === undefined) {
-        danmaku.sendLog(`${userName}: ${m}`);
+        danmu.sendLog(`${userName}: ${m}`);
         return true;
       }
       photo.chat(m);
@@ -1363,7 +1367,7 @@ Item {
 
       const photo = Logic.getPhoto(pid);
       if (photo === undefined) {
-        danmaku.sendLog(`${userName}: ${m}`);
+        danmu.sendLog(`${userName}: ${m}`);
         return true;
       }
       photo.chat(m);
@@ -1378,8 +1382,8 @@ Item {
     log.append({ logText: msg });
   }
 
-  function sendDanmaku(msg) {
-    danmaku.sendLog(msg);
+  function sendDanmu(msg) {
+    danmu.sendLog(msg);
     chat.append(null, {
       msg: msg,
       general: "__server", // FIXME: 基于默认读取貂蝉的数据
@@ -1406,7 +1410,7 @@ Item {
   }
 
   function startCheatByPath(path, data) {
-    cheatLoader.sourceComponent = Qt.createComponent(`${AppPath}/${path}.qml`);
+    cheatLoader.sourceComponent = Qt.createComponent(`${Cpp.path}/${path}.qml`);
     cheatLoader.item.extra_data = data;
     cheatLoader.open();
   }
@@ -1433,7 +1437,7 @@ Item {
         });
       }
     }
-    mainStack.pop();
+    App.quitPage();
     Lua.call("ResetClientLua");
     mainStack.push(room);
     mainStack.currentItem.loadPlayerData(datalist);
@@ -1541,7 +1545,7 @@ Item {
           break;
         case "custom":
           skillInteraction.sourceComponent =
-            Qt.createComponent(AppPath + "/" + data.qml_path + ".qml");
+            Qt.createComponent(Cpp.path + "/" + data.qml_path + ".qml");
           skillInteraction.item.skill = skill_name;
           skillInteraction.item.extra_data = data;
           skillInteraction.item?.clicked();
@@ -1576,8 +1580,183 @@ Item {
     else return temp;
   }
 
+  function enterLobby(sender, data) {
+    App.quitPage();
+
+    App.setBusy(false);
+    Cpp.notifyServer("RefreshRoomList", "");
+    Config.saveConf();
+  }
+
+  function updateGameData(sender, data) {
+    const id = data[0];
+    const total = data[1];
+    const win = data[2];
+    const run = data[3];
+    const photo = getPhoto(id);
+    if (photo) {
+      photo.totalGame = total;
+      photo.winGame = win;
+      photo.runGame = run;
+    }
+  }
+
+  function setRoomOwner(sender, data) {
+    // jsonData: int uid of the owner
+    const uid = data[0];
+
+    roomScene.isOwner = (Self.id === uid);
+
+    const model = Logic.getPhotoModel(uid);
+    if (typeof(model) !== "undefined") {
+      model.isOwner = true;
+    }
+  }
+
+  function readyChanged(sender, data) {
+    const id = data[0];
+    const ready = data[1];
+
+    if (id === Self.id) {
+      roomScene.isReady = !!ready;
+    }
+
+    const model = Logic.getPhotoModel(id);
+    if (typeof(model) !== "undefined") {
+      model.ready = ready ? true : false;
+      Logic.checkAllReady();
+    }
+  }
+
+  function netStateChanged(sender, data) {
+    const id = data[0];
+    let state = data[1];
+
+    const model = Logic.getPhotoModel(id);
+    if (!model) return;
+    if (state === "run" && model.dead) {
+      state = "leave";
+    }
+    model.netstate = state;
+  }
+
+  function addPlayer(sender, data) {
+    // jsonData: int id, string screenName, string avatar, bool ready
+    for (let i = 0; i < photoModel.count; i++) {
+      const item = photoModel.get(i);
+      if (item.id === -1) {
+        const uid = data[0];
+        const name = data[1];
+        const avatar = data[2];
+        const ready = data[3];
+
+        item.id = uid;
+        item.screenName = name;
+        item.general = avatar;
+        item.avatar = avatar;
+        item.ready = ready;
+
+        Logic.checkAllReady();
+
+        if (getPhoto(-1)) {
+          roomScene.isFull = false;
+        } else {
+          roomScene.isFull = true;
+        }
+        roomScene.playersAltered = true;
+
+        return;
+      }
+    }
+  }
+
+  function removePlayer(sender, data) {
+    // jsonData: int uid
+    const uid = data[0];
+    const model = Logic.getPhotoModel(uid);
+    if (typeof(model) !== "undefined") {
+      model.id = -1;
+      model.screenName = "";
+      model.general = "";
+      model.isOwner = false;
+      roomScene.isFull = false;
+      roomScene.playersAltered = true;
+    }
+  }
+
   Component.onCompleted: {
-    toast.show(Lua.tr("$EnterRoom"));
+    // TODO 虽然这里很多都要杀成Waiting界面 但现在还是得以跑起来为头等大事
+    addCallback(Command.EnterLobby, enterLobby);
+    addCallback(Command.UpdateGameData, updateGameData);
+    addCallback(Command.RoomOwner, setRoomOwner);
+
+    addCallback(Command.ReadyChanged, readyChanged);
+    addCallback(Command.NetStateChanged, netStateChanged);
+    addCallback(Command.AddPlayer, addPlayer);
+    addCallback(Command.RemovePlayer, removePlayer);
+
+    // TODO 摆烂了 反正这些后面也是得重构 懒得搬砖了
+    addCallback(Command.SetCardFootnote, Logic.callbacks["SetCardFootnote"]);
+    addCallback(Command.SetCardVirtName, Logic.callbacks["SetCardVirtName"]);
+    addCallback(Command.ShowVirtualCard, Logic.callbacks["ShowVirtualCard"]);
+    addCallback(Command.DestroyTableCard, Logic.callbacks["DestroyTableCard"]);
+    addCallback(Command.DestroyTableCardByEvent, Logic.callbacks["DestroyTableCardByEvent"]);
+    addCallback(Command.MaxCard, Logic.callbacks["MaxCard"]);
+    addCallback(Command.PropertyUpdate, Logic.callbacks["PropertyUpdate"]);
+    addCallback(Command.UpdateHandcard, Logic.callbacks["UpdateHandcard"]);
+    addCallback(Command.UpdateCard, Logic.callbacks["UpdateCard"]);
+    addCallback(Command.UpdateSkill, Logic.callbacks["UpdateSkill"]);
+    addCallback(Command.StartGame, Logic.callbacks["StartGame"]);
+    addCallback(Command.ArrangeSeats, Logic.callbacks["ArrangeSeats"]);
+    addCallback(Command.MoveFocus, Logic.callbacks["MoveFocus"]);
+    addCallback(Command.PlayerRunned, Logic.callbacks["PlayerRunned"]);
+    addCallback(Command.AskForGeneral, Logic.callbacks["AskForGeneral"]);
+    addCallback(Command.AskForSkillInvoke, Logic.callbacks["AskForSkillInvoke"]);
+    addCallback(Command.AskForArrangeCards, Logic.callbacks["AskForArrangeCards"]);
+    addCallback(Command.AskForGuanxing, Logic.callbacks["AskForGuanxing"]);
+    addCallback(Command.AskForExchange, Logic.callbacks["AskForExchange"]);
+    addCallback(Command.AskForChoice, Logic.callbacks["AskForChoice"]);
+    addCallback(Command.AskForChoices, Logic.callbacks["AskForChoices"]);
+    addCallback(Command.AskForCardChosen, Logic.callbacks["AskForCardChosen"]);
+    addCallback(Command.AskForCardsChosen, Logic.callbacks["AskForCardsChosen"]);
+    addCallback(Command.AskForPoxi, Logic.callbacks["AskForPoxi"]);
+    addCallback(Command.AskForMoveCardInBoard, Logic.callbacks["AskForMoveCardInBoard"]);
+    addCallback(Command.AskForCardsAndChoice, Logic.callbacks["AskForCardsAndChoice"]);
+    addCallback(Command.MoveCards, Logic.callbacks["MoveCards"]);
+    addCallback(Command.PlayCard, Logic.callbacks["PlayCard"]);
+    addCallback(Command.LoseSkill, Logic.callbacks["LoseSkill"]);
+    addCallback(Command.AddSkill, Logic.callbacks["AddSkill"]);
+    addCallback(Command.PrelightSkill, Logic.callbacks["PrelightSkill"]);
+    addCallback(Command.AskForUseActiveSkill, Logic.callbacks["AskForUseActiveSkill"]);
+    addCallback(Command.CancelRequest, Logic.callbacks["CancelRequest"]);
+    addCallback(Command.GameLog, Logic.callbacks["GameLog"]);
+    addCallback(Command.AskForUseCard, Logic.callbacks["AskForUseCard"]);
+    addCallback(Command.AskForResponseCard, Logic.callbacks["AskForResponseCard"]);
+    addCallback(Command.SetPlayerMark, Logic.callbacks["SetPlayerMark"]);
+    addCallback(Command.SetBanner, Logic.callbacks["SetBanner"]);
+    addCallback(Command.Animate, Logic.callbacks["Animate"]);
+    addCallback(Command.LogEvent, Logic.callbacks["LogEvent"]);
+    addCallback(Command.GameOver, Logic.callbacks["GameOver"]);
+    addCallback(Command.FillAG, Logic.callbacks["FillAG"]);
+    addCallback(Command.AskForAG, Logic.callbacks["AskForAG"]);
+    addCallback(Command.TakeAG, Logic.callbacks["TakeAG"]);
+    addCallback(Command.CloseAG, Logic.callbacks["CloseAG"]);
+    addCallback(Command.CustomDialog, Logic.callbacks["CustomDialog"]);
+    addCallback(Command.MiniGame, Logic.callbacks["MiniGame"]);
+    addCallback(Command.UpdateMiniGame, Logic.callbacks["UpdateMiniGame"]);
+    addCallback(Command.EmptyRequest, Logic.callbacks["EmptyRequest"]);
+    addCallback(Command.UpdateLimitSkill, Logic.callbacks["UpdateLimitSkill"]);
+    addCallback(Command.UpdateDrawPile, Logic.callbacks["UpdateDrawPile"]);
+    addCallback(Command.UpdateRoundNum, Logic.callbacks["UpdateRoundNum"]);
+    addCallback(Command.ChangeSelf, Logic.callbacks["ChangeSelf"]);
+    addCallback(Command.UpdateRequestUI, Logic.callbacks["UpdateRequestUI"]);
+    addCallback(Command.GetPlayerHandcards, Logic.callbacks["GetPlayerHandcards"]);
+    addCallback(Command.ReplyToServer, Logic.callbacks["ReplyToServer"]);
+    addCallback(Command.ReplayerDurationSet, Logic.callbacks["ReplayerDurationSet"]);
+    addCallback(Command.ReplayerElapsedChange, Logic.callbacks["ReplayerElapsedChange"]);
+    addCallback(Command.ReplayerSpeedChange, Logic.callbacks["ReplayerSpeedChange"]);
+
+    App.showToast(Lua.tr("$EnterRoom"));
     playerNum = Config.roomCapacity;
 
     for (let i = 0; i < playerNum; i++) {

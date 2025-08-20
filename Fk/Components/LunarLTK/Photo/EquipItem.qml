@@ -50,7 +50,7 @@ Item {
     visible: !sealed && number > 0 && number < 14
     text: Util.convertNumber(number)
     color: "white"
-    font.family: fontLibian.name
+    font.family: Config.libianName
     font.pixelSize: 16
     glow.color: "black"
     glow.spread: 0.75
@@ -62,7 +62,7 @@ Item {
 
   Text {
     id: textItem
-    font.family: fontLibian.name
+    font.family: Config.libianName
     color: sealed ? "black" : "white"
     font.pixelSize: 18
     anchors.left: iconItem.right

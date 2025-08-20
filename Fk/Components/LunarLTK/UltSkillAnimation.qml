@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
+import Fk
 
 Item {
   id: root
@@ -41,7 +42,7 @@ Item {
         }
         color: "white"
         font.pixelSize: 30
-        font.family: fontLibian.name
+        font.family: Config.libianName
       }
     }
   }
@@ -72,7 +73,7 @@ Item {
         }
         color: "white"
         font.pixelSize: 30
-        font.family: fontLibian.name
+        font.family: Config.libianName
       }
     }
   }
@@ -91,7 +92,7 @@ Item {
     topPadding: 5
     id: skill
     text: Lua.tr(skillName)
-    font.family: fontLi2.name
+    font.family: Config.li2Name
     font.pixelSize: 40
     x: root.width / 2 + 100
     y: root.height + 300

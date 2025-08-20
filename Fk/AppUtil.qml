@@ -15,4 +15,8 @@ QtObject {
   function showToast(s: string) {
     Mediator.notify(null, Command.ShowToast, s);
   }
+
+  function setBusy(v: bool) {
+    Mediator.notify(null, Command.SetBusyUI, v);
+  }
 }

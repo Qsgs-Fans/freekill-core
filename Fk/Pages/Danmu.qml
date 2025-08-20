@@ -35,7 +35,7 @@ Item {
       id: txt
       color: "white"
       font.pixelSize: 18
-      font.family: fontLibian.name
+      font.family: Config.libianName
       textFormat: TextEdit.RichText
       y: -1
       property bool changedAvail: false

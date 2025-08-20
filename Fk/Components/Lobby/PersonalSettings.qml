@@ -36,7 +36,7 @@ Item {
         }
       }
       x: 12; y: 1
-      font.family: fontLibian.name
+      font.family: Config.libianName
       font.pixelSize: 16
       color: "white"
       //style: Text.Outline
@@ -66,7 +66,7 @@ Item {
       Layout.alignment: Qt.AlignTop
       text: Self.screenName
       font.pixelSize: 22
-      font.family: fontLibian.name
+      font.family: Config.libianName
       color: "#F0DFAF"
       style: Text.Outline
     }

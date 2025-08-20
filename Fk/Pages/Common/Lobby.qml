@@ -195,13 +195,11 @@ W.PageBase {
       Button {
         text: Lua.tr("Create Room")
         onClicked: {
-          // lobby_drawer.sourceComponent =
-          //   Qt.createComponent("../LobbyElement/CreateRoom.qml");
-          // lobby_drawer.open();
+          lobby_drawer.sourceComponent =
+            Qt.createComponent("CreateRoom.qml");
+          lobby_drawer.open();
           Config.observing = false;
           Config.replaying = false;
-
-          App.enterNewPage("Fk.Pages.Common", "CreateRoom");
         }
       }
     }
@@ -357,17 +355,17 @@ W.PageBase {
     Config.replaying = false;
     if (playerNum < capacity) {
       Config.observing = false;
-      mainWindow.busy = true;
+      App.setBusy(true);
       Cpp.notifyServer("EnterRoom", [roomId, pw]);
     } else {
       Config.observing = true;
-      mainWindow.busy = true;
+      App.setBusy(true);
       Cpp.notifyServer("ObserveRoom", [roomId, pw]);
     }
   }
 
-  Danmaku {
-    id: danmaku
+  Danmu {
+    id: danmu
     width: parent.width
   }
 
@@ -378,11 +376,11 @@ W.PageBase {
     raw.msg = raw.msg.replace(/\{emoji([0-9]+)\}/g,
       `<img src="${Cpp.path}/image/emoji/$1.png" height="24" width="24" />`);
     lobbyChat.append(msg);
-    danmaku.sendLog("<b>" + raw.userName + "</b>: " + raw.msg);
+    danmu.sendLog("<b>" + raw.userName + "</b>: " + raw.msg);
   }
 
-  function sendDanmaku(msg) {
-    danmaku.sendLog(msg);
+  function sendDanmu(msg) {
+    danmu.sendLog(msg);
     lobbyChat.append(msg);
   }
 
@@ -426,8 +424,7 @@ W.PageBase {
     Config.enableFreeAssign = roomSettings.enableFreeAssign;
     Config.heg = roomSettings.gameMode.includes('heg_mode');
     App.enterNewPage("Fk.Pages.LunarLTK", "Room");
-    // mainStack.push(room);
-    mainWindow.busy = false;
+    App.setBusy(false);
   }
 
   Component.onCompleted: {

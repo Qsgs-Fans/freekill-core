@@ -4,6 +4,10 @@ pragma Singleton
 import QtQuick
 
 QtObject {
+  // TODO 全局变量堆一下 后面想办法
+  property string libianName: "FZLiBian-S02"
+  property string li2Name: "FZLiShu II-S06S"
+
   // Client configuration
   property real winX
   property real winY

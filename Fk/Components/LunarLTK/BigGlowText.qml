@@ -1,5 +1,6 @@
 import QtQuick
 import Qt5Compat.GraphicalEffects
+import Fk
 
 Item {
   property alias text: pileName.text
@@ -7,7 +8,7 @@ Item {
     id: pileName
     horizontalAlignment: Text.AlignHCenter
     width: parent.width
-    font.family: fontLibian.name
+    font.family: Config.libianName
     color: "#E4D5A0"
     font.pixelSize: 30
     font.weight: Font.Medium

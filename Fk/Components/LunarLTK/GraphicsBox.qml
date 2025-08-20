@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import QtQuick
+import Fk
 
 Item {
   property alias title: titleItem

@@ -22,7 +22,7 @@ Item {
     anchors.horizontalCenterOffset: 100
     text: skill_name
     font.pixelSize: Math.max(24, 48 - (text.length - 2) * 6)
-    font.family: fontLi2.name
+    font.family: Config.li2Name
     style: Text.Outline
     color: "white"
     opacity: 0

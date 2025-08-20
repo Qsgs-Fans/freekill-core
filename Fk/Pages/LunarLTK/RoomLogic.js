@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+let callbacks={}
+
 const Card = {
   Unknown : 0,
   PlayerHand : 1,
@@ -434,7 +436,7 @@ function setEmotion(id, emotion, isCardId) {
     // TODO: set picture emotion
     return;
   }
-  const component = Qt.createComponent("../RoomElement/PixmapAnimation.qml");
+  const component = Qt.createComponent("../../Components/LunarLTK/PixmapAnimation.qml");
   if (component.status !== Component.Ready)
     return;
 
@@ -487,7 +489,7 @@ function setCardFootnote(id, footnote, virtual) {
   card.footnoteVisible = true;
 }
 
-callbacks["SetCardFootnote"] = (data) => {
+callbacks["SetCardFootnote"] = (sender, data) => {
   const [id, note, virtual] = data;
   setCardFootnote(id, note, virtual);
 }
@@ -508,12 +510,12 @@ function setCardVirtName(id, name, virtual) {
   card.virt_name = name;
 }
 
-callbacks["SetCardVirtName"] = (data) => {
+callbacks["SetCardVirtName"] = (sender, data) => {
   const [ids, note, virtual] = data;
   ids.forEach(id => setCardVirtName(id, note, virtual));
 }
 
-callbacks["ShowVirtualCard"] = (data) => {
+callbacks["ShowVirtualCard"] = (sender, data) => {
   const [card_data, playerid, footnote, event_id] = data;
   let from = drawPile;
   const photo = getPhoto(playerid);
@@ -545,7 +547,7 @@ callbacks["ShowVirtualCard"] = (data) => {
   tablePile.updateCardPosition(true);
 }
 
-callbacks["DestroyTableCard"] = (data) => {
+callbacks["DestroyTableCard"] = (sender, data) => {
   for (let i = 0; i < tablePile.cards.length; i++) {
     const card = tablePile.cards[i];
     if (data.indexOf(card.virt_id) !== -1) {
@@ -555,7 +557,7 @@ callbacks["DestroyTableCard"] = (data) => {
   }
 }
 
-callbacks["DestroyTableCardByEvent"] = (data) => {
+callbacks["DestroyTableCardByEvent"] = (sender, data) => {
   for (let i = 0; i < tablePile.cards.length; i++) {
     const card = tablePile.cards[i];
     if (card.holding_event_id >= data) {
@@ -579,7 +581,7 @@ function changeHp(id, delta, losthp) {
 }
 
 function doIndicate(from, tos) {
-  const component = Qt.createComponent("../RoomElement/IndicatorLine.qml");
+  const component = Qt.createComponent("../../Components/LunarLTK/IndicatorLine.qml");
   if (component.status !== Component.Ready)
     return;
 
@@ -647,7 +649,7 @@ function processPrompt(prompt) {
   return raw;
 }
 
-callbacks["MaxCard"] = (data) => {
+callbacks["MaxCard"] = (sender, data) => {
   const id = data.id;
   const cardMax = data.pcardMax;
   const hp = data.php;
@@ -655,62 +657,6 @@ callbacks["MaxCard"] = (data) => {
   if (photo) {
     photo.maxCard = cardMax;
     photo.hp = hp;
-  }
-}
-
-callbacks["AddPlayer"] = (data) => {
-  // jsonData: int id, string screenName, string avatar, bool ready
-  for (let i = 0; i < photoModel.count; i++) {
-    const item = photoModel.get(i);
-    if (item.id === -1) {
-      const uid = data[0];
-      const name = data[1];
-      const avatar = data[2];
-      const ready = data[3];
-
-      item.id = uid;
-      item.screenName = name;
-      item.general = avatar;
-      item.avatar = avatar;
-      item.ready = ready;
-
-      checkAllReady();
-
-      if (getPhoto(-1)) {
-        roomScene.isFull = false;
-      } else {
-        roomScene.isFull = true;
-      }
-      roomScene.playersAltered = true;
-
-      return;
-    }
-  }
-}
-
-callbacks["RemovePlayer"] = (data) => {
-  // jsonData: int uid
-  const uid = data[0];
-  const model = getPhotoModel(uid);
-  if (typeof(model) !== "undefined") {
-    model.id = -1;
-    model.screenName = "";
-    model.general = "";
-    model.isOwner = false;
-    roomScene.isFull = false;
-    roomScene.playersAltered = true;
-  }
-}
-
-callbacks["RoomOwner"] = (data) => {
-  // jsonData: int uid of the owner
-  const uid = data[0];
-
-  roomScene.isOwner = (Self.id === uid);
-
-  const model = getPhotoModel(uid);
-  if (typeof(model) !== "undefined") {
-    model.isOwner = true;
   }
 }
 
@@ -726,34 +672,7 @@ function checkAllReady() {
   roomScene.isAllReady = allReady;
 }
 
-callbacks["ReadyChanged"] = (data) => {
-  const id = data[0];
-  const ready = data[1];
-
-  if (id === Self.id) {
-    roomScene.isReady = !!ready;
-  }
-
-  const model = getPhotoModel(id);
-  if (typeof(model) !== "undefined") {
-    model.ready = ready ? true : false;
-    checkAllReady();
-  }
-}
-
-callbacks["NetStateChanged"] = (data) => {
-  const id = data[0];
-  let state = data[1];
-
-  const model = getPhotoModel(id);
-  if (!model) return;
-  if (state === "run" && model.dead) {
-    state = "leave";
-  }
-  model.netstate = state;
-}
-
-callbacks["PropertyUpdate"] = (data) => {
+callbacks["PropertyUpdate"] = (sender, data) => {
   // jsonData: int id, string property_name, value
   const uid = data[0];
   const property_name = data[1];
@@ -774,7 +693,7 @@ callbacks["PropertyUpdate"] = (data) => {
   }
 }
 
-callbacks["UpdateHandcard"] = (j) => {
+callbacks["UpdateHandcard"] = (sender, j) => {
   const id = parseInt(j);
   const sortable = Lua.call("CanSortHandcards", Self.id);
   let card;
@@ -795,7 +714,7 @@ callbacks["UpdateHandcard"] = (j) => {
   card.draggable = sortable;
 }
 
-callbacks["UpdateCard"] = (j) => {
+callbacks["UpdateCard"] = (sender, j) => {
   const id = parseInt(j);
   let card;
   roomScene.tableCards.forEach((v) => {
@@ -821,7 +740,7 @@ callbacks["UpdateCard"] = (j) => {
   card.setData(Lua.call("GetCardData", id));
 }
 
-callbacks["UpdateSkill"] = (j) => {
+callbacks["UpdateSkill"] = (sender, j) => {
   const sortable = Lua.call("CanSortHandcards", Self.id);
   dashboard.sortable = sortable;
   dashboard.handcardArea.sortable = sortable;
@@ -836,7 +755,7 @@ callbacks["UpdateSkill"] = (j) => {
   }
 }
 
-callbacks["StartGame"] = (jsonData) => {
+callbacks["StartGame"] = (sender, jsonData) => {
   roomScene.isStarted = true;
 
   for (let i = 0; i < photoModel.count; i++) {
@@ -846,7 +765,7 @@ callbacks["StartGame"] = (jsonData) => {
   }
 }
 
-callbacks["ArrangeSeats"] = (order) => {
+callbacks["ArrangeSeats"] = (sender, order) => {
   // jsonData: seat order
 
   for (let i = 0; i < photoModel.count; i++) {
@@ -877,7 +796,7 @@ function cancelAllFocus() {
   }
 }
 
-callbacks["MoveFocus"] = (data) => {
+callbacks["MoveFocus"] = (sender, data) => {
   // jsonData: int[] focuses, string command
   cancelAllFocus();
   const focuses = data[0];
@@ -897,7 +816,7 @@ callbacks["MoveFocus"] = (data) => {
   }
 }
 
-callbacks["PlayerRunned"] = (data) => {
+callbacks["PlayerRunned"] = (sender, data) => {
   // jsonData: int runner, int robot
   const runner = data[0];
   const robot = data[1];
@@ -908,7 +827,7 @@ callbacks["PlayerRunned"] = (data) => {
   }
 }
 
-callbacks["AskForGeneral"] = (data) => {
+callbacks["AskForGeneral"] = (sender, data) => {
   // jsonData: string[] generals, integer n, boolean no_convert, boolean heg, string rule, table extra_data
   //const {generals, n, no_convert, heg, rule, extra_data } = data;
   const generals = data[0];
@@ -921,7 +840,7 @@ callbacks["AskForGeneral"] = (data) => {
   roomScene.setPrompt(Lua.tr("#AskForGeneral"), true);
   roomScene.activate();
   roomScene.popupBox.sourceComponent =
-    Qt.createComponent("../RoomElement/ChooseGeneralBox.qml");
+    Qt.createComponent("../../Components/LunarLTK/ChooseGeneralBox.qml");
   const box = roomScene.popupBox.item;
   box.accepted.connect(() => {
     replyToServer(box.choices);
@@ -938,7 +857,7 @@ callbacks["AskForGeneral"] = (data) => {
   box.refreshPrompt();
 }
 
-callbacks["AskForSkillInvoke"] = (data) => {
+callbacks["AskForSkillInvoke"] = (sender, data) => {
   // jsonData: [ string name, string prompt ]
   const skill = data[0];
   const prompt = data[1];
@@ -951,10 +870,10 @@ callbacks["AskForSkillInvoke"] = (data) => {
   roomScene.activate();
 }
 
-callbacks["AskForArrangeCards"] = (data) => {
+callbacks["AskForArrangeCards"] = (sender, data) => {
   roomScene.activate();
   roomScene.popupBox.sourceComponent =
-    Qt.createComponent("../RoomElement/ArrangeCardsBox.qml");
+    Qt.createComponent("../../Components/LunarLTK/ArrangeCardsBox.qml");
   const box = roomScene.popupBox.item;
   const cards = data.cards;
   box.cards = cards.reduce((newArray, elem) => {
@@ -974,7 +893,7 @@ callbacks["AskForArrangeCards"] = (data) => {
   box.initializeCards();
 }
 
-callbacks["AskForGuanxing"] = (data) => {
+callbacks["AskForGuanxing"] = (sender, data) => {
   const cards = data.cards;
   const min_top_cards = data.min_top_cards;
   const max_top_cards = data.max_top_cards;
@@ -985,7 +904,7 @@ callbacks["AskForGuanxing"] = (data) => {
   const prompt = data.prompt;
   roomScene.activate();
   roomScene.popupBox.sourceComponent =
-    Qt.createComponent("../RoomElement/GuanxingBox.qml");
+    Qt.createComponent("../../Components/LunarLTK/GuanxingBox.qml");
   const box = roomScene.popupBox.item;
   box.prompt = prompt;
   box.free_arrange = data.is_free;
@@ -1014,14 +933,14 @@ callbacks["AskForGuanxing"] = (data) => {
   });
 }
 
-callbacks["AskForExchange"] = (data) => {
+callbacks["AskForExchange"] = (sender, data) => {
   const cards = [];
   const cards_name = [];
   const capacities = [];
   const limits = [];
   roomScene.activate();
   roomScene.popupBox.sourceComponent =
-    Qt.createComponent("../RoomElement/GuanxingBox.qml");
+    Qt.createComponent("../../Components/LunarLTK/GuanxingBox.qml");
   let for_i = 0;
   const box = roomScene.popupBox.item;
   box.org_cards = data.piles;
@@ -1044,7 +963,7 @@ callbacks["AskForExchange"] = (data) => {
   });
 }
 
-callbacks["AskForChoice"] = (data) => {
+callbacks["AskForChoice"] = (sender, data) => {
   // jsonData: [ string[] choices, string skill ]
   // TODO: multiple choices, e.g. benxi_ol
   const choices = data[0];
@@ -1061,9 +980,9 @@ callbacks["AskForChoice"] = (data) => {
   roomScene.activate();
   let qmlSrc;
   if (!detailed) {
-    qmlSrc = "../RoomElement/ChoiceBox.qml";
+    qmlSrc = "../../Components/LunarLTK/ChoiceBox.qml";
   } else {
-    qmlSrc = "../RoomElement/DetailedChoiceBox.qml";
+    qmlSrc = "../../Components/LunarLTK/DetailedChoiceBox.qml";
   }
   roomScene.popupBox.sourceComponent = Qt.createComponent(qmlSrc);
   const box = roomScene.popupBox.item;
@@ -1075,7 +994,7 @@ callbacks["AskForChoice"] = (data) => {
   });
 }
 
-callbacks["AskForChoices"] = (data) => {
+callbacks["AskForChoices"] = (sender, data) => {
   // jsonData: [ string[] choices, string skill ]
   // TODO: multiple choices, e.g. benxi_ol
   const choices = data[0];
@@ -1095,9 +1014,9 @@ callbacks["AskForChoices"] = (data) => {
   roomScene.activate();
   let qmlSrc;
   if (!detailed) {
-    qmlSrc = "../RoomElement/CheckBox.qml";
+    qmlSrc = "../../Components/LunarLTK/CheckBox.qml";
   } else {
-    qmlSrc = "../RoomElement/DetailedCheckBox.qml";
+    qmlSrc = "../../Components/LunarLTK/DetailedCheckBox.qml";
   }
   roomScene.popupBox.sourceComponent = Qt.createComponent(qmlSrc);
   const box = roomScene.popupBox.item;
@@ -1116,7 +1035,7 @@ callbacks["AskForChoices"] = (data) => {
   });
 }
 
-callbacks["AskForCardChosen"] = (data) => {
+callbacks["AskForCardChosen"] = (sender, data) => {
   // jsonData: [ int[] handcards, int[] equips, int[] delayedtricks,
   //  string reason ]
   const reason = data._reason;
@@ -1129,7 +1048,7 @@ callbacks["AskForCardChosen"] = (data) => {
   }
   roomScene.activate();
   roomScene.popupBox.sourceComponent =
-    Qt.createComponent("../RoomElement/PlayerCardBox.qml");
+    Qt.createComponent("../../Components/LunarLTK/PlayerCardBox.qml");
 
   const box = roomScene.popupBox.item;
   box.prompt = prompt;
@@ -1146,7 +1065,7 @@ callbacks["AskForCardChosen"] = (data) => {
   box.cardSelected.connect(cid => replyToServer(cid));
 }
 
-callbacks["AskForCardsChosen"] = (data) => {
+callbacks["AskForCardsChosen"] = (sender, data) => {
   // jsonData: [ int[] handcards, int[] equips, int[] delayedtricks,
   //  int min, int max, string reason ]
   const min = data._min;
@@ -1162,7 +1081,7 @@ callbacks["AskForCardsChosen"] = (data) => {
 
   roomScene.activate();
   roomScene.popupBox.sourceComponent =
-    Qt.createComponent("../RoomElement/PlayerCardBox.qml");
+    Qt.createComponent("../../Components/LunarLTK/PlayerCardBox.qml");
   const box = roomScene.popupBox.item;
   box.multiChoose = true;
   box.min = min;
@@ -1183,12 +1102,12 @@ callbacks["AskForCardsChosen"] = (data) => {
   });
 }
 
-callbacks["AskForPoxi"] = (dat) => {
+callbacks["AskForPoxi"] = (sender, dat) => {
   const { type, data, extra_data, cancelable } = dat;
 
   roomScene.activate();
   roomScene.popupBox.sourceComponent =
-    Qt.createComponent("../RoomElement/PoxiBox.qml");
+    Qt.createComponent("../../Components/LunarLTK/PoxiBox.qml");
   const box = roomScene.popupBox.item;
   box.extra_data = extra_data;
   box.poxi_type = type;
@@ -1209,12 +1128,12 @@ callbacks["AskForPoxi"] = (dat) => {
   });
 }
 
-callbacks["AskForMoveCardInBoard"] = (data) => {
+callbacks["AskForMoveCardInBoard"] = (sender, data) => {
   const { cards, cardsPosition, generalNames, playerIds } = data;
 
   roomScene.activate();
   roomScene.popupBox.sourceComponent =
-    Qt.createComponent("../RoomElement/MoveCardInBoardBox.qml");
+    Qt.createComponent("../../Components/LunarLTK/MoveCardInBoardBox.qml");
 
   const boxCards = [];
   cards.forEach(id => {
@@ -1241,14 +1160,14 @@ callbacks["AskForMoveCardInBoard"] = (data) => {
   });
 }
 
-callbacks["AskForCardsAndChoice"] = (data) => {
+callbacks["AskForCardsAndChoice"] = (sender, data) => {
   // jsonData: [ int[] handcards, int[] equips, int[] delayedtricks,
   //  int min, int max, string reason ]
   const { cards, choices, prompt, cancel_choices, min, max, filter_skel, disabled, extra_data } = data;
 
   roomScene.activate();
   roomScene.popupBox.sourceComponent =
-    Qt.createComponent("../RoomElement/ChooseCardsAndChoiceBox.qml");
+    Qt.createComponent("../../Components/LunarLTK/ChooseCardsAndChoiceBox.qml");
 
   const boxCards = [];
   cards.forEach(id => boxCards.push(Lua.call("GetCardData", id)));
@@ -1267,7 +1186,7 @@ callbacks["AskForCardsAndChoice"] = (data) => {
   roomScene.popupBox.moveToCenter();
 }
 
-callbacks["MoveCards"] = (moves) => {
+callbacks["MoveCards"] = (sender, moves) => {
   // jsonData: merged moves
   moveCards(moves);
 }
@@ -1279,7 +1198,7 @@ callbacks["PlayCard"] = () => {
   roomScene.okCancel.visible = true;
 }
 
-callbacks["LoseSkill"] = (data) => {
+callbacks["LoseSkill"] = (sender, data) => {
   // jsonData: [ int player_id, string skill_name ]
   const id = data[0];
   const skill_name = data[1];
@@ -1289,7 +1208,7 @@ callbacks["LoseSkill"] = (data) => {
   }
 }
 
-callbacks["AddSkill"] = (data) => {
+callbacks["AddSkill"] = (sender, data) => {
   // jsonData: [ int player_id, string skill_name ]
   const id = data[0];
   const skill_name = data[1];
@@ -1299,14 +1218,14 @@ callbacks["AddSkill"] = (data) => {
   }
 }
 
-callbacks["PrelightSkill"] = (data) => {
+callbacks["PrelightSkill"] = (sender, data) => {
   const skill_name = data[0];
   const prelight = data[1];
 
   dashboard.prelightSkill(skill_name, prelight);
 }
 
-callbacks["AskForUseActiveSkill"] = (data) => {
+callbacks["AskForUseActiveSkill"] = (sender, data) => {
   // jsonData: string skill_name, string prompt
   const skill_name = data[0];
   const prompt = data[1];
@@ -1327,11 +1246,11 @@ callbacks["CancelRequest"] = () => {
   roomScene.state = "notactive";
 }
 
-callbacks["GameLog"] = (jsonData) => {
+callbacks["GameLog"] = (sender, jsonData) => {
   roomScene.addToLog(jsonData)
 }
 
-callbacks["AskForUseCard"] = (data) => {
+callbacks["AskForUseCard"] = (sender, data) => {
   // jsonData: card, pattern, prompt, cancelable, {}
   const cardname = data[0];
   const pattern = data[1];
@@ -1365,7 +1284,7 @@ callbacks["AskForUseCard"] = (data) => {
   // cancelButton.enabled = true;
 }
 
-callbacks["AskForResponseCard"] = (data) => {
+callbacks["AskForResponseCard"] = (sender, data) => {
   // jsonData: card_name, pattern, prompt, cancelable, {}
   const cardname = data[0];
   const pattern = data[1];
@@ -1392,7 +1311,7 @@ const getMarkValue = function(value) {
   }
 }
 
-callbacks["SetPlayerMark"] = (data) => {
+callbacks["SetPlayerMark"] = (sender, data) => {
   const player = getPhoto(data[0]);
   const mark = data[1];
   const value = getMarkValue(data[2]);
@@ -1405,7 +1324,7 @@ callbacks["SetPlayerMark"] = (data) => {
   }
 }
 
-callbacks["SetBanner"] = (data) => {
+callbacks["SetBanner"] = (sender, data) => {
   const mark = data[0];
   const value = getMarkValue(data[1]);
   let area = roomScene.banner;
@@ -1416,7 +1335,7 @@ callbacks["SetBanner"] = (data) => {
   }
 }
 
-callbacks["Animate"] = (data) => {
+callbacks["Animate"] = (sender, data) => {
   // jsonData: [Object object]
   switch (data.type) {
     case "Indicate":
@@ -1444,7 +1363,7 @@ callbacks["Animate"] = (data) => {
     case "InvokeSkill": {
       const id = data.player;
       const component =
-            Qt.createComponent("../RoomElement/SkillInvokeAnimation.qml");
+            Qt.createComponent("../../Components/LunarLTK/SkillInvokeAnimation.qml");
       if (component.status !== Component.Ready)
         return;
 
@@ -1468,7 +1387,7 @@ callbacks["Animate"] = (data) => {
         return null;
       }
 
-      roomScene.bigAnim.source = "../RoomElement/UltSkillAnimation.qml";
+      roomScene.bigAnim.source = "../../Components/LunarLTK/UltSkillAnimation.qml";
       roomScene.bigAnim.item.loadData({
         skill_name: data.name,
         general: data.deputy ? photo.deputyGeneral : photo.general,
@@ -1480,7 +1399,7 @@ callbacks["Animate"] = (data) => {
   }
 }
 
-callbacks["LogEvent"] = (data) => {
+callbacks["LogEvent"] = (sender, data) => {
   // jsonData: [Object object]
   switch (data.type) {
     case "Damage": {
@@ -1550,28 +1469,28 @@ callbacks["LogEvent"] = (data) => {
   }
 }
 
-callbacks["GameOver"] = (jsonData) => {
+callbacks["GameOver"] = (sender, jsonData) => {
   roomScene.state = "notactive";
   roomScene.popupBox.sourceComponent =
-    Qt.createComponent("../RoomElement/GameOverBox.qml");
+    Qt.createComponent("../../Components/LunarLTK/GameOverBox.qml");
   const box = roomScene.popupBox.item;
   box.winner = jsonData;
   // roomScene.isStarted = false;
 }
 
-callbacks["FillAG"] = (data) => {
+callbacks["FillAG"] = (sender, data) => {
   const ids = data[0];
   roomScene.manualBox.sourceComponent =
-    Qt.createComponent("../RoomElement/AG.qml");
+    Qt.createComponent("../../Components/LunarLTK/AG.qml");
   roomScene.manualBox.item.addIds(ids);
 }
 
-callbacks["AskForAG"] = (j) => {
+callbacks["AskForAG"] = (sender, j) => {
   roomScene.activate();
   roomScene.manualBox.item.interactive = true;
 }
 
-callbacks["TakeAG"] = (data) => {
+callbacks["TakeAG"] = (sender, data) => {
   if (!roomScene.manualBox.item) return;
   const pid = data[0];
   const cid = data[1];
@@ -1584,7 +1503,7 @@ callbacks["TakeAG"] = (data) => {
 
 callbacks["CloseAG"] = () => roomScene.manualBox.item.close();
 
-callbacks["CustomDialog"] = (data) => {
+callbacks["CustomDialog"] = (sender, data) => {
   const path = data.path;
   const dat = data.data;
   roomScene.activate();
@@ -1594,7 +1513,7 @@ callbacks["CustomDialog"] = (data) => {
   }
 }
 
-callbacks["MiniGame"] = (data) => {
+callbacks["MiniGame"] = (sender, data) => {
   const game = data.type;
   const dat = data.data;
   const gdata = Lua.call("GetMiniGame", game, Self.id, JSON.stringify(dat));
@@ -1605,17 +1524,17 @@ callbacks["MiniGame"] = (data) => {
   }
 }
 
-callbacks["UpdateMiniGame"] = (data) => {
+callbacks["UpdateMiniGame"] = (sender, data) => {
   if (roomScene.popupBox.item) {
     roomScene.popupBox.item.updateData(data);
   }
 }
 
-callbacks["EmptyRequest"] = (data) => {
+callbacks["EmptyRequest"] = (sender, data) => {
   roomScene.activate();
 }
 
-callbacks["UpdateLimitSkill"] = (data) => {
+callbacks["UpdateLimitSkill"] = (sender, data) => {
   const id = data[0];
   const skill = data[1];
   const time = data[2];
@@ -1626,31 +1545,18 @@ callbacks["UpdateLimitSkill"] = (data) => {
   }
 }
 
-callbacks["UpdateDrawPile"] = (j) => {
+callbacks["UpdateDrawPile"] = (sender, j) => {
   const data = parseInt(j);
   roomScene.miscStatus.pileNum = data;
 }
 
-callbacks["UpdateRoundNum"] = (j) => {
+callbacks["UpdateRoundNum"] = (sender, j) => {
   const data = parseInt(j);
   roomScene.miscStatus.roundNum = data;
 }
 
-callbacks["UpdateGameData"] = (data) => {
-  const id = data[0];
-  const total = data[1];
-  const win = data[2];
-  const run = data[3];
-  const photo = getPhoto(id);
-  if (photo) {
-    photo.totalGame = total;
-    photo.winGame = win;
-    photo.runGame = run;
-  }
-}
-
 // 神貂蝉
-callbacks["ChangeSelf"] = (j) => {
+callbacks["ChangeSelf"] = (sender, j) => {
   // move new selfPhoto to dashboard
   let order = new Array(photoModel.count);
   for (let i = 0; i < photoModel.count; i++) {
@@ -1666,7 +1572,7 @@ callbacks["ChangeSelf"] = (j) => {
   dashboard.update();
 }
 
-callbacks["UpdateRequestUI"] = (uiUpdate) => {
+callbacks["UpdateRequestUI"] = (sender, uiUpdate) => {
   if (uiUpdate["_prompt"])
     roomScene.promptText = processPrompt(uiUpdate["_prompt"]);
 
@@ -1676,25 +1582,25 @@ callbacks["UpdateRequestUI"] = (uiUpdate) => {
 }
 
 // 蒋琬
-callbacks["GetPlayerHandcards"] = (data) => {
+callbacks["GetPlayerHandcards"] = (sender, data) => {
   const hand = dashboard.handcardArea.cards.map(c => {
     return c.cid;
   })
   replyToServer(hand);
 }
 
-callbacks["ReplyToServer"] = (data) => {
+callbacks["ReplyToServer"] = (sender, data) => {
   replyToServer(data);
 }
 
-callbacks["ReplayerDurationSet"] = (j) => {
+callbacks["ReplayerDurationSet"] = (sender, j) => {
   roomScene.replayerDuration = parseInt(j);
 }
 
-callbacks["ReplayerElapsedChange"] = (j) => {
+callbacks["ReplayerElapsedChange"] = (sender, j) => {
   roomScene.replayerElapsed = parseInt(j);
 }
 
-callbacks["ReplayerSpeedChange"] = (j) => {
+callbacks["ReplayerSpeedChange"] = (sender, j) => {
   roomScene.replayerSpeed = parseFloat(j);
 }

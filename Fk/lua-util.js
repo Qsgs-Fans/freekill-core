@@ -6,7 +6,7 @@ const backend = typeof Backend !== 'undefined' ? Backend : {
     console.log(`Lua.call: ${fn} ${params}`);
   },
   evalLuaExp: (exp) => {
-    console.log(`Lua.evaluate: ${exp}`);
+    console.log(`Lua.evaluateuate: ${exp}`);
   },
   translate: (src) => {
     return src;

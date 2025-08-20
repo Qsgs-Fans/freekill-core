@@ -22,7 +22,7 @@ Item {
     text: Lua.tr("#currentRoundNum").arg(roundNum)
     color: "#F0E5DA"
     font.pixelSize: 18
-    font.family: fontLibian.name
+    font.family: Config.libianName
     style: Text.Outline
     styleColor: "#3D2D1C"
   }
@@ -33,7 +33,7 @@ Item {
     anchors.rightMargin: 12
     color: "#F0E5DA"
     font.pixelSize: 18
-    font.family: fontLibian.name
+    font.family: Config.libianName
     style: Text.Outline
     styleColor: "#3D2D1C"
   }
@@ -61,7 +61,7 @@ Item {
 
   Text {
     anchors.centerIn: deckImg
-    font.family: fontLibian.name
+    font.family: Config.libianName
     font.pixelSize: 32
     color: "white"
     style: Text.Outline

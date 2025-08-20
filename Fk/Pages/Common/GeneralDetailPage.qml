@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import Fk
+import Fk.Widgets as W
 import Fk.Components.LunarLTK
 
 Item {
@@ -159,7 +160,7 @@ Item {
       onPressAndHold: {
         Backend.copyToClipboard('$' + name + ':' + (idx ? idx.toString() : "")
           + (specific ? ':' + detailGeneralCard.name : ""));
-        toast.show(Lua.tr("Audio Code Copy Success"));
+        App.showToast(Lua.tr("Audio Code Copy Success"));
       }
 
       ToolButton {
@@ -183,7 +184,7 @@ Item {
             onTriggered: {
               Backend.copyToClipboard('$' + name + ':' + (idx ? idx.toString() : "")
                 + (specific ? ':' + detailGeneralCard.name : ""));
-              toast.show(Lua.tr("Audio Code Copy Success"));
+              App.showToast(Lua.tr("Audio Code Copy Success"));
             }
           }
           MenuItem {
@@ -191,7 +192,7 @@ Item {
             onTriggered: {
               Backend.copyToClipboard(Lua.tr('$' + name + (specific ? '_' + detailGeneralCard.name : "")
               + (idx ? idx.toString() : "")));
-              toast.show(Lua.tr("Audio Text Copy Success"));
+              App.showToast(Lua.tr("Audio Text Copy Success"));
             }
           }
         }
@@ -248,13 +249,13 @@ Item {
       interval: 4000
     }
 
-    MetroButton {
+    W.ButtonContent {
       text: Lua.tr("Set as Avatar")
-      visible: mainStack.currentItem.objectName === "GeneralsOverview"
+      // visible: mainStack.currentItem.objectName === "GeneralsOverview"
       enabled: detailGeneralCard.name !== "" && !opTimer.running
       && Self.avatar !== detailGeneralCard.name
       onClicked: {
-        mainWindow.busy = true;
+        App.setBusy(true);
         opTimer.start();
         ClientInstance.notifyServer(
           "UpdateAvatar",
@@ -263,7 +264,7 @@ Item {
       }
     }
 
-    MetroButton {
+    W.ButtonContent {
       text: root.isFavor ? Lua.tr("Remove from Favorite") : Lua.tr("Set as Favorite")
       onClicked: {
         const g = root.general;
@@ -364,7 +365,7 @@ Item {
 
         onPressAndHold: {
           Backend.copyToClipboard("$!" + root.general);
-          toast.show(Lua.tr("Audio Code Copy Success"));
+          App.showToast(Lua.tr("Audio Code Copy Success"));
         }
 
         ToolButton {
@@ -387,14 +388,14 @@ Item {
               text: Lua.tr("Copy Audio Code")
               onTriggered: {
                 Backend.copyToClipboard("$~" + root.general);
-                toast.show(Lua.tr("Audio Code Copy Success"));
+                App.showToast(Lua.tr("Audio Code Copy Success"));
               }
             }
             MenuItem {
               text: Lua.tr("Copy Audio Text")
               onTriggered: {
                 Backend.copyToClipboard(Lua.tr("~" + root.general));
-                toast.show(Lua.tr("Audio Text Copy Success"));
+                App.showToast(Lua.tr("Audio Text Copy Success"));
               }
             }
           }
@@ -436,7 +437,7 @@ Item {
 
         onPressAndHold: {
           Backend.copyToClipboard("$~" + root.general);
-          toast.show(Lua.tr("Audio Code Copy Success"));
+          App.showToast(Lua.tr("Audio Code Copy Success"));
         }
 
         ToolButton {
@@ -459,14 +460,14 @@ Item {
               text: Lua.tr("Copy Audio Code")
               onTriggered: {
                 Backend.copyToClipboard("$~" + root.general);
-                toast.show(Lua.tr("Audio Code Copy Success"));
+                App.showToast(Lua.tr("Audio Code Copy Success"));
               }
             }
             MenuItem {
               text: Lua.tr("Copy Audio Text")
               onTriggered: {
                 Backend.copyToClipboard(Lua.tr("~" + root.general));
-                toast.show(Lua.tr("Audio Text Copy Success"));
+                App.showToast(Lua.tr("Audio Text Copy Success"));
               }
             }
           }

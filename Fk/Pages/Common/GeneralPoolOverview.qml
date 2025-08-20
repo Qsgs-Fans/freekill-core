@@ -110,8 +110,8 @@ Item {
     Button {
       text: Lua.tr("Copy as ban scheme")
       onClicked: {
-        const disabledGenerals = Lua.eval("ClientInstance.disabled_generals");
-        const disabledPack = Lua.eval("ClientInstance.disabled_packs");
+        const disabledGenerals = Lua.evaluate("ClientInstance.disabled_generals");
+        const disabledPack = Lua.evaluate("ClientInstance.disabled_packs");
         const allPack = Lua.call("GetAllGeneralPack");
         const scheme = {
           name: (new Date).toJSON(),
@@ -136,7 +136,7 @@ Item {
           }
         }
         Backend.copyToClipboard(JSON.stringify(scheme));
-        toast.show(Lua.tr("Export Success"));
+        App.showToast(Lua.tr("Export Success"));
       }
     }
   }
@@ -196,7 +196,7 @@ Item {
   Button {
     text: Lua.tr("Quit")
     anchors.bottom: parent.bottom
-    visible: mainStack.currentItem.objectName === "ModesOverview"
+    // visible: mainStack.currentItem.objectName === "ModesOverview"
     onClicked: {
       App.quitPage();
     }
@@ -204,8 +204,8 @@ Item {
 
   Popup {
     id: pop
-    width: realMainWin.width * 0.6
-    height: realMainWin.height * 0.8
+    width: Config.winWidth * 0.6
+    height: Config.winHeight * 0.8
     anchors.centerIn: parent
     background: Rectangle {
       color: "#EEEEEEEE"
@@ -216,10 +216,10 @@ Item {
 
     Loader {
       id: popLoader
-      width: parent.width / mainWindow.scale
-      height: parent.height / mainWindow.scale
+      width: parent.width / Config.winScale
+      height: parent.height / Config.winScale
       anchors.centerIn: parent
-      scale: mainWindow.scale
+      scale: Config.winScale
       source: "GeneralDetailPage.qml"
     }
   }
@@ -227,15 +227,15 @@ Item {
 
 
   Component.onCompleted: {
-    const disabledGenerals = Lua.eval("ClientInstance.disabled_generals");
-    const disabledPack = Lua.eval("ClientInstance.disabled_packs");
+    const disabledGenerals = Lua.evaluate("ClientInstance.disabled_generals");
+    const disabledPack = Lua.evaluate("ClientInstance.disabled_packs");
     const allPack = Lua.call("GetAllGeneralPack");
     pkgModel.clear();
     const allGenerals = [];
     for (let pkname of allPack) {
       if (disabledPack.includes(pkname)) continue;
       let generals = Lua.call("GetGenerals", pkname);
-      generals = generals.filter(g => !Lua.eval(`Fk.generals['${g}'].hidden`));
+      generals = generals.filter(g => !Lua.evaluate(`Fk.generals['${g}'].hidden`));
       generals = generals.filter(g => !disabledGenerals.includes(g));
       if (generals.length === 0) continue;
       pkgModel.append({

@@ -153,7 +153,7 @@ Item {
     visible: virt_rect.visible
     anchors.centerIn: virt_rect
     font.pixelSize: 16
-    font.family: fontLibian.name
+    font.family: Config.libianName
     font.letterSpacing: -0.6
     text: Lua.tr(root.virt_name)
   }
@@ -170,7 +170,7 @@ Item {
     style: Text.Outline
     wrapMode: Text.WrapAnywhere
     horizontalAlignment: Text.AlignHCenter
-    font.family: fontLibian.name
+    font.family: Config.libianName
     font.pixelSize: 14
     // glow.color: "black"
     // glow.spread: 1
@@ -202,7 +202,7 @@ Item {
         id: mark_text
         x: 2
         font.pixelSize: 16
-        font.family: fontLibian.name
+        font.family: Config.libianName
         font.letterSpacing: -0.6
         text: {
           let ret = Lua.tr(modelData.k);
@@ -253,7 +253,7 @@ Item {
     id: prohibitText
     visible: !root.selectable && root.known
     anchors.centerIn: parent
-    font.family: fontLibian.name
+    font.family: Config.libianName
     font.pixelSize: 18
     opacity: 0.9
     horizontalAlignment: Text.AlignHCenter

@@ -8,7 +8,7 @@ import Fk
 import Fk.Components.LunarLTK
 import Fk.Widgets as W
 
-Item {
+W.PageBase {
   id: root
   objectName: "GeneralsOverview"
   property alias generals: gridView.model
@@ -73,17 +73,19 @@ Item {
     delegate: Item {
       width: pkgList.width
       height: 40
+      required property string modelData
+      required property int index
 
       Text {
-        text: Lua.tr(modelData)
-        color: !Config.curScheme.banPkg[modelData] ? "black" : "grey"
+        text: Lua.tr(parent.modelData)
+        color: !Config.curScheme.banPkg[parent.modelData] ? "black" : "grey"
         Behavior on color { ColorAnimation { duration: 200 } }
         anchors.centerIn: parent
       }
 
       Image {
-        source: AppPath + "/image/button/skill/locked.png"
-        opacity: !Config.curScheme.banPkg[modelData] ? 0 : 1
+        source: Cpp.path + "/image/button/skill/locked.png"
+        opacity: !Config.curScheme.banPkg[parent.modelData] ? 0 : 1
         Behavior on opacity { NumberAnimation { duration: 200 } }
         anchors.centerIn: parent
         scale: 0.8
@@ -91,8 +93,8 @@ Item {
 
       W.TapHandler {
         onTapped: {
-          if (stat === 1) {
-            const name = modelData;
+          if (root.stat === 1) {
+            const name = parent.modelData;
             let s = Config.curScheme;
             if (s.banPkg[name]) {
               delete s.banPkg[name];
@@ -103,7 +105,7 @@ Item {
             }
             Config.curSchemeChanged();
           } else {
-            pkgList.currentIndex = index;
+            pkgList.currentIndex = parent.index;
           }
         }
       }
@@ -120,7 +122,7 @@ Item {
     y: 8
 
     background: Rectangle {
-      color: stat === 0 ? "#5cb3cc" : "#869d9d"
+      color: root.stat === 0 ? "#5cb3cc" : "#869d9d"
       Behavior on color { ColorAnimation { duration: 200 } }
     }
 
@@ -130,7 +132,7 @@ Item {
 
       Label {
         text: {
-          switch (stat) {
+          switch (root.stat) {
             case 0: return Lua.tr("Generals Overview");
             case 1: return Lua.tr("$BanPkgHelp");
             case 2: return Lua.tr("$BanCharaHelp");
@@ -194,7 +196,7 @@ Item {
 
       ToolButton {
         text: Lua.tr("Revert Selection")
-        enabled: stat === 2
+        enabled: root.stat === 2
         font.pixelSize: 20
         onClicked: {
           generals.forEach((g) => {
@@ -207,16 +209,16 @@ Item {
         id: banButton
         font.pixelSize: 20
         text: {
-          if (stat === 2) return Lua.tr("OK");
+          if (root.stat === 2) return Lua.tr("OK");
           return Lua.tr("BanGeneral");
         }
-        enabled: stat !== 1
-        visible: mainStack.currentItem.objectName === "GeneralsOverview"
+        enabled: root.stat !== 1
+        // visible: mainStack.currentItem.objectName === "GeneralsOverview"
         onClicked: {
-          if (stat === 0) {
-            stat = 2;
+          if (root.stat === 0) {
+            root.stat = 2;
           } else {
-            stat = 0;
+            root.stat = 0;
           }
         }
       }
@@ -225,16 +227,16 @@ Item {
         id: banPkgButton
         font.pixelSize: 20
         text: {
-          if (stat === 1) return Lua.tr("OK");
+          if (root.stat === 1) return Lua.tr("OK");
           return Lua.tr("BanPackage");
         }
-        enabled: stat !== 2
-        visible: mainStack.currentItem.objectName === "GeneralsOverview"
+        enabled: root.stat !== 2
+        // visible: mainStack.currentItem.objectName === "GeneralsOverview"
         onClicked: {
-          if (stat === 0) {
-            stat = 1;
+          if (root.stat === 0) {
+            root.stat = 1;
           } else {
-            stat = 0;
+            root.stat = 0;
           }
         }
       }
@@ -242,7 +244,7 @@ Item {
       ToolButton {
         text: Lua.tr("Quit")
         font.pixelSize: 20
-        visible: mainStack.currentItem.objectName === "GeneralsOverview"
+        // visible: mainStack.currentItem.objectName === "GeneralsOverview"
         onClicked: {
           App.quitPage();
           Config.saveConf();
@@ -267,7 +269,7 @@ Item {
       autoBack: false
       name: modelData
       onClicked: {
-        if (stat === 2) {
+        if (root.stat === 2) {
           doBanGeneral(modelData);
         } else {
           generalDetailLoader.item.general = modelData;
@@ -318,7 +320,7 @@ Item {
           }
         }
         anchors.centerIn: parent
-        font.family: fontLi2.name
+        font.family: Config.li2Name
         color: "#E4D5A0"
         font.pixelSize: 36
         font.weight: Font.Medium
@@ -336,7 +338,7 @@ Item {
         font.pixelSize: 20
         anchors.horizontalCenter: parent.horizontalCenter
         horizontalAlignment: Text.AlignHCenter
-        font.family: fontLibian.name
+        font.family: Config.libianName
         color: "lightgrey"
       }
     }
@@ -399,8 +401,8 @@ Item {
 
   Popup {
     id: generalDetail
-    width: realMainWin.width * 0.6
-    height: realMainWin.height * 0.8
+    width: Config.winWidth * 0.6
+    height: Config.winHeight * 0.8
     anchors.centerIn: parent
     background: Rectangle {
       color: "#EEEEEEEE"
@@ -411,18 +413,18 @@ Item {
 
     Loader {
       id: generalDetailLoader
-      width: parent.width / mainWindow.scale
-      height: parent.height / mainWindow.scale
+      width: parent.width / Config.winScale
+      height: parent.height / Config.winScale
       anchors.centerIn: parent
-      scale: mainWindow.scale
+      scale: Config.winScale
       source: "GeneralDetailPage.qml"
     }
   }
 
   Popup {
     id: lobby_drawer
-    width: realMainWin.width * 0.8
-    height: realMainWin.height * 0.85
+    width: Config.winWidth * 0.8
+    height: Config.winHeight * 0.85
     anchors.centerIn: parent
     background: Rectangle {
       color: "#EEEEEEEE"
@@ -434,9 +436,9 @@ Item {
     Loader {
       id: lobby_dialog
       anchors.centerIn: parent
-      width: parent.width / mainWindow.scale
-      height: parent.height / mainWindow.scale
-      scale: mainWindow.scale
+      width: parent.width / Config.winScale
+      height: parent.height / Config.winScale
+      scale: Config.winScale
       clip: true
       onSourceChanged: {
         if (item === null)

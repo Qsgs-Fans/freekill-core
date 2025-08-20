@@ -48,7 +48,7 @@ RowLayout {
           text: mark_extra
           visible: false
           property bool clicked: false
-          font.family: fontLibian.name
+          font.family: Config.libianName
           font.pixelSize: 20
         }
       }
@@ -58,7 +58,7 @@ RowLayout {
         anchors.bottom: parent.bottom
         text: special_value
         visible: special_value !== ""
-        font.family: fontLibian.name
+        font.family: Config.libianName
         font.pixelSize: 20
         font.bold: true
         color: "white"

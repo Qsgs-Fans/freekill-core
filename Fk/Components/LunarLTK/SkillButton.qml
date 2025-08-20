@@ -3,6 +3,7 @@
 import QtQuick
 import Qt5Compat.GraphicalEffects
 import QtQuick.Controls
+import Fk
 import Fk.Widgets as W
 
 Item {
@@ -54,7 +55,7 @@ Item {
     anchors.centerIn: parent
     topPadding: 5
     id: skill
-    font.family: fontLi2.name
+    font.family: Config.li2Name
     font.pixelSize: Math.max(26 - text.length, 18)
     visible: false
     font.bold: true
@@ -123,7 +124,7 @@ Item {
       id: count
       anchors.centerIn: parent
       font.pixelSize: 16
-      font.family: fontLibian.name
+      font.family: Config.libianName
       font.bold: true
       text: root.times
       z: 1.5
@@ -185,8 +186,8 @@ Item {
     id: skillDetail
     x: Math.round((parent.width - width) / 2)
     y: Math.round((parent.height - height) / 2)
-    width: Math.min(contentWidth, realMainWin.width * 0.4)
-    height: Math.min(contentHeight + 24, realMainWin.height * 0.9)
+    width: Math.min(contentWidth, Config.winWidth * 0.4)
+    height: Math.min(contentHeight + 24, Config.winHeight * 0.9)
     visible: false
 
     contentItem: Text{

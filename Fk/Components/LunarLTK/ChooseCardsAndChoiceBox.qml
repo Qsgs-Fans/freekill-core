@@ -123,7 +123,7 @@ GraphicsBox {
             if (filter_skel != "") {
               const func = `Fk.skill_skels["${filter_skel}"].extra.choiceFilter({${cards}}, "${modelData}", json.decode('${JSON.stringify(extra_data)}'))`;
               // console.log(func);
-              return Lua.eval(func);
+              return Lua.evaluate(func);
             }
             return true;
           }

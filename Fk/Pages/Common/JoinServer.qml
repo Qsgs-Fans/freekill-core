@@ -252,7 +252,7 @@ Item {
         const _password = passwordEdit.text;
         Config.screenName = _username;
         Config.password = _password;
-        mainWindow.busy = true;
+        App.setBusy(true);
         Config.serverAddr = _addr;
         Config.serverPort = _port;
         let name = selectedServer?.name;

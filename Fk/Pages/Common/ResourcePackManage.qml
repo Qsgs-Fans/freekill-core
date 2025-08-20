@@ -4,9 +4,11 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
-import Fk
 
-Item {
+import Fk
+import Fk.Widgets as W
+
+W.PageBase {
   id: root
 
   property var currentEnabled: []

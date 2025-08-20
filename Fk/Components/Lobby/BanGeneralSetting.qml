@@ -68,7 +68,7 @@ Item {
           text: Lua.tr("Export")
           onClicked: {
             Backend.copyToClipboard(JSON.stringify(Config.curScheme));
-            toast.show(Lua.tr("Export Success"));
+            App.showToast(Lua.tr("Export Success"));
           }
         }
 
@@ -80,12 +80,12 @@ Item {
             try {
               data = JSON.parse(str);
             } catch (e) {
-              toast.show(Lua.tr("Not Legal"));
+              App.showToast(Lua.tr("Not Legal"));
               return;
             }
             if (!data instanceof Object || !data.banPkg || !data.normalPkg
               || !data.banCardPkg) {
-              toast.show(Lua.tr("Not JSON"));
+              App.showToast(Lua.tr("Not JSON"));
               return;
             }
             Config.curScheme = data;

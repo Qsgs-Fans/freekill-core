@@ -67,7 +67,7 @@ W.PageBase {
             const serverCfg = Config.findFavorite("127.0.0.1", 9527);
             Config.screenName = serverCfg?.username ?? "player";
             Config.password = serverCfg?.password ?? "1234";
-            mainWindow.busy = true;
+            App.setBusy(true);
             Config.addFavorite(Config.serverAddr, Config.serverPort, "",
               Config.screenName, Config.password);
             Backend.startServer(9527);
@@ -224,7 +224,7 @@ W.PageBase {
   function enterLobby(sender, data) {
     Config.lastLoginServer = Config.serverAddr;
     App.enterNewPage("Fk.Pages.Common", "Lobby")
-    mainWindow.busy = false;
+    App.setBusy(false);
     Cpp.notifyServer("RefreshRoomList", "");
     Config.saveConf();
   }

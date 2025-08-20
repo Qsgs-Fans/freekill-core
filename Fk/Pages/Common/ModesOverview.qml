@@ -7,7 +7,7 @@ import QtQuick.Controls
 import Fk
 import Fk.Widgets as W
 
-Item {
+W.PageBase {
   objectName: "ModesOverview"
   RowLayout {
     anchors.fill: parent

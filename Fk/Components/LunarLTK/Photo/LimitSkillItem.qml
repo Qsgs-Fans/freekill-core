@@ -22,7 +22,7 @@ Item {
     anchors.centerIn: bg
     color: "#F0E5DA"
     font.pixelSize: 20
-    font.family: fontLi2.name
+    font.family: Config.li2Name
     style: Text.Outline
     styleColor: "#3D2D1C"
     text: Lua.tr(skillname);
@@ -32,7 +32,7 @@ Item {
     id: x
     opacity: (skilltype === "limit" || skilltype === "quest") ? 1 : 0
     text: "X"
-    font.family: fontLibian.name
+    font.family: Config.libianName
     font.pixelSize: 28
     color: "red"
     x: 26

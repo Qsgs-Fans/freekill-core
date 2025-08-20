@@ -7,7 +7,7 @@ import Fk
 import Fk.Widgets as W
 import Fk.Components.LunarLTK
 
-Item {
+W.PageBase {
   id: root
   objectName: "CardsOverview"
 

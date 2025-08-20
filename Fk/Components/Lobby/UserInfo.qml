@@ -43,7 +43,7 @@ ColumnLayout {
       text: Lua.tr("Update Avatar")
       enabled: avatarName.text !== "" && !opTimer.running
       onClicked: {
-        mainWindow.busy = true;
+        App.setBusy(true);
         opTimer.start();
         ClientInstance.notifyServer(
           "UpdateAvatar",
@@ -85,7 +85,7 @@ ColumnLayout {
       enabled: oldPassword.text !== "" && newPassword.text !== ""
                && !opTimer.running
       onClicked: {
-        mainWindow.busy = true;
+        App.setBusy(true);
         opTimer.start();
         ClientInstance.notifyServer(
           "UpdatePassword",

@@ -137,7 +137,7 @@ Item {
     id: generalName
     x: 5
     y: 28
-    font.family: fontLibian.name
+    font.family: Config.libianName
     font.pixelSize: 22
     opacity: 0.9
     horizontalAlignment: Text.AlignHCenter
@@ -153,7 +153,7 @@ Item {
     id: longGeneralName
     x: 5
     y: 6
-    font.family: fontLibian.name
+    font.family: Config.libianName
     font.pixelSize: 22
     rotation: 90
     transformOrigin: Item.BottomLeft
@@ -230,7 +230,7 @@ Item {
       anchors.left: generalImage.right
       anchors.leftMargin: -14
       y: 23
-      font.family: fontLibian.name
+      font.family: Config.libianName
       font.pixelSize: 22
       opacity: 0.9
       horizontalAlignment: Text.AlignHCenter
@@ -248,7 +248,7 @@ Item {
       anchors.left: generalImage.right
       anchors.leftMargin: -14
       y: 23
-      font.family: fontLibian.name
+      font.family: Config.libianName
       font.pixelSize: 22
       rotation: 90
       transformOrigin: Item.BottomLeft
@@ -310,7 +310,7 @@ Item {
     GlowText {
       Layout.alignment: Qt.AlignCenter
       text: Lua.tr("resting...")
-      font.family: fontLibian.name
+      font.family: Config.libianName
       font.pixelSize: 40
       font.bold: true
       color: "#FEF7D6"
@@ -322,7 +322,7 @@ Item {
       Layout.alignment: Qt.AlignCenter
       visible: root.rest > 0 && root.rest < 999
       text: root.rest
-      font.family: fontLibian.name
+      font.family: Config.libianName
       font.pixelSize: 34
       font.bold: true
       color: "#DBCC69"
@@ -334,7 +334,7 @@ Item {
       Layout.alignment: Qt.AlignCenter
       visible: root.rest > 0 && root.rest < 999
       text: Lua.tr("rest round num")
-      font.family: fontLibian.name
+      font.family: Config.libianName
       font.pixelSize: 28
       color: "#F0E5D6"
       glow.color: "#2E200F"
@@ -358,7 +358,7 @@ Item {
       y: 4
       anchors.horizontalCenter: parent.horizontalCenter
       font.pixelSize: 20
-      font.family: fontLibian.name
+      font.family: Config.libianName
       color: (totalGame > 0 && runGame / totalGame > 0.2) ? "red" : "white"
       style: Text.Outline
       text: {
@@ -505,7 +505,7 @@ Item {
           return n + "/" + maxCard;
         }
       }
-      font.family: fontLibian.name
+      font.family: Config.libianName
       font.pixelSize: (root.maxCard === root.hp || root.hp < 0 ) ? 32 : 27
       //font.weight: 30
       color: "white"
@@ -617,7 +617,7 @@ Item {
       "一", "二", "三", "四", "五", "六",
       "七", "八", "九", "十", "十一", "十二",
     ]
-    font.family: fontLi2.name
+    font.family: Config.li2Name
     font.pixelSize: 32
     text: seatChr[seatNumber - 1]
 
@@ -681,7 +681,7 @@ Item {
     visible: progressTip.text != ""
     Text {
       id: progressTip
-      font.family: fontLibian.name
+      font.family: Config.libianName
       font.pixelSize: 18
       x: 18
       color: "white"
@@ -712,7 +712,7 @@ Item {
           anchors.centerIn: parent
           visible: modelData.type === "normal"
           text: Util.processPrompt(modelData.content)
-          font.family: fontLi2.name
+          font.family: Config.li2Name
           color: "#FEFE84"
           font.pixelSize: {
             if (text.length <= 3) return 36;
@@ -731,7 +731,7 @@ Item {
         Text {
           anchors.centerIn: parent
           visible: modelData.type === "warning"
-          font.family: fontLibian.name
+          font.family: Config.libianName
           font.pixelSize: 24
           opacity: 0.9
           horizontalAlignment: Text.AlignHCenter
@@ -789,7 +789,7 @@ Item {
       y: 4
       text: parent.text
       wrapMode: Text.WrapAnywhere
-      font.family: fontLibian.name
+      font.family: Config.libianName
       font.pixelSize: 20
     }
     SequentialAnimation {
@@ -889,7 +889,7 @@ Item {
         return txt.join("<br>");
       }
       color: "#E4D5A0"
-      font.family: fontLibian.name
+      font.family: Config.libianName
       font.pixelSize: 18
       textFormat: Text.RichText
       horizontalAlignment: Text.AlignHCenter

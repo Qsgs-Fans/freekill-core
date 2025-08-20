@@ -7,7 +7,7 @@ import Fk
 import Fk.Components.Replay
 import Fk.Widgets as W
 
-Item {
+W.PageBase {
   id: root
 
   ListView {

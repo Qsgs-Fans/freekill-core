@@ -34,7 +34,7 @@ Image {
     Text {
       text: Lua.tr(pkgName)
       x: 2; y: 1
-      font.family: fontLibian.name
+      font.family: Config.libianName
       font.pixelSize: 14
       color: "white"
       style: Text.Outline
@@ -54,7 +54,7 @@ Image {
     Text {
       text: Lua.tr(root.general)
       x: 2; y: 1
-      font.family: fontLibian.name
+      font.family: Config.libianName
       font.pixelSize: 14
       color: "black"
       textFormat: Text.RichText

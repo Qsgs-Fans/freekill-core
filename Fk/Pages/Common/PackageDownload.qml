@@ -3,7 +3,7 @@ import QtQuick
 import Fk
 import Fk.Widgets as W
 
-Item {
+W.PageBase {
   id: root
 
 

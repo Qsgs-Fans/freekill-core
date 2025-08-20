@@ -3,6 +3,8 @@
 import QtQuick
 import QtQuick.Layouts
 
+import Fk
+
 Flickable {
   id: root
   property alias skill_buttons: skill_buttons

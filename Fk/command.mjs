@@ -4,6 +4,7 @@
 export const PushPage = 'PushPage';
 export const PopPage = 'PopPage';
 export const ShowToast = 'ShowToast';
+export const SetBusyUI = 'SetBusyUI';
 
 export const ErrorMsg = "ErrorMsg";
 export const ErrorDlg = "ErrorDlg";

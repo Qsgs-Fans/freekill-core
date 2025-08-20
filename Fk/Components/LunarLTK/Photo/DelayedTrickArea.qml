@@ -49,7 +49,7 @@ Item {
           anchors.bottomMargin: 5
           text: len
           visible: len > 1
-          font.family: fontLibian.name
+          font.family: Config.libianName
           font.pixelSize: 20
           font.bold: true
           color: "white"

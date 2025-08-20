@@ -2,6 +2,7 @@
 
 import QtQuick
 import QtQuick.Layouts
+import Fk
 import Fk.Pages
 
 GraphicsBox {
@@ -43,7 +44,7 @@ GraphicsBox {
             height: 100
             text: modelData
             color: "white"
-            font.family: fontLibian.name
+            font.family: Config.libianName
             font.pixelSize: 18
             style: Text.Outline
             wrapMode: Text.WordWrap
@@ -67,7 +68,7 @@ GraphicsBox {
               anchors.centerIn: parent
               text: Lua.tr(modelData.subtype)
               color: "#90765F"
-              font.family: fontLibian.name
+              font.family: Config.libianName
               font.pixelSize: 16
               width: parent.width * 0.8
               wrapMode: Text.WordWrap

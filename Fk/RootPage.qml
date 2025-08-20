@@ -23,8 +23,15 @@ W.PageBase {
     fillMode: Image.PreserveAspectCrop
   }
 
-  FontLoader { id: fontLibian; source: Cpp.path + "/fonts/FZLBGBK.ttf" }
-  FontLoader { id: fontLi2; source: Cpp.path + "/fonts/FZLE.ttf" }
+  FontLoader {
+    id: fontLibian
+    source: Cpp.path + "/fonts/FZLBGBK.ttf"
+  }
+
+  FontLoader {
+    id: fontLi2
+    source: Cpp.path + "/fonts/FZLE.ttf"
+  }
 
   StackView {
     id: mainStack
@@ -49,7 +56,7 @@ W.PageBase {
     text: root.tipList[idx - 1] ?? ""
     color: "#F0E5DA"
     font.pixelSize: 20
-    font.family: fontLibian.name
+    font.family: Config.libianName
     style: Text.Outline
     styleColor: "#3D2D1C"
     textFormat: Text.RichText
@@ -114,7 +121,7 @@ W.PageBase {
   Connections {
     target: Mediator
     function onCommandGot(sender, command, data) {
-      for (let i = 0; i < mainStack.depth; i++) {
+      for (let i = mainStack.depth; i >= 0; i--) {
         const page = mainStack.get(i, StackView.DontLoad) as W.PageBase;
         if (!page) continue;
         if (page.canHandleCommand(command)) {
@@ -153,7 +160,7 @@ W.PageBase {
     }
 
     console.log("ERROR: " + log);
-    toast.show(log, 5000);
+    App.showToast(log, 5000);
     busy = false;
   }
 
@@ -178,6 +185,13 @@ W.PageBase {
     Config.serverEnableBot = enableBots;
   }
 
+  function setBusy(sender, data) {
+    busy = data;
+  }
+
+  function addTotalGameTime(sender, data) {
+    Config.totalTime++;
+  }
 
   Component.onCompleted: {
     Config.loadConf();
@@ -188,11 +202,13 @@ W.PageBase {
     addCallback(Command.PushPage, pushPage);
     addCallback(Command.PopPage, popPage);
     addCallback(Command.ShowToast, showToast);
+    addCallback(Command.SetBusyUI, setBusy);
 
     addCallback(Command.ErrorMsg, errorMessage);
     addCallback(Command.ErrorDlg, errorDialog);
 
     addCallback(Command.SetServerSettings, setServerSettings);
+    addCallback(Command.AddTotalGameTime, addTotalGameTime);
 
     mainStack.push(Qt.createComponent("Fk.Pages.Common", "Init"));
   }

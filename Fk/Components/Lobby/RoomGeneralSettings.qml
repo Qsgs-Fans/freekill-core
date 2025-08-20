@@ -176,7 +176,7 @@ Item {
         onClicked: {
           Config.saveConf();
           root.finish();
-          mainWindow.busy = true;
+          App.setBusy(true);
           let k, arr;
 
           let disabledGenerals = [];

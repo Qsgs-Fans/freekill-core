@@ -12,6 +12,6 @@ import Fk.Components.LunarLTK.Photo as PhotoElement
 import Fk.Widgets as W
 import Fk.LobbyElement as L
 
-Item {
+W.PageBase {
   id: roomScene
 }

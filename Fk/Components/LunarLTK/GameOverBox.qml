@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import Qt.labs.qmlmodels
+import Fk
 import Fk.Pages
 import Fk.Common
 
@@ -109,7 +110,7 @@ GraphicsBox {
 
       onClicked: {
         if (Config.replaying) {
-          mainStack.pop();
+          App.quitPage();
           Backend.controlReplayer("shutdown");
         } else {
           ClientInstance.notifyServer("QuitRoom", "");
@@ -125,7 +126,7 @@ GraphicsBox {
       onClicked: {
         repBtn.visible = false;
         Lua.call("SaveRecord");
-        toast.show("OK.");
+        App.showToast("OK.");
       }
     }
 
@@ -137,13 +138,13 @@ GraphicsBox {
       onClicked: {
         bkmBtn.visible = false;
         Backend.saveBlobRecordToFile(ClientInstance.getMyGameData()[0].id); // 建立在自动保存录像基础上
-        toast.show("OK.");
+        App.showToast("OK.");
       }
     }
   }
 
   function getSummary() {
-    const summaryData = Lua.eval("ClientInstance.banners['GameSummary']");
+    const summaryData = Lua.evaluate("ClientInstance.banners['GameSummary']");
     if (!summaryData || summaryData.length === 0) {
       return;
     }
@@ -197,6 +198,6 @@ GraphicsBox {
   }
 
   Component.onCompleted: {
-    my_role = Lua.eval("Self.role");
+    my_role = Lua.evaluate("Self.role");
   }
 }
