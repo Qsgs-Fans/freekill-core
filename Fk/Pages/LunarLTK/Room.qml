@@ -5,13 +5,13 @@ import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Layouts
 import QtMultimedia
+
 import Fk
-import Fk.Pages
 import Fk.Components.Common
 import Fk.Components.LunarLTK
 import Fk.Components.LunarLTK.Photo as PhotoElement
 import Fk.Widgets as W
-import Fk.Components.Lobby as L
+import Fk.Pages.Lobby as L
 import "RoomLogic.js" as Logic
 
 W.PageBase {
@@ -117,7 +117,7 @@ W.PageBase {
             Backend.controlReplayer("shutdown");
             App.quitPage();
           } else if (Config.observing) {
-            ClientInstance.notifyServer("QuitRoom", "");
+            Cpp.notifyServer("QuitRoom", "");
           } else {
             quitDialog.open();
           }
@@ -212,7 +212,7 @@ W.PageBase {
     anchors.centerIn: parent
     enabled: Config.serverEnableBot && canAddRobot
     onClicked: {
-      ClientInstance.notifyServer("AddRobot", "");
+      Cpp.notifyServer("AddRobot", "");
     }
   }
   onPlayersAlteredChanged: {
@@ -228,7 +228,7 @@ W.PageBase {
     enabled: isAllReady
     anchors.centerIn: parent
     onClicked: {
-      ClientInstance.notifyServer("StartGame", "");
+      Cpp.notifyServer("StartGame", "");
     }
   }
 
@@ -243,7 +243,7 @@ W.PageBase {
     anchors.centerIn: parent
     onClicked: {
       opTimer.start();
-      ClientInstance.notifyServer("Ready", "");
+      Cpp.notifyServer("Ready", "");
     }
   }
 
@@ -258,7 +258,7 @@ W.PageBase {
         let item = photoModel.get(i);
         if (item.isOwner) {
           // 傻逼qml喜欢加1.0
-          ClientInstance.notifyServer("KickPlayer", Math.floor(item.id));
+          Cpp.notifyServer("KickPlayer", Math.floor(item.id));
         }
       }
     }
@@ -1035,7 +1035,7 @@ W.PageBase {
     onButtonClicked: function (button) {
       switch (button) {
         case MessageDialog.Ok: {
-          ClientInstance.notifyServer("QuitRoom", "[]");
+          Cpp.notifyServer("QuitRoom", "[]");
           break;
         }
         case MessageDialog.Cancel: {
@@ -1058,7 +1058,7 @@ W.PageBase {
           if (surrenderCheck.length &&
                 !surrenderCheck.find(check => !check.passed)) {
 
-            ClientInstance.notifyServer("PushRequest", [
+            Cpp.notifyServer("PushRequest", [
               "surrender", true
             ].join(","));
           }
@@ -1076,7 +1076,7 @@ W.PageBase {
     id: settingsDialog
     padding: 0
     width: Config.winWidth * 0.6
-    height: Config.winHeight * 0.6
+    height: Config.winHeight * 0.75
     anchors.centerIn: parent
     background: Rectangle {
       color: "#EEEEEEEE"
@@ -1085,26 +1085,27 @@ W.PageBase {
       border.width: 1
     }
 
-    W.SideBarSwitcher {
-      id: settingBar
-      width: 200
-      height: parent.height
-      model: ListModel {
-        ListElement { name: "Audio Settings" }
-        ListElement { name: "Control Settings" }
+    sourceComponent: RowLayout {
+      W.SideBarSwitcher {
+        id: settingBar
+        Layout.preferredWidth: 200
+        Layout.fillHeight: true
+        model: ListModel {
+          ListElement { name: "Audio Settings" }
+          ListElement { name: "Control Settings" }
+        }
       }
-    }
 
-    SwipeView {
-      width: settingsDialog.width - settingBar.width - 16
-      x: settingBar.width + 16
-      height: parent.height
-      interactive: false
-      orientation: Qt.Vertical
-      currentIndex: settingBar.currentIndex
-      clip: true
-      L.AudioSetting {}
-      L.ControlSetting {}
+      SwipeView {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        interactive: false
+        orientation: Qt.Vertical
+        currentIndex: settingBar.currentIndex
+        clip: true
+        L.AudioSetting {}
+        L.ControlSetting {}
+      }
     }
   }
 
@@ -1439,6 +1440,8 @@ W.PageBase {
     }
     App.quitPage();
     Lua.call("ResetClientLua");
+
+    // TODO 想想办法...
     mainStack.push(room);
     mainStack.currentItem.loadPlayerData(datalist);
   }
@@ -1564,7 +1567,7 @@ W.PageBase {
     const cur = num.curComp;
     const robotsToAdd = Math.max(0, min - cur);
     for (let i = 0; i < robotsToAdd; i++) {
-      ClientInstance.notifyServer("AddRobot", "");
+      Cpp.notifyServer("AddRobot", "");
     }
   }
 

@@ -3,7 +3,6 @@
 import QtQuick
 import QtQuick.Controls
 
-import Fk.Components.Lobby
 import Fk.Widgets as W
 
 Item {

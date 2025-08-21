@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import QtQuick
+
 import Fk
-import Fk.Pages
+import Fk.Components.Common
+import Fk.Components.LunarLTK
 
 GraphicsBox {
   property string prompt: ""

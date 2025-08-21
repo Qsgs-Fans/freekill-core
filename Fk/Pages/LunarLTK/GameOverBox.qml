@@ -4,8 +4,8 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import Qt.labs.qmlmodels
+
 import Fk
-import Fk.Pages
 import Fk.Components.Common
 
 GraphicsBox {

@@ -3,8 +3,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+
 import Fk
-import Fk.Pages
 
 Rectangle {
   color: "transparent"

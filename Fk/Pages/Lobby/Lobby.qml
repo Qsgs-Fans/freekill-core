@@ -8,7 +8,6 @@ import QtQuick.Layouts
 import Fk
 import Fk.Components.Lobby
 import Fk.Components.Common
-import Fk.Pages
 import Fk.Widgets as W
 
 W.PageBase {
@@ -188,7 +187,7 @@ W.PageBase {
       Button {
         text: Lua.tr("Filter")
         onClicked: { // 打开筛选框，在框内完成筛选，不刷新
-          lobby_drawer.sourceComponent = Qt.createComponent("../LobbyElement/FilterRoom.qml"); //roomFilterDialog;
+          lobby_drawer.sourceComponent = Qt.createComponent("FilterRoom.qml"); //roomFilterDialog;
           lobby_drawer.open();
         }
       }
@@ -318,7 +317,7 @@ W.PageBase {
     Button {
       text: Lua.tr("Replay")
       onClicked: {
-        App.enterNewPage("Fk.Pages.Common", "Replay");
+        App.enterNewPage("Fk.Pages.Replay", "Replay");
       }
     }
     Button {

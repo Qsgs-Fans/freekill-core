@@ -223,7 +223,7 @@ W.PageBase {
 
   function enterLobby(sender, data) {
     Config.lastLoginServer = Config.serverAddr;
-    App.enterNewPage("Fk.Pages.Common", "Lobby")
+    App.enterNewPage("Fk.Pages.Lobby", "Lobby")
     App.setBusy(false);
     Cpp.notifyServer("RefreshRoomList", "");
     Config.saveConf();

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import QtQuick
+
 import Fk
+import Fk.Components.LunarLTK
 
 GraphicsBox {
   property int spacing: 5

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import QtQuick
-import QtQuick.Layouts
+
 import Fk
-import Fk.Pages
+import Fk.Components.Common
 
 GraphicsBox {
   property var options: []
@@ -19,23 +19,32 @@ GraphicsBox {
   width: Math.max(140, body.width + 20)
   height: buttons.height + body.height + title.height + 20
 
-  GridLayout {
+  ListView {
     id: body
-    // x: 10
-    anchors.horizontalCenter: parent.horizontalCenter
+    x: 10
     y: title.height + 5
-    flow: GridLayout.TopToBottom
-    rows: 8
-    columnSpacing: 10
+    width: Math.min(700, 220 * model.length)
+    height: 300
+    orientation: ListView.Horizontal
+    clip: true
+    spacing: 20
 
-    Repeater {
-      model: all_options
+    model: all_options
+
+    delegate: Item {
+      width: 200
+      height: 290
 
       MetroToggleButton {
-        Layout.fillWidth: true
-        text: Util.processPrompt(modelData)
+        id: choicetitle
+        width: parent.width
+        text: Lua.tr(modelData)
+        triggered: root.result.includes(index)
         enabled: options.indexOf(modelData) !== -1
                  && (root.result.length < max_num || triggered)
+        textFont.pixelSize: 24
+        anchors.top: choiceDetail.bottom
+        anchors.topMargin: 8
 
         onClicked: {
           if (triggered) {
@@ -46,18 +55,37 @@ GraphicsBox {
           root.result = root.result;
         }
       }
+
+      Flickable {
+        id: choiceDetail
+        x: 4
+        height: parent.height - choicetitle.height
+        contentHeight: detail.height
+        width: parent.width
+        clip: true
+        Text {
+          id: detail
+          width: parent.width
+          text: Lua.tr(":" + modelData)
+          color: "white"
+          wrapMode: Text.WordWrap
+          font.pixelSize: 16
+          textFormat: TextEdit.RichText
+        }
+      }
     }
   }
 
   Row {
     id: buttons
     anchors.margins: 8
-    anchors.top: body.bottom
+    anchors.bottom: root.bottom
     anchors.horizontalCenter: root.horizontalCenter
     spacing: 32
 
     MetroButton {
-      Layout.fillWidth: true
+      width: 120
+      height: 35
       text: Lua.tr("OK")
       enabled: root.result.length >= min_num
 
@@ -67,12 +95,13 @@ GraphicsBox {
     }
 
     MetroButton {
-      Layout.fillWidth: true
+      width: 120
+      height: 35
       text: Lua.tr("Cancel")
-      visible: cancelable
+      visible: root.cancelable
 
       onClicked: {
-        root.result = [];
+        result = [];
         root.close();
       }
     }

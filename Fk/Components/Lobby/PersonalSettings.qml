@@ -76,7 +76,8 @@ Item {
     gesturePolicy: TapHandler.WithinBounds
 
     onTapped: {
-      lobby_drawer.sourceComponent = Qt.createComponent("EditProfile.qml");
+      // TODO 解耦
+      lobby_drawer.sourceComponent = Qt.createComponent("Fk.Pages.Lobby", "EditProfile");
       lobby_drawer.open();
     }
   }

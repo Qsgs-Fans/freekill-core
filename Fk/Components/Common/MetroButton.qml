@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import QtQuick
+
 import Fk.Widgets as W
 
 Item {
   property bool enabled: true
-  property bool triggered: false
   property alias text: title.text
   property alias textColor: title.color
   property alias textFont: title.font
@@ -13,8 +13,10 @@ Item {
   property alias border: bg.border
   property alias iconSource: icon.source
   property int padding: 5
+  property bool hovered: false
 
   signal clicked
+  signal rightClicked
 
   id: button
   width: icon.width + title.implicitWidth + padding * 2
@@ -31,19 +33,9 @@ Item {
 
   states: [
     State {
-      name: "hovered_checked"; when: hover.hovered && triggered
-      PropertyChanges { target: bg; color: "gold" }
-      PropertyChanges { target: title; color: "black" }
-    },
-    State {
       name: "hovered"; when: hover.hovered
       PropertyChanges { target: bg; color: "white" }
       PropertyChanges { target: title; color: "black" }
-    },
-    State {
-      name: "checked"; when: triggered
-      PropertyChanges { target: border; color: "gold" }
-      PropertyChanges { target: title; color: "gold" }
     },
     State {
       name: "disabled"; when: !enabled
@@ -53,15 +45,34 @@ Item {
 
   W.TapHandler {
     id: mouse
-    onTapped: if (parent.enabled) {
-      triggered = !triggered;
-      parent.clicked();
+    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.NoButton
+    gesturePolicy: TapHandler.WithinBounds
+
+    onTapped: (p, btn) => {
+      if (parent.enabled) {
+        if (btn === Qt.LeftButton || btn === Qt.NoButton) {
+          parent.clicked();
+        } else if (btn === Qt.RightButton) {
+          parent.rightClicked();
+        }
+      }
+    }
+
+    onLongPressed: {
+      parent.rightClicked();
     }
   }
 
   HoverHandler {
     id: hover
     cursorShape: Qt.PointingHandCursor
+    onHoveredChanged: {
+      if (hovered) {
+        button.hovered = true;
+      } else {
+        button.hovered = false;
+      }
+    }
   }
 
   Row {

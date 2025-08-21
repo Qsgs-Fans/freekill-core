@@ -840,7 +840,7 @@ callbacks["AskForGeneral"] = (sender, data) => {
   roomScene.setPrompt(Lua.tr("#AskForGeneral"), true);
   roomScene.activate();
   roomScene.popupBox.sourceComponent =
-    Qt.createComponent("../../Components/LunarLTK/ChooseGeneralBox.qml");
+    Qt.createComponent("ChooseGeneralBox.qml");
   const box = roomScene.popupBox.item;
   box.accepted.connect(() => {
     replyToServer(box.choices);
@@ -873,7 +873,7 @@ callbacks["AskForSkillInvoke"] = (sender, data) => {
 callbacks["AskForArrangeCards"] = (sender, data) => {
   roomScene.activate();
   roomScene.popupBox.sourceComponent =
-    Qt.createComponent("../../Components/LunarLTK/ArrangeCardsBox.qml");
+    Qt.createComponent("ArrangeCardsBox.qml");
   const box = roomScene.popupBox.item;
   const cards = data.cards;
   box.cards = cards.reduce((newArray, elem) => {
@@ -904,7 +904,7 @@ callbacks["AskForGuanxing"] = (sender, data) => {
   const prompt = data.prompt;
   roomScene.activate();
   roomScene.popupBox.sourceComponent =
-    Qt.createComponent("../../Components/LunarLTK/GuanxingBox.qml");
+    Qt.createComponent("GuanxingBox.qml");
   const box = roomScene.popupBox.item;
   box.prompt = prompt;
   box.free_arrange = data.is_free;
@@ -940,7 +940,7 @@ callbacks["AskForExchange"] = (sender, data) => {
   const limits = [];
   roomScene.activate();
   roomScene.popupBox.sourceComponent =
-    Qt.createComponent("../../Components/LunarLTK/GuanxingBox.qml");
+    Qt.createComponent("GuanxingBox.qml");
   let for_i = 0;
   const box = roomScene.popupBox.item;
   box.org_cards = data.piles;
@@ -980,9 +980,9 @@ callbacks["AskForChoice"] = (sender, data) => {
   roomScene.activate();
   let qmlSrc;
   if (!detailed) {
-    qmlSrc = "../../Components/LunarLTK/ChoiceBox.qml";
+    qmlSrc = "ChoiceBox.qml";
   } else {
-    qmlSrc = "../../Components/LunarLTK/DetailedChoiceBox.qml";
+    qmlSrc = "DetailedChoiceBox.qml";
   }
   roomScene.popupBox.sourceComponent = Qt.createComponent(qmlSrc);
   const box = roomScene.popupBox.item;
@@ -1014,9 +1014,9 @@ callbacks["AskForChoices"] = (sender, data) => {
   roomScene.activate();
   let qmlSrc;
   if (!detailed) {
-    qmlSrc = "../../Components/LunarLTK/CheckBox.qml";
+    qmlSrc = "CheckBox.qml";
   } else {
-    qmlSrc = "../../Components/LunarLTK/DetailedCheckBox.qml";
+    qmlSrc = "DetailedCheckBox.qml";
   }
   roomScene.popupBox.sourceComponent = Qt.createComponent(qmlSrc);
   const box = roomScene.popupBox.item;
@@ -1048,7 +1048,7 @@ callbacks["AskForCardChosen"] = (sender, data) => {
   }
   roomScene.activate();
   roomScene.popupBox.sourceComponent =
-    Qt.createComponent("../../Components/LunarLTK/PlayerCardBox.qml");
+    Qt.createComponent("PlayerCardBox.qml");
 
   const box = roomScene.popupBox.item;
   box.prompt = prompt;
@@ -1081,7 +1081,7 @@ callbacks["AskForCardsChosen"] = (sender, data) => {
 
   roomScene.activate();
   roomScene.popupBox.sourceComponent =
-    Qt.createComponent("../../Components/LunarLTK/PlayerCardBox.qml");
+    Qt.createComponent("PlayerCardBox.qml");
   const box = roomScene.popupBox.item;
   box.multiChoose = true;
   box.min = min;
@@ -1107,7 +1107,7 @@ callbacks["AskForPoxi"] = (sender, dat) => {
 
   roomScene.activate();
   roomScene.popupBox.sourceComponent =
-    Qt.createComponent("../../Components/LunarLTK/PoxiBox.qml");
+    Qt.createComponent("PoxiBox.qml");
   const box = roomScene.popupBox.item;
   box.extra_data = extra_data;
   box.poxi_type = type;
@@ -1133,7 +1133,7 @@ callbacks["AskForMoveCardInBoard"] = (sender, data) => {
 
   roomScene.activate();
   roomScene.popupBox.sourceComponent =
-    Qt.createComponent("../../Components/LunarLTK/MoveCardInBoardBox.qml");
+    Qt.createComponent("MoveCardInBoardBox.qml");
 
   const boxCards = [];
   cards.forEach(id => {
@@ -1167,7 +1167,7 @@ callbacks["AskForCardsAndChoice"] = (sender, data) => {
 
   roomScene.activate();
   roomScene.popupBox.sourceComponent =
-    Qt.createComponent("../../Components/LunarLTK/ChooseCardsAndChoiceBox.qml");
+    Qt.createComponent("ChooseCardsAndChoiceBox.qml");
 
   const boxCards = [];
   cards.forEach(id => boxCards.push(Lua.call("GetCardData", id)));
@@ -1472,7 +1472,7 @@ callbacks["LogEvent"] = (sender, data) => {
 callbacks["GameOver"] = (sender, jsonData) => {
   roomScene.state = "notactive";
   roomScene.popupBox.sourceComponent =
-    Qt.createComponent("../../Components/LunarLTK/GameOverBox.qml");
+    Qt.createComponent("GameOverBox.qml");
   const box = roomScene.popupBox.item;
   box.winner = jsonData;
   // roomScene.isStarted = false;

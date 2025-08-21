@@ -1,7 +1,0 @@
-module Fk.Pages
-
-# 几个智慧玩意 为了兼容性不杀
-MetroButton 1.0 MetroButton.qml
-MetroToggleButton 1.0 MetroToggleButton.qml
-Danmu 1.0 Danmu.qml
-TileButton 1.0 TileButton.qml

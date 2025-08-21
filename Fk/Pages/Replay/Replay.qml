@@ -4,7 +4,6 @@ import QtQuick
 import QtQuick.Controls
 
 import Fk
-import Fk.Components.Replay
 import Fk.Widgets as W
 
 W.PageBase {

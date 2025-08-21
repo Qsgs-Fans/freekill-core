@@ -1,3 +1,13 @@
 module Fk.Pages.LunarLTK
 
+# 此为游戏全屏主页面
 Room 1.0 Room.qml
+
+# 以下为弹窗页面，收录并不完全（因为其实没人会import它们）
+AG 1.0 AG.qml
+ChoiceBox 1.0 ChoiceBox.qml
+ChooseGeneralBox 1.0 ChooseGeneralBox.qml
+GameOverBox 1.0 GameOverBox.qml
+GraphicsBox 1.0 GraphicsBox.qml
+GuanxingBox 1.0 GuanxingBox.qml
+PlayerCardBox 1.0 PlayerCardBox.qml

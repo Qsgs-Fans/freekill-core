@@ -24,7 +24,9 @@ RowLayout {
 
   signal cardSelected(var card)
 
-  Item { width: 5 }
+  Item {
+    Layout.preferredWidth: 5
+  }
 
   HandcardArea {
     id: handcardAreaItem
@@ -47,8 +49,8 @@ RowLayout {
   }
 
   Item {
-    width: 175
-    height: 233
+    Layout.preferredWidth: 175
+    Layout.preferredHeight: 233
     Layout.rightMargin: -175 / 8 + (roomArea.width - 175 * 0.75 * 7) / 8
     // handcards: handcardAreaItem.length
   }

@@ -3,8 +3,9 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+
 import Fk
-import Fk.Pages
+import Fk.Components.Common
 import Fk.Components.LunarLTK
 
 GraphicsBox {

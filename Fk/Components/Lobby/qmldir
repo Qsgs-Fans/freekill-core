@@ -1,13 +1,4 @@
 module Fk.Components.Lobby
 
-AudioSetting 1.0 AudioSetting.qml
-BanGeneralSetting 1.0 BanGeneralSetting.qml
-BGSetting 1.0 BGSetting.qml
-ControlSetting 1.0 ControlSetting.qml
 RoomDelegate 1.0 RoomDelegate.qml
-FilterRoom 1.0 FilterRoom.qml
 PersonalSettings 1.0 PersonalSettings.qml
-RoomGeneralSettings 1.0 RoomGeneralSettings.qml
-RoomPackageSettings 1.0 RoomPackageSettings.qml
-UserInfo 1.0 UserInfo.qml
-EditProfile 1.0 EditProfile.qml

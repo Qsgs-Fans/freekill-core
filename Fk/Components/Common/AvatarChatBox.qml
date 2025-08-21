@@ -3,10 +3,9 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Fk.Pages
+
 import Fk.Widgets as W
 import Fk
-import Fk.Components.LunarLTK
 
 Rectangle {
   color: "transparent"
