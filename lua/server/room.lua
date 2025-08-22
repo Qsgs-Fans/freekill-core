@@ -2483,9 +2483,10 @@ function Room:askToPlayCard(player, params)
   local extra_data = params.extra_data or {}
 
   local useables = {} -- 可用牌名
-  local useableTrues = {} -- 可用牌名
-  for _, id in ipairs(Fk:getAllCardIds()) do
-    local card = Fk:getCardById(id)
+  local useableTrues = {} -- 可用牌真名
+  for _, name in ipairs(Fk.all_card_names) do
+    local card = Fk:cloneCard(name)
+    card:setVSPattern(nil, player, ".")
     if not player:prohibitUse(card) and card.skill:canUse(player, card, extra_data) then
       table.insertIfNeed(useables, card.name)
       table.insertIfNeed(useableTrues, card.trueName)

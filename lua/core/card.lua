@@ -793,11 +793,17 @@ function Card:getDefaultTarget (player, extra_data)
   else
     return table.random(tos, n)
   end
+  return {}
 end
 
 --- 给卡牌赋予skillname，并赋予pattern（适用于转化技在合法性判断时未确定实体牌的情况）
+---@param skillName string?
+---@param player Player?
+---@param pattern string?
 function Card:setVSPattern(skillName, player, pattern)
-  self.skillName = skillName
+  if skillName then
+    self.skillName = skillName
+  end
   if pattern then
     self:setMark("Global_VS_Pattern", pattern)
   else
