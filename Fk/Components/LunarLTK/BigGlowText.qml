@@ -1,9 +1,12 @@
 import QtQuick
 import Qt5Compat.GraphicalEffects
+
 import Fk
 
 Item {
   property alias text: pileName.text
+  property alias font: pileName.font
+
   GlowText {
     id: pileName
     horizontalAlignment: Text.AlignHCenter

@@ -3,6 +3,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
+
 import Fk
 import Fk.Widgets as W
 
