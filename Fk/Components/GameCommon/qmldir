@@ -1,0 +1,7 @@
+module Fk.Components.GameCommon
+
+# 基础组件，屏幕上一切可操作组件的基类
+BasicItem 1.0 BasicItem.qml
+
+BasicCard 1.0 BasicCard.qml
+PokerCard 1.0 PokerCard.qml

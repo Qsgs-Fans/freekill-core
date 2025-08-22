@@ -3,6 +3,7 @@
 import QtQuick
 import Qt5Compat.GraphicalEffects
 import Fk
+import Fk.Components.GameCommon as Game
 import Fk.Components.LunarLTK.Photo
 
 /* Layout of general card:
@@ -16,7 +17,12 @@ import Fk.Components.LunarLTK.Photo
  * Inherit from CardItem to use common signal
  */
 
-CardItem {
+Game.BasicCard {
+  id: root
+  width: 93
+  height: 130
+
+  property string name
   property string kingdom
   property string subkingdom: "wei"
   property int hp
@@ -28,13 +34,10 @@ CardItem {
   property string pkgName: ""
   property bool detailed: true
   property alias hasCompanions: companions.visible
-  name: ""
-  // description: Sanguosha.getGeneralDescription(name)
-  suit: ""
-  number: 0
+
   footnote: ""
-  card.source: known ? SkinBank.getGeneralPicture(name)
-                     : (SkinBank.GENERALCARD_DIR + 'card-back')
+  cardFrontSource: SkinBank.getGeneralPicture(name)
+  cardBackSource: SkinBank.GENERALCARD_DIR + 'card-back'
   glow.color: "white" //Engine.kingdomColor[kingdom]
 
   // FIXME: 藕！！
@@ -42,45 +45,45 @@ CardItem {
                      name.includes('heg__')
 
   Image {
-    source: known ? (SkinBank.GENERALCARD_DIR + "border") : ""
+    source: parent.known ? (SkinBank.GENERALCARD_DIR + "border") : ""
   }
 
   Image {
-    scale: subkingdom ? 0.6 : 1
+    scale: parent.subkingdom ? 0.6 : 1
     width: 34; fillMode: Image.PreserveAspectFit
     transformOrigin: Item.TopLeft
-    source: SkinBank.getGeneralCardDir(kingdom) + kingdom
-    visible: detailed && known
+    source: SkinBank.getGeneralCardDir(parent.kingdom) + parent.kingdom
+    visible: parent.detailed && parent.known
   }
 
   Image {
     scale: 0.6; x: 9; y: 12
     transformOrigin: Item.TopLeft
     width: 34; fillMode: Image.PreserveAspectFit
-    source: subkingdom ? SkinBank.getGeneralCardDir(subkingdom) + subkingdom
+    source: parent.subkingdom ? SkinBank.getGeneralCardDir(parent.subkingdom) + parent.subkingdom
                        : ""
-    visible: detailed && known
+    visible: parent.detailed && parent.known
   }
 
   Row {
     x: 34
     y: 4
     spacing: 1
-    visible: detailed && known && !heg
+    visible: parent.detailed && parent.known && !parent.heg
     Repeater {
       id: hpRepeater
-      model: (!heg) ? ((hp > 5 || hp !== maxHp) ? 1 : hp) : 0
+      model: (!root.heg) ? ((root.hp > 5 || root.hp !== root.maxHp) ? 1 : root.hp) : 0
       Item {
         width: childrenRect.width
         height: childrenRect.height
         Image {
-          source: SkinBank.getGeneralCardDir(kingdom) + kingdom + "-magatama"
+          source: SkinBank.getGeneralCardDir(root.kingdom) + root.kingdom + "-magatama"
         }
         Image {
           id: subkingdomMagatama
           visible: false
-          source: subkingdom ? SkinBank.getGeneralCardDir(subkingdom) +
-                               subkingdom + "-magatama" : ""
+          source: root.subkingdom ? SkinBank.getGeneralCardDir(root.subkingdom) +
+                               root.subkingdom + "-magatama" : ""
         }
         LinearGradient {
           id: subkingdomMask
@@ -95,14 +98,14 @@ CardItem {
           anchors.fill: subkingdomMagatama
           source: subkingdomMagatama
           maskSource: subkingdomMask
-          visible: subkingdom
+          visible: root.subkingdom
         }
       }
     }
 
     Text {
-      visible: hp > 5 || hp !== maxHp
-      text: hp === maxHp ? ("x" + hp) : (" " + hp + "/" + maxHp)
+      visible: root.hp > 5 || root.hp !== root.maxHp
+      text: root.hp === root.maxHp ? ("x" + root.hp) : (" " + root.hp + "/" + root.maxHp)
       color: "white"
       font.pixelSize: 14
       style: Text.Outline

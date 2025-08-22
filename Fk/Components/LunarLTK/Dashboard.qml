@@ -170,7 +170,7 @@ RowLayout {
     // TODO: 先确定要不要展开相关Pile
     // card - HandcardArea
     const parentPos = roomScene.mapFromItem(self, 0, 0);
-    const component = Qt.createComponent("../RoomElement/CardItem.qml");
+    const component = Qt.createComponent("CardItem");
 
     uiUpdate["_delete"]?.forEach(data => {
       if (data.type == "CardItem") {

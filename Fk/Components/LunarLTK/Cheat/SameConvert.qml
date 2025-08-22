@@ -3,6 +3,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+
+import Fk
 import Fk.Components.LunarLTK
 
 Item {
