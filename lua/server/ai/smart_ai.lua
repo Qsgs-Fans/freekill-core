@@ -402,10 +402,10 @@ function SmartAI:handleAskForUseCard(data)
       return self:doOKButton()
     end
   elseif pattern == "nullification" then
-    local to = prompt:split(":")[3]
+    local to = prompt:startsWith("#AskForNullificationWithoutTo") and prompt:split(":")[2] or prompt:split(":")[3]
     if to then
       to = self.room:getPlayerById(tonumber(to))
-      if self:isFriend(to) then
+      if prompt:startsWith("#AskForNullificationWithoutTo") and self:isEnemy(to) or self:isFriend(to) then
         for _, cd in ipairs(card_ids) do
           self:selectCard(cd, true)
           return self:doOKButton()
