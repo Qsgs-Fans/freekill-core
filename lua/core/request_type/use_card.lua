@@ -37,7 +37,23 @@ function ReqUseCard:cardValidity(cid)
 end
 
 function ReqUseCard:targetValidity(pid)
-  if self.skill_name then return ReqActiveSkill.targetValidity(self, pid) end
+  if self.skill_name then
+    local skill = Fk.skills[self.skill_name] --[[@as ActiveSkill | ViewAsSkill]]
+    if not skill then return false end
+    local card -- 姑且接一下(雾)
+    if skill:isInstanceOf(ViewAsSkill) then
+      ---@cast skill ViewAsSkill
+      card = skill:viewAs(self.player, self.pendings)
+      --不要在当前转化卡牌不可用的情况下开启选目标
+      if card and self:cardFeasible(card) then
+        skill = card.skill
+      end
+    end
+    local room = Fk:currentRoom()
+    local p = room:getPlayerById(pid)
+    local selected = table.map(self.selected_targets, Util.Id2PlayerMapper)
+    return not not skill:targetFilter(self.player, p, selected, self.pendings, card, self.extra_data)
+  end
   local card = self.selected_card
   local p = Fk:currentRoom():getPlayerById(pid)
   local selected = table.map(self.selected_targets or {}, Util.Id2PlayerMapper)
@@ -47,7 +63,7 @@ end
 
 ---@param card Card
 function ReqUseCard:cardFeasible(card)
-  local exp = Exppattern:Parse(self.pattern)
+  local exp = Exppattern:Parse(self.pattern or ".")
   local player = self.player
   if not player:prohibitUse(card) and exp:match(card) then
     return (card.is_passive and not self.extra_data.not_passive) or player:canUse(card, self.extra_data)

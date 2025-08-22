@@ -1185,8 +1185,18 @@ function Player:canUseOrResponseInCurrent(card, extra_data)
   if Fk.currentResponsePattern == nil then
     return self:canUse(card, extra_data)
   else
-    --FIXME: 无法判断当前是使用还是打出，暂且搁置
-    return Exppattern:Parse(Fk.currentResponsePattern):match(card)
+    if Exppattern:Parse(Fk.currentResponsePattern):match(card) then
+      if ClientInstance then
+        local handler = ClientInstance.current_request_handler
+        if handler and handler.class.name == "ReqResponseCard" then
+          return not self:prohibitResponse(card)
+        else
+          return not self:prohibitUse(card) and
+            ((card.is_passive and not (extra_data or {}).not_passive) or card.skill:canUse(self, card, extra_data))
+        end
+      end
+      return true
+    end
   end
 end
 

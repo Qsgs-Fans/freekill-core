@@ -269,8 +269,7 @@ function ReqActiveSkill:feasible()
     ---@cast skill ViewAsSkill
     local card = skill:viewAs(player, self.pendings)
     if card then
-      local card_skill = card.skill
-      ret = card_skill:feasible(player, targets, { card.id }, card)
+      ret = card.skill:feasible(player, targets, { card.id }, card)
     else
       ret = skill:feasible(player, targets, self.pendings)
     end
