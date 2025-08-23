@@ -1174,7 +1174,7 @@ end
 
 --- 确认玩家是否可以使用/打出特定牌，考虑Fk.currentResponsePattern。
 ---@param card Card @ 特定牌
----@param extra_data? UseExtraData @ 额外数据
+---@param extra_data? UseExtraData @ 额外数据（为nil的情况取当前req的extra_data信息）
 function Player:canUseOrResponseInCurrent(card, extra_data)
   if Fk.currentResponsePattern == nil then
     return self:canUse(card, extra_data)
@@ -1193,6 +1193,7 @@ function Player:canUseOrResponseInCurrent(card, extra_data)
       return true
     end
   end
+  return false
 end
 
 --- 当前可用的牌名筛选。用于转化技的interaction里对泛转化牌名的合法性检测
@@ -1200,12 +1201,12 @@ end
 ---@param card_names string[] @ 待判定的牌名列表
 ---@param subcards? integer[] @ 子卡（某些技能可以提前确定子卡，如奇策、妙弦）
 ---@param ban_cards? string[] @ 被排除的卡名
----@param extra_data? UseExtraData|table @ 用于使用的额外信息
+---@param extra_data? UseExtraData|table @ 用于使用的额外信息（为nil的情况取当前req的extra_data信息）
 ---@param vs_pattern? string @ 转化后的卡牌pattern
 ---@return string[] @ 返回牌名列表
 function Player:getViewAsCardNames(skill_name, card_names, subcards, ban_cards, extra_data, vs_pattern)
   ban_cards = ban_cards or Util.DummyTable
-  extra_data = extra_data or Util.DummyTable
+  --extra_data = extra_data or Util.DummyTable
   return table.filter(card_names, function (name)
     local card = Fk:cloneCard(name)
     if subcards then
