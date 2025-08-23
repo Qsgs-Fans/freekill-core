@@ -2,7 +2,7 @@
 
 import QtQuick
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+
 import Fk
 
 RowLayout {
@@ -170,7 +170,7 @@ RowLayout {
     // TODO: 先确定要不要展开相关Pile
     // card - HandcardArea
     const parentPos = roomScene.mapFromItem(self, 0, 0);
-    const component = Qt.createComponent("CardItem");
+    const component = Qt.createComponent("Fk.Components.LunarLTK", "CardItem");
 
     uiUpdate["_delete"]?.forEach(data => {
       if (data.type == "CardItem") {

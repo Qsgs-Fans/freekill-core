@@ -5,3 +5,8 @@ BasicItem 1.0 BasicItem.qml
 
 BasicCard 1.0 BasicCard.qml
 PokerCard 1.0 PokerCard.qml
+
+# 不可见组件之ItemArea
+
+ItemArea 1.0 ItemArea.qml
+InvisibleItemArea 1.0 InvisibleItemArea.qml

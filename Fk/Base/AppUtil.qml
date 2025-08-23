@@ -6,7 +6,8 @@ import Fk
 
 QtObject {
   function enterNewPage(uri, name) {
-    Mediator.notify(null, Command.PushPage, Qt.createComponent(uri, name))
+    const component = Qt.createComponent(uri, name);
+    Mediator.notify(null, Command.PushPage, component);
   }
 
   function quitPage() {

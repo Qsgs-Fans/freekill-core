@@ -1,39 +1,41 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+.import "cpp-util.js" as Cpp
+.import "lua-util.js" as Lua
+
 // TODO 这排var都得不能让外部直接调用了 改成基于函数调用
 // SkinBank.getSystemPic(PHOTO_DIR, path)之类的
 // 这样美化包就可以把path拐到resource_pak/xxx/packages/freekill-core/...下面
 // 由于要全改SkinBank.XXX 留给后来人
-//var AppPath = "file:///home/notify/develop/FreeKill";
-var PHOTO_BACK_DIR = AppPath + "/image/photo/back/";
-var PHOTO_DIR = AppPath + "/image/photo/";
-var GENERAL_DIR = AppPath + "/image/generals/";
-var GENERALCARD_DIR = AppPath + "/image/card/general/";
-var STATE_DIR = AppPath + "/image/photo/state/";
-var STATUS_DIR = AppPath + "/image/photo/status/";
-var ROLE_DIR = AppPath + "/image/photo/role/";
-var DEATH_DIR = AppPath + "/image/photo/death/";
-var MAGATAMA_DIR = AppPath + "/image/photo/magatama/";
-var LIMIT_SKILL_DIR = AppPath + "/image/photo/skill/";
-var CARD_DIR = AppPath + "/image/card/";
-var CARD_SUIT_DIR = AppPath + "/image/card/suit/";
-var DELAYED_TRICK_DIR = AppPath + "/image/card/delayedTrick/";
-var EQUIP_ICON_DIR = AppPath + "/image/card/equipIcon/";
-var PIXANIM_DIR = AppPath + "/image/anim/"
-var TILE_ICON_DIR = AppPath + "/image/button/tileicon/"
-var LOBBY_IMG_DIR = AppPath + "/image/lobby/";
-var MISC_DIR = AppPath + "/image/misc/";
+var PHOTO_BACK_DIR = Cpp.path + "/image/photo/back/";
+var PHOTO_DIR = Cpp.path + "/image/photo/";
+var GENERAL_DIR = Cpp.path + "/image/generals/";
+var GENERALCARD_DIR = Cpp.path + "/image/card/general/";
+var STATE_DIR = Cpp.path + "/image/photo/state/";
+var STATUS_DIR = Cpp.path + "/image/photo/status/";
+var ROLE_DIR = Cpp.path + "/image/photo/role/";
+var DEATH_DIR = Cpp.path + "/image/photo/death/";
+var MAGATAMA_DIR = Cpp.path + "/image/photo/magatama/";
+var LIMIT_SKILL_DIR = Cpp.path + "/image/photo/skill/";
+var CARD_DIR = Cpp.path + "/image/card/";
+var CARD_SUIT_DIR = Cpp.path + "/image/card/suit/";
+var DELAYED_TRICK_DIR = Cpp.path + "/image/card/delayedTrick/";
+var EQUIP_ICON_DIR = Cpp.path + "/image/card/equipIcon/";
+var PIXANIM_DIR = Cpp.path + "/image/anim/"
+var TILE_ICON_DIR = Cpp.path + "/image/button/tileicon/"
+var LOBBY_IMG_DIR = Cpp.path + "/image/lobby/";
+var MISC_DIR = Cpp.path + "/image/misc/";
 
 const searchPkgResource = function (path, name, suffix) {
   suffix = suffix ?? ".png";
-  const dirs = Backend.ls(AppPath + "/packages/").filter(dir =>
+  const dirs = Backend.ls(Cpp.path + "/packages/").filter(dir =>
     !Pacman.getDisabledPacks().includes(dir) &&
     !dir.endsWith(".disabled")
   );
   if (typeof config !== "undefined" && Config.enabledResourcePacks) {
     for (const packName of Config.enabledResourcePacks) {
       for (const dir of dirs) {
-        const resPath = AppPath + "/resource_pak/" + packName + "/packages/" + dir + path + name + suffix;
+        const resPath = Cpp.path + "/resource_pak/" + packName + "/packages/" + dir + path + name + suffix;
         if (Backend.exists(resPath)) return resPath;
       }
     }
@@ -41,7 +43,7 @@ const searchPkgResource = function (path, name, suffix) {
 
   let ret;
   for (const dir of dirs) {
-    ret = AppPath + "/packages/" + dir + path + name + suffix;
+    ret = Cpp.path + "/packages/" + dir + path + name + suffix;
     if (Backend.exists(ret)) return ret;
   }
 }
@@ -50,12 +52,12 @@ const searchPkgResourceWithExtension = function (extension, path, name, suffix) 
   suffix = suffix ?? ".png";
   if (typeof config !== "undefined" && Config.enabledResourcePacks) {
     for (const packName of Config.enabledResourcePacks) {
-      const resPath = AppPath + "/resource_pak/" + packName + "/packages/" + extension + path + name + suffix;
+      const resPath = Cpp.path + "/resource_pak/" + packName + "/packages/" + extension + path + name + suffix;
       if (Backend.exists(resPath)) return resPath;
     }
   }
 
-  const ret = AppPath + "/packages/" + extension + path + name + suffix;
+  const ret = Cpp.path + "/packages/" + extension + path + name + suffix;
   if (Backend.exists(ret)) return ret;
 }
 
@@ -63,14 +65,14 @@ const searchPkgResourceWithExtension = function (extension, path, name, suffix) 
 const searchAudioResourceWithExtension = function (extension, path, name, suffix = ".mp3") {
   if (typeof config !== "undefined" && Config.enabledResourcePacks) {
     for (const packName of Config.enabledResourcePacks) {
-      const resPath = `${AppPath}/resource_pak/${packName}/packages/${extension}${path}${name}${suffix}`;
+      const resPath = `${Cpp.path}/resource_pak/${packName}/packages/${extension}${path}${name}${suffix}`;
       if (Backend.exists(resPath)) {
         return `./resource_pak/${packName}/packages/${extension}${path}${name}`;
       }
     }
   }
 
-  const retPath = `${AppPath}/packages/${extension}${path}${name}${suffix}`;
+  const retPath = `${Cpp.path}/packages/${extension}${path}${name}${suffix}`;
   if (Backend.exists(retPath)) {
     return `./packages/${extension}${path}${name}`;
   }
@@ -80,14 +82,14 @@ const searchAudioResourceWithExtension = function (extension, path, name, suffix
 const searchAudioResourceByPath = function (path) {
   if (typeof config !== "undefined" && Config.enabledResourcePacks) {
     for (const packName of Config.enabledResourcePacks) {
-      const resPath = `${AppPath}/resource_pak/${packName}${path}`;
+      const resPath = `${Cpp.path}/resource_pak/${packName}${path}`;
       if (Backend.exists(resPath)) {
         return `./resource_pak/${packName}${path}`;
       }
     }
   }
 
-  const retPath = `${AppPath}/${path}`;
+  const retPath = `${Cpp.path}/${path}`;
   if (Backend.exists(retPath)) {
     return path;
   }
@@ -97,11 +99,11 @@ function searchBuiltinPic(path, name, suffix) {
   suffix = suffix ?? ".png";
   if (typeof config !== "undefined" && Config.enabledResourcePacks) {
     for (const packName of Config.enabledResourcePacks) {
-      const resPath = AppPath + "/resource_pak/" + packName + path + name + suffix;
+      const resPath = Cpp.path + "/resource_pak/" + packName + path + name + suffix;
       if (Backend.exists(resPath)) return resPath;
     }
   }
-  let ret = AppPath + path + name + suffix;
+  let ret = Cpp.path + path + name + suffix;
   if (Backend.exists(ret)) return ret;
 }
 

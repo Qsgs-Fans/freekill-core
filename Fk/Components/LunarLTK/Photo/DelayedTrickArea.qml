@@ -18,7 +18,7 @@ Item {
 
   InvisibleCardArea {
     id: area
-    checkExisting: true
+    // checkExisting: true
   }
 
   ListModel {

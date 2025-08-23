@@ -2,6 +2,7 @@
 
 import QtQuick
 import Qt5Compat.GraphicalEffects
+
 import Fk
 import Fk.Components.GameCommon as Game
 import Fk.Components.LunarLTK.Photo

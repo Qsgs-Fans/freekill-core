@@ -4,18 +4,21 @@ import QtQuick
 import Fk
 
 Item {
-  property var discardedCards: []
+  id: root
+
+  property var discardedCards: [] // 即将消失的牌
   property alias cards: area.cards
   property bool toVanish: false
 
-  id: root
-
   CardArea {
     id: area
+    anchors.horizontalCenter: parent.horizontalCenter
+    width: length * 93 * 0.8
   }
 
   InvisibleCardArea {
     id: invisibleArea
+    anchors.horizontalCenter: parent.horizontalCenter
   }
 
   // FIXME: 重构需要
@@ -45,11 +48,12 @@ Item {
             continue;
           }
           card.origOpacity = 0;
+          card.destroyOnStop();
           card.goBack(true);
-          card.destroyOnStop()
         }
 
         cards = cards.filter((c) => discardedCards.indexOf(c) === -1);
+        area.length = cards.length;
         updateCardPosition(true);
 
         discardedCards = [];
@@ -69,12 +73,10 @@ Item {
     }
   }
 
-  function add(inputs)
-  {
+  function add(inputs) {
     area.add(inputs);
     // if (!inputs instanceof Array)
-    for (let i = 0; i < inputs.length; i++) {
-      const c = inputs[i];
+    for (const c of inputs) {
       c.footnoteVisible = true;
       c.markVisible = false;
       c.selectable = true;
@@ -86,21 +88,14 @@ Item {
     }
   }
 
-  function remove(outputs, _, visibleData)
-  {
+  function remove(ids, _, visibleData) {
+    visibleData = visibleData ?? {};
     let i, j;
 
-    const to_remove = [];
-    for (j = 0; j < outputs.length; j++) {
-      for (i = cards.length - 1; i >= 0; i--) {
-        if (outputs[j] === cards[i].cid) {
-          if (cards[i].known === !!visibleData[outputs[j].toString()])
-            to_remove.push(outputs[j]);
-          break;
-        }
-      }
-    }
-
+    const to_remove = cards.filter(cd => {
+      return ids.includes(cd.cid) &&
+        cd.known === !!visibleData[cd.cid.toString()];
+    });
     let result = area.remove(to_remove);
     result.forEach(c => {
       const idx = discardedCards.indexOf(c);
@@ -113,74 +108,18 @@ Item {
       c.width = c.width / 0.8;
       c.rotation = 0;
     });
-    const vanished = [];
-    if (result.length < outputs.length) {
-      for (i = 0; i < outputs.length; i++) {
-        let exists = false;
-        for (j = 0; j < result.length; j++) {
-          if (result[j].cid === outputs[i]) {
-            exists = true;
-            break;
-          }
-        }
-        if (!exists)
-          vanished.push(outputs[i]);
-      }
-    }
+
+    const vanished = ids.filter(id => {
+      return !result.find(cd => cd.cid === id);
+    });
     result = result.concat(invisibleArea.remove(vanished));
 
-    for (i = 0; i < result.length; i++) {
-      for (j = 0; j < discardedCards.length; j++) {
-        if (result[i].cid === discardedCards[j].cid) {
-          discardedCards.splice(j, 1);
-          break;
-        }
-      }
-    }
     updateCardPosition(true);
     return result;
   }
 
-  function updateCardPosition(animated)
-  {
-    if (cards.length <= 0)
-      return;
-
-    let i, card;
-
-    let overflow = false;
-    for (i = 0; i < cards.length; i++) {
-      card = cards[i];
-      card.origX = i * card.width;
-      if (card.origX + card.width >= root.width) {
-        overflow = true;
-        break;
-      }
-      card.origY = 0;
-    }
-
-    if (overflow) {
-      //@to-do: Adjust cards in multiple lines if there are too many cards
-      const xLimit = root.width - card.width;
-      const spacing = xLimit / (cards.length - 1);
-      for (i = 0; i < cards.length; i++) {
-        card = cards[i];
-        card.origX = i * spacing;
-        card.origY = 0;
-      }
-    }
-
-    const offsetX = Math.max(0, (root.width - cards.length * card.width) / 2);
-    const parentPos = roomScene.mapFromItem(root, 0, 0);
-    for (i = 0; i < cards.length; i++) {
-      card = cards[i];
-      card.origX += parentPos.x + offsetX;
-      card.origY += parentPos.y;
-    }
-
-    if (animated) {
-      for (i = 0; i < cards.length; i++)
-        cards[i].goBack(true)
-    }
+  function updateCardPosition(animated) {
+    area.updateCardPosition(animated);
+    invisibleArea.updateCardPosition(animated);
   }
 }

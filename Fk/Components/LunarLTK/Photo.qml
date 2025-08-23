@@ -23,7 +23,7 @@ Item {
   property bool role_shown: false
   property string kingdom: "qun"
   property string netstate: "online"
-  property alias handcards: handcardAreaItem.length
+  property int handcards: 0
   property int maxHp: 0
   property int hp: 0
   property int shield: 0
@@ -754,6 +754,11 @@ Item {
   InvisibleCardArea {
     id: handcardAreaItem
     anchors.centerIn: parent
+    onLengthChanged: {
+      root.handcards = Lua.evaluate(`(function()
+        return #ClientInstance:getPlayerById(${root.playerid}):getCardIds("h")
+      end)()`);
+    }
   }
 
   DelayedTrickArea {

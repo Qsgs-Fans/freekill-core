@@ -4,6 +4,8 @@ import QtQuick
 import Fk
 
 Item {
+  id: area
+
   property alias cards: cardArea.cards
   property alias length: cardArea.length
   property bool sortable: true
@@ -13,16 +15,13 @@ Item {
   signal cardSelected(int cardId, bool selected)
   signal cardDoubleClicked(int cardId, bool selected)
 
-  id: area
-
   CardArea {
-    anchors.fill: parent
     id: cardArea
+    anchors.fill: parent
     onLengthChanged: area.updateCardPosition(true);
   }
 
-  function add(inputs)
-  {
+  function add(inputs) {
     cardArea.add(inputs);
     if (inputs instanceof Array) {
       for (let i = 0; i < inputs.length; i++)
@@ -32,8 +31,7 @@ Item {
     }
   }
 
-  function filterInputCard(card)
-  {
+  function filterInputCard(card) {
     card.markVisible = true;
     card.autoBack = true;
     // 只有会被频繁刷新的手牌才能拖动
@@ -46,8 +44,7 @@ Item {
     card.xChanged.connect(updateCardDragging);
   }
 
-  function remove(outputs)
-  {
+  function remove(outputs) {
     const result = cardArea.remove(outputs);
     let card;
     for (let i = 0; i < result.length; i++) {
@@ -84,8 +81,7 @@ Item {
     }
   }
 
-  function updateCardDragging()
-  {
+  function updateCardDragging() {
     let _card, c;
     let index;
     for (index = 0; index < cards.length; index++) {
@@ -115,8 +111,7 @@ Item {
     }
   }
 
-  function updateCardReleased(_card)
-  {
+  function updateCardReleased(_card) {
     let i;
     if (movepos != null && sortable) {
       const handcardnum = Lua.call("GetPlayerHandcards", Self.id).length; // 不计入expand_pile
@@ -129,8 +124,7 @@ Item {
     updateCardPosition(true);
   }
 
-  function adjustCards()
-  {
+  function adjustCards() {
     area.updateCardPosition(true);
   }
 
@@ -145,8 +139,7 @@ Item {
     }
   }
 
-  function enableCards(cardIds)
-  {
+  function enableCards(cardIds) {
     let card, i;
     cards.forEach(card => {
       card.selectable = cardIds.includes(card.cid);

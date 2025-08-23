@@ -26,7 +26,7 @@ Item {
     defensiveHorseItem, offensiveHorseItem]
   property var subtypes: ["treasure", "weapon", "armor",
     "defensive_horse", "offensive_horse"]
-  property int length: area.length
+  property int length: 0
 
   // FIXME: Qt 6.6
 Column {
@@ -34,7 +34,12 @@ Column {
   InvisibleCardArea {
     id: area
     anchors.centerIn: parent
-    checkExisting: true
+    // checkExisting: true
+    onLengthChanged: {
+      root.length = Lua.evaluate(`(function()
+        return #ClientInstance:getPlayerById(${root.parent.playerid}):getCardIds("e")
+      end)()`);
+    }
   }
 
   EquipItem {
