@@ -1191,6 +1191,7 @@ function Player:canUseOrResponseInCurrent(card, extra_data)
         if handler and handler.class.name == "ReqResponseCard" then
           return not self:prohibitResponse(card)
         else
+          extra_data = extra_data or handler.extra_data
           return not self:prohibitUse(card) and
             ((card.is_passive and not (extra_data or {}).not_passive) or card.skill:canUse(self, card, extra_data))
         end
