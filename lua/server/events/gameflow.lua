@@ -398,7 +398,7 @@ function Phase:main()
         if not card then
           card = Fk:getCardById(cid)
         end
-        if table.contains(player:getCardIds(Player.Judge), cid) and card.skill then
+        if table.contains(player:getCardIds(Player.Judge), cid) and card.skill and card.skill.name ~= "default_card_skill" then
           room:moveCardTo(card, Card.Processing, nil, fk.ReasonPut, "phase_judge")
           if card:isVirtual() then
             room:sendCardVirtName({cid}, card.name)
