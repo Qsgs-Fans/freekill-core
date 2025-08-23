@@ -28,12 +28,6 @@ callbacks["GetServerDetail"] = (j) => {
   }
 }
 
-callbacks["UpdatePackage"] = (jsonData) => sheduled_download = jsonData;
-
-callbacks["UpdateBusyText"] = (jsonData) => {
-  mainWindow.busyText = jsonData;
-}
-
 callbacks["DownloadComplete"] = () => {
   App.setBusy(false);
   mainStack.currentItem.downloadComplete(); // should be pacman page
@@ -52,37 +46,6 @@ callbacks["PackageDownloadError"] = (msg) => {
 callbacks["PackageTransferProgress"] = (data) => {
   const page = mainStack.currentItem;
   page.showTransferProgress(data);
-}
-
-callbacks["BackToStart"] = (jsonData) => {
-  while (mainStack.depth > 1) {
-    App.quitPage();
-  }
-
-  tryUpdatePackage();
-}
-
-callbacks["Chat"] = (data) => {
-  // jsonData: { string userName, string general, string time, string msg }
-  const current = mainStack.currentItem;  // lobby or room
-  const pid = data.sender;
-  const userName = data.userName;
-  const general = Lua.tr(data.general);
-  const time = data.time;
-  const msg = data.msg;
-
-  if (Config.blockedUsers.indexOf(userName) !== -1) {
-    return;
-  }
-
-  let text;
-  if (general === "")
-    text = `<font color="#3598E8">[${time}] ${userName}:</font> ${msg}`;
-  else
-    text = `<font color="#3598E8">[${time}] ${userName}` +
-           `(${general}):</font> ${msg}`;
-
-  current.addToChat(pid, data, text);
 }
 
 callbacks["ServerMessage"] = (jsonData) => {

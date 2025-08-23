@@ -14,6 +14,8 @@ W.PageBase {
   property string busyText: ""
   property bool closing: false
 
+  property string sheduledDownload: ""
+
   signal confLoaded
 
   onBusyChanged: busyText = "";
@@ -194,6 +196,52 @@ W.PageBase {
     Config.totalTime++;
   }
 
+  function backToStart() {
+    while (mainStack.depth > 1) {
+      App.quitPage();
+    }
+
+    tryUpdatePackage();
+  }
+
+  function setDownloadData(sender, data) {
+    sheduledDownload = data;
+  }
+
+  function tryUpdatePackage() {
+    if (sheduledDownload !== "") {
+      mainStack.push(Qt.createComponent("Fk.Pages.Common", "PackageDownload"));
+      const downloadPage = mainStack.currentItem;
+      downloadPage.setPackages(sheduledDownload);
+      Pacman.loadSummary(JSON.stringify(sheduledDownload), true);
+      sheduledDownload = "";
+    }
+  }
+
+  function chat(sender, data) {
+    // jsonData: { string userName, string general, string time, string msg }
+    const current = mainStack.currentItem;  // lobby or room
+    const pid = data.sender;
+    const userName = data.userName;
+    const general = Lua.tr(data.general);
+    const time = data.time;
+    const msg = data.msg;
+
+    if (Config.blockedUsers.indexOf(userName) !== -1) {
+      return;
+    }
+
+    let text;
+    if (general === "")
+    text = `<font color="#3598E8">[${time}] ${userName}:</font> ${msg}`;
+    else
+    text = `<font color="#3598E8">[${time}] ${userName}` +
+    `(${general}):</font> ${msg}`;
+
+    current.addToChat(pid, data, text);
+  }
+
+
   Component.onCompleted: {
     Config.loadConf();
     confLoaded();
@@ -207,9 +255,17 @@ W.PageBase {
 
     addCallback(Command.ErrorMsg, errorMessage);
     addCallback(Command.ErrorDlg, errorDialog);
+    // 此为cpp手误 不加入Command
+    addCallback("ErrorDialog", errorDialog);
 
     addCallback(Command.SetServerSettings, setServerSettings);
     addCallback(Command.AddTotalGameTime, addTotalGameTime);
+
+    addCallback(Command.UpdatePackage, setDownloadData);
+    addCallback(Command.BackToStart, backToStart);
+
+    // FIXME 我偷懒了
+    addCallback(Command.Chat, chat);
 
     mainStack.push(Qt.createComponent("Fk.Pages.Common", "Init"));
   }

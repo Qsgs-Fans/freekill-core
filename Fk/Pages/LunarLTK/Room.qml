@@ -95,6 +95,7 @@ W.PageBase {
           if (Config.replaying) {
             Backend.controlReplayer("shutdown");
             App.quitPage();
+            App.quitPage();
           } else if (Config.observing) {
             Cpp.notifyServer("QuitRoom", "");
           } else {

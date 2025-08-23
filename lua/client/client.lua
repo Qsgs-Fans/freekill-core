@@ -377,6 +377,11 @@ fk.client_callback["AddPlayer"] = function(self, data)
   local id, name, avatar, time = data[1], data[2], data[3], data[5]
   self:addPlayer(id, name, avatar, time)
   self:notifyUI("AddPlayer", data)
+
+  -- FIXME 详见StartGame
+  if self.replaying and #self.players == self.capacity then
+    fk.client_callback["StartGame"](self, nil)
+  end
 end
 
 function Client:removePlayer(id)
@@ -1179,6 +1184,15 @@ end
 
 fk.client_callback["StartGame"] = function(self, jsonData)
   self:startRecording()
+
+  -- FIXME 这是个给cpp擦屁股的行为 cpp中播放录像会立刻播一句StartGame
+  -- FIXME 而新UI中必须先AddPlayer再StartGame（进入页面）
+  -- FIXME 为此只好延迟一会 等全addPlayer齐了再StartGame
+  -- FIXME AddPlayer中有一段同理
+  if self.replaying and self.capacity > 1 and #self.players == 1 then
+    return
+  end
+
   self:notifyUI("StartGame", jsonData)
 end
 
@@ -1238,9 +1252,9 @@ local function loadRoomSummary(self, data)
     end
   end
 
-  fk.client_callback["ArrangeSeats"](self, data.circle)
-
   fk.client_callback["StartGame"](self, "")
+
+  fk.client_callback["ArrangeSeats"](self, data.circle)
 
   self:loadJsonObject(data) -- 此处已同步全部数据 剩下就是更新UI
 

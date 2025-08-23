@@ -111,6 +111,7 @@ GraphicsBox {
       onClicked: {
         if (Config.replaying) {
           App.quitPage();
+          App.quitPage();
           Backend.controlReplayer("shutdown");
         } else {
           ClientInstance.notifyServer("QuitRoom", "");

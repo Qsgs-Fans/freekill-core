@@ -1,5 +1,7 @@
 import QtQuick
 
+import Fk
+
 Item {
   id: root
   width: 900

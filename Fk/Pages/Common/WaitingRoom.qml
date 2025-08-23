@@ -402,6 +402,13 @@ W.PageBase {
     }
   }
 
+  Shortcut {
+    sequence: "T"
+    onActivated: {
+      roomDrawer.open();
+    }
+  }
+
   function getPhotoModel(id) {
     for (let i = 0; i < playerNum; i++) {
       const item = photoModel.get(i);
@@ -590,6 +597,99 @@ W.PageBase {
     kickOwnerTimer.stop();
     Backend.playSound("./audio/system/gamestart");
     App.enterNewPage("Fk.Pages.LunarLTK", "Room");
+  }
+
+  function specialChat(pid, data, msg) {
+    // skill audio: %s%d[%s]
+    // death audio: ~%s
+    // something special: !%s:...
+
+    const time = data.time;
+    const userName = data.userName;
+    const general = Lua.tr(data.general);
+
+    if (msg.startsWith("!") || msg.startsWith("~")) { // 胜利、阵亡
+      const g = msg.slice(1);
+      const extension = Lua.call("GetGeneralData", g).extension;
+      if (!Config.disableMsgAudio) {
+        const path = SkinBank.getAudio(g, extension, msg.startsWith("!") ? "win" : "death");
+        Backend.playSound(path);
+      }
+
+      const m = Lua.tr(msg);
+      data.msg = m;
+      if (general === "")
+        chat.append(`[${time}] ${userName}: ${m}`, data);
+      else
+        chat.append(`[${time}] ${userName}(${general}): ${m}`, data);
+
+      const photo = getPhoto(pid);
+      if (photo === undefined) {
+        danmu.sendLog(`${userName}: ${m}`);
+        return true;
+      }
+      photo.chat(m);
+
+      return true;
+    } else { // 技能
+      const split = msg.split(":");
+      if (split.length < 2) return false;
+      const skill = split[0];
+      const idx = parseInt(split[1]);
+      const gene = split[2];
+      if (!Config.disableMsgAudio)
+        try {
+          callbacks["LogEvent"]({
+            type: "PlaySkillSound",
+            name: skill,
+            general: gene,
+            i: idx,
+          });
+        } catch (e) {}
+      const m = Lua.tr("$" + skill + (gene ? "_" + gene : "")
+                          + (idx ? idx.toString() : ""));
+      data.msg = m;
+      if (general === "")
+        chat.append(`[${time}] ${userName}: ${m}`, data);
+      else
+        chat.append(`[${time}] ${userName}(${general}): ${m}`, data)
+
+      const photo = getPhoto(pid);
+      if (photo === undefined) {
+        danmu.sendLog(`${userName}: ${m}`);
+        return true;
+      }
+      photo.chat(m);
+
+      return true;
+    }
+
+    return false;
+  }
+
+  function addToChat(pid, raw, msg) {
+    if (raw.type === 1) return;
+    const photo = getPhoto(pid);
+    if (photo === undefined && Config.hideObserverChatter)
+      return;
+
+    msg = msg.replace(/\{emoji([0-9]+)\}/g,
+      `<img src="${Cpp.path}/image/emoji/$1.png" height="24" width="24" />`);
+    raw.msg = raw.msg.replace(/\{emoji([0-9]+)\}/g,
+      `<img src="${Cpp.path}/image/emoji/$1.png" height="24" width="24" />`);
+
+    if (raw.msg.startsWith("$")) {
+      if (specialChat(pid, raw, raw.msg.slice(1))) return; // 蛋花、语音
+    }
+    chat.append(msg, raw);
+
+    if (photo === undefined) {
+      const user = raw.userName;
+      const m = raw.msg;
+      danmu.sendLog(`${user}: ${m}`);
+      return;
+    }
+    photo.chat(raw.msg);
   }
 
   Component.onCompleted: {
