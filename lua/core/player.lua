@@ -35,7 +35,6 @@
 ---@field public special_cards table<string, integer[]> @ 类似“屯田”的“田”的私人牌堆
 ---@field public cardUsedHistory table<string, integer[]> @ 用牌次数历史记录
 ---@field public skillUsedHistory table<string, integer[]> @ 发动技能次数的历史记录
----@field public fixedDistance table<Player, integer> @ 与其他玩家的固定距离列表
 ---@field public buddy_list integer[] @ 队友列表，或者说自己可以观看别人手牌的那些玩家的列表
 ---@field public equipSlots string[] @ 装备栏列表
 ---@field public sealedSlots string[] @ 被废除的装备栏列表
@@ -124,7 +123,6 @@ function Player:initialize()
 
   self.cardUsedHistory = {}
   self.skillUsedHistory = {}
-  self.fixedDistance = {}
   self.buddy_list = {}
 end
 
@@ -679,10 +677,6 @@ function Player:distanceTo(other, mode, ignore_dead, excludeIds, excludeSkills)
       end
       ret = ret + (correct or 0)
     end
-  end
-
-  if self.fixedDistance[other] then
-    ret = self.fixedDistance[other]
   end
 
   return math.max(ret, 1)
