@@ -95,20 +95,25 @@ function SkillEffect:main()
       )
     end
 
-    player:addSkillUseHistory(skill.name)
-    if not (skill.name ~= skill:getSkeleton().name and skill.is_delay_effect) then
-      player:addSkillUseHistory(skill:getSkeleton().name)
-      local branch = cost_data.history_branch
-      if not branch then
-        if type(skill.history_branch) == "function" then
-          branch = skill:history_branch(player, skill_data)
-        else
-          branch = skill.history_branch
-        end
+    local branch = cost_data.history_branch
+    if not branch then
+      if type(skill.history_branch) == "function" then
+        branch = skill:history_branch(player, skill_data)
+      else
+        branch = skill.history_branch
       end
+    end
+
+    player:addSkillUseHistory(skill.name)
+    if skill.name ~= skill:getSkeleton().name and not skill.is_delay_effect then
+      player:addSkillUseHistory(skill:getSkeleton().name)
 
       if branch then
         player:addSkillBranchUseHistory(skill:getSkeleton().name, branch)
+      end
+    else
+      if branch then
+        player:addSkillBranchUseHistory(skill.name, branch)
       end
     end
   end
