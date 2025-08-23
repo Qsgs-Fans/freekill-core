@@ -7,7 +7,11 @@
 ---@field public anim_type? string|AnimationType @ 技能类型定义
 ---@field public global? boolean @ 决定是否是全局技能
 ---@field public dynamic_desc? fun(self: Skill, player: Player, lang: string): string? @ 动态描述函数
----@field public derived_piles? string|string[] @ 与某效果联系起来的私人牌堆名，失去该效果时将之置入弃牌堆(@deprecated)
+---@field public derived_piles? string|string[]  @deprecated @ 与某效果联系起来的私人牌堆名，失去该效果时将之置入弃牌堆
+---@field public max_phase_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能效果的最大使用次数——阶段
+---@field public max_turn_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能效果的最大使用次数——回合
+---@field public max_round_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能效果的最大使用次数——轮次
+---@field public max_game_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能效果的最大使用次数——本局游戏
 ---@field public audio_index? table|integer @ 此技能效果播放的语音序号，可为int或int表
 ---@field public extra? table @ 塞进技能里的各种数据
 
@@ -19,7 +23,11 @@
 ---@field public attached_skill_name? string @ 向其他角色分发的技能名（如黄天）
 ---@field public dynamic_name? fun(self: SkillSkeleton, player: Player, lang?: string): string @ 动态名称函数
 ---@field public dynamic_desc? fun(self: SkillSkeleton, player: Player, lang?: string): string? @ 动态描述函数
----@field public derived_piles? string | string[] @ 与该技能联系起来的私人牌堆名，失去该技能时将之置入弃牌堆
+---@field public derived_piles? string|string[] @ 与该技能联系起来的私人牌堆名，失去该技能时将之置入弃牌堆
+---@field public max_phase_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能的最大使用次数——阶段
+---@field public max_turn_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能的最大使用次数——回合
+---@field public max_round_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能的最大使用次数——轮次
+---@field public max_game_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能的最大使用次数——本局游戏
 ---@field public mode_skill? boolean @ 是否为模式技能（诸如斗地主的“飞扬”和“跋扈”）
 ---@field public extra? table @ 塞进技能里的各种数据
 
@@ -32,9 +40,10 @@
 ---@field public dynamicName fun(self: SkillSkeleton, player: Player, lang?: string): string @ 动态名称函数
 ---@field public dynamicDesc fun(self: SkillSkeleton, player: Player, lang?: string): string @ 动态描述函数
 ---@field public derived_piles? string[] @ 与一个技能同在的私有牌堆名，失去时弃置其中的所有牌
+---@field public max_use_time table<integer, integer?> @ 一个技能在各时机内最大的使用次数
 ---@field public addTest fun(self: SkillSkeleton, fn: fun(room: Room, me: ServerPlayer)) @ 测试函数
----@field public onAcquire fun(self: SkillSkeleton, player: ServerPlayer, is_start: boolean)
----@field public onLose fun(self: SkillSkeleton, player: ServerPlayer, is_death: boolean)
+---@field public onAcquire fun(self: SkillSkeleton, player: ServerPlayer, is_start: boolean) @ 获得技能时执行的函数
+---@field public onLose fun(self: SkillSkeleton, player: ServerPlayer, is_death: boolean) @ 失去技能时执行的函数
 ---@field public addEffect fun(self: SkillSkeleton, key: "distance", data: DistanceSpec, attribute: nil): SkillSkeleton
 ---@field public addEffect fun(self: SkillSkeleton, key: "prohibit", data: ProhibitSpec, attribute: nil): SkillSkeleton
 ---@field public addEffect fun(self: SkillSkeleton, key: "atkrange", data: AttackRangeSpec, attribute: nil): SkillSkeleton
@@ -86,6 +95,13 @@ function SkillSkeleton:initialize(spec)
   self.mode_skill = spec.mode_skill
 
   self.extra = spec.extra or {}
+
+  self.max_use_time = {
+    spec.max_phase_use_time,
+    spec.max_turn_use_time,
+    spec.max_round_use_time,
+    spec.max_game_use_time,
+  }
 
   --Notify智慧，当不存在main_skill时，用于创建main_skill。看上去毫无用处
   fk.readCommonSpecToSkill(self, spec)
@@ -670,6 +686,50 @@ function SkillSkeleton:getDynamicDescription(player, lang)
     end
   end
   return self.dynamicDesc and self:dynamicDesc(player, lang)
+end
+
+-- 获得技能的最大使用次数
+---@param player Player @ 使用者
+---@param scope integer @ 查询历史范围（默认为回合）
+---@param to? Player @ 目标
+---@return number? @ 最大使用次数，nil就是无限
+function SkillSkeleton:getMaxUseTime(player, scope, to)
+  scope = scope or Player.HistoryTurn
+  local time = self.max_use_time[scope]
+  local ret = time
+  if type(time) == "function" then
+    ret = time(self, player, to)
+  end
+  if ret == nil then return nil end
+  return ret
+end
+
+-- 获得技能的剩余使用次数
+---@param player Player @ 使用者
+---@param scope integer @ 查询历史范围（默认为回合）
+---@param to? Player @ 目标
+---@return number? @ 剩余使用次数，nil就是无限
+function SkillSkeleton:getRemainUseTime(player, scope, to)
+  scope = scope or Player.HistoryTurn
+
+  local limit = self:getMaxUseTime(player, scope, to)
+  if limit == nil then return nil end
+
+  return math.max(0, limit - player:usedSkillTimes(self.name, scope))
+end
+
+-- 判断一个角色是否在技能的次数限制内
+---@param player Player @ 使用者
+---@param scope integer @ 查询历史范围（默认为回合）
+---@param to? Player @ 目标
+---@return boolean?
+function SkillSkeleton:withinTimesLimit(player, scope, to)
+  scope = scope or Player.HistoryTurn
+
+  local limit = self:getMaxUseTime(player, scope, to)
+  if limit == nil then return true end
+
+  return self:getRemainUseTime(player, scope, to) > 0
 end
 
 ---@param spec SkillSkeletonSpec
