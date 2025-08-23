@@ -4,6 +4,8 @@ import QtQuick.Layouts
 
 AbstractButton {
   id: root
+  implicitWidth: 120
+  implicitHeight: 32
 
   // TODO icon
 

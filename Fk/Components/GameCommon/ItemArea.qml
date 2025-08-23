@@ -3,11 +3,11 @@ import QtQuick
 InvisibleItemArea {
   id: root
 
-  function remove(toRemove) {
+  function remove(toRemove, compareFn) {
     let result = [];
     for (let j = 0; j < toRemove.length; j++) {
       for (let i = items.length - 1; i >= 0; i--) {
-        if (toRemove[j] === items[i].cid) {
+        if (compareFn(toRemove[j], items[i])) {
           result.push(items[i]);
           items.splice(i, 1);
           i--;

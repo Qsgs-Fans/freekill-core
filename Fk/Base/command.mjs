@@ -10,6 +10,9 @@ export const ErrorMsg = "ErrorMsg";
 export const ErrorDlg = "ErrorDlg";
 export const SetServerSettings = "SetServerSettings";
 
+// WaitingRoom
+export const BackToRoom = "BackToRoom";
+
 // Misc
 export const UpdateAvatar = "UpdateAvatar";
 export const UpdatePassword = "UpdatePassword";

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import QtQuick
-import Qt5Compat.GraphicalEffects
 import QtQuick.Controls
 import QtQuick.Layouts
 
@@ -9,36 +8,21 @@ import Fk
 import Fk.Components.LunarLTK.Photo
 import Fk.Widgets as W
 
-Item {
+PhotoBase {
   id: root
-  width: 175
-  height: 233
-  scale: 0.75
-  property int playerid: 0
-  property string general: ""
-  property string avatar: ""
-  property string deputyGeneral: ""
-  property string screenName: ""
+
   property string role: "unknown"
   property bool role_shown: false
-  property string kingdom: "qun"
   property string netstate: "online"
   property int handcards: 0
   property int maxHp: 0
   property int hp: 0
   property int shield: 0
-  property int seatNumber: 1
-  property bool dead: false
   property bool dying: false
   property bool faceup: true
   property bool chained: false
   property int drank: 0
   property int rest: 0
-  property bool isOwner: false
-  property bool ready: false
-  property int winGame: 0
-  property int runGame: 0
-  property int totalGame: 0
   property list<string> sealedSlots: []
 
   property int distance: -1
@@ -56,60 +40,11 @@ Item {
   property alias progressBar: progressBar
   property alias progressTip: progressTip.text
 
-  property bool selectable: false
-  property bool selected: false
   property bool doubleTapped: false
 
   property bool playing: false
-  property bool surrendered: false
 
   property var targetTip: []
-  onPlayingChanged: {
-    if (playing) {
-      animPlaying.start();
-    } else {
-      animPlaying.stop();
-    }
-  }
-
-  Behavior on x {
-    NumberAnimation { duration: 600; easing.type: Easing.InOutQuad }
-  }
-
-  Behavior on y {
-    NumberAnimation { duration: 600; easing.type: Easing.InOutQuad }
-  }
-
-  states: [
-    State { name: "normal" },
-    State { name: "candidate" }
-    //State { name: "playing" }
-    //State { name: "responding" },
-    //State { name: "sos" }
-  ]
-
-  state: "normal"
-  transitions: [
-    Transition {
-      from: "*"; to: "normal"
-      ScriptAction {
-        script: {
-          animSelectable.stop();
-          animSelected.stop();
-        }
-      }
-    },
-
-    Transition {
-      from: "*"; to: "candidate"
-      ScriptAction {
-        script: {
-          animSelectable.start();
-          animSelected.start();
-        }
-      }
-    }
-  ]
 
   PixmapAnimation {
     id: animPlaying
@@ -118,52 +53,16 @@ Item {
     loop: true
     scale: 1.1
     visible: root.playing
+    running: visible
   }
 
   PixmapAnimation {
-    id: animSelected
-    source: SkinBank.PIXANIM_DIR + "selected"
+    id: animSelectable
+    source: SkinBank.PIXANIM_DIR + "selectable"
     anchors.centerIn: parent
     loop: true
-    scale: 1.1
-    visible: root.state === "candidate" && selected
-  }
-
-  Image {
-    id: back
-    source: SkinBank.getPhotoBack(root.kingdom)
-  }
-
-  Text {
-    id: generalName
-    x: 5
-    y: 28
-    font.family: Config.libianName
-    font.pixelSize: 22
-    opacity: 0.9
-    horizontalAlignment: Text.AlignHCenter
-    lineHeight: 18
-    lineHeightMode: Text.FixedHeight
-    color: "white"
-    width: 24
-    wrapMode: Text.WrapAnywhere
-    text: ""
-  }
-
-  Text {
-    id: longGeneralName
-    x: 5
-    y: 6
-    font.family: Config.libianName
-    font.pixelSize: 22
-    rotation: 90
-    transformOrigin: Item.BottomLeft
-    opacity: 0.9
-    horizontalAlignment: Text.AlignHCenter
-    lineHeight: 18
-    lineHeightMode: Text.FixedHeight
-    color: "white"
-    text: ""
+    visible: root.state === "candidate" && root.selectable
+    running: visible
   }
 
   HpBar {
@@ -174,119 +73,6 @@ Item {
     shieldNum: root.shield
     anchors.bottom: parent.bottom
     anchors.bottomMargin: 36
-  }
-
-  Item {
-    width: 138
-    height: 222
-    visible: false
-    id: generalImgItem
-
-    Image {
-      id: generalImage
-      width: deputyGeneral ? parent.width / 2 : parent.width
-      Behavior on width { NumberAnimation { duration: 100 } }
-      height: parent.height
-      smooth: true
-      fillMode: Image.PreserveAspectCrop
-      source: {
-        if (general === "") {
-          return "";
-        }
-        if (deputyGeneral) {
-          return SkinBank.getGeneralExtraPic(general, "dual/")
-              ?? SkinBank.getGeneralPicture(general);
-        } else {
-          return SkinBank.getGeneralPicture(general)
-        }
-      }
-    }
-
-    Image {
-      id: deputyGeneralImage
-      anchors.left: generalImage.right
-      width: parent.width / 2
-      height: parent.height
-      smooth: true
-      fillMode: Image.PreserveAspectCrop
-      source: {
-        const general = deputyGeneral;
-        if (deputyGeneral != "") {
-          return SkinBank.getGeneralExtraPic(general, "dual/")
-              ?? SkinBank.getGeneralPicture(general);
-        } else {
-          return "";
-        }
-      }
-    }
-
-    Image {
-      id: deputySplit
-      source: SkinBank.PHOTO_DIR + "deputy-split"
-      opacity: deputyGeneral ? 1 : 0
-    }
-
-    Text {
-      id: deputyGeneralName
-      anchors.left: generalImage.right
-      anchors.leftMargin: -14
-      y: 23
-      font.family: Config.libianName
-      font.pixelSize: 22
-      opacity: 0.9
-      horizontalAlignment: Text.AlignHCenter
-      lineHeight: 18
-      lineHeightMode: Text.FixedHeight
-      color: "white"
-      width: 24
-      wrapMode: Text.WrapAnywhere
-      text: ""
-      style: Text.Outline
-    }
-
-    Text {
-      id: longDeputyGeneralName
-      anchors.left: generalImage.right
-      anchors.leftMargin: -14
-      y: 23
-      font.family: Config.libianName
-      font.pixelSize: 22
-      rotation: 90
-      transformOrigin: Item.BottomLeft
-      opacity: 0.9
-      horizontalAlignment: Text.AlignHCenter
-      lineHeight: 18
-      lineHeightMode: Text.FixedHeight
-      color: "white"
-      width: 24
-      text: ""
-      style: Text.Outline
-    }
-  }
-
-  Rectangle {
-    id: photoMask
-    x: 31
-    y: 5
-    width: 138
-    height: 222
-    radius: 8
-    visible: false
-  }
-
-  OpacityMask {
-    id: photoMaskEffect
-    anchors.fill: photoMask
-    source: generalImgItem
-    maskSource: photoMask
-  }
-
-  Colorize {
-    anchors.fill: photoMaskEffect
-    source: photoMaskEffect
-    saturation: 0
-    opacity: (root.dead || root.surrendered) ? 1 : 0
-    Behavior on opacity { NumberAnimation { duration: 300 } }
   }
 
   Rectangle {
@@ -341,49 +127,6 @@ Item {
       glow.color: "#2E200F"
       glow.spread: 0.6
     }
-  }
-
-  Rectangle {
-    id: winRateRect
-    width: 138; x: 31
-    anchors.bottom: parent.bottom
-    anchors.bottomMargin: 6
-    height: childrenRect.height + 8
-    color: "#CC3C3229"
-    radius: 8
-    border.color: "white"
-    border.width: 1
-    visible: screenName != "" && !roomScene.isStarted
-
-    Text {
-      y: 4
-      anchors.horizontalCenter: parent.horizontalCenter
-      font.pixelSize: 20
-      font.family: Config.libianName
-      color: (totalGame > 0 && runGame / totalGame > 0.2) ? "red" : "white"
-      style: Text.Outline
-      text: {
-        if (totalGame === 0) {
-          return Lua.tr("Newbie");
-        }
-        const winRate = (winGame / totalGame) * 100;
-        const runRate = (runGame / totalGame) * 100;
-        return Lua.tr("Win=%1\nRun=%2\nTotal=%3")
-          .arg(winRate.toFixed(2))
-          .arg(runRate.toFixed(2))
-          .arg(totalGame);
-      }
-    }
-  }
-
-  Image {
-    anchors.bottom: winRateRect.top
-    anchors.right: parent.right
-    anchors.bottomMargin: -8
-    anchors.rightMargin: 4
-    source: SkinBank.PHOTO_DIR +
-            (isOwner ? "owner" : (ready ? "ready" : "notready"))
-    visible: screenName != "" && !roomScene.isStarted
   }
 
   Image {
@@ -583,25 +326,6 @@ Item {
     anchors.rightMargin: 30
   }
 
-  GlowText {
-    id: playerName
-    anchors.horizontalCenter: parent.horizontalCenter
-    anchors.top: parent.top
-    anchors.topMargin: 2
-    width: parent.width
-
-    font.pixelSize: 16
-    text: {
-      let ret = screenName;
-      if (Config.blockedUsers?.includes(screenName))
-        ret = Lua.tr("<Blocked> ") + ret;
-      return ret;
-    }
-    elide: root.playerid === Self.id ? Text.ElideNone : Text.ElideMiddle
-    horizontalAlignment: Qt.AlignHCenter
-    glow.radius: 8
-  }
-
   Image {
     visible: root.state === "candidate" && !selectable && !selected
     source: SkinBank.PHOTO_DIR + "disable"
@@ -690,14 +414,6 @@ Item {
     }
   }
 
-  PixmapAnimation {
-    id: animSelectable
-    source: SkinBank.PIXANIM_DIR + "selectable"
-    anchors.centerIn: parent
-    loop: true
-    visible: root.state === "candidate" && selectable
-  }
-
   RowLayout {
     anchors.centerIn: parent
     spacing: 5
@@ -781,45 +497,6 @@ Item {
   }
 
   Rectangle {
-    id: chat
-    color: "#F2ECD7"
-    radius: 4
-    opacity: 0
-    width: parent.width
-    height: childrenRect.height + 8
-    property string text: ""
-    visible: false
-    Text {
-      width: parent.width - 8
-      x: 4
-      y: 4
-      text: parent.text
-      wrapMode: Text.WrapAnywhere
-      font.family: Config.libianName
-      font.pixelSize: 20
-    }
-    SequentialAnimation {
-      id: chatAnim
-      PropertyAnimation {
-        target: chat
-        property: "opacity"
-        to: 0.9
-        duration: 200
-      }
-      NumberAnimation {
-        duration: 2500
-      }
-      PropertyAnimation {
-        target: chat
-        property: "opacity"
-        to: 0
-        duration: 150
-      }
-      onFinished: chat.visible = false;
-    }
-  }
-
-  Rectangle {
     color: "white"
     height: 20
     width: 20
@@ -830,119 +507,19 @@ Item {
     }
   }
 
-  Rectangle {
-    color: "#CC2E2C27"
-    radius: 6
-    border.color: "#A6967A"
-    border.width: 1
-    width: 44
-    height: 112
-    /* 有点小问题，因为绝大部分都是手机玩家我还是无脑放左
-    x: {
-      const roomX = mapToItem(roomScene, root.x, root.y).x;
-      if (roomX < 48) return 175;
-      return -44;
-    }
-    */
+  HandcardViewer {
     x: -44
     y: 128
+    playerid: root.playerid
+    handcards: root.handcards
+
     visible: {
       if (root.playerid === Self.id) return false;
       if (root.handcards === 0) return false; // 优先绑定再判buddy，否则不会更新
       if (!Lua.call("IsMyBuddy", Self.id, root.playerid) &&
-        !Lua.call("HasVisibleCard", Self.id, root.playerid)) return false;
+      !Lua.call("HasVisibleCard", Self.id, root.playerid)) return false;
       return true;
     }
-
-    Text {
-      x: 2; y: 2
-      width: 42
-      text: {
-        if (!parent.visible) return "";
-        const unused = root.handcards; // 绑定
-        const ids = Lua.call("GetPlayerHandcards", root.playerid);
-        const txt = [];
-        for (const cid of ids) {
-          if (txt.length >= 4) {
-            // txt.push("&nbsp;&nbsp;&nbsp;...");
-            txt.push("...");
-            break;
-          }
-          if (!Lua.call("CardVisibility", cid)) continue;
-          const data = Lua.call("GetCardData", cid);
-          let a = Lua.tr(data.name);
-          /* if (a.length === 1) {
-            a = "&nbsp;&nbsp;" + a;
-          } else  */
-          if (a.length >= 2) {
-            a = a.slice(0, 2);
-          }
-          txt.push(a);
-        }
-
-        if (txt.length < 5) {
-          const unknownCards = ids.length - txt.length;
-          for (let i = 0; i < unknownCards; i++) {
-            if (txt.length >= 4) {
-              txt.push("...");
-              break;
-            } else {
-              txt.push("?");
-            }
-          }
-        }
-
-        return txt.join("<br>");
-      }
-      color: "#E4D5A0"
-      font.family: Config.libianName
-      font.pixelSize: 18
-      textFormat: Text.RichText
-      horizontalAlignment: Text.AlignHCenter
-    }
-
-    W.TapHandler {
-      onTapped: {
-        const params = { name: "hand_card" };
-        let data = Lua.call("GetPlayerHandcards", root.playerid);
-        data = data.filter((e) => Lua.call("CardVisibility", e));
-
-        params.ids = data;
-
-        // Just for using room's right drawer
-        roomScene.startCheat("../RoomElement/ViewPile", params);
-      }
-    }
-  }
-
-  onGeneralChanged: {
-    if (!roomScene.isStarted) return;
-    const text = Lua.tr(general);
-    if (text.replace(/<\/?[^>]+(>|$)/g, "").length > 6) {
-      generalName.text = "";
-      longGeneralName.text = text;
-    } else {
-      generalName.text = text;
-      longGeneralName.text = "";
-    }
-  }
-
-  onDeputyGeneralChanged: {
-    if (!roomScene.isStarted) return;
-    const text = Lua.tr(deputyGeneral);
-    if (text.replace(/<\/?[^>]+(>|$)/g, "").length > 6) {
-      deputyGeneralName.text = "";
-      longDeputyGeneralName.text = text;
-    } else {
-      deputyGeneralName.text = text;
-      longDeputyGeneralName.text = "";
-    }
-  }
-
-  function chat(msg) {
-    chat.text = msg;
-    chat.visible = true;
-    chatAnim.restart();
   }
 
   function updateLimitSkill(skill, time) {

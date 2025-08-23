@@ -11,6 +11,7 @@ Item {
   property bool autoStart: false
   property bool loop: false
   property bool keepAtStop: false
+  property alias running: timer.running
 
   signal loaded()
   signal started()

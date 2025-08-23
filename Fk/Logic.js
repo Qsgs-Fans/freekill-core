@@ -81,6 +81,7 @@ callbacks["Chat"] = (data) => {
   else
     text = `<font color="#3598E8">[${time}] ${userName}` +
            `(${general}):</font> ${msg}`;
+
   current.addToChat(pid, data, text);
 }
 

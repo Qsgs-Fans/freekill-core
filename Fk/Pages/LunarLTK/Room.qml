@@ -18,16 +18,6 @@ W.PageBase {
   id: roomScene
 
   property int playerNum: 0
-  // property var dashboardModel
-
-  property bool isOwner: false
-  property bool isStarted: false
-  property bool isFull: false
-  property bool isAllReady: false
-  property bool isReady: false
-  property bool canKickOwner: false
-  property bool playersAltered: false // 有人加入或离开房间
-  property bool canAddRobot: false
 
   property alias popupBox: popupBox
   property alias manualBox: manualBox
@@ -69,22 +59,11 @@ W.PageBase {
 
     loops: MediaPlayer.Infinite
     onPlaybackStateChanged: {
-      if (playbackState == MediaPlayer.StoppedState && roomScene.isStarted)
+      if (playbackState == MediaPlayer.StoppedState)
         play();
     }
     audioOutput: AudioOutput {
       volume: Config.bgmVolume / 100
-    }
-  }
-
-  onIsStartedChanged: {
-    if (isStarted) {
-      Backend.playSound("./audio/system/gamestart");
-      bgm.play();
-      canKickOwner = false;
-      kickOwnerTimer.stop();
-    } else {
-      bgm.stop();
     }
   }
 
@@ -184,12 +163,12 @@ W.PageBase {
 
       MenuItem {
         id: surrenderButton
-        enabled: !Config.observing && !Config.replaying && isStarted
+        enabled: !Config.observing && !Config.replaying
         text: Lua.tr("Surrender")
         icon.source: Cpp.path + "/image/misc/surrender"
         onClicked: {
           const photo = getPhoto(Self.id);
-          if (isStarted && !(photo.dead && photo.rest <= 0)) {
+          if (!(photo.dead && photo.rest <= 0)) {
             const surrenderCheck = Lua.call('CheckSurrenderAvailable', miscStatus.playedTime);
             if (!surrenderCheck.length) {
               surrenderDialog.informativeText =
@@ -206,139 +185,11 @@ W.PageBase {
     }
   }
 
-  Button {
-    text: Lua.tr("Add Robot")
-    visible: isOwner && !isStarted && !isFull
-    anchors.centerIn: parent
-    enabled: Config.serverEnableBot && canAddRobot
-    onClicked: {
-      Cpp.notifyServer("AddRobot", "");
-    }
-  }
-  onPlayersAlteredChanged: {
-    if (playersAltered) {
-      checkCanAddRobot();
-      playersAltered = false;
-    }
-  }
-
-  Button {
-    text: Lua.tr("Start Game")
-    visible: isOwner && !isStarted && isFull
-    enabled: isAllReady
-    anchors.centerIn: parent
-    onClicked: {
-      Cpp.notifyServer("StartGame", "");
-    }
-  }
-
-  Timer {
-    id: opTimer
-    interval: 1000
-  }
-  Button {
-    text: isReady ? Lua.tr("Cancel Ready") : Lua.tr("Ready")
-    visible: !isOwner && !isStarted
-    enabled: !opTimer.running
-    anchors.centerIn: parent
-    onClicked: {
-      opTimer.start();
-      Cpp.notifyServer("Ready", "");
-    }
-  }
-
-  Button {
-    id: kickOwner
-    anchors.horizontalCenter: parent.horizontalCenter
-    y: parent.height / 2 + 30
-    text: Lua.tr("Kick Owner")
-    visible: canKickOwner && !isStarted && isFull && !isOwner
-    onClicked: {
-      for (let i = 0; i < photoModel.count; i++) {
-        let item = photoModel.get(i);
-        if (item.isOwner) {
-          // 傻逼qml喜欢加1.0
-          Cpp.notifyServer("KickPlayer", Math.floor(item.id));
-        }
-      }
-    }
-  }
-
-  Timer {
-    id: kickOwnerTimer
-    interval: 15000
-    onTriggered: {
-      canKickOwner = true;
-    }
-  }
-
-  onIsAllReadyChanged: {
-    if (!isAllReady) {
-      canKickOwner = false;
-      kickOwnerTimer.stop();
-    } else {
-      Backend.playSound("./audio/system/ready");
-      kickOwnerTimer.start();
-    }
-  }
-
-  Rectangle {
-    x: parent.width / 2 + 60
-    y: parent.height / 2 - 30
-    color: "snow"
-    opacity: 0.8
-    radius: 6
-    visible: !isStarted
-    width: 280
-    height: 280
-
-    Flickable {
-      id: flickableContainer
-      ScrollBar.vertical: ScrollBar {}
-      anchors.horizontalCenter: parent.horizontalCenter
-      anchors.top: parent.top
-      anchors.topMargin: 10
-      flickableDirection: Flickable.VerticalFlick
-      width: parent.width - 10
-      height: parent.height - 10
-      contentHeight: roominfo.height
-      clip: true
-
-      Text {
-        id: roominfo
-        font.pixelSize: 16
-        width: parent.width
-        wrapMode: TextEdit.WordWrap
-        Component.onCompleted: {
-          const data = Lua.call("GetRoomConfig");
-          let cardpack = Lua.call("GetAllCardPack");
-          cardpack = cardpack.filter(p => !data.disabledPack.includes(p));
-
-          text = Lua.tr("GameMode") + Lua.tr(data.gameMode) + "<br />"
-            + Lua.tr("LuckCardNum") + "<b>" + data.luckTime + "</b><br />"
-            + Lua.tr("ResponseTime") + "<b>" + Config.roomTimeout + "</b><br />"
-            + Lua.tr("ChooseGeneralTime") + "<b>" + data.generalTimeout + "</b><br />"
-            + Lua.tr("GeneralBoxNum") + "<b>" + data.generalNum + "</b>"
-            + (data.enableFreeAssign ? "<br />" + Lua.tr("IncludeFreeAssign")
-                                     : "")
-            + (data.enableDeputy ? " " + Lua.tr("IncludeDeputy") : "")
-            + '<br />' + Lua.tr('CardPackages') + cardpack.map(e => {
-              let ret = Lua.tr(e);
-              // TODO: 这种东西最好还是变量名规范化= =
-              if (ret.search(/特殊牌|衍生牌/) === -1) {
-                ret = "<b>" + ret + "</b>";
-              }
-              return ret;
-            }).join('，');
-        }
-      }
-    }
-  }
-
   states: [
     State { name: "notactive" },
     State { name: "active" }
   ]
+
   state: "notactive"
   transitions: [
     Transition {
@@ -440,8 +291,6 @@ W.PageBase {
         chained: model.chained
         drank: model.drank
         rest: model.rest
-        isOwner: model.isOwner
-        ready: model.ready
         surrendered: model.surrendered
         sealedSlots: JSON.parse(model.sealedSlots)
 
@@ -1217,7 +1066,6 @@ W.PageBase {
   Timer {
     id: statusSkillTimer
     interval: 200
-    running: isStarted
     repeat: true
     onTriggered: {
       Lua.call("RefreshStatusSkills");
@@ -1241,12 +1089,6 @@ W.PageBase {
       // 刷大家的明置手牌提示框
       for (let i = 0; i < photos.count; i++)
         photos.itemAt(i).handcardsChanged();
-    }
-  }
-
-  onIsOwnerChanged: {
-    if (isOwner && !isStarted && !isFull) {
-      addInitComputers();
     }
   }
 
@@ -1441,9 +1283,8 @@ W.PageBase {
     App.quitPage();
     Lua.call("ResetClientLua");
 
-    // TODO 想想办法...
-    mainStack.push(room);
-    mainStack.currentItem.loadPlayerData(datalist);
+    Mediator.notify(this, Command.BackToRoom, datalist);
+    // mainStack.currentItem.loadPlayerData(datalist);
   }
 
   function setPrompt(text, iscur) {
@@ -1453,19 +1294,6 @@ W.PageBase {
 
   function resetPrompt() {
     promptText = currentPrompt;
-  }
-
-  function loadPlayerData(datalist) {
-    datalist.forEach(d => {
-      if (d.id === Self.id) {
-        roomScene.isOwner = d.isOwner;
-      } else {
-        Lua.call("ResetAddPlayer",
-          [d.id, d.name, d.avatar, d.ready, d.gameData[3]]);
-      }
-      Lua.call("SetPlayerGameData", d.id, d.gameData);
-      Logic.getPhotoModel(d.id).isOwner = d.isOwner;
-    });
   }
 
   function getPhoto(id) {
@@ -1561,74 +1389,18 @@ W.PageBase {
     });
   }
 
-  function addInitComputers() {
-    const num = Lua.call("GetCompNum");
-    const min = num.minComp;
-    const cur = num.curComp;
-    const robotsToAdd = Math.max(0, min - cur);
-    for (let i = 0; i < robotsToAdd; i++) {
-      Cpp.notifyServer("AddRobot", "");
-    }
-  }
-
-  function checkCanAddRobot() {
-    if (Config.serverEnableBot) {
-      const num = Lua.call("GetCompNum");
-      canAddRobot = num.maxComp > num.curComp;
-    }
-  }
-
   function addZero(temp) {
     if (temp < 10) return "0" + temp;
     else return temp;
   }
 
   function enterLobby(sender, data) {
+    App.quitPage(); // 退到等待页了，再退
     App.quitPage();
 
     App.setBusy(false);
     Cpp.notifyServer("RefreshRoomList", "");
     Config.saveConf();
-  }
-
-  function updateGameData(sender, data) {
-    const id = data[0];
-    const total = data[1];
-    const win = data[2];
-    const run = data[3];
-    const photo = getPhoto(id);
-    if (photo) {
-      photo.totalGame = total;
-      photo.winGame = win;
-      photo.runGame = run;
-    }
-  }
-
-  function setRoomOwner(sender, data) {
-    // jsonData: int uid of the owner
-    const uid = data[0];
-
-    roomScene.isOwner = (Self.id === uid);
-
-    const model = Logic.getPhotoModel(uid);
-    if (typeof(model) !== "undefined") {
-      model.isOwner = true;
-    }
-  }
-
-  function readyChanged(sender, data) {
-    const id = data[0];
-    const ready = data[1];
-
-    if (id === Self.id) {
-      roomScene.isReady = !!ready;
-    }
-
-    const model = Logic.getPhotoModel(id);
-    if (typeof(model) !== "undefined") {
-      model.ready = ready ? true : false;
-      Logic.checkAllReady();
-    }
   }
 
   function netStateChanged(sender, data) {
@@ -1643,60 +1415,11 @@ W.PageBase {
     model.netstate = state;
   }
 
-  function addPlayer(sender, data) {
-    // jsonData: int id, string screenName, string avatar, bool ready
-    for (let i = 0; i < photoModel.count; i++) {
-      const item = photoModel.get(i);
-      if (item.id === -1) {
-        const uid = data[0];
-        const name = data[1];
-        const avatar = data[2];
-        const ready = data[3];
-
-        item.id = uid;
-        item.screenName = name;
-        item.general = avatar;
-        item.avatar = avatar;
-        item.ready = ready;
-
-        Logic.checkAllReady();
-
-        if (getPhoto(-1)) {
-          roomScene.isFull = false;
-        } else {
-          roomScene.isFull = true;
-        }
-        roomScene.playersAltered = true;
-
-        return;
-      }
-    }
-  }
-
-  function removePlayer(sender, data) {
-    // jsonData: int uid
-    const uid = data[0];
-    const model = Logic.getPhotoModel(uid);
-    if (typeof(model) !== "undefined") {
-      model.id = -1;
-      model.screenName = "";
-      model.general = "";
-      model.isOwner = false;
-      roomScene.isFull = false;
-      roomScene.playersAltered = true;
-    }
-  }
-
   Component.onCompleted: {
     // TODO 虽然这里很多都要杀成Waiting界面 但现在还是得以跑起来为头等大事
     addCallback(Command.EnterLobby, enterLobby);
-    addCallback(Command.UpdateGameData, updateGameData);
-    addCallback(Command.RoomOwner, setRoomOwner);
 
-    addCallback(Command.ReadyChanged, readyChanged);
     addCallback(Command.NetStateChanged, netStateChanged);
-    addCallback(Command.AddPlayer, addPlayer);
-    addCallback(Command.RemovePlayer, removePlayer);
 
     // TODO 摆烂了 反正这些后面也是得重构 懒得搬砖了
     addCallback(Command.SetCardFootnote, Logic.callbacks["SetCardFootnote"]);
@@ -1759,11 +1482,12 @@ W.PageBase {
     addCallback(Command.ReplayerElapsedChange, Logic.callbacks["ReplayerElapsedChange"]);
     addCallback(Command.ReplayerSpeedChange, Logic.callbacks["ReplayerSpeedChange"]);
 
-    App.showToast(Lua.tr("$EnterRoom"));
     playerNum = Config.roomCapacity;
+    bgm.play();
 
     for (let i = 0; i < playerNum; i++) {
-      photoModel.append({
+      const state = Lua.evaluate(`ClientInstance.players[${i + 1}]:__toqml().properties`);
+      const modelData = {
         id: i ? -1 : Self.id,
         index: i,   // For animating seat swap
         general: i ? "" : Self.avatar,
@@ -1784,14 +1508,15 @@ W.PageBase {
         chained: false,
         drank: 0,
         rest: 0,
-        isOwner: false,
-        ready: false,
         surrendered: false,
         sealedSlots: "[]",
-      });
+      };
+      Object.assign(modelData, state);
+      modelData.id = state.playerid;
+
+      photoModel.append(modelData);
     }
 
     Logic.arrangePhotos();
-    checkCanAddRobot();
   }
 }

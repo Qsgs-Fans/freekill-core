@@ -22,7 +22,7 @@ Item {
   }
 
   function remove(outputs) {
-    let result = area.remove(outputs);
+    let result = area.remove(outputs, (a, b) => a === b.cid);
     for (const cd of result) {
       const state = Lua.call("GetCardData", cd.cid);
       cd.setData(state);

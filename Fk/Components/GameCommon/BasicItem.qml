@@ -126,14 +126,6 @@ Item {
     }
   }
 
-  Rectangle {
-    visible: !root.selectable
-    anchors.fill: parent
-    color: Qt.rgba(0, 0, 0, 0.5)
-    opacity: 0.7
-    z: 2
-  }
-
   function goBack(animated) {
     if (animated) {
       moveAborted = true;

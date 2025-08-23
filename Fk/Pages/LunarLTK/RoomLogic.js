@@ -660,18 +660,6 @@ callbacks["MaxCard"] = (sender, data) => {
   }
 }
 
-function checkAllReady() {
-  let allReady = true;
-  for (let i = 0; i < photoModel.count; i++) {
-    const item = photoModel.get(i);
-    if (!item.isOwner && !item.ready) {
-      allReady = false;
-      break;
-    }
-  }
-  roomScene.isAllReady = allReady;
-}
-
 callbacks["PropertyUpdate"] = (sender, data) => {
   // jsonData: int id, string property_name, value
   const uid = data[0];
@@ -1566,7 +1554,7 @@ callbacks["ChangeSelf"] = (sender, j) => {
       dashboard.self = photos.itemAt(i);
     }
   }
-  callbacks["ArrangeSeats"](order);
+  callbacks["ArrangeSeats"](null, order);
 
   // update dashboard
   dashboard.update();

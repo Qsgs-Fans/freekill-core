@@ -95,7 +95,7 @@ Item {
     const to_remove = cards.filter(cd => {
       return ids.includes(cd.cid) &&
         cd.known === !!visibleData[cd.cid.toString()];
-    });
+    }).map(c => c.cid);
     let result = area.remove(to_remove);
     result.forEach(c => {
       const idx = discardedCards.indexOf(c);
