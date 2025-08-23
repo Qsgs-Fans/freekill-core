@@ -22,7 +22,7 @@ end
 
 -- 获得技能的最大使用次数
 ---@param player Player @ 使用者
----@param scope integer @ 查询历史范围（默认为回合）
+---@param scope? integer @ 查询历史范围（默认为回合）
 ---@param card? Card @ 卡牌
 ---@param to? Player @ 目标
 ---@return number? @ 最大使用次数，nil就是无限
@@ -48,7 +48,7 @@ end
 
 -- 判断一个角色是否在技能的次数限制内
 ---@param player Player @ 使用者
----@param scope integer @ 查询历史范围（默认为回合）
+---@param scope? integer @ 查询历史范围（默认为回合）
 ---@param card? Card @ 牌，若没有牌，则尝试制造一张虚拟牌
 ---@param card_name? string @ 牌名
 ---@param to? Player @ 目标

@@ -13,6 +13,7 @@
 ---@field public no_indicate? boolean @ 发动时是否不显示指示线
 ---@field public audio_index? number @ 发动时是否播放特定编号台词
 ---@field public anim_type? AnimationType|string @ 发动时是否播放特定动画
+---@field public history_branch? string @ 发动时是否播放特定动画
 
 --- 技能使用的数据
 ---@class SkillUseData: SkillUseDataSpec, TriggerData
@@ -21,7 +22,7 @@ SkillUseData = TriggerData:subclass("SkillUseData")
 ---@class SkillEffectDataSpec
 ---@field public skill_cb fun():any @ 实际技能函数
 ---@field public who ServerPlayer @ 技能发动者
----@field public skill Skill @ 发动的技能
+---@field public skill UsableSkill @ 发动的技能
 ---@field public skill_data SkillUseData @ 技能数据
 ---@field public prevented? boolean @ 防止执行技能效果（仅用于触发技、主动技、转化技）
 ---@field public trigger_break? boolean @ 停止继续触发此时机（仅用于触发技）

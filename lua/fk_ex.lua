@@ -90,15 +90,15 @@ function fk.readStatusSpecToSkill(skill, spec)
 end
 
 ---@class UsableSkillSpec: SkillSpec
----@field public main_skill? UsableSkill
----@field public max_use_time? integer[]
+---@field public main_skill? UsableSkill @ 该技能是否为某技能的主框架
+---@field public max_phase_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能效果的最大使用次数——阶段
+---@field public max_turn_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能效果的最大使用次数——回合
+---@field public max_round_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能效果的最大使用次数——轮次
+---@field public max_game_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能效果的最大使用次数——本局游戏
+---@field public history_branch? string @ 裁定本技能发动时（on_cost->on_use）将技能历史额外添加到某处分支下（内部有独立的时段细分），这也将超前地接管自动次数判断
 ---@field public expand_pile? string | integer[] | fun(self: UsableSkill, player: ServerPlayer): integer[]|string? @ 额外牌堆，牌堆名称或卡牌id表
 ---@field public derived_piles? string | string[] @ 与某效果联系起来的私人牌堆名，失去该效果时将之置入弃牌堆(@deprecated)
----@field public max_phase_use_time? integer  @ 每阶段使用次数上限
----@field public max_turn_use_time? integer  @ 每回合使用次数上限
----@field public max_round_use_time? integer  @ 每回合使用次数上限
----@field public max_game_use_time? integer  @ 整场游戏使用次数上限
----@field public times? integer | fun(self: UsableSkill, player: Player): integer
+---@field public times? integer | fun(self: UsableSkill, player: Player): integer @ 显示在主动技按钮上的发动次数数字
 ---@field public min_target_num? integer
 ---@field public max_target_num? integer
 ---@field public target_num? integer

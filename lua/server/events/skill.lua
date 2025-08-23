@@ -98,6 +98,13 @@ function SkillEffect:main()
     player:addSkillUseHistory(skill.name)
     if skill.name ~= skill:getSkeleton().name and not skill.is_delay_effect then
       player:addSkillUseHistory(skill:getSkeleton().name)
+      if cost_data.history_branch then
+        player:addSkillBranchUseHistory(skill:getSkeleton().name, cost_data.history_branch)
+      end
+    else --想必没人给自己的主effect上is_delay_effect吧
+      if cost_data.history_branch then
+        player:addSkillBranchUseHistory(skill.name, cost_data.history_branch)
+      end
     end
   end
 
