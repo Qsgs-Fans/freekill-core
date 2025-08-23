@@ -2224,7 +2224,7 @@ function Room:handleUseCardReply(player, data, params)
           from = player,
           cards = selected_cards,
           tos = table.map(targets, Util.Id2PlayerMapper),
-        }, c, params)
+        }, c, params) or ""
         if type(useResult) == "table" then
           if params == nil then
             player.room:useCard(useResult)

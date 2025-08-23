@@ -119,7 +119,7 @@ end
 ---@param room Room
 ---@param cardUseEvent SkillUseData
 ---@param params? handleUseCardParams
----@return UseCardDataSpec|string
+---@return UseCardDataSpec|string?
 function ViewAsSkill:onUse(room, cardUseEvent, card, params)
   if card == nil then return "" end
   ---@type UseCardDataSpec
