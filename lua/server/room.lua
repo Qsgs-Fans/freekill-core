@@ -2205,26 +2205,28 @@ function Room:handleUseCardReply(player, data, params)
     local selected_cards = card_data.subcards
     if skill.interaction then skill.interaction.data = data.interaction_data end
     if skill:isInstanceOf(ActiveSkill) then
+      local use_data = {
+        from = player,
+        cards = selected_cards,
+        tos = table.map(targets, Util.Id2PlayerMapper),
+      }
       ---@cast skill ActiveSkill
       self:useSkill(player, skill, function()
-        skill:onUse(self, SkillUseData:new {
-          from = player,
-          cards = selected_cards,
-          tos = table.map(targets, Util.Id2PlayerMapper),
-        })
-      end, {tos = table.map(targets, Util.Id2PlayerMapper), cards = selected_cards, cost_data = {}})
+        skill:onUse(self, SkillUseData:new(use_data))
+      end, use_data)
       return nil
     elseif skill:isInstanceOf(ViewAsSkill) then
       ---@cast skill ViewAsSkill
       --Self = player
       local useResult
       local c = skill:viewAs(player, selected_cards)
+      local use_data = {
+        from = player,
+        cards = selected_cards,
+        tos = table.map(targets, Util.Id2PlayerMapper),
+      }
       self:useSkill(player, skill, function()
-        useResult = skill:onUse(self, SkillUseData:new {
-          from = player,
-          cards = selected_cards,
-          tos = table.map(targets, Util.Id2PlayerMapper),
-        }, c, params) or ""
+        useResult = skill:onUse(self, SkillUseData:new(use_data), c, params) or ""
         if type(useResult) == "table" then
           if params == nil then
             player.room:useCard(useResult)
@@ -2234,7 +2236,7 @@ function Room:handleUseCardReply(player, data, params)
             useResult.attachedSkillAndUser = { skillName = skill.name, user = player.id, muteCard = skill.mute_card }
           end
         end
-      end, {tos = table.map(targets, Util.Id2PlayerMapper), cards = selected_cards, cost_data = {}})
+      end, use_data)
       return useResult
     end
   else

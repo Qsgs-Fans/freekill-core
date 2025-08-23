@@ -80,6 +80,7 @@ function fk.readUsableSpecToSkill(skill, spec)
   skill.is_delay_effect = not not spec.is_delay_effect
   skill.late_refresh = not not spec.late_refresh
   skill.click_count = not not spec.click_count
+  skill.history_branch = spec.history_branch
 end
 
 function fk.readStatusSpecToSkill(skill, spec)
@@ -95,7 +96,7 @@ end
 ---@field public max_turn_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能效果的最大使用次数——回合
 ---@field public max_round_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能效果的最大使用次数——轮次
 ---@field public max_game_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能效果的最大使用次数——本局游戏
----@field public history_branch? string @ 裁定本技能发动时（on_cost->on_use）将技能历史额外添加到某处分支下（内部有独立的时段细分），这也将超前地接管自动次数判断
+---@field public history_branch? string|fun(self: UsableSkill, player: ServerPlayer, data: SkillUseData):string? @ 裁定本技能发动时（on_cost->on_use）将技能历史额外添加到某处分支下（内部有独立的时段细分），无法约束本技能是否可用
 ---@field public expand_pile? string | integer[] | fun(self: UsableSkill, player: ServerPlayer): integer[]|string? @ 额外牌堆，牌堆名称或卡牌id表
 ---@field public derived_piles? string | string[] @ 与某效果联系起来的私人牌堆名，失去该效果时将之置入弃牌堆(@deprecated)
 ---@field public times? integer | fun(self: UsableSkill, player: Player): integer @ 显示在主动技按钮上的发动次数数字

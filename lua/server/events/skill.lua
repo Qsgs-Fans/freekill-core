@@ -96,14 +96,19 @@ function SkillEffect:main()
     end
 
     player:addSkillUseHistory(skill.name)
-    if skill.name ~= skill:getSkeleton().name and not skill.is_delay_effect then
+    if not (skill.name ~= skill:getSkeleton().name and skill.is_delay_effect) then
       player:addSkillUseHistory(skill:getSkeleton().name)
-      if cost_data.history_branch then
-        player:addSkillBranchUseHistory(skill:getSkeleton().name, cost_data.history_branch)
+      local branch = cost_data.history_branch
+      if not branch then
+        if type(skill.history_branch) == "function" then
+          branch = skill:history_branch(player, skill_data)
+        else
+          branch = skill.history_branch
+        end
       end
-    else --想必没人给自己的主effect上is_delay_effect吧
-      if cost_data.history_branch then
-        player:addSkillBranchUseHistory(skill.name, cost_data.history_branch)
+
+      if branch then
+        player:addSkillBranchUseHistory(skill:getSkeleton().name, branch)
       end
     end
   end
@@ -141,7 +146,7 @@ end
 ---@param player ServerPlayer @ 发动技能的玩家
 ---@param skill Skill @ 发动的技能
 ---@param effect_cb fun() @ 实际要调用的函数
----@param skill_data? table @ 技能的信息
+---@param skill_data? SkillUseDataSpec @ 技能的信息
 ---@return SkillEffectData
 function SkillEventWrappers:useSkill(player, skill, effect_cb, skill_data)
   ---@cast self Room
