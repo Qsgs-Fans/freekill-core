@@ -7,7 +7,7 @@
 --]]
 
 ---@class UsableSkill : Skill
----@field public max_use_time (integer?)[] @ 一个效果的最大可用次数
+---@field public max_use_time table<integer, integer?> @ 一个效果的最大可用次数
 ---@field public expand_pile? string | integer[] | fun(self: UsableSkill, player: Player): integer[]|string? @ 额外牌堆，牌堆名称或卡牌id表
 ---@field public derived_piles? string | string[] @deprecated @ 与某效果联系起来的私人牌堆名，失去该效果时将之置入弃牌堆
 ---@field public times? fun(self: UsableSkill, player: Player): integer

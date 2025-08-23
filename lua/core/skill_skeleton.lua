@@ -52,9 +52,9 @@
 ---@field public addEffect fun(self: SkillSkeleton, key: "filter", data: FilterSpec, attribute: nil): SkillSkeleton
 ---@field public addEffect fun(self: SkillSkeleton, key: "invalidity", data: InvaliditySpec, attribute: nil): SkillSkeleton
 ---@field public addEffect fun(self: SkillSkeleton, key: "visibility", data: VisibilitySpec, attribute: nil): SkillSkeleton
----@field public addEffect fun(self: SkillSkeleton, key: "active", data: ActiveSkillSpec, attribute: nil): SkillSkeleton
+---@field public addEffect fun(self: SkillSkeleton, key: "active", data: ActiveSkillSpec, attribute: SkillAttribute?): SkillSkeleton
 ---@field public addEffect fun(self: SkillSkeleton, key: "cardskill", data: CardSkillSpec, attribute: nil): SkillSkeleton
----@field public addEffect fun(self: SkillSkeleton, key: "viewas", data: ViewAsSkillSpec, attribute: nil): SkillSkeleton
+---@field public addEffect fun(self: SkillSkeleton, key: "viewas", data: ViewAsSkillSpec, attribute: SkillAttribute?): SkillSkeleton
 local SkillSkeleton = class("SkillSkeleton")
 
 
@@ -205,9 +205,12 @@ function SkillSkeleton:createSkill()
   return main_skill
 end
 
----@class TrigSkelAttribute
----@field public is_delay_effect? boolean
---- 若为true，则不贴main_skill
+---@class SkillAttribute
+---@field public check_effect_limit? boolean @ 若为true，则自带判断效果次数（若不填can_use，则默认带限定“本阶段”的次数判定）
+---@field public check_skill_limit? boolean @ 若为true，则自带判断技能次数
+
+---@class TrigSkelAttribute: SkillAttribute
+---@field public is_delay_effect? boolean @ 若为true，则不贴main_skill
 
 ---@alias TrigFunc fun(self: TriggerSkill, event: TriggerEvent, target: ServerPlayer?, player: ServerPlayer, data: any): any
 ---@class TrigSkelSpec<T>: {
@@ -245,16 +248,34 @@ function SkillSkeleton:createTriggerSkill(_skill, idx, key, attr, spec)
     sk.global = spec.global
   end
   if spec.can_trigger then
+    local tmp_func
     if table.contains(_skill.tags, Skill.Wake) then
-      sk.triggerable = function(_self, event, target, player, data)
+      if spec.can_wake then
+        sk.canWake = spec.can_wake
+      end
+      tmp_func = function(_self, event, target, player, data)
         return spec.can_trigger(_self, event, target, player, data) and
           sk:enableToWake(event, target, player, data)
       end
     else
-      sk.triggerable = spec.can_trigger
+      tmp_func = spec.can_trigger
     end
-    if table.contains(_skill.tags, Skill.Wake) and spec.can_wake then
-      sk.canWake = spec.can_wake
+    sk.triggerable = function(_self, event, target, player, data)
+      if attr.check_effect_limit then
+        for scope, _ in pairs(_self.max_use_time) do
+          if not _self:withinTimesLimit(player, scope) then
+            return false
+          end
+        end
+      end
+      if attr.check_skill_limit then
+        for scope, _ in pairs(_skill.max_use_time) do
+          if not _skill:withinTimesLimit(player, scope) then
+            return false
+          end
+        end
+      end
+      return tmp_func(_self, event, target, player, data)
     end
   end
   if spec.on_trigger then sk.trigger = spec.on_trigger end
@@ -472,10 +493,28 @@ function SkillSkeleton:createActiveSkill(_skill, idx, key, attr, spec)
   local skill = ActiveSkill:new(new_name, #_skill.tags > 0 and _skill.tags[1] or Skill.NotFrequent)
   fk.readUsableSpecToSkill(skill, spec)
 
-  if spec.can_use then
-    skill.canUse = function(curSkill, player)
-      return spec.can_use(curSkill, player) and curSkill:isEffectable(player)
+  local spec_can_use = spec.can_use
+  if not spec_can_use then
+    spec_can_use = ActiveSkill.canUse
+  end
+
+  skill.canUse = function(curSkill, player, _, extra_data)
+    if not curSkill:isEffectable(player) then return end
+    if attr.check_effect_limit then
+      for scope, _ in pairs(curSkill.max_use_time) do
+        if not curSkill:withinTimesLimit(player, scope) then
+          return false
+        end
+      end
     end
+    if attr.check_skill_limit then
+      for scope, _ in pairs(_skill.max_use_time) do
+        if not _skill:withinTimesLimit(player, scope) then
+          return false
+        end
+      end
+    end
+    return spec_can_use(curSkill, player, _, extra_data)
   end
   if spec.card_filter then skill.cardFilter = spec.card_filter end
   if spec.target_filter then skill.targetFilter = spec.target_filter end
@@ -546,14 +585,41 @@ function SkillSkeleton:createViewAsSkill(_skill, idx, key, attr, spec)
   if type(spec.pattern) == "string" then
     skill.pattern = spec.pattern
   end
+
+  local timeCheck = function(curSkill, player)
+    if attr.check_effect_limit then
+      for scope, _ in pairs(curSkill.max_use_time) do
+        if not curSkill:withinTimesLimit(player, scope) then
+          return false
+        end
+      end
+    end
+    if attr.check_skill_limit then
+      for scope, _ in pairs(_skill.max_use_time) do
+        if not _skill:withinTimesLimit(player, scope) then
+          return false
+        end
+      end
+    end
+    return true
+  end
+
   if type(spec.enabled_at_play) == "function" then
     skill.enabledAtPlay = function(curSkill, player)
-      return spec.enabled_at_play(curSkill, player) and curSkill:isEffectable(player)
+      return timeCheck(curSkill, player) and spec.enabled_at_play(curSkill, player) and curSkill:isEffectable(player)
+    end
+  else
+    skill.enabledAtPlay = function(curSkill, player)
+      return timeCheck(curSkill, player) and ViewAsSkill.enabledAtPlay(curSkill, player)
     end
   end
   if type(spec.enabled_at_response) == "function" then
     skill.enabledAtResponse = function(curSkill, player, cardResponsing)
-      return spec.enabled_at_response(curSkill, player, cardResponsing) and curSkill:isEffectable(player)
+      return timeCheck(curSkill, player) and spec.enabled_at_response(curSkill, player, cardResponsing) and curSkill:isEffectable(player)
+    end
+  else
+    skill.enabledAtResponse = function(curSkill, player, cardResponsing)
+      return timeCheck(curSkill, player) and ViewAsSkill.enabledAtResponse(curSkill, player, cardResponsing)
     end
   end
   if spec.prompt then skill.prompt = spec.prompt end
@@ -572,7 +638,13 @@ function SkillSkeleton:createViewAsSkill(_skill, idx, key, attr, spec)
   if spec.click_count then skill.click_count = spec.click_count end
 
   if type(spec.enabled_at_nullification) == "function" then
-    skill.enabledAtNullification = spec.enabled_at_nullification
+    skill.enabledAtNullification = function(curSkill, player, cardData)
+      return timeCheck(curSkill, player) and spec.enabled_at_nullification(curSkill, player, cardData) and curSkill:isEffectable(player)
+    end
+  else
+    skill.enabledAtNullification = function(curSkill, player, cardData)
+      return timeCheck(curSkill, player) and ViewAsSkill.enabledAtNullification(curSkill, player, cardData)
+    end
   end
 
   skill.handly_pile = spec.handly_pile
