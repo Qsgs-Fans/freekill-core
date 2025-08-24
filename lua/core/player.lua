@@ -933,6 +933,37 @@ function Player:setSkillBranchUseHistory(skill_name, branch, num, scope)
   end
 end
 
+--- 清空玩家使用特定技能的历史次数
+---@param skill_name string @ 技能名，若为主技能则同时清空所有技能效果和分支的历史次数
+---@param scope? integer @ 清空的历史范围，不填则全部清空
+function Player:clearSkillHistory(skill_name, scope)
+  local skill = Fk.skills[skill_name]
+  local skel = skill:getSkeleton()
+  if skel and skel.name == skill_name then
+    if scope then
+      for _, effect in ipairs(skel.effect_names) do
+        self:setSkillUseHistory(effect, 0, scope)
+      end
+    else
+      for _, effect in ipairs(skel.effect_names) do
+        self:setSkillUseHistory(effect)
+      end
+    end
+    self:setSkillBranchUseHistory(skill_name)
+    return
+  end
+
+  if scope then
+    for _, effect in ipairs(skill_name) do
+      self:setSkillUseHistory(effect, 0, scope)
+    end
+  else
+    for _, effect in ipairs(skill_name) do
+      self:setSkillUseHistory(effect)
+    end
+  end
+end
+
 --- 获取玩家使用特定牌的历史次数（只算计入次数的部分）。
 ---@param cardName string @ 牌名
 ---@param scope? integer @ 查询历史范围，默认Turn
