@@ -9,6 +9,7 @@ import Fk.Widgets as W
 Item {
   width: 600
   height: 800
+
   W.PreferencePage {
     id: prefPage
     anchors.top: parent.top
@@ -147,12 +148,10 @@ Item {
       for (let k in Config.curScheme.banPkg) {
         Lua.call("UpdatePackageEnable", k, false);
       }
-      Config.curScheme.banCardPkg.forEach(p =>
-      Lua.call("UpdatePackageEnable", p, false));
-      Config.curSchemeChanged();
+      Config.curScheme.banCardPkg.forEach(p => Lua.call("UpdatePackageEnable", p, false));
+      Config.curScheme = Config.curScheme;
     }
   }
-
 
   Rectangle {
     id: buttonBar

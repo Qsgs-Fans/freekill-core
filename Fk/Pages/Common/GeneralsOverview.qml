@@ -103,7 +103,7 @@ W.PageBase {
               delete s.normalPkg[name];
               s.banPkg[name] = [];
             }
-            Config.curSchemeChanged();
+            Config.curScheme = Config.curScheme;
           } else {
             pkgList.currentIndex = parent.index;
           }
@@ -493,7 +493,7 @@ W.PageBase {
     } else {
       arr.push(name);
     }
-    Config.curSchemeChanged();
+    Config.curScheme = Config.curScheme;
   }
 
   Component.onCompleted: {
