@@ -2,7 +2,7 @@
 
 ---@class SkillSpec
 ---@field public name? string @ 技能名
----@field public mute? boolean @ 决定是否关闭技能配音，若为true，同时也不添加技能发动历史
+---@field public mute? boolean @ 决定是否关闭技能配音
 ---@field public no_indicate? boolean @ 决定是否关闭技能指示线
 ---@field public anim_type? string|AnimationType @ 技能类型定义
 ---@field public global? boolean @ 决定是否是全局技能
