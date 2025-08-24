@@ -19,12 +19,12 @@
 ---@field public attached_skill_name? string @ 向其他角色分发的技能名（如黄天）
 ---@field public dynamic_name? fun(self: SkillSkeleton, player: Player, lang?: string): string @ 动态名称函数
 ---@field public dynamic_desc? fun(self: SkillSkeleton, player: Player, lang?: string): string? @ 动态描述函数
----@field public derived_piles? string|string[] @ 与该技能联系起来的私人牌堆名，失去该技能时将之置入弃牌堆
----@field public max_phase_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能的最大使用次数——阶段
----@field public max_turn_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能的最大使用次数——回合
----@field public max_round_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能的最大使用次数——轮次
----@field public max_game_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能的最大使用次数——本局游戏
----@field public max_branches_use_time? table<string, table<integer, integer?>?>|fun(self: SkillSkeleton, player: Player): table<string, table<integer, integer?>?>? @ 该技能的最大使用次数——任意标签（内部有独立的时段细分）
+---@field public derived_piles? string | string[] @ 与该技能联系起来的私人牌堆名，失去该技能时将之置入弃牌堆
+---@field public max_phase_use_time? integer | fun(self: SkillSkeleton, player: Player): integer? @ 该技能的最大使用次数——阶段
+---@field public max_turn_use_time? integer | fun(self: SkillSkeleton, player: Player): integer? @ 该技能的最大使用次数——回合
+---@field public max_round_use_time? integer | fun(self: SkillSkeleton, player: Player): integer? @ 该技能的最大使用次数——轮次
+---@field public max_game_use_time? integer | fun(self: SkillSkeleton, player: Player): integer? @ 该技能的最大使用次数——本局游戏
+---@field public max_branches_use_time? table<string, table<integer, integer?>?> | fun(self: SkillSkeleton, player: Player): table<string, table<integer, integer?>?>? @ 该技能的最大使用次数——任意标签（内部有独立的时段细分）
 ---@field public mode_skill? boolean @ 是否为模式技能（诸如斗地主的“飞扬”和“跋扈”）
 ---@field public extra? table @ 塞进技能里的各种数据
 
@@ -38,7 +38,7 @@
 ---@field public dynamicDesc fun(self: SkillSkeleton, player: Player, lang?: string): string @ 动态描述函数
 ---@field public derived_piles? string[] @ 与该技能同在的私有牌堆名，失去时弃置其中的所有牌
 ---@field public max_use_time table<integer, integer?> @ 该技能在各时机内最大的使用次数
----@field public max_branches_use_time? table<string, table<integer, integer?>?>|fun(self: SkillSkeleton, player: Player): table<string, table<integer, integer?>?>? @ 该技能的最大使用次数——任意标签（内部有独立的时段细分）
+---@field public max_branches_use_time? table<string, table<integer, integer?>?> | fun(self: SkillSkeleton, player: Player): table<string, table<integer, integer?>?>? @ 该技能的最大使用次数——任意标签（内部有独立的时段细分）
 ---@field public addTest fun(self: SkillSkeleton, fn: fun(room: Room, me: ServerPlayer)) @ 测试函数
 ---@field public onAcquire fun(self: SkillSkeleton, player: ServerPlayer, is_start: boolean) @ 获得技能时执行的函数
 ---@field public onLose fun(self: SkillSkeleton, player: ServerPlayer, is_death: boolean) @ 失去技能时执行的函数
