@@ -106,10 +106,10 @@ function Skill:__touistring()
 end
 function Skill:__toqml()
   return {
-    moduleUri = "Fk.RoomElement",
-    typeName = "SkillButton",
+    uri = "Fk.Components.LunarLTK",
+    name = "SkillButton",
 
-    properties = {
+    prop = {
       type = "notactive",
       orig = self.name,
       skill = Fk:translate(self.name),

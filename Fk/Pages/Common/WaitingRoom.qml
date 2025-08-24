@@ -4,13 +4,10 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Layouts
-import QtMultimedia
 
 import Fk
 import Fk.Components.Common
 import Fk.Components.WaitingRoom
-import Fk.Components.LunarLTK
-import Fk.Components.LunarLTK.Photo as PhotoElement
 import Fk.Widgets as W
 
 W.PageBase {
@@ -596,7 +593,18 @@ W.PageBase {
     canKickOwner = false;
     kickOwnerTimer.stop();
     Backend.playSound("./audio/system/gamestart");
-    App.enterNewPage("Fk.Pages.LunarLTK", "Room");
+
+    const data = Lua.evaluate(`Fk.game_modes[ClientInstance.settings.gameMode].room_page`);
+    if (!data instanceof Object) {
+      App.enterNewPage("Fk.Pages.LunarLTK", "Room");
+    } else {
+      if (data.uri && data.name) {
+        // TODO 还不可用，需要让Lua能添加import path
+        App.enterNewPage(data.uri, data.name);
+      } else {
+        App.enterNewPage(Cpp.path + "/" + data.url);
+      }
+    }
   }
 
   function specialChat(pid, data, msg) {

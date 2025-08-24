@@ -1487,7 +1487,7 @@ W.PageBase {
     bgm.play();
 
     for (let i = 0; i < playerNum; i++) {
-      const state = Lua.evaluate(`ClientInstance.players[${i + 1}]:__toqml().properties`);
+      const state = Lua.evaluate(`ClientInstance.players[${i + 1}]:__toqml().prop`);
       const modelData = {
         id: i ? -1 : Self.id,
         index: i,   // For animating seat swap

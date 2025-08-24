@@ -217,10 +217,10 @@ function Card:__toqml()
   end
 
   return {
-    moduleUri = "Fk.RoomElement",
-    typeName = "CardItem",
+    uri = "Fk.Components.LunarLTK",
+    name = "CardItem",
 
-    properties = {
+    prop = {
       cid = self.id,
       virt_id = self.virt_id,
       name = self.name,

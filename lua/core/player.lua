@@ -144,11 +144,11 @@ function Player:__touistring()
 end
 function Player:__toqml()
   return {
-    moduleUri = "Fk.RoomElement",
-    typeName = "Photo",
+    uri = "Fk.Components.LunarLTK",
+    name = "PhotoBase",
 
     -- 屋檐了，烂QML
-    properties = {
+    prop = {
       playerid = self.id,
       scale = 0.55,
       general = self.general,

@@ -526,8 +526,8 @@ callbacks["ShowVirtualCard"] = (sender, data) => {
   const items = [];
   for (let i = 0; i < card_data.length; i++) {
     const dat = Lua.call("ToQml", card_data[i]);
-    let component = Qt.createComponent(dat.moduleUri, dat.typeName);
-    let state = dat.properties;
+    let component = Qt.createComponent(dat.uri, dat.name);
+    let state = dat.prop;
     const parentPos = roomScene.mapFromItem(from, 0, 0);
     state.x = parentPos.x;
     state.y = parentPos.y;

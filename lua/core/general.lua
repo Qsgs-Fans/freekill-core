@@ -90,11 +90,11 @@ function General:__touistring()
 end
 function General:__toqml()
   return {
-    moduleUri = "Fk.RoomElement",
-    typeName = "GeneralCardItem",
+    uri = "Fk.Components.LunarLTK",
+    name = "GeneralCardItem",
 
     -- TODO 虚拟卡
-    properties = {
+    prop = {
       name = self.name,
     },
   }

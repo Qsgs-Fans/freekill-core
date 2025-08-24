@@ -1208,7 +1208,10 @@ end
 function ToUIString(v)
   local ok, obj = pcall(cbor.decode, v)
   if not ok then return "未知类型" end
-  local f = getmetatable(obj).__touistring
+  local mt = getmetatable(obj)
+  if not mt then return "未知类型" end
+
+  local f = mt.__touistring
   if f then
     local ret = f(obj)
     if type(ret) == "string" then
@@ -1222,12 +1225,14 @@ end
 
 local defaultQml = {
   -- 比照Qt.createComponent参数名而设
-  moduleUri = "QtQuick",
-  typeName = "Rectangle",
+  uri = "QtQuick",
+  name = "Rectangle",
+
+  -- 或者可以写QML文件路径
   url = nil,
 
   -- 比照Component.createObject
-  properties = {
+  prop = {
     width = 80,
     height = 100,
     color = "green",
@@ -1237,7 +1242,10 @@ local defaultQml = {
 function ToQml(v)
   local ok, obj = pcall(cbor.decode, v)
   if not ok then return defaultQml end
-  local f = getmetatable(obj).__toqml
+  local mt = getmetatable(obj)
+  if not mt then return defaultQml end
+
+  local f = mt.__toqml
   if f then
     local ret = f(obj)
     if type(ret) == "table" then
