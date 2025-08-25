@@ -595,7 +595,7 @@ W.PageBase {
     Backend.playSound("./audio/system/gamestart");
 
     const data = Lua.evaluate(`Fk.game_modes[ClientInstance.settings.gameMode].room_page`);
-    if (!data instanceof Object) {
+    if (!(data instanceof Object)) {
       App.enterNewPage("Fk.Pages.LunarLTK", "Room");
     } else {
       if (data.uri && data.name) {
