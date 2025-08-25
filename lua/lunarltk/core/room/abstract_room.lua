@@ -18,7 +18,7 @@
 ---@field public disabled_generals string[] @ 未开启的武将
 local AbstractRoom = class("AbstractRoom")
 
-local CardManager = require 'core.room.card_manager'
+local CardManager = require 'lunarltk.core.room.card_manager'
 AbstractRoom:include(CardManager)
 
 function AbstractRoom:initialize()

@@ -1,5 +1,5 @@
-local ReqActiveSkill = require 'core.request_type.active_skill'
-local ReqUseCard = require 'lua.core.request_type.use_card'
+local ReqActiveSkill = require 'lunarltk.core.request_type.active_skill'
+local ReqUseCard = require 'lunarltk.core.request_type.use_card'
 local SpecialSkills = require 'ui_emu.specialskills'
 local Button = (require 'ui_emu.control').Button
 

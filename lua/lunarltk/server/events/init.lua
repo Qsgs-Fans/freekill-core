@@ -11,13 +11,13 @@
 local GameEventWrappers = {} -- mixin
 
 local tmp
-tmp = require "server.events.misc"
+tmp = require "lunarltk.server.events.misc"
 GameEvent.Game = tmp[1]
 GameEvent.ChangeProperty = tmp[2]
 GameEvent.ClearEvent = tmp[3]
 table.assign(GameEventWrappers, tmp[4])
 
-tmp = require "server.events.hp"
+tmp = require "lunarltk.server.events.hp"
 GameEvent.ChangeHp = tmp[1]
 GameEvent.Damage = tmp[2]
 GameEvent.LoseHp = tmp[3]
@@ -25,37 +25,37 @@ GameEvent.Recover = tmp[4]
 GameEvent.ChangeMaxHp = tmp[5]
 table.assign(GameEventWrappers, tmp[6])
 
-tmp = require "server.events.death"
+tmp = require "lunarltk.server.events.death"
 GameEvent.Dying = tmp[1]
 GameEvent.Death = tmp[2]
 GameEvent.Revive = tmp[3]
 table.assign(GameEventWrappers, tmp[4])
 
-tmp = require "server.events.movecard"
+tmp = require "lunarltk.server.events.movecard"
 GameEvent.MoveCards = tmp[1]
 table.assign(GameEventWrappers, tmp[2])
 
-tmp = require "server.events.usecard"
+tmp = require "lunarltk.server.events.usecard"
 GameEvent.UseCard = tmp[1]
 GameEvent.RespondCard = tmp[2]
 GameEvent.CardEffect = tmp[3]
 table.assign(GameEventWrappers, tmp[4])
 
-tmp = require "server.events.skill"
+tmp = require "lunarltk.server.events.skill"
 GameEvent.SkillEffect = tmp[1]
 table.assign(GameEventWrappers, tmp[2])
 
-tmp = require "server.events.judge"
+tmp = require "lunarltk.server.events.judge"
 GameEvent.Judge = tmp[1]
 table.assign(GameEventWrappers, tmp[2])
 
-tmp = require "server.events.gameflow"
+tmp = require "lunarltk.server.events.gameflow"
 GameEvent.DrawInitial = tmp[1]
 GameEvent.Round = tmp[2]
 GameEvent.Turn = tmp[3]
 GameEvent.Phase = tmp[4]
 
-tmp = require "server.events.pindian"
+tmp = require "lunarltk.server.events.pindian"
 GameEvent.Pindian = tmp[1]
 table.assign(GameEventWrappers, tmp[2])
 

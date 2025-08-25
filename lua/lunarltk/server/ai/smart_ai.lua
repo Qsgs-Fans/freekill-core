@@ -15,15 +15,15 @@ fk.ai_card_keep_value = {}
 ---@field public enemies ServerPlayer[] @ 敌人
 local SmartAI = TrustAI:subclass("SmartAI")
 
-AIParser = require 'lua.server.ai.parser'
-local require_skill = require "lua.server.ai.skill"
+AIParser = require 'lunarltk.server.ai.parser'
+local require_skill = require "lunarltk.server.ai.skill"
 SkillAI, TriggerSkillAI = require_skill[1], require_skill[2]
-local AIUtil = require 'lua.server.ai.util'
+local AIUtil = require 'lunarltk.server.ai.util'
 SmartAI:include(AIUtil)
 
 ---@type table<string, AIGameEvent>
 fk.ai_events = {}
-AIGameLogic, AIGameEvent = require "lua.server.ai.logic"
+AIGameLogic, AIGameEvent = require "lunarltk.server.ai.logic"
 
 function SmartAI:initialize(player)
   TrustAI.initialize(self, player)

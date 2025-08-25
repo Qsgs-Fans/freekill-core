@@ -368,11 +368,11 @@ end
 
 --- 载入响应事件
 function Engine:loadRequestHandlers()
-  self.request_handlers["AskForSkillInvoke"] = require 'core.request_type.invoke'
-  self.request_handlers["AskForUseActiveSkill"] = require 'core.request_type.active_skill'
-  self.request_handlers["AskForResponseCard"] = require 'core.request_type.response_card'
-  self.request_handlers["AskForUseCard"] = require 'core.request_type.use_card'
-  self.request_handlers["PlayCard"] = require 'core.request_type.play_card'
+  self.request_handlers["AskForSkillInvoke"] = require 'lunarltk.core.request_type.invoke'
+  self.request_handlers["AskForUseActiveSkill"] = require 'lunarltk.core.request_type.active_skill'
+  self.request_handlers["AskForResponseCard"] = require 'lunarltk.core.request_type.response_card'
+  self.request_handlers["AskForUseCard"] = require 'lunarltk.core.request_type.use_card'
+  self.request_handlers["PlayCard"] = require 'lunarltk.core.request_type.play_card'
 end
 
 --- 向翻译表中加载新的翻译表。

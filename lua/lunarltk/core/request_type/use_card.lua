@@ -1,5 +1,5 @@
-local ReqActiveSkill = require 'core.request_type.active_skill'
-local ReqResponseCard = require 'core.request_type.response_card'
+local ReqActiveSkill = require 'lunarltk.core.request_type.active_skill'
+local ReqResponseCard = require 'lunarltk.core.request_type.response_card'
 
 ---@class ReqUseCard: ReqResponseCard
 local ReqUseCard = ReqResponseCard:subclass("ReqUseCard")

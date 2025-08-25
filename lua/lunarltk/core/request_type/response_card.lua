@@ -1,5 +1,5 @@
 local RoomScene = require 'ui_emu.roomscene'
-local ReqActiveSkill = require 'core.request_type.active_skill'
+local ReqActiveSkill = require 'lunarltk.core.request_type.active_skill'
 
 --[[
   负责处理AskForResponseCard的Handler。

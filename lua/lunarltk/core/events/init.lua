@@ -19,15 +19,12 @@ function TriggerData:__newindex(k, v)
   self._data[k] = v
 end
 
-require "core.events.misc"
-require "core.events.hp"
-require "core.events.death"
-require "core.events.movecard"
-require "core.events.usecard"
-require "core.events.skill"
-require "core.events.judge"
-require "core.events.gameflow"
-require "core.events.pindian"
-
--- 要兼容的嘛
--- require "compat.events.init"
+require "lunarltk.core.events.misc"
+require "lunarltk.core.events.hp"
+require "lunarltk.core.events.death"
+require "lunarltk.core.events.movecard"
+require "lunarltk.core.events.usecard"
+require "lunarltk.core.events.skill"
+require "lunarltk.core.events.judge"
+require "lunarltk.core.events.gameflow"
+require "lunarltk.core.events.pindian"

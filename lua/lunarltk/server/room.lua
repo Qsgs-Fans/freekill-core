@@ -29,10 +29,10 @@ local Room = AbstractRoom:subclass("Room")
 -- load classes used by the game
 Request = require "server.network"
 GameEvent = require "server.gameevent"
-GameEventWrappers = require "lua.server.events"
+GameEventWrappers = require "lunarltk.server.events"
 Room:include(GameEventWrappers)
-GameLogic = require "server.gamelogic"
-ServerPlayer = require "server.serverplayer"
+GameLogic = require "lunarltk.server.gamelogic"
+ServerPlayer = require "lunarltk.server.serverplayer"
 
 CompatAskFor = require "compat.askfor"
 Room:include(CompatAskFor)
@@ -42,7 +42,7 @@ Room:include(CompatAskFor)
 
 ---@type Player
 Self = nil -- `Self' is client-only, but we need it in AI
-dofile "lua/server/ai/init.lua"
+dofile "lua/lunarltk/server/ai/init.lua"
 
 --[[--------------------------------------------------------------------
   Room 保存着服务器端游戏房间的所有信息，比如说玩家、卡牌，以及其他信息。

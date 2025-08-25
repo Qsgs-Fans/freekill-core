@@ -1,10 +1,10 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 
-AI = require "server.ai.ai"
-TrustAI = require "server.ai.trust_ai"
--- RandomAI = require "server.ai.random_ai"
+AI = require "lunarltk.server.ai.ai"
+TrustAI = require "lunarltk.server.ai.trust_ai"
+-- RandomAI = require "lunarltk.server.ai.random_ai"
 
-SmartAI = require "server.ai.smart_ai"
+SmartAI = require "lunarltk.server.ai.smart_ai"
 
 for _, pname in ipairs(Fk.package_names) do
   local pack = Fk.packages[pname]
