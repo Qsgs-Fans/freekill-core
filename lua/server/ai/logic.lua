@@ -457,7 +457,7 @@ function UseCard:exec()
   local logic = self.logic
   local useCardData = self.data
 
-  if useCardData.card.skill then
+  if useCardData and useCardData.card and useCardData.card.skill then
     local skill_ai = fk.ai_skills[useCardData.card.skill.name]
     if skill_ai then skill_ai:onUse(logic, useCardData) end
   end

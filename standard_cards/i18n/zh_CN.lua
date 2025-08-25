@@ -56,6 +56,14 @@ Fk:loadTranslationTable{
   ["method_draw"] = "摸",
   ["method_discard"] = "弃置",
 
+  --numberic(need gsub)
+  ["drawX"] = "摸{num}张牌",
+  ["discardX"] = "弃{num}张牌",
+  ["recoverX"] = "回复{num}点体力",
+  ["loseHpX"] = "失去{num}点体力",
+  ["damageX"] = "造成{num}点伤害",
+  ["loseMaxHpX"] = "减{num}点体力上限",
+
   ["prohibit"] = "禁",
 
   ["slash"] = "杀",

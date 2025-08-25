@@ -523,6 +523,10 @@ function SkillSkeleton:createViewAsSkill(_skill, idx, key, attr, spec)
     skill.filterPattern = spec.filter_pattern
   end
 
+  if spec.target_filter then skill.targetFilter = spec.target_filter end
+  if spec.feasible then skill.feasible = spec.feasible end
+  if spec.on_use then skill.onUse = spec.on_use end
+
   if type(spec.pattern) == "string" then
     skill.pattern = spec.pattern
   end

@@ -35,7 +35,6 @@
 ---@field public special_cards table<string, integer[]> @ 类似“屯田”的“田”的私人牌堆
 ---@field public cardUsedHistory table<string, integer[]> @ 用牌次数历史记录
 ---@field public skillUsedHistory table<string, integer[]> @ 发动技能次数的历史记录
----@field public fixedDistance table<Player, integer> @ 与其他玩家的固定距离列表
 ---@field public buddy_list integer[] @ 队友列表，或者说自己可以观看别人手牌的那些玩家的列表
 ---@field public equipSlots string[] @ 装备栏列表
 ---@field public sealedSlots string[] @ 被废除的装备栏列表
@@ -124,7 +123,6 @@ function Player:initialize()
 
   self.cardUsedHistory = {}
   self.skillUsedHistory = {}
-  self.fixedDistance = {}
   self.buddy_list = {}
 end
 
@@ -681,10 +679,6 @@ function Player:distanceTo(other, mode, ignore_dead, excludeIds, excludeSkills)
     end
   end
 
-  if self.fixedDistance[other] then
-    ret = self.fixedDistance[other]
-  end
-
   return math.max(ret, 1)
 end
 
@@ -1180,14 +1174,26 @@ end
 
 --- 确认玩家是否可以使用/打出特定牌，考虑Fk.currentResponsePattern。
 ---@param card Card @ 特定牌
----@param extra_data? UseExtraData @ 额外数据
+---@param extra_data? UseExtraData @ 额外数据（为nil的情况取当前req的extra_data信息）
 function Player:canUseOrResponseInCurrent(card, extra_data)
   if Fk.currentResponsePattern == nil then
     return self:canUse(card, extra_data)
   else
-    --FIXME: 无法判断当前是使用还是打出，暂且搁置
-    return Exppattern:Parse(Fk.currentResponsePattern):match(card)
+    if Exppattern:Parse(Fk.currentResponsePattern):match(card) then
+      if ClientInstance then
+        local handler = ClientInstance.current_request_handler
+        if handler and handler.class.name == "ReqResponseCard" then
+          return not self:prohibitResponse(card)
+        else
+          extra_data = extra_data or handler.extra_data
+          return not self:prohibitUse(card) and
+            ((card.is_passive and not (extra_data or {}).not_passive) or card.skill:canUse(self, card, extra_data))
+        end
+      end
+      return true
+    end
   end
+  return false
 end
 
 --- 当前可用的牌名筛选。用于转化技的interaction里对泛转化牌名的合法性检测
@@ -1195,12 +1201,12 @@ end
 ---@param card_names string[] @ 待判定的牌名列表
 ---@param subcards? integer[] @ 子卡（某些技能可以提前确定子卡，如奇策、妙弦）
 ---@param ban_cards? string[] @ 被排除的卡名
----@param extra_data? UseExtraData|table @ 用于使用的额外信息
+---@param extra_data? UseExtraData|table @ 用于使用的额外信息（为nil的情况取当前req的extra_data信息）
 ---@param vs_pattern? string @ 转化后的卡牌pattern
 ---@return string[] @ 返回牌名列表
 function Player:getViewAsCardNames(skill_name, card_names, subcards, ban_cards, extra_data, vs_pattern)
   ban_cards = ban_cards or Util.DummyTable
-  extra_data = extra_data or Util.DummyTable
+  --extra_data = extra_data or Util.DummyTable
   return table.filter(card_names, function (name)
     local card = Fk:cloneCard(name)
     if subcards then
@@ -1508,7 +1514,7 @@ end
 
 --- Player是否可看到某card
 --- @param cardId integer
----@param move? CardsMoveStruct @ 移动数据，注意涉及Player全是id
+---@param move? MoveCardsData @ 移动数据，注意涉及Player全是id
 ---@return boolean
 function Player:cardVisible(cardId, move)
   local room = Fk:currentRoom()
@@ -1529,6 +1535,10 @@ function Player:cardVisible(cardId, move)
   local falsy = true -- 当难以决定时是否要选择暗置？
   local oldarea, oldspecial, oldowner
   if move then
+    move = table.simpleClone(move)
+    -- 把playerId转为Player
+    if type(move.to) == "number" then move.to = room:getPlayerById(move.to) end
+    if type(move.from) == "number" then move.from = room:getPlayerById(move.from) end
     ---@type MoveInfo
     local info = table.find(move.moveInfo, function(info) return info.cardId == cardId end)
     if info then
@@ -1541,7 +1551,7 @@ function Player:cardVisible(cardId, move)
 
       oldarea = info.fromArea
       oldspecial = info.fromSpecialName
-      oldowner = move.from and room:getPlayerById(move.from)
+      oldowner = move.from
       if move.moveVisible or move.specialVisible then return true end
       if move.visiblePlayers then
         local visiblePlayers = move.visiblePlayers

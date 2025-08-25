@@ -394,6 +394,39 @@ end
 
 function SmartAI:handleAskForUseCard(data)
   local card_ids = self:getEnabledCards()
+  local pattern = data[2]
+  local prompt = data[3]
+  if pattern == "jink" then
+    for _, cd in ipairs(card_ids) do
+      self:selectCard(cd, true) -- 默认按下卡牌后直接可确定 懒得管了
+      return self:doOKButton()
+    end
+  elseif pattern == "nullification" then
+    local to = prompt:startsWith("#AskForNullificationWithoutTo") and prompt:split(":")[2] or prompt:split(":")[3]
+    if to then
+      to = self.room:getPlayerById(tonumber(to))
+      if prompt:startsWith("#AskForNullificationWithoutTo") and self:isEnemy(to) or self:isFriend(to) then
+        for _, cd in ipairs(card_ids) do
+          self:selectCard(cd, true)
+          return self:doOKButton()
+        end
+      end
+    end
+    return ""
+  elseif pattern == "peach" or pattern == "peach,analeptic" then
+    local to = prompt:startsWith("#AskForPeachesSelf") and self.player.id or prompt:split(":")[2]
+    if to then
+      to = self.room:getPlayerById(tonumber(to))
+      if self:isFriend(to) then
+        for _, cd in ipairs(card_ids) do
+          self:selectCard(cd, true)
+          return self:doOKButton()
+        end
+      end
+    end
+    return ""
+  end
+
   local skill_ai_list = {}
   for _, id in ipairs(card_ids) do
     local cd = Fk:getCardById(id)

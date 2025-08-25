@@ -613,14 +613,6 @@ Fk:loadTranslationTable {
   ["heal_hp"] = "回复体力",
   ["damaged"] = "受到伤害",
   ["view"] = "观看",
-
-  --numberic(need gsub)
-  ["drawX"] = "摸{num}张牌",
-  ["discardX"] = "弃{num}张牌",
-  ["recoverX"] = "回复{num}点体力",
-  ["loseHpX"] = "失去{num}点体力",
-  ["damageX"] = "造成{num}点伤害",
-  ["loseMaxHpX"] = "减{num}点体力上限",
 }
 
 -- related to sendLog

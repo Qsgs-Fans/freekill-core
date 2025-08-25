@@ -140,6 +140,9 @@ end
 ---@class ViewAsSkillSpec: UsableSkillSpec
 ---@field public filter_pattern? ViewAsPattern|fun(self: ViewAsSkill, player: Player, card_name: string?, selected: integer[]?): ViewAsPattern?
 ---@field public card_filter? fun(self: ViewAsSkill, player: Player, to_select: integer, selected: integer[], selected_targets: Player[]): any @ 判断卡牌能否选择
+---@field public target_filter? fun(self: ViewAsSkill, player: Player?, to_select: Player, selected: Player[], selected_cards: integer[], card: Card?, extra_data: UseExtraData|table?): any @ 判定目标能否选择
+---@field public feasible? fun(self: ViewAsSkill, player: Player, selected: Player[], selected_cards: integer[], card: Card): any @ 判断卡牌和目标是否符合技能限制
+---@field public on_use? fun(self: ActiveSkill, room: Room, skillUseEvent: SkillUseData, card: Card, params: handleUseCardParams?): UseCardDataSpec|string?
 ---@field public view_as fun(self: ViewAsSkill, player: Player, cards: integer[]): Card? @ 判断转化为什么牌
 ---@field public pattern? string
 ---@field public enabled_at_play? fun(self: ViewAsSkill, player: Player): any

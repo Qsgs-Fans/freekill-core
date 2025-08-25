@@ -21,6 +21,7 @@ MetroButton {
   }
 
   onClicked: {
+    if (choices.length < 2 && choices.includes(answer)) return;
     roomScene.popupBox.sourceComponent =
       Qt.createComponent(AppPath + "/packages/utility/qml/CardNamesBox.qml");
 

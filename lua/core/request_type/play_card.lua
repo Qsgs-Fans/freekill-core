@@ -101,6 +101,9 @@ function ReqPlayCard:feasible()
     else -- viewasskill
       ---@cast skill ViewAsSkill
       card = skill:viewAs(player, self.pendings)
+      if card == nil then
+        return skill:feasible(player, table.map(self.selected_targets, Util.Id2PlayerMapper), self.pendings)
+      end
     end
   else
     card = self.selected_card
@@ -206,9 +209,15 @@ function ReqPlayCard:selectSkill(skill, data)
 end
 
 function ReqPlayCard:update(elemType, id, action, data)
-  if elemType == "Button" and id == "End" then
-    self:doEndButton()
-    return true
+  if elemType == "Button" then
+    if id == "End" then
+      self:doEndButton()
+      return true
+    end
+    if id == "Cancel" then
+      self:doCancelButton()
+      return false
+    end
   elseif elemType == "SpecialSkills" then
     self:selectSpecialUse(data)
   end

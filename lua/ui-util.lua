@@ -41,7 +41,13 @@ end
 -- 必输参数：可选牌名choices；可输参数：全部牌名all_choices
 UI.CardNameBox = function(spec)
   spec.choices = type(spec.choices) == "table" and spec.choices or Util.DummyTable
-  spec.all_choices = type(spec.all_choices) == "table" and spec.all_choices or spec.choices
+  if type(spec.all_choices) == "table" then
+    if #spec.all_choices == 0 or type(spec.all_choices[1]) ~= "table" then
+      spec.all_choices = {spec.all_choices}
+    end
+  else
+    spec.all_choices = {spec.choices}
+  end
   spec.default_choice = spec.default_choice and spec.default_choice or spec.choices[1]
   spec.type = "custom"
   spec.qml_path = "packages/freekill-core/Fk/SkillInteraction/SkillCardName"

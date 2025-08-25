@@ -394,11 +394,11 @@ function Phase:main()
         if data.phase_end then break end
         local cid = table.remove(cards)
         if not cid then return end
-        local card = player:removeVirtualEquip(cid)
+        local card = player:getVirualEquip(cid)
         if not card then
           card = Fk:getCardById(cid)
         end
-        if table.contains(player:getCardIds(Player.Judge), cid) then
+        if table.contains(player:getCardIds(Player.Judge), cid) and card.skill and card.skill.name ~= "default_card_skill" then
           room:moveCardTo(card, Card.Processing, nil, fk.ReasonPut, "phase_judge")
           if card:isVirtual() then
             room:sendCardVirtName({cid}, card.name)
@@ -410,7 +410,7 @@ function Phase:main()
             tos = { player },
           }
           room:doCardEffect(effect_data)
-          if effect_data.isCancellOut and card.skill then
+          if effect_data.isCancellOut then
             card.skill:onNullified(room, effect_data)
           end
         end

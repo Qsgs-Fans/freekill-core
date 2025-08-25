@@ -44,9 +44,12 @@ function ReqActiveSkill:initialize(player, data)
   end
 end
 
+--- 初始化所有信息
+---@param ignoreInteraction? boolean @ 是否不初始化Interaction，继承原数据
 function ReqActiveSkill:setup(ignoreInteraction)
   local scene = self.scene
 
+  local old_pendings = table.simpleClone(self.pendings or {})
   self.pendings = {}
   self.selected_targets = {}
 
@@ -73,7 +76,15 @@ function ReqActiveSkill:setup(ignoreInteraction)
 
   self:retractAllPiles()
   self:expandPiles()
+
   scene:unselectAllCards()
+  if ignoreInteraction then -- 修改Interaction时重新筛选一次原选择牌
+    for _, cid in ipairs(old_pendings) do
+      local ret = self:cardValidity(cid)
+      if ret then table.insert(self.pendings, cid) end
+      scene:update("CardItem", cid, { selected = not not ret })
+    end
+  end
 
   scene:unselectAllTargets()
 
@@ -122,7 +133,7 @@ function ReqActiveSkill:updatePrompt()
 end
 
 function ReqActiveSkill:setupInteraction()
-  local skill = Fk.skills[self.skill_name]
+  local skill = Fk.skills[self.skill_name]---@type ActiveSkill
   if skill and skill.interaction then
     skill.interaction.data = nil
     local interaction = skill:interaction(self.player)
@@ -247,7 +258,7 @@ end
 ---@return boolean
 function ReqActiveSkill:feasible()
   local player = self.player
-  local skill = Fk.skills[self.skill_name]
+  local skill = Fk.skills[self.skill_name] --[[@as ActiveSkill | ViewAsSkill]]
   if not skill then return false end
   local ret
   local targets = table.map(self.selected_targets, Util.Id2PlayerMapper)
@@ -258,8 +269,9 @@ function ReqActiveSkill:feasible()
     ---@cast skill ViewAsSkill
     local card = skill:viewAs(player, self.pendings)
     if card then
-      local card_skill = card.skill
-      ret = card_skill:feasible(player, targets, { card.id }, card)
+      ret = card.skill:feasible(player, targets, { card.id }, card)
+    else
+      ret = skill:feasible(player, targets, self.pendings)
     end
   end
   return not not ret
@@ -288,8 +300,9 @@ function ReqActiveSkill:targetValidity(pid)
   if skill:isInstanceOf(ViewAsSkill) then
     ---@cast skill ViewAsSkill
     card = skill:viewAs(self.player, self.pendings)
-    if not card then return false end
-    skill = card.skill
+    if card then
+      skill = card.skill
+    end
   end
   local room = Fk:currentRoom()
   local p = room:getPlayerById(pid)
@@ -331,10 +344,6 @@ function ReqActiveSkill:initiateTargets()
   local room = self.room
   local scene = self.scene
   local skill = Fk.skills[self.skill_name]
-  if skill:isInstanceOf(ViewAsSkill) then
-    local card = skill:viewAs(self.player, self.pendings)
-    if card then skill = card.skill else skill = nil end
-  end
 
   local old_targets = table.simpleClone(self.selected_targets)
   self.selected_targets = {}
@@ -426,11 +435,6 @@ function ReqActiveSkill:selectTarget(playerid, data)
   local selected = data.selected
   local skill = Fk.skills[self.skill_name]
   scene:update("Photo", playerid, data)
-  -- 发生以下Viewas判断时已经是因为选角色触发的了，说明肯定有card了，这么写不会出事吧？
-  if skill:isInstanceOf(ViewAsSkill) then
-    ---@cast skill ViewAsSkill
-    skill = skill:viewAs(self.player, self.pendings).skill
-  end
 
   -- 类似选卡
   -- 增加目标时，直接塞入已选目标组即可
