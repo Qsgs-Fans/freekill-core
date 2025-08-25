@@ -2211,13 +2211,15 @@ function Room:handleUseCardReply(player, data, params)
         from = player,
         cards = selected_cards,
         tos = table.map(targets, Util.Id2PlayerMapper),
-        cost_data = {}
       }
       local use_data = SkillUseData:new(use_spec)
-      if type(skill.history_branch) == "function" then
-        use_data.cost_data.history_branch = skill:history_branch(player, use_data)
-      else
-        use_data.cost_data.history_branch = skill.history_branch
+      use_data.cost_data = skill:onCost(player, use_data)
+      if not use_data.cost_data.history_branch then
+        if type(skill.history_branch) == "function" then
+          use_data.cost_data.history_branch = skill:history_branch(player, use_data)
+        else
+          use_data.cost_data.history_branch = skill.history_branch
+        end
       end
       use_spec.cost_data = table.simpleClone(use_data.cost_data)
 
@@ -2235,13 +2237,15 @@ function Room:handleUseCardReply(player, data, params)
         from = player,
         cards = selected_cards,
         tos = table.map(targets, Util.Id2PlayerMapper),
-        cost_data = {}
       }
       local use_data = SkillUseData:new(use_spec)
-      if type(skill.history_branch) == "function" then
-        use_data.cost_data.history_branch = skill:history_branch(player, use_data)
-      else
-        use_data.cost_data.history_branch = skill.history_branch
+      use_data.cost_data = skill:onCost(player, use_data)
+      if not use_data.cost_data.history_branch then
+        if type(skill.history_branch) == "function" then
+          use_data.cost_data.history_branch = skill:history_branch(player, use_data)
+        else
+          use_data.cost_data.history_branch = skill.history_branch
+        end
       end
       use_spec.cost_data = table.simpleClone(use_data.cost_data)
 
