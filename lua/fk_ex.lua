@@ -80,6 +80,7 @@ function fk.readUsableSpecToSkill(skill, spec)
   skill.is_delay_effect = not not spec.is_delay_effect
   skill.late_refresh = not not spec.late_refresh
   skill.click_count = not not spec.click_count
+  skill.history_branch = spec.history_branch
 end
 
 function fk.readStatusSpecToSkill(skill, spec)
@@ -90,15 +91,15 @@ function fk.readStatusSpecToSkill(skill, spec)
 end
 
 ---@class UsableSkillSpec: SkillSpec
----@field public main_skill? UsableSkill
----@field public max_use_time? integer[]
+---@field public main_skill? UsableSkill @ 该技能是否为某技能的主框架
+---@field public max_phase_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能效果的最大使用次数——阶段
+---@field public max_turn_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能效果的最大使用次数——回合
+---@field public max_round_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能效果的最大使用次数——轮次
+---@field public max_game_use_time? integer|fun(self: SkillSkeleton, player: Player): integer? @ 该技能效果的最大使用次数——本局游戏
+---@field public history_branch? string|fun(self: UsableSkill, player: ServerPlayer, data: SkillUseData):string? @ 裁定本技能发动时（on_cost->on_use）将技能历史额外添加到某处分支下（内部有独立的时段细分），无法约束本技能是否可用
 ---@field public expand_pile? string | integer[] | fun(self: UsableSkill, player: ServerPlayer): integer[]|string? @ 额外牌堆，牌堆名称或卡牌id表
 ---@field public derived_piles? string | string[] @ 与某效果联系起来的私人牌堆名，失去该效果时将之置入弃牌堆(@deprecated)
----@field public max_phase_use_time? integer  @ 每阶段使用次数上限
----@field public max_turn_use_time? integer  @ 每回合使用次数上限
----@field public max_round_use_time? integer  @ 每回合使用次数上限
----@field public max_game_use_time? integer  @ 整场游戏使用次数上限
----@field public times? integer | fun(self: UsableSkill, player: Player): integer
+---@field public times? integer | fun(self: UsableSkill, player: Player): integer @ 显示在主动技按钮上的发动次数数字
 ---@field public min_target_num? integer
 ---@field public max_target_num? integer
 ---@field public target_num? integer
@@ -114,6 +115,7 @@ end
 ---@field public card_filter? fun(self: ActiveSkill, player: Player, to_select: integer, selected: integer[], selected_targets: Player[]): any @ 判断卡牌能否选择
 ---@field public target_filter? fun(self: ActiveSkill, player: Player?, to_select: Player, selected: Player[], selected_cards: integer[], card: Card?, extra_data: UseExtraData|table?): any @ 判定目标能否选择
 ---@field public feasible? fun(self: ActiveSkill, player: Player, selected: Player[], selected_cards: integer[], card: Card): any @ 判断卡牌和目标是否符合技能限制
+---@field public on_cost? fun(self: UsableSkill, player: ServerPlayer, data: SkillUseData):CostData|table @ 自定义技能的消耗信息
 ---@field public on_use? fun(self: ActiveSkill, room: Room, skillUseEvent: SkillUseData): any
 ---@field public prompt? string|fun(self: ActiveSkill, player: Player, selected_cards: integer[], selected_targets: Player[]): string @ 提示信息
 ---@field public interaction? fun(self: ActiveSkill, player: Player): table? @ 选项框
@@ -142,8 +144,9 @@ end
 ---@field public card_filter? fun(self: ViewAsSkill, player: Player, to_select: integer, selected: integer[], selected_targets: Player[]): any @ 判断卡牌能否选择
 ---@field public target_filter? fun(self: ViewAsSkill, player: Player?, to_select: Player, selected: Player[], selected_cards: integer[], card: Card?, extra_data: UseExtraData|table?): any @ 判定目标能否选择
 ---@field public feasible? fun(self: ViewAsSkill, player: Player, selected: Player[], selected_cards: integer[], card: Card): any @ 判断卡牌和目标是否符合技能限制
----@field public on_use? fun(self: ActiveSkill, room: Room, skillUseEvent: SkillUseData, card: Card, params: handleUseCardParams?): UseCardDataSpec|string?
+---@field public on_use? fun(self: ViewAsSkill, room: Room, skillUseEvent: SkillUseData, card: Card, params: handleUseCardParams?): UseCardDataSpec|string?
 ---@field public view_as fun(self: ViewAsSkill, player: Player, cards: integer[]): Card? @ 判断转化为什么牌
+---@field public on_cost? fun(self: ViewAsSkill, player: ServerPlayer, data: SkillUseData):CostData|table @ 自定义技能的消耗信息
 ---@field public pattern? string
 ---@field public enabled_at_play? fun(self: ViewAsSkill, player: Player): any
 ---@field public enabled_at_response? fun(self: ViewAsSkill, player: Player, response: boolean): any

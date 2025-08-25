@@ -7,9 +7,10 @@
 --]]
 
 ---@class UsableSkill : Skill
----@field public max_use_time integer[]
+---@field public max_use_time table<integer, integer?> @ 一个效果的最大可用次数
+---@field public history_branch? string | fun(self: UsableSkill, player: ServerPlayer, data: SkillUseData):string? @ 发动时是否将技能发动历史归类到某个分支
 ---@field public expand_pile? string | integer[] | fun(self: UsableSkill, player: Player): integer[]|string? @ 额外牌堆，牌堆名称或卡牌id表
----@field public derived_piles? string | string[] @ 与某效果联系起来的私人牌堆名，失去该效果时将之置入弃牌堆(@deprecated)
+---@field public derived_piles? string | string[] @deprecated @ 与某效果联系起来的私人牌堆名，失去该效果时将之置入弃牌堆
 ---@field public times? fun(self: UsableSkill, player: Player): integer
 local UsableSkill = Skill:subclass("UsableSkill")
 
@@ -22,7 +23,7 @@ end
 
 -- 获得技能的最大使用次数
 ---@param player Player @ 使用者
----@param scope integer @ 查询历史范围（默认为回合）
+---@param scope? integer @ 查询历史范围（默认为回合）
 ---@param card? Card @ 卡牌
 ---@param to? Player @ 目标
 ---@return number? @ 最大使用次数，nil就是无限
@@ -48,7 +49,7 @@ end
 
 -- 判断一个角色是否在技能的次数限制内
 ---@param player Player @ 使用者
----@param scope integer @ 查询历史范围（默认为回合）
+---@param scope? integer @ 查询历史范围（默认为回合）
 ---@param card? Card @ 牌，若没有牌，则尝试制造一张虚拟牌
 ---@param card_name? string @ 牌名
 ---@param to? Player @ 目标
@@ -67,9 +68,6 @@ function UsableSkill:withinTimesLimit(player, scope, card, card_name, to)
 
   local limit = self:getMaxUseTime(player, scope, card, to)
   if not limit then return true end
-  for _, skill in ipairs(status_skills) do
-    if skill:bypassTimesCheck(player, self, scope, card, to) then return true end
-  end
 
   if not card_name then
     if card then
@@ -77,6 +75,10 @@ function UsableSkill:withinTimesLimit(player, scope, card, card_name, to)
     else ---坏了，不是卡的技能
       return player:usedEffectTimes(self.name, scope) < limit
     end
+  end
+
+  for _, skill in ipairs(status_skills) do
+    if skill:bypassTimesCheck(player, self, scope, card, to) then return true end
   end
 
   return player:usedCardTimes(card_name, scope) < limit or

@@ -196,6 +196,12 @@ function ActiveSkill:prompt(player, selected_cards, selected_targets, extra_data
 
 ------- }
 
+---@param player ServerPlayer
+---@param skillData SkillUseData
+function ActiveSkill:onCost(player, skillData)
+  return {}
+end
+
 ---@param room Room
 ---@param cardUseEvent SkillUseData
 function ActiveSkill:onUse(room, cardUseEvent) end

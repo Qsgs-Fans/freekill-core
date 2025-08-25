@@ -116,6 +116,12 @@ function ViewAsSkill:feasible(player, targets, selected_cards, card)
   return false
 end
 
+---@param player ServerPlayer
+---@param skillData SkillUseData
+function ViewAsSkill:onCost(player, skillData)
+  return {}
+end
+
 ---@param room Room
 ---@param cardUseEvent SkillUseData
 ---@param params? handleUseCardParams

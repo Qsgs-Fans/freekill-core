@@ -35,6 +35,7 @@
 ---@field public special_cards table<string, integer[]> @ 类似“屯田”的“田”的私人牌堆
 ---@field public cardUsedHistory table<string, integer[]> @ 用牌次数历史记录
 ---@field public skillUsedHistory table<string, integer[]> @ 发动技能次数的历史记录
+---@field public skillBranchUsedHistory table<string, table<string, integer[]>> @ 发动技能某分支次数的历史记录
 ---@field public buddy_list integer[] @ 队友列表，或者说自己可以观看别人手牌的那些玩家的列表
 ---@field public equipSlots string[] @ 装备栏列表
 ---@field public sealedSlots string[] @ 被废除的装备栏列表
@@ -123,6 +124,7 @@ function Player:initialize()
 
   self.cardUsedHistory = {}
   self.skillUsedHistory = {}
+  self.skillBranchUsedHistory = {}
   self.buddy_list = {}
 end
 
@@ -838,22 +840,42 @@ function Player:addSkillUseHistory(skill_name, num)
   end
 end
 
+--- 增加玩家使用特定技能分支的历史次数。
+---@param skill_name string @ 技能名
+---@param branch string @ 技能分支名，不写则默认改变某技能**所有分支**的历史次数
+---@param num? integer @ 次数 默认1
+function Player:addSkillBranchUseHistory(skill_name, branch, num)
+  num = num or 1
+  assert(type(num) == "number" and num ~= 0)
+
+  self.skillBranchUsedHistory[skill_name] = self.skillBranchUsedHistory[skill_name] or {}
+  self.skillBranchUsedHistory[skill_name][branch] = self.skillBranchUsedHistory[skill_name][branch] or {0, 0, 0, 0}
+  local t = self.skillBranchUsedHistory[skill_name][branch]
+  for i, _ in ipairs(t) do
+    t[i] = t[i] + num
+  end
+end
+
 --- 设定玩家使用特定技能的历史次数。
+--- `num`和`scope`均不写则为清空特定区域的历史次数
 ---@param skill_name? string @ 技能名，不写则默认改变所有技能的历史次数
 ---@param num? integer @ 次数 默认0
----@param scope? integer @ 查询历史范围
+---@param scope? integer @ 查询历史范围，若你填了num则必须填具体时机
 function Player:setSkillUseHistory(skill_name, num, scope)
   skill_name = skill_name or ""
   if num == nil and scope == nil then
     if skill_name ~= "" then
       self.skillUsedHistory[skill_name] = {0, 0, 0, 0}
+      self:setSkillBranchUseHistory(skill_name)
     else
       self.skillUsedHistory = {}
+      self:setSkillBranchUseHistory()
     end
     return
   end
 
   num = num or 0
+  assert(scope)
   if skill_name == "" then
     for _, v in pairs(self.skillUsedHistory) do
       v[scope] = num
@@ -863,6 +885,83 @@ function Player:setSkillUseHistory(skill_name, num, scope)
 
   self.skillUsedHistory[skill_name] = self.skillUsedHistory[skill_name] or {0, 0, 0, 0}
   self.skillUsedHistory[skill_name][scope] = num
+end
+
+--- 设定玩家使用特定技能分支的历史次数。
+--- `num`和`scope`均不写则为清空特定区域的历史次数
+---@param skill_name? string @ 技能名，不写则默认改变**所有技能**之所有分支的历史次数
+---@param branch? string @ 技能分支名，不写则默认改变某技能**所有分支**的历史次数
+---@param num? integer @ 次数 默认0
+---@param scope? integer @ 查询历史范围
+function Player:setSkillBranchUseHistory(skill_name, branch, num, scope)
+  skill_name = skill_name or ""
+  if num == nil and scope == nil then
+    if skill_name ~= "" then
+      if branch then
+        self.skillBranchUsedHistory[skill_name][branch] = {0, 0, 0, 0}
+      else
+        self.skillBranchUsedHistory[skill_name] = {}
+      end
+    else
+      self.skillBranchUsedHistory = {}
+    end
+    return
+  end
+
+  num = num or 0
+  assert(scope)
+  if skill_name == "" then
+    for _, v in pairs(self.skillBranchUsedHistory) do
+      if branch then
+        v[branch][scope] = num
+      else
+        for _, history in pairs(v) do
+          history[scope] = num
+        end
+      end
+    end
+  else
+    self.skillBranchUsedHistory[skill_name] = self.skillBranchUsedHistory[skill_name] or {}
+    if branch then
+      self.skillBranchUsedHistory[skill_name][branch] = self.skillBranchUsedHistory[skill_name][branch] or {0, 0, 0, 0}
+      self.skillBranchUsedHistory[skill_name][branch][scope] = num
+    else
+      for _, history in pairs(self.skillBranchUsedHistory[skill_name]) do
+        history[scope] = num
+      end
+    end
+  end
+end
+
+--- 清空玩家使用特定技能的历史次数
+---@param skill_name string @ 技能名，若为主技能则同时清空所有技能效果和分支的历史次数
+---@param scope? integer @ 清空的历史范围，不填则全部清空
+function Player:clearSkillHistory(skill_name, scope)
+  local skill = Fk.skills[skill_name]
+  local skel = skill:getSkeleton()
+  if skel and skel.name == skill_name then
+    if scope then
+      for _, effect in ipairs(skel.effect_names) do
+        self:setSkillUseHistory(effect, 0, scope)
+      end
+    else
+      for _, effect in ipairs(skel.effect_names) do
+        self:setSkillUseHistory(effect)
+      end
+    end
+    self:setSkillBranchUseHistory(skill_name)
+    return
+  end
+
+  if scope then
+    for _, effect in ipairs(skill_name) do
+      self:setSkillUseHistory(effect, 0, scope)
+    end
+  else
+    for _, effect in ipairs(skill_name) do
+      self:setSkillUseHistory(effect)
+    end
+  end
 end
 
 --- 获取玩家使用特定牌的历史次数（只算计入次数的部分）。
@@ -879,11 +978,20 @@ end
 --- 获取玩家使用特定技能的历史次数。
 ---@param skill_name string @ 技能(skill skeleton)名
 ---@param scope? integer @ 查询历史范围，默认Turn
-function Player:usedSkillTimes(skill_name, scope)
+---@param branch? string @ 不查询主技能使用次数，改为查询分支所属的次数限制
+function Player:usedSkillTimes(skill_name, scope, branch)
   if not self.skillUsedHistory[skill_name] then
     return 0
   end
   scope = scope or Player.HistoryTurn
+
+  if branch then
+    if not self.skillBranchUsedHistory[skill_name] or not self.skillBranchUsedHistory[skill_name][branch] then
+      return 0
+    end
+
+    return self.skillBranchUsedHistory[skill_name][branch][scope]
+  end
   return self.skillUsedHistory[skill_name][scope]
 end
 
