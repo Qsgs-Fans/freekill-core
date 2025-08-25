@@ -2221,11 +2221,10 @@ function Room:handleUseCardReply(player, data, params)
           use_data.cost_data.history_branch = skill.history_branch
         end
       end
-      use_spec.cost_data = table.simpleClone(use_data.cost_data)
 
       self:useSkill(player, skill, function()
         skill:onUse(self, use_data)
-      end, use_spec)
+      end, use_data)
       return nil
     elseif skill:isInstanceOf(ViewAsSkill) then
       ---@cast skill ViewAsSkill
@@ -2247,7 +2246,6 @@ function Room:handleUseCardReply(player, data, params)
           use_data.cost_data.history_branch = skill.history_branch
         end
       end
-      use_spec.cost_data = table.simpleClone(use_data.cost_data)
 
       self:useSkill(player, skill, function()
         useResult = skill:onUse(self, use_data, c, params) or ""
@@ -2260,7 +2258,7 @@ function Room:handleUseCardReply(player, data, params)
             useResult.attachedSkillAndUser = { skillName = skill.name, user = player.id, muteCard = skill.mute_card }
           end
         end
-      end, use_spec)
+      end, use_data)
       return useResult
     end
   else
