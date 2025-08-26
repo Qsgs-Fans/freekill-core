@@ -117,6 +117,7 @@ Flickable {
         }
       }
 
+      /*
       MetroButton {
         text: Lua.tr("Kick From Room")
         visible: !roomScene.isStarted && roomScene.isOwner
@@ -134,6 +135,7 @@ Flickable {
           root.finish();
         }
       }
+      */
     }
 
     RowLayout {

@@ -147,6 +147,58 @@ W.PageBase {
         isOwner: model.isOwner
         ready: model.ready
         opacity: model.sealed ? 0 : 1
+
+        onClicked: {
+          if (photoMenu.visible){
+            photoMenu.close();
+          } else if (model.id !== -1 && model.id !== Self.id) {
+            photoMenu.open();
+          }
+        }
+
+        Menu {
+          id: photoMenu
+          y: parent.height - 12
+          width: parent.width * 0.8
+
+          MenuItem {
+            id: kickButton
+            text: Lua.tr("Kick From Room")
+            enabled: {
+              if (model.id === Self.id) return false;
+              if (model.id < -1) {
+                const { minComp, curComp } = Lua.call("GetCompNum");
+                return curComp > minComp;
+              }
+              return true;
+            }
+            onClicked: {
+              // 傻逼qml喜欢加1.0
+              // FIXME 留下image
+              Cpp.notifyServer("KickPlayer", Math.floor(model.id));
+            }
+          }
+          MenuItem {
+            id: blockButton
+            text: {
+              const name = model.screenName;
+              const blocked = !Config.blockedUsers.includes(name);
+              return blocked ? Lua.tr("Block Chatter") : Lua.tr("Unblock Chatter");
+            }
+            enabled: model.id !== Self.id && model.id > 0 // 旁观屏蔽不了正在被旁观的人
+            onClicked: {
+              const name = model.screenName;
+              const idx = Config.blockedUsers.indexOf(name);
+              if (idx === -1) {
+                if (name === "") return;
+                Config.blockedUsers.push(name);
+              } else {
+                Config.blockedUsers.splice(idx, 1);
+              }
+              Config.blockedUsers = Config.blockedUsers;
+            }
+          }
+        }
       }
     }
   }

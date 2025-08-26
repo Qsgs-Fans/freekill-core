@@ -24,10 +24,10 @@ MetroButton {
     if (choices.length < 2) return;
     if (detailed) {
       roomScene.popupBox.sourceComponent =
-        Qt.createComponent("../RoomElement/DetailedChoiceBox.qml");
+        Qt.createComponent("../../../Pages/LunarLTK/DetailedChoiceBox.qml");
     } else {
       roomScene.popupBox.sourceComponent =
-        Qt.createComponent("../RoomElement/ChoiceBox.qml");
+        Qt.createComponent("../../../Pages/LunarLTK/ChoiceBox.qml");
     }
     const box = roomScene.popupBox.item;
     box.options = choices;
