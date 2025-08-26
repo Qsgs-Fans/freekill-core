@@ -3,7 +3,6 @@
 local modManager = require "core.mod_manager"
 local baseEngine = require "core.engine"
 
---@field public legacy_global_trigger LegacyTriggerSkill[] @ 所有的全局触发技
 --- Engine是整个FreeKill赖以运行的核心。
 ---
 --- 它包含了FreeKill涉及的所有武将、卡牌、游戏模式等等
@@ -78,7 +77,6 @@ function Engine:initialize()
   self.skill_skels = {}    -- name --> SkillSkeleton
   self.related_skills = {} -- skillName --> relatedSkill[]
   self.global_trigger = {}
-  self.legacy_global_trigger = {}
   self.global_status_skill = {}
   self.generals = {}    -- name --> General
   self.same_generals = {}
@@ -303,8 +301,6 @@ function Engine:addSkill(skill)
     if sk.global then
       if sk:isInstanceOf(TriggerSkill) then
         table.insertIfNeed(self.global_trigger, sk)
-      -- elseif sk:isInstanceOf(LegacyTriggerSkill) then
-      --   table.insertIfNeed(self.legacy_global_trigger, sk)
       else
         local t = self.global_status_skill
         t[sk.class] = t[sk.class] or {}

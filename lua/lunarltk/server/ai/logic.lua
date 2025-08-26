@@ -46,17 +46,6 @@ function AIGameLogic:trigger(event, target, data)
   local ai = self.ai
   local logic = ai.room.logic
   local skills = logic.skill_table[event] or {}
-  --[[
-  if logic.legacy_skill_table then
-    skills = logic.legacy_skill_table[event]
-  end
-  table.insertTableIfNeed(skills, logic.legacy_skill_table[event] or {})
-
-  if logic.legacy_refresh_skill_table then
-    refresh_skills = logic.legacy_refresh_skill_table[event]
-  end
-  table.insertTableIfNeed(refresh_skills, logic.legacy_refresh_skill_table[event] or {})
-  --]]
   local _target = ai.room.current -- for iteration
   local player = _target
   local exit

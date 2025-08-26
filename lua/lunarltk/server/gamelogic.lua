@@ -1,6 +1,8 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 
----@class GameLogic: Object --, GameLogicLegacyMixin
+local baseGameLogic = require "lua.server.gamelogic"
+
+---@class GameLogic: Base.GameLogic --, GameLogicLegacyMixin
 ---@field public room Room
 ---@field public skill_table table<(TriggerEvent|integer|string), TriggerSkill[]>
 ---@field public skill_priority_table table<(TriggerEvent|integer|string), number[]>
@@ -12,19 +14,14 @@
 ---@field public event_recorder table<GameEvent, GameEvent>
 ---@field public current_event_id integer
 ---@field public current_trigger_event_id integer
-local GameLogic = class("GameLogic")
+local GameLogic = baseGameLogic:subclass("GameLogic")
 
 function GameLogic:initialize(room)
-  self.room = room
+  baseGameLogic.initialize(self, room)
 
   self.skills = {}
   self.skill_table = {}
   self.skill_priority_table = {}
-  -- 牢技能
-  self.legacy_skill_table = {}   -- TriggerEvent --> TriggerSkill[]
-  self.legacy_skill_priority_table = {}
-  self.legacy_refresh_skill_table = {}
-  self.legacy_skills = {}    -- skillName[]
 
   self.game_event_stack = Stack:new()
   self.cleaner_stack = Stack:new()
@@ -299,9 +296,6 @@ function GameLogic:prepareForStart()
 
   self:addTriggerSkill(Fk.skills["game_rule"] --[[@as TriggerSkill]])
   for _, trig in ipairs(Fk.global_trigger) do
-    self:addTriggerSkill(trig)
-  end
-  for _, trig in ipairs(Fk.legacy_global_trigger) do
     self:addTriggerSkill(trig)
   end
 
