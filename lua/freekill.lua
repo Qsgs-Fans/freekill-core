@@ -39,7 +39,7 @@ RequestHandler = require "core.request_handler"
 UI = require "ui-util"
 
 -- TODO 剥出基类后都改掉
--- Room = require "lunarltk.server.room"
+Room = require "lunarltk.server.room"
 GameEvent = require "server.gameevent"
 GameLogic = require "lunarltk.server.gamelogic"
 

@@ -2,6 +2,24 @@
 
 Room = require "lunarltk.server.room"
 
+for _, l in ipairs(Fk._custom_events) do
+  local name, p, m, c, e = l.name, l.p, l.m, l.c, l.e
+  -- GameEvent.prepare_funcs[name] = p
+  -- GameEvent.functions[name] = m
+  -- GameEvent.cleaners[name] = c
+  -- GameEvent.exit_funcs[name] = e
+  local custom = GameEvent:subclass(name)
+  custom.prepare = p
+  custom.main = m
+  custom.clear = c
+  custom.exit = e
+  GameEvent[name] = custom
+end
+
+---@type Player
+Self = nil -- `Self' is client-only, but we need it in AI
+dofile "lua/lunarltk/server/ai/init.lua"
+
 -- 所有当前正在运行的房间（即游戏尚未结束的房间）
 ---@type table<integer, Room>
 local runningRooms = {}

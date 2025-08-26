@@ -5,6 +5,7 @@
 ---@field public extensions table<string, string[]> @ 所有mod列表及其包含的拓展包
 ---@field public extension_names string[] @ Mod名字的数组，为了方便排序
 ---@field public translations table<string, table<string, string>> @ 翻译表
+---@field public boardgames { [string] : Base.BoardGame } @ name -> game
 local ModManager = {}
 
 function ModManager:initModManager()
@@ -17,6 +18,10 @@ function ModManager:initModManager()
   self.extension_names = { "standard", "standard_cards", "maneuvering", "test" }
 
   self.translations = {}  -- srcText --> translated
+
+  self.boardgames = {
+    -- FIXME 我们就当有个默认的lunarltk在此
+  }
 end
 
 --- 加载所有拓展包。
@@ -104,6 +109,11 @@ function ModManager:translate(src, lang)
   if not self.translations[lang] then lang = "zh_CN" end
   local ret = self.translations[lang][src]
   return ret or src
+end
+
+---@param game Base.BoardGame
+function ModManager:addBoardGame(game)
+  self.boardgames[game.name] = game
 end
 
 return ModManager

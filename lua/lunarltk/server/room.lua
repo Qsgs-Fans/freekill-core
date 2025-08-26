@@ -3,28 +3,24 @@
 --- Room是fk游戏逻辑运行的主要场所，同时也提供了许多API函数供编写技能使用。
 ---
 --- 一个房间中只有一个Room实例，保存在RoomInstance全局变量中。
----@class Room : AbstractRoom, GameEventWrappers, CompatAskFor
----@field public room fk.Room @ C++层面的Room类实例，别管他就是了，用不着
----@field public id integer @ 房间的id
----@field private main_co any @ 本房间的主协程
+---@class Room : AbstractRoom, RoomMixin, GameEventWrappers, CompatAskFor
+---@field public extra_turn_list table @ 待执行的额外回合表
+---@field public tag table<string, any> @ Tag清单，其实跟Player的标记是差不多的东西
+---@field public general_pile string[] @ 武将牌堆，这是可用武将名的数组
+---@field public skill_costs table<string, any> @ 存放skill.cost_data用
+---@field public card_marks table<integer, any> @ 存放card.mark之用
+---@field public current_cost_skill TriggerSkill? @ AI用
+local Room = AbstractRoom:subclass("Room")
+
+-- 比较蠢的数据类型覆写这一块 但凡有个AbstractRoom<T>都好
+---@class Room
 ---@field public players ServerPlayer[] @ 这个房间中所有参战玩家
 ---@field public alive_players ServerPlayer[] @ 所有还活着的玩家
 ---@field public observers fk.ServerPlayer[] @ 旁观者清单，这是c++玩家列表，别乱动
 ---@field public current ServerPlayer @ 当前回合玩家
----@field public game_started boolean @ 游戏是否已经开始
----@field public game_finished boolean @ 游戏是否已经结束
----@field public extra_turn_list table @ 待执行的额外回合表
----@field public tag table<string, any> @ Tag清单，其实跟Player的标记是差不多的东西
----@field public general_pile string[] @ 武将牌堆，这是可用武将名的数组
----@field public logic GameLogic @ 这个房间使用的游戏逻辑，可能根据游戏模式而变动
----@field public request_queue table<userdata, table>
----@field public request_self table<integer, integer>
----@field public last_request Request @ 上一次完成的request
----@field public skill_costs table<string, any> @ 存放skill.cost_data用
----@field public card_marks table<integer, any> @ 存放card.mark之用
----@field public current_cost_skill TriggerSkill? @ AI用
----@field public _test_disable_delay boolean? 测试专用 会禁用delay和烧条
-local Room = AbstractRoom:subclass("Room")
+
+local RoomMixin = require "server.room_mixin"
+Room:include(RoomMixin)
 
 -- load classes used by the game
 Request = require "server.network"
@@ -39,10 +35,6 @@ Room:include(CompatAskFor)
 
 -- 唉，兼容个锤子牢函数
 -- GameLogic:include(dofile "lua/compat/gamelogic.lua")
-
----@type Player
-Self = nil -- `Self' is client-only, but we need it in AI
-dofile "lua/lunarltk/server/ai/init.lua"
 
 --[[--------------------------------------------------------------------
   Room 保存着服务器端游戏房间的所有信息，比如说玩家、卡牌，以及其他信息。
@@ -67,28 +59,15 @@ dofile "lua/lunarltk/server/ai/init.lua"
 -- 构造函数
 ------------------------------------------------------------------------
 
---- 构造函数。别去构造
 ---@param _room fk.Room
 function Room:initialize(_room)
   AbstractRoom.initialize(self)
-  self.room = _room
-  self.id = _room:getId()
+  self:initRoomMixin(_room)
 
-  self.game_started = false
-  self.game_finished = false
   self.extra_turn_list = {}
-  self.timeout = _room:getTimeout()
   self.tag = {}
   self.general_pile = {}
-  self.request_queue = {}
-  self.request_self = {}
 
-  -- doNotify过载保护，每次获得控制权时置为0
-  -- 若在yield之前执行了max次doNotify则强制让出
-  self.notify_count = 0
-  self.notify_max = 500
-
-  self.settings = cbor.decode(self.room:settings())
   self.disabled_packs = self.settings.disabledPack
   if not Fk.game_modes[self.settings.gameMode] then
     self.settings.gameMode = "aaa_role_mode"
@@ -96,48 +75,6 @@ function Room:initialize(_room)
 
   table.insertTable(self.disabled_packs, Fk.game_mode_disabled[self.settings.gameMode])
   self.disabled_generals = self.settings.disabledGenerals
-end
-
--- 供调度器使用的函数。能让房间开始运行/从挂起状态恢复。
----@param reason string?
-function Room:resume(reason)
-  -- 如果还没运行的话就先创建自己的主协程
-  if not self.main_co then
-    self.main_co = coroutine.create(function()
-      self:makeGeneralPile()
-      self:run()
-    end)
-  end
-
-  local ret, err_msg, rest_time = true, true, nil
-  local main_co = self.main_co
-
-  if self:checkNoHuman() then
-    goto GAME_OVER
-  end
-
-  if not self.game_finished then
-    self.notify_count = 0
-    ret, err_msg, rest_time = coroutine.resume(main_co, reason)
-
-    -- handle error
-    if ret == false then
-      fk.qCritical(err_msg .. "\n" .. debug.traceback(main_co))
-      goto GAME_OVER
-    end
-
-    if rest_time == "over" then
-      goto GAME_OVER
-    end
-
-    return false, rest_time
-  end
-
-  ::GAME_OVER::
-  self:gameOver("")
-  -- coroutine.close(main_co)
-  -- self.main_co = nil
-  return true
 end
 
 -- 构造武将牌堆。同名武将只留下一张
@@ -160,43 +97,13 @@ function Room:makeGeneralPile()
   return true
 end
 
-function Room:checkNoHuman(chkOnly)
-  if #self.players == 0 then return end
-
-  for _, p in ipairs(self.players) do
-    -- TODO: trust
-    if p.serverplayer:getState() == fk.Player_Online then
-      return
-    end
-  end
-
-  if not chkOnly then
-    self:gameOver("")
-  end
-  return true
+function Room:run()
+  self:makeGeneralPile()
+  RoomMixin.run(self)
 end
 
 function Room:__tostring()
   return string.format("<Room #%d>", self.id)
-end
-
---- 正式在这个房间中开始游戏。
----
---- 当这个函数返回之后，整个Room线程也宣告结束。
----@return nil
-function Room:run()
-  self.start_time = os.time()
-  for _, p in fk.qlist(self.room:getPlayers()) do
-    local player = ServerPlayer:new(p)
-    player.room = self
-    table.insert(self.players, player)
-  end
-
-  local mode = Fk.game_modes[self.settings.gameMode]
-  local logic = (mode.logic and mode.logic() or GameLogic):new(self)
-  self.logic = logic
-  if mode.rule then self:addSkill(mode.rule) end
-  logic:start()
 end
 
 ------------------------------------------------------------------------
@@ -639,25 +546,6 @@ function Room:notifyProperty(p, player, property)
     property,
     player[property],
   })
-end
-
---- 向多名玩家广播一条消息。
----@param command string @ 发出这条消息的消息类型
----@param jsonData any @ 消息的数据，一般是JSON字符串，也可以是普通字符串，取决于client怎么处理了
----@param players? ServerPlayer[] @ 要告知的玩家列表，默认为所有人
-function Room:doBroadcastNotify(command, jsonData, players)
-  players = players or self.players
-  for _, p in ipairs(players) do
-    p:doNotify(command, jsonData)
-  end
-end
-
---- 延迟一段时间。
----@param ms integer @ 要延迟的毫秒数
-function Room:delay(ms)
-  self.room:delay(math.ceil(ms))
-  if self._test_disable_delay then return end
-  coroutine.yield("__handleRequest", ms)
 end
 
 --- 延迟一段时间。界面上会显示所有人读条了。注意这个只能延迟多少秒。

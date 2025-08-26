@@ -13,8 +13,10 @@
 
 --- 定义某款桌游。桌游大类只负责：
 ---
+--- * 包加载时，将拓展包加载到相应的Engine
 --- * 服务端newroom时创建相应类型的Room
---- * 
+--- * 客户端enterRoom时创建相应的client换掉已有的
+--- * 客户端游戏开始时向GUI中加载相应的Page
 ---@class Base.BoardGame : Base.BoardGameSpec, Object
 local BoardGame = class("Base.BoardGame")
 
