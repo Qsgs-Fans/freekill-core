@@ -454,10 +454,22 @@ function ServerPlayer:addSkillUseHistory(skillName, num)
   self.room:doBroadcastNotify("AddSkillUseHistory", {self.id, skillName, num})
 end
 
+-- 增加技能分支发动次数
+function ServerPlayer:addSkillBranchUseHistory(skillName, branch, num)
+  Player.addSkillBranchUseHistory(self, skillName, branch, num)
+  self.room:doBroadcastNotify("AddSkillBranchUseHistory", {self.id, skillName, branch, num})
+end
+
 -- 设置技能已发动次数
 function ServerPlayer:setSkillUseHistory(skillName, num, scope)
   Player.setSkillUseHistory(self, skillName, num, scope)
   self.room:doBroadcastNotify("SetSkillUseHistory", {self.id, skillName, num, scope})
+end
+
+-- 设置技能分支已发动次数
+function ServerPlayer:setSkillBranchUseHistory(skillName, branch, num, scope)
+  Player.setSkillBranchUseHistory(self, skillName, branch, num, scope)
+  self.room:doBroadcastNotify("SetSkillBranchUseHistory", {self.id, skillName, branch, num, scope})
 end
 
 --- 设置连环状态

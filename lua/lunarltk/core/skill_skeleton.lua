@@ -7,7 +7,7 @@
 ---@field public anim_type? string|AnimationType @ 技能类型定义
 ---@field public global? boolean @ 决定是否是全局技能
 ---@field public dynamic_desc? fun(self: Skill, player: Player, lang: string): string? @ 动态描述函数
----@field public derived_piles? string|string[] @ 与某效果联系起来的私人牌堆名，失去该效果时将之置入弃牌堆(@deprecated)
+---@field public derived_piles? string|string[]  @deprecated @ 与某效果联系起来的私人牌堆名，失去该效果时将之置入弃牌堆
 ---@field public audio_index? table|integer @ 此技能效果播放的语音序号，可为int或int表
 ---@field public extra? table @ 塞进技能里的各种数据
 
@@ -20,21 +20,28 @@
 ---@field public dynamic_name? fun(self: SkillSkeleton, player: Player, lang?: string): string @ 动态名称函数
 ---@field public dynamic_desc? fun(self: SkillSkeleton, player: Player, lang?: string): string? @ 动态描述函数
 ---@field public derived_piles? string | string[] @ 与该技能联系起来的私人牌堆名，失去该技能时将之置入弃牌堆
+---@field public max_phase_use_time? integer | fun(self: SkillSkeleton, player: Player): integer? @ 该技能的最大使用次数——阶段
+---@field public max_turn_use_time? integer | fun(self: SkillSkeleton, player: Player): integer? @ 该技能的最大使用次数——回合
+---@field public max_round_use_time? integer | fun(self: SkillSkeleton, player: Player): integer? @ 该技能的最大使用次数——轮次
+---@field public max_game_use_time? integer | fun(self: SkillSkeleton, player: Player): integer? @ 该技能的最大使用次数——本局游戏
+---@field public max_branches_use_time? table<string, table<integer, integer?>?> | fun(self: SkillSkeleton, player: Player): table<string, table<integer, integer?>?>? @ 该技能的最大使用次数——任意标签（内部有独立的时段细分）
 ---@field public mode_skill? boolean @ 是否为模式技能（诸如斗地主的“飞扬”和“跋扈”）
 ---@field public extra? table @ 塞进技能里的各种数据
 
 ---@class SkillSkeleton : Object, SkillSkeletonSpec
----@field public effects Skill[] 技能对应的所有效果
----@field public effect_names string[] 技能对应的效果名
----@field public effect_spec_list ([any, any, any])[] 技能对应的效果信息
+---@field public effects Skill[] @ 该技能对应的所有效果
+---@field public effect_names string[] @ 该技能对应的效果名
+---@field public effect_spec_list ([any, any, any])[] @ 该技能对应的效果信息
 ---@field public ai_list ([string, any, string, boolean?])[]
 ---@field public tests fun(room: Room, me: ServerPlayer)[]
 ---@field public dynamicName fun(self: SkillSkeleton, player: Player, lang?: string): string @ 动态名称函数
 ---@field public dynamicDesc fun(self: SkillSkeleton, player: Player, lang?: string): string @ 动态描述函数
----@field public derived_piles? string[] @ 与一个技能同在的私有牌堆名，失去时弃置其中的所有牌
+---@field public derived_piles? string[] @ 与该技能同在的私有牌堆名，失去时弃置其中的所有牌
+---@field public max_use_time table<integer, integer?> @ 该技能在各时机内最大的使用次数
+---@field public max_branches_use_time? table<string, table<integer, integer?>?> | fun(self: SkillSkeleton, player: Player): table<string, table<integer, integer?>?>? @ 该技能的最大使用次数——任意标签（内部有独立的时段细分）
 ---@field public addTest fun(self: SkillSkeleton, fn: fun(room: Room, me: ServerPlayer)) @ 测试函数
----@field public onAcquire fun(self: SkillSkeleton, player: ServerPlayer, is_start: boolean)
----@field public onLose fun(self: SkillSkeleton, player: ServerPlayer, is_death: boolean)
+---@field public onAcquire fun(self: SkillSkeleton, player: ServerPlayer, is_start: boolean) @ 获得技能时执行的函数
+---@field public onLose fun(self: SkillSkeleton, player: ServerPlayer, is_death: boolean) @ 失去技能时执行的函数
 ---@field public addEffect fun(self: SkillSkeleton, key: "distance", data: DistanceSpec, attribute: nil): SkillSkeleton
 ---@field public addEffect fun(self: SkillSkeleton, key: "prohibit", data: ProhibitSpec, attribute: nil): SkillSkeleton
 ---@field public addEffect fun(self: SkillSkeleton, key: "atkrange", data: AttackRangeSpec, attribute: nil): SkillSkeleton
@@ -43,9 +50,9 @@
 ---@field public addEffect fun(self: SkillSkeleton, key: "filter", data: FilterSpec, attribute: nil): SkillSkeleton
 ---@field public addEffect fun(self: SkillSkeleton, key: "invalidity", data: InvaliditySpec, attribute: nil): SkillSkeleton
 ---@field public addEffect fun(self: SkillSkeleton, key: "visibility", data: VisibilitySpec, attribute: nil): SkillSkeleton
----@field public addEffect fun(self: SkillSkeleton, key: "active", data: ActiveSkillSpec, attribute: nil): SkillSkeleton
+---@field public addEffect fun(self: SkillSkeleton, key: "active", data: ActiveSkillSpec, attribute: SkillAttribute?): SkillSkeleton
 ---@field public addEffect fun(self: SkillSkeleton, key: "cardskill", data: CardSkillSpec, attribute: nil): SkillSkeleton
----@field public addEffect fun(self: SkillSkeleton, key: "viewas", data: ViewAsSkillSpec, attribute: nil): SkillSkeleton
+---@field public addEffect fun(self: SkillSkeleton, key: "viewas", data: ViewAsSkillSpec, attribute: SkillAttribute?): SkillSkeleton
 local SkillSkeleton = class("SkillSkeleton")
 
 
@@ -86,6 +93,14 @@ function SkillSkeleton:initialize(spec)
   self.mode_skill = spec.mode_skill
 
   self.extra = spec.extra or {}
+
+  self.max_use_time = {
+    spec.max_phase_use_time,
+    spec.max_turn_use_time,
+    spec.max_round_use_time,
+    spec.max_game_use_time,
+  }
+  self.max_branches_use_time = spec.max_branches_use_time
 
   --Notify智慧，当不存在main_skill时，用于创建main_skill。看上去毫无用处
   fk.readCommonSpecToSkill(self, spec)
@@ -189,9 +204,12 @@ function SkillSkeleton:createSkill()
   return main_skill
 end
 
----@class TrigSkelAttribute
----@field public is_delay_effect? boolean
---- 若为true，则不贴main_skill
+---@class SkillAttribute
+---@field public check_effect_limit? boolean @ 若为true，则自带判断效果次数（若不填can_use，则默认带限定“本阶段”的次数判定）
+---@field public check_skill_limit? boolean @ 若为true，则自带判断技能次数
+
+---@class TrigSkelAttribute: SkillAttribute
+---@field public is_delay_effect? boolean @ 若为true，则不贴main_skill
 
 ---@alias TrigFunc fun(self: TriggerSkill, event: TriggerEvent, target: ServerPlayer?, player: ServerPlayer, data: any): any
 ---@class TrigSkelSpec<T>: {
@@ -229,16 +247,42 @@ function SkillSkeleton:createTriggerSkill(_skill, idx, key, attr, spec)
     sk.global = spec.global
   end
   if spec.can_trigger then
+    local tmp_func
     if table.contains(_skill.tags, Skill.Wake) then
-      sk.triggerable = function(_self, event, target, player, data)
+      if spec.can_wake then
+        sk.canWake = spec.can_wake
+      end
+      tmp_func = function(_self, event, target, player, data)
         return spec.can_trigger(_self, event, target, player, data) and
           sk:enableToWake(event, target, player, data)
       end
     else
-      sk.triggerable = spec.can_trigger
+      tmp_func = spec.can_trigger
     end
-    if table.contains(_skill.tags, Skill.Wake) and spec.can_wake then
-      sk.canWake = spec.can_wake
+    sk.triggerable = function(_self, event, target, player, data)
+      if attr.check_effect_limit then
+        for scope, _ in pairs(_self.max_use_time) do
+          if not _self:withinTimesLimit(player, scope) then
+            return false
+          end
+        end
+      end
+      if attr.check_skill_limit then
+        if #_skill.max_use_time == 0 and _skill.max_branches_use_time then
+          -- 写死的时机table，考虑到历史记录也是写死在这的，姑且先这样吧
+          for _, scope in ipairs({Player.HistoryGame, Player.HistoryRound, Player.HistoryTurn, Player.HistoryPhase}) do
+            if not _skill:withinBranchTimesLimit(player, nil, scope) then
+              return false
+            end
+          end
+        end
+        for scope, _ in pairs(_skill.max_use_time) do
+          if not _skill:withinTimesLimit(player, scope) then
+            return false
+          end
+        end
+      end
+      return tmp_func(_self, event, target, player, data)
     end
   end
   if spec.on_trigger then sk.trigger = spec.on_trigger end
@@ -447,6 +491,9 @@ function fk.readInteractionToSkill(skill, spec)
   end
 end
 
+---@param _skill SkillSkeleton
+---@param idx integer
+---@param attr SkillAttribute
 ---@param spec ActiveSkillSpec
 ---@return ActiveSkill
 function SkillSkeleton:createActiveSkill(_skill, idx, key, attr, spec)
@@ -456,14 +503,43 @@ function SkillSkeleton:createActiveSkill(_skill, idx, key, attr, spec)
   local skill = ActiveSkill:new(new_name, #_skill.tags > 0 and _skill.tags[1] or Skill.NotFrequent)
   fk.readUsableSpecToSkill(skill, spec)
 
-  if spec.can_use then
-    skill.canUse = function(curSkill, player)
-      return spec.can_use(curSkill, player) and curSkill:isEffectable(player)
+  local spec_can_use = spec.can_use
+  if not spec_can_use then
+    spec_can_use = ActiveSkill.canUse
+  end
+
+  ---@param curSkill ViewAsSkill
+  ---@param player Player
+  skill.canUse = function(curSkill, player, card, extra_data)
+    if not curSkill:isEffectable(player) then return end
+    if attr.check_effect_limit then
+      for scope, _ in pairs(curSkill.max_use_time) do
+        if not curSkill:withinTimesLimit(player, scope) then
+          return false
+        end
+      end
     end
+    if attr.check_skill_limit then
+      if #_skill.max_use_time == 0 and _skill.max_branches_use_time then
+        -- 写死的时机table，考虑到历史记录也是写死在这的，姑且先这样吧
+        for _, scope in ipairs({Player.HistoryGame, Player.HistoryRound, Player.HistoryTurn, Player.HistoryPhase}) do
+          if not _skill:withinBranchTimesLimit(player, nil, scope) then
+            return false
+          end
+        end
+      end
+      for scope, _ in pairs(_skill.max_use_time) do
+        if not _skill:withinTimesLimit(player, scope) then
+          return false
+        end
+      end
+    end
+    return spec_can_use(curSkill, player, card, extra_data)
   end
   if spec.card_filter then skill.cardFilter = spec.card_filter end
   if spec.target_filter then skill.targetFilter = spec.target_filter end
   if spec.feasible then skill.feasible = spec.feasible end
+  if spec.on_cost then skill.onCost = spec.on_cost end
   if spec.on_use then skill.onUse = spec.on_use end
   if spec.prompt then skill.prompt = spec.prompt end
   if spec.target_tip then skill.targetTip = spec.target_tip end
@@ -501,6 +577,9 @@ function SkillSkeleton:createCardSkill(_skill, idx, key, attr, spec)
   return skill
 end
 
+---@param _skill SkillSkeleton
+---@param idx integer
+---@param attr SkillAttribute
 ---@param spec ViewAsSkillSpec
 ---@return ViewAsSkill
 function SkillSkeleton:createViewAsSkill(_skill, idx, key, attr, spec)
@@ -530,14 +609,51 @@ function SkillSkeleton:createViewAsSkill(_skill, idx, key, attr, spec)
   if type(spec.pattern) == "string" then
     skill.pattern = spec.pattern
   end
+
+  ---@param curSkill ViewAsSkill
+  ---@param player Player
+  local timeCheck = function(curSkill, player)
+    if attr.check_effect_limit then
+      for scope, _ in pairs(curSkill.max_use_time) do
+        if not curSkill:withinTimesLimit(player, scope) then
+          return false
+        end
+      end
+    end
+    if attr.check_skill_limit then
+      if #_skill.max_use_time == 0 and _skill.max_branches_use_time then
+        -- 写死的时机table，考虑到历史记录也是写死在这的，姑且先这样吧
+        for _, scope in ipairs({Player.HistoryGame, Player.HistoryRound, Player.HistoryTurn, Player.HistoryPhase}) do
+          if not _skill:withinBranchTimesLimit(player, nil, scope) then
+            return false
+          end
+        end
+      end
+      for scope, _ in pairs(_skill.max_use_time) do
+        if not _skill:withinTimesLimit(player, scope) then
+          return false
+        end
+      end
+    end
+    return true
+  end
+
   if type(spec.enabled_at_play) == "function" then
     skill.enabledAtPlay = function(curSkill, player)
-      return spec.enabled_at_play(curSkill, player) and curSkill:isEffectable(player)
+      return timeCheck(curSkill, player) and spec.enabled_at_play(curSkill, player) and curSkill:isEffectable(player)
+    end
+  else
+    skill.enabledAtPlay = function(curSkill, player)
+      return timeCheck(curSkill, player) and ViewAsSkill.enabledAtPlay(curSkill, player)
     end
   end
   if type(spec.enabled_at_response) == "function" then
     skill.enabledAtResponse = function(curSkill, player, cardResponsing)
-      return spec.enabled_at_response(curSkill, player, cardResponsing) and curSkill:isEffectable(player)
+      return timeCheck(curSkill, player) and spec.enabled_at_response(curSkill, player, cardResponsing) and curSkill:isEffectable(player)
+    end
+  else
+    skill.enabledAtResponse = function(curSkill, player, cardResponsing)
+      return timeCheck(curSkill, player) and ViewAsSkill.enabledAtResponse(curSkill, player, cardResponsing)
     end
   end
   if spec.prompt then skill.prompt = spec.prompt end
@@ -556,7 +672,13 @@ function SkillSkeleton:createViewAsSkill(_skill, idx, key, attr, spec)
   if spec.click_count then skill.click_count = spec.click_count end
 
   if type(spec.enabled_at_nullification) == "function" then
-    skill.enabledAtNullification = spec.enabled_at_nullification
+    skill.enabledAtNullification = function(curSkill, player, cardData)
+      return timeCheck(curSkill, player) and spec.enabled_at_nullification(curSkill, player, cardData) and curSkill:isEffectable(player)
+    end
+  else
+    skill.enabledAtNullification = function(curSkill, player, cardData)
+      return timeCheck(curSkill, player) and ViewAsSkill.enabledAtNullification(curSkill, player, cardData)
+    end
   end
 
   skill.handly_pile = spec.handly_pile
@@ -566,6 +688,8 @@ function SkillSkeleton:createViewAsSkill(_skill, idx, key, attr, spec)
   else
     skill.mute_card = not (string.find(skill.pattern, "|") or skill.pattern == "." or string.find(skill.pattern, ","))
   end
+
+  if spec.on_cost then skill.onCost = spec.on_cost end
 
   return skill
 end
@@ -670,6 +794,106 @@ function SkillSkeleton:getDynamicDescription(player, lang)
     end
   end
   return self.dynamicDesc and self:dynamicDesc(player, lang)
+end
+
+-- 获得技能的最大使用次数
+---@param player Player @ 使用者
+---@param scope integer @ 查询历史范围（默认为回合）
+---@param to? Player @ 目标
+---@return number? @ 最大使用次数，nil就是无限
+function SkillSkeleton:getMaxUseTime(player, scope, to)
+  scope = scope or Player.HistoryTurn
+  local time = self.max_use_time[scope]
+  local ret = time
+  if type(time) == "function" then
+    ret = time(self, player, to)
+  end
+  if ret == nil then return nil end
+  return ret
+end
+
+-- 获得技能的最大使用次数（基于某个分支）
+---@param player Player @ 使用者
+---@param branch string @ 分支名（没有后缀）
+---@param scope integer @ 查询历史范围（默认为回合）
+---@param to? Player @ 目标
+---@return number? @ 最大使用次数，nil就是无限
+function SkillSkeleton:getBranchMaxUseTime(player, branch, scope, to)
+  scope = scope or Player.HistoryTurn
+  local times_table
+  if type(self.max_branches_use_time) == "function" then
+    times_table = self:max_branches_use_time(player)
+  else
+    times_table = self.max_branches_use_time
+  end
+  if not times_table then return nil end
+
+  local ret = times_table[branch][scope]
+  if ret == nil then return nil end
+  return ret
+end
+
+-- 获得技能的剩余使用次数
+---@param player Player @ 使用者
+---@param scope integer @ 查询历史范围（默认为回合）
+---@param to? Player @ 目标
+---@return number? @ 剩余使用次数，nil就是无限
+function SkillSkeleton:getRemainUseTime(player, scope, to)
+  scope = scope or Player.HistoryTurn
+
+  local limit = self:getMaxUseTime(player, scope, to)
+  if limit == nil then return nil end
+
+  return math.max(0, limit - player:usedSkillTimes(self.name, scope))
+end
+
+-- 判断一个角色是否在技能的次数限制内
+---@param player Player @ 使用者
+---@param scope? integer @ 查询历史范围（默认为回合）
+---@param to? Player @ 目标
+---@return boolean?
+function SkillSkeleton:withinTimesLimit(player, scope, to)
+  scope = scope or Player.HistoryTurn
+  if not self:withinBranchTimesLimit(player, nil, scope) then return false end
+
+  local limit = self:getMaxUseTime(player, scope, to)
+  if limit == nil then return true end
+
+  return self:getRemainUseTime(player, scope, to) > 0
+end
+
+-- 判断一个角色是否在技能的**所有分支**次数限制内
+---@param player Player @ 使用者
+---@param branch? string @ 查询分支范围（无则检查所有分支）
+---@param scope? integer @ 查询历史范围（默认为回合）
+---@param to? Player @ 目标
+---@return boolean?
+function SkillSkeleton:withinBranchTimesLimit(player, branch, scope, to)
+  scope = scope or Player.HistoryTurn
+  local times_table
+  if type(self.max_branches_use_time) == "function" then
+    times_table = self:max_branches_use_time(player)
+  else
+    times_table = self.max_branches_use_time
+  end
+  if not times_table then return true end
+
+  if branch then
+    local limit = (times_table[branch] or {})[scope]
+    return not (limit and player:usedSkillTimes(self.name, scope, branch) >= limit)
+  end
+
+  local has_limit = false
+  for target_branch, limits in pairs(times_table) do
+    local ret = (limits or {})[scope]
+    if ret ~= nil then
+      has_limit = true
+      if player:usedSkillTimes(self.name, scope, target_branch) < ret then
+        return true
+      end
+    end
+  end
+  return not has_limit
 end
 
 ---@param spec SkillSkeletonSpec

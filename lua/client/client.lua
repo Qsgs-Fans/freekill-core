@@ -1121,6 +1121,17 @@ fk.client_callback["AddSkillUseHistory"] = function(self, data)
   updateLimitSkill(playerid, Fk.skills[skill_name])
 end
 
+fk.client_callback["AddSkillBranchUseHistory"] = function(self, data)
+  local playerid, skill_name, branch, time = data[1], data[2], data[3], data[4]
+  local player = self:getPlayerById(playerid)
+  player:addSkillBranchUseHistory(skill_name, branch, time)
+
+  -- 真的有分支会改变状态吗……？
+  -- local skill = Fk.skills[skill_name]
+  -- if not skill then return end
+  -- updateLimitSkill(playerid, Fk.skills[skill_name])
+end
+
 fk.client_callback["SetSkillUseHistory"] = function(self, data)
   local id, skill_name, time, scope = data[1], data[2], data[3], data[4]
   local player = self:getPlayerById(id)
@@ -1129,6 +1140,18 @@ fk.client_callback["SetSkillUseHistory"] = function(self, data)
   local skill = Fk.skills[skill_name]
   if not skill then return end
   updateLimitSkill(id, Fk.skills[skill_name])
+end
+
+fk.client_callback["SetSkillBranchUseHistory"] = function(self, data)
+  local id, skill_name, branch, time, scope =
+                                    data[1], data[2], data[3], data[4], data[5]
+  local player = self:getPlayerById(id)
+  player:setSkillBranchUseHistory(skill_name, branch, time, scope)
+
+  -- 真的有分支会改变状态吗……？
+  -- local skill = Fk.skills[skill_name]
+  -- if not skill then return end
+  -- updateLimitSkill(id, Fk.skills[skill_name])
 end
 
 fk.client_callback["AddVirtualEquip"] = function(self, data)

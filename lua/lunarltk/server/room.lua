@@ -2206,25 +2206,49 @@ function Room:handleUseCardReply(player, data, params)
     if skill.interaction then skill.interaction.data = data.interaction_data end
     if skill:isInstanceOf(ActiveSkill) then
       ---@cast skill ActiveSkill
+
+      local use_spec = {
+        from = player,
+        cards = selected_cards,
+        tos = table.map(targets, Util.Id2PlayerMapper),
+      }
+      local use_data = SkillUseData:new(use_spec)
+      use_data.cost_data = skill:onCost(player, use_data)
+      if not use_data.cost_data.history_branch then
+        if type(skill.history_branch) == "function" then
+          use_data.cost_data.history_branch = skill:history_branch(player, use_data)
+        else
+          use_data.cost_data.history_branch = skill.history_branch
+        end
+      end
+
       self:useSkill(player, skill, function()
-        skill:onUse(self, SkillUseData:new {
-          from = player,
-          cards = selected_cards,
-          tos = table.map(targets, Util.Id2PlayerMapper),
-        })
-      end, {tos = table.map(targets, Util.Id2PlayerMapper), cards = selected_cards, cost_data = {}})
+        skill:onUse(self, use_data)
+      end, use_data)
       return nil
     elseif skill:isInstanceOf(ViewAsSkill) then
       ---@cast skill ViewAsSkill
       --Self = player
       local useResult
       local c = skill:viewAs(player, selected_cards)
+
+      local use_spec = {
+        from = player,
+        cards = selected_cards,
+        tos = table.map(targets, Util.Id2PlayerMapper),
+      }
+      local use_data = SkillUseData:new(use_spec)
+      use_data.cost_data = skill:onCost(player, use_data)
+      if not use_data.cost_data.history_branch then
+        if type(skill.history_branch) == "function" then
+          use_data.cost_data.history_branch = skill:history_branch(player, use_data)
+        else
+          use_data.cost_data.history_branch = skill.history_branch
+        end
+      end
+
       self:useSkill(player, skill, function()
-        useResult = skill:onUse(self, SkillUseData:new {
-          from = player,
-          cards = selected_cards,
-          tos = table.map(targets, Util.Id2PlayerMapper),
-        }, c, params) or ""
+        useResult = skill:onUse(self, use_data, c, params) or ""
         if type(useResult) == "table" then
           if params == nil then
             player.room:useCard(useResult)
@@ -2234,7 +2258,7 @@ function Room:handleUseCardReply(player, data, params)
             useResult.attachedSkillAndUser = { skillName = skill.name, user = player.id, muteCard = skill.mute_card }
           end
         end
-      end, {tos = table.map(targets, Util.Id2PlayerMapper), cards = selected_cards, cost_data = {}})
+      end, use_data)
       return useResult
     end
   else
@@ -3983,6 +4007,7 @@ function Room:clearHistory (scope)
   for _, p in ipairs(self.players) do
     p:setCardUseHistory("", 0, scope)
     p:setSkillUseHistory("", 0, scope)
+    p:setSkillBranchUseHistory("", nil, 0, scope)
     for name, _ in pairs(p.mark) do
       if name:find(suffix, 1, true) then
         self:setPlayerMark(p, name, 0)
