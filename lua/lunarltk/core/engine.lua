@@ -1,5 +1,8 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 
+local modManager = require "core.mod_manager"
+local baseEngine = require "core.engine"
+
 --@field public legacy_global_trigger LegacyTriggerSkill[] @ 所有的全局触发技
 --- Engine是整个FreeKill赖以运行的核心。
 ---
@@ -7,9 +10,7 @@
 ---
 --- 同时也提供了许多常用的函数。
 ---
----@class Engine : Object
----@field public extensions table<string, string[]> @ 所有mod列表及其包含的拓展包
----@field public extension_names string[] @ Mod名字的数组，为了方便排序
+---@class Engine : Base.Engine, Base.ModManager
 ---@field public packages table<string, Package> @ 所有拓展包的列表
 ---@field public package_names string[] @ 含所有拓展包名字的数组，为了方便排序
 ---@field public skills table<string, Skill> @ 所有的技能
@@ -23,7 +24,6 @@
 ---@field public all_card_types table<string, Card> @ 所有的卡牌类型以及一张样板牌
 ---@field public all_card_names string[] @ 有序的所有的卡牌牌名，顺序：基本牌（杀置顶），普通锦囊，延时锦囊，按副类别排序的装备
 ---@field public cards Card[] @ 所有卡牌
----@field public translations table<string, table<string, string>> @ 翻译表
 ---@field public game_modes table<string, GameMode> @ 所有游戏模式
 ---@field public game_mode_disabled table<string, string[]> @ 游戏模式禁用的包
 ---@field public main_mode_list table<string, string[]> @ 主模式检索表
@@ -41,7 +41,8 @@
 ---@field public request_handlers table<string, RequestHandler> @ 请求处理程序
 ---@field public target_tips table<string, TargetTipSpec> @ 选择目标提示对应表
 ---@field public choose_general_rule table<string, ChooseGeneralSpec> @ 选将框操作方法表
-local Engine = class("Engine")
+local Engine = baseEngine:subclass("Engine")
+Engine:include(modManager)
 
 --- Engine的构造函数。
 ---
@@ -55,13 +56,9 @@ function Engine:initialize()
   end
 
   Fk = self
-  self.extensions = {
-    ["standard"] = { "standard" },
-    ["standard_cards"] = { "standard_cards" },
-    ["maneuvering"] = { "maneuvering" },
-    ["test"] = { "test_p_0" },
-  }
-  self.extension_names = { "standard", "standard_cards", "maneuvering", "test" }
+
+  baseEngine.initialize(self)
+  self:initModManager()
   self.packages = {}    -- name --> Package
   self.package_names = {}
   self.skill_keys = {    -- key --> {SkillSkeleton.createSkill, integer}
@@ -89,7 +86,6 @@ function Engine:initialize()
   self.all_card_types = {}
   self.all_card_names = {}
   self.cards = {}     -- Card[]
-  self.translations = {}  -- srcText --> translated
   self.game_modes = {}
   self.game_mode_disabled = {}
   self.main_mode_list = {}
@@ -105,6 +101,34 @@ function Engine:initialize()
   self.choose_general_rule = {}
 
   self:loadPackages()
+
+  -- 唉，杀批的Engine又搞特殊了
+  -- 把card放在后面加载吧
+  for _, pkname in ipairs(self.package_names) do
+    local pack = self.packages[pkname]
+
+    for _, skel in ipairs(pack.card_skels) do
+      local card = skel:createCardPrototype()
+      if card then
+        card.package = pack
+        self.skills[card.skill.name] = self.skills[card.skill.name] or card.skill
+        self.all_card_types[card.name] = card
+        table.insert(self.all_card_names, card.name)
+      end
+    end
+
+    for _, tab in ipairs(pack.card_specs) do
+      local card = self:cloneCard(tab[1], tab[2], tab[3])
+      card.extra_data = tab[4]
+      pack:addCard(card)
+    end
+
+    -- add cards, generals and skills to Engine
+    if pack.type == Package.CardPack then
+      self:addCards(pack.cards)
+    end
+  end
+
   self:setLords()
   self:loadCardNames()
   self:loadDisabled()
@@ -132,38 +156,9 @@ function Engine:__newindex(k, v)
   end
 end
 
---- 向Engine中加载一个拓展包。
----
---- 会加载这个拓展包含有的所有武将、卡牌以及游戏模式。
----@param pack Package @ 要加载的拓展包
-function Engine:loadPackage(pack)
-  assert(pack:isInstanceOf(Package))
-  if self.packages[pack.name] ~= nil then
-    error(string.format("Duplicate package %s detected", pack.name))
-  end
-  self.packages[pack.name] = pack
-  table.insert(self.package_names, pack.name)
-
-  -- create skills from skel
-  for _, skel in ipairs(pack.skill_skels) do
-    local skill = skel:createSkill()
-    skill.package = pack
-    table.insert(pack.related_skills, skill)
-    self.skill_skels[skel.name] = skel
-    for _, s in ipairs(skill.related_skills) do
-      s.package = pack
-    end
-  end
-
-  if pack.type == Package.GeneralPack then
-    self:addGenerals(pack.generals)
-  end
-  self:addSkills(pack:getSkills())
-  self:addGameModes(pack.game_modes)
-end
-
 -- Don't do this
 
+--[[
 local package = package
 
 function Engine:reloadPackage(path)
@@ -235,97 +230,9 @@ function Engine:reloadPackage(path)
     for _, p in ipairs(pkg) do f(p) end
   end
 end
+--]]
 
-
---- 加载所有拓展包。
----
---- Engine会在packages/下搜索所有含有init.lua的文件夹，并把它们作为拓展包加载进来。
----
---- 这样的init.lua可以返回单个拓展包，也可以返回拓展包数组，或者什么都不返回。
----
---- 标包和标准卡牌包比较特殊，它们永远会在第一个加载。
----@return nil
-function Engine:loadPackages()
-  if FileIO.pwd():endsWith("packages/freekill-core") then
-    UsingNewCore = true
-    FileIO.cd("../..")
-  end
-  local directories = FileIO.ls("packages")
-
-  -- load standard & standard_cards first
-  if UsingNewCore then
-    self:loadPackage(require("packages.freekill-core.standard"))
-    self:loadPackage(require("packages.freekill-core.standard_cards"))
-    self:loadPackage(require("packages.freekill-core.maneuvering"))
-    self:loadPackage(require("packages.freekill-core.test"))
-    table.removeOne(directories, "freekill-core")
-  else
-    self:loadPackage(require("packages.standard"))
-    self:loadPackage(require("packages.standard_cards"))
-    self:loadPackage(require("packages.maneuvering"))
-    self:loadPackage(require("packages.test"))
-  end
-  table.removeOne(directories, "standard")
-  table.removeOne(directories, "standard_cards")
-  table.removeOne(directories, "maneuvering")
-  table.removeOne(directories, "test")
-
-  ---@type string[]
-  local _disable_packs = json.decode(fk.GetDisabledPacks())
-
-  for _, dir in ipairs(directories) do
-    if (not string.find(dir, ".disabled")) and not table.contains(_disable_packs, dir)
-      and FileIO.isDir("packages/" .. dir)
-      and FileIO.exists("packages/" .. dir .. "/init.lua") then
-      local pack = Pcall(require, string.format("packages.%s", dir))
-      -- Note that instance of Package is a table too
-      -- so dont use type(pack) == "table" here
-      if type(pack) == "table" then
-        table.insert(self.extension_names, dir)
-        if pack[1] ~= nil then
-          self.extensions[dir] = {}
-          for _, p in ipairs(pack) do
-            table.insert(self.extensions[dir], p.name)
-            self:loadPackage(p)
-          end
-        else
-          self.extensions[dir] = { pack.name }
-          self:loadPackage(pack)
-        end
-      end
-    end
-  end
-
-  -- 把card放在后面加载吧
-  for _, pkname in ipairs(self.package_names) do
-    local pack = self.packages[pkname]
-
-    for _, skel in ipairs(pack.card_skels) do
-      local card = skel:createCardPrototype()
-      if card then
-        card.package = pack
-        self.skills[card.skill.name] = self.skills[card.skill.name] or card.skill
-        self.all_card_types[card.name] = card
-        table.insert(self.all_card_names, card.name)
-      end
-    end
-
-    for _, tab in ipairs(pack.card_specs) do
-      local card = self:cloneCard(tab[1], tab[2], tab[3])
-      card.extra_data = tab[4]
-      pack:addCard(card)
-    end
-
-    -- add cards, generals and skills to Engine
-    if pack.type == Package.CardPack then
-      self:addCards(pack.cards)
-    end
-  end
-
-  if UsingNewCore then
-    FileIO.cd("packages/freekill-core")
-  end
-end
+Engine.reloadPackages = Util.DummyFunc
 
 ---@return nil
 function Engine:loadDisabled()
@@ -373,28 +280,6 @@ function Engine:loadRequestHandlers()
   self.request_handlers["AskForResponseCard"] = require 'lunarltk.core.request_type.response_card'
   self.request_handlers["AskForUseCard"] = require 'lunarltk.core.request_type.use_card'
   self.request_handlers["PlayCard"] = require 'lunarltk.core.request_type.play_card'
-end
-
---- 向翻译表中加载新的翻译表。
----@param t table @ 要加载的翻译表，这是一个 原文 --> 译文 的键值对表
----@param lang? string @ 目标语言，默认为zh_CN
-function Engine:loadTranslationTable(t, lang)
-  assert(type(t) == "table")
-  lang = lang or "zh_CN"
-  self.translations[lang] = self.translations[lang] or {}
-  for k, v in pairs(t) do
-    self.translations[lang][k] = v
-  end
-end
-
---- 翻译一段文本。其实就是从翻译表中去找
----@param src string @ 要翻译的文本
----@param lang? string @ 要使用的语言，默认读取config
-function Engine:translate(src, lang)
-  lang = lang or (Config.language or "zh_CN")
-  if not self.translations[lang] then lang = "zh_CN" end
-  local ret = self.translations[lang][src]
-  return ret or src
 end
 
 --- 向Engine中加载一个技能。

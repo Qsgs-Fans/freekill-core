@@ -1,12 +1,12 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 
+local basePackage = require "core.package"
+
 --- Package用来描述一个FreeKill拓展包。
 ---
 --- 所谓拓展包，就是武将/卡牌/游戏模式的一个集合而已。
 ---
----@class Package : Object
----@field public name string @ 拓展包的名字
----@field public extensionName string @ 拓展包对应的mod的名字。 `详情... <extension name_>`_
+---@class Package : Base.Package
 ---@field public type PackageType @ 拓展包的类别，只会影响到选择拓展包的界面
 ---@field public generals General[] @ 拓展包包含的所有武将的列表
 ---@field public extra_skills Skill[] @ 拓展包包含的额外技能，即不属于武将的技能
@@ -18,7 +18,7 @@
 ---@field public skill_skels SkillSkeleton[]
 ---@field public card_skels CardSkeleton[]
 ---@field public card_specs [string, integer, integer, table][]
-local Package = class("Package")
+local Package = basePackage:subclass("Package")
 
 ---@alias PackageType integer
 
@@ -30,10 +30,8 @@ Package.SpecialPack = 3
 ---@param name string @ 包的名字
 ---@param _type? integer @ 包的类型，默认为武将包
 function Package:initialize(name, _type)
-  assert(type(name) == "string")
+  basePackage.initialize(self, name)
   assert(type(_type) == "nil" or type(_type) == "number")
-  self.name = name
-  self.extensionName = name -- used for get assets
   self.type = _type or Package.GeneralPack
 
   self.generals = {}
@@ -136,6 +134,35 @@ end
 ---@param extra_data? table @ 额外数据
 function Package:addCardSpec(name, suit, number, extra_data)
   table.insert(self.card_specs, { name, suit, number, extra_data })
+end
+
+--- 向engine中加载一个自己。
+---
+--- 会加载这个自己含有的所有武将、卡牌以及游戏模式。
+---@param engine Engine
+function Package:install(engine)
+  if engine.packages[self.name] ~= nil then
+    error(string.format("Duplicate package %s detected", self.name))
+  end
+  engine.packages[self.name] = self
+  table.insert(engine.package_names, self.name)
+
+  -- create skills from skel
+  for _, skel in ipairs(self.skill_skels) do
+    local skill = skel:createSkill()
+    skill.package = self
+    table.insert(self.related_skills, skill)
+    engine.skill_skels[skel.name] = skel
+    for _, s in ipairs(skill.related_skills) do
+      s.package = self
+    end
+  end
+
+  if self.type == Package.GeneralPack then
+    engine:addGenerals(self.generals)
+  end
+  engine:addSkills(self:getSkills())
+  engine:addGameModes(self.game_modes)
 end
 
 return Package

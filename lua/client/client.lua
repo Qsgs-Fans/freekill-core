@@ -135,26 +135,6 @@ function Client:stopRecording(jsonData)
   self.recording = false
 end
 
----@param id integer
----@return ClientPlayer
-function Client:getPlayerById(id)
-  if id == Self.id then return Self end
-  for _, p in ipairs(self.players) do
-    if p.id == id then return p end
-  end
-  return nil
-end
-
----@param seat integer
----@return ClientPlayer
-function Client:getPlayerBySeat(seat)
-  if seat == Self.seat then return Self end
-  for _, p in ipairs(self.players) do
-    if p.seat == seat then return p end
-  end
-  return nil
-end
-
 ---@param moves MoveCardsData[]
 function Client:moveCards(moves)
   for _, data in ipairs(moves) do

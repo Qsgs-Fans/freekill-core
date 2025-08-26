@@ -1,13 +1,14 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 
+local basePlayer = require "core.player"
+
 --- 玩家分为客户端要处理的玩家，以及服务端处理的玩家两种。
 ---
 --- 客户端能知道的玩家的信息十分有限，而服务端知道一名玩家的所有细节。
 ---
 --- Player类就是这两种玩家的基类，包含它们共用的部分。
 ---
----@class Player : Object
----@field public id integer @ 玩家的id，每名玩家的id是唯一的，为正数。机器人的id是负数。
+---@class Player : Base.Player
 ---@field public hp integer @ 体力值
 ---@field public maxHp integer @ 体力上限
 ---@field public shield integer @ 护甲数
@@ -17,8 +18,6 @@
 ---@field public general string @ 武将
 ---@field public deputyGeneral string @ 副将
 ---@field public gender integer @ 性别
----@field public seat integer @ 座位号
----@field public next Player @ 下家
 ---@field public phase Phase @ 当前阶段
 ---@field public faceup boolean @ 是否正面朝上
 ---@field public chained boolean @ 是否处于连环状态
@@ -29,7 +28,6 @@
 ---@field private _fake_skills Skill[]
 ---@field public flag string[] @ 当前拥有的flag，不过好像没用过
 ---@field public tag table<string, any> @ 当前拥有的所有tag，好像也没用过
----@field public mark table<string, any> @ 当前拥有的所有标记，键为标记名，值为标记值
 ---@field public player_cards table<integer, integer[]> @ 当前拥有的所有牌，键是区域，值是id列表
 ---@field public virtual_equips Card[] @ 当前的虚拟装备牌，其实也包含着虚拟延时锦囊这种
 ---@field public special_cards table<string, integer[]> @ 类似“屯田”的“田”的私人牌堆
@@ -39,7 +37,7 @@
 ---@field public buddy_list integer[] @ 队友列表，或者说自己可以观看别人手牌的那些玩家的列表
 ---@field public equipSlots string[] @ 装备栏列表
 ---@field public sealedSlots string[] @ 被废除的装备栏列表
-local Player = class("Player")
+local Player = basePlayer:subclass("Player")
 
 ---@alias Phase integer
 
@@ -72,16 +70,16 @@ Player.DefensiveRideSlot = 'DefensiveRideSlot'
 Player.TreasureSlot = 'TreasureSlot'
 Player.JudgeSlot = 'JudgeSlot'
 
---- 构造函数。总之这不是随便调用的函数
 function Player:initialize()
-  self.id = 0
-  self.property_keys = {
+  basePlayer.initialize(self)
+
+  self.property_keys = table.insertTable(self.property_keys, {
     "general", "deputyGeneral", "maxHp", "hp", "shield", "gender", "kingdom",
-    "dead", "role", "role_shown", "rest", "seat", "phase", "faceup", "chained",
+    "dead", "role", "role_shown", "rest", "phase", "faceup", "chained",
     "equipSlots", "sealedSlots",
 
     "surrendered",
-  }
+  })
   self.hp = 0
   self.maxHp = 0
   self.kingdom = "qun"
@@ -89,8 +87,6 @@ function Player:initialize()
   self.general = ""
   self.deputyGeneral = ""
   self.gender = General.Male
-  self.seat = 0
-  self.next = nil
   self.phase = Player.NotActive
   self.faceup = true
   self.chained = false
@@ -104,7 +100,6 @@ function Player:initialize()
   self._fake_skills = {}
   self.flag = {}
   self.tag = {}
-  self.mark = {}
   self.player_cards = {
     [Player.Hand] = {},
     [Player.Equip] = {},
@@ -224,96 +219,6 @@ end
 --- 清除角色flag。
 function Player:clearFlags()
   self.flag = {}
-end
-
---- 为角色```mark```增加```count```个。
---- 实践上通常直接使用包含通知客户端的```Room:addPlayerMark```
----@param mark string @ 标记
----@param count integer @ 为标记赋予的数量
-function Player:addMark(mark, count)
-  count = count or 1
-  local num = self.mark[mark]
-  num = num or 0
-  self:setMark(mark, math.max(num + count, 0))
-end
-
---- 为角色移除数个Mark。仅能用于数字型标记，且至多减至0
----@param mark string @ 标记
----@param count? integer @ 为标记删除的数量，默认1
-function Player:removeMark(mark, count)
-  count = count or 1
-  local num = self.mark[mark]
-  num = num or 0
-  self:setMark(mark, math.max(num - count, 0))
-end
-
---- 为角色设置Mark至指定数量。
--- mark name and UI:
---
--- ```xxx```: invisible mark
---
--- ```@xxx```: mark with extra data (maybe string or number)
---
--- ```@@xxx```: mark with invisible extra data
---
--- ```@$xxx```: mark with card_name[] data
---
--- ```@&xxx```: mark with general_name[] data
----@param mark string @ 标记
----@param count? any @ 标记要设定的数量
-function Player:setMark(mark, count)
-  if count == 0 then count = nil end
-  if self.mark[mark] ~= count then
-    self.mark[mark] = count
-  end
-end
-
---- 获取角色对应Mark的数量。注意初始为0
----@param name string @ 标记
----@return any
-function Player:getMark(name)
-  local mark = self.mark[name]
-  if not mark then return 0 end
-  if type(mark) == "table" and not Util.isCborObject(mark) then
-    return table.simpleClone(mark)
-  end
-  return mark
-end
-
---- 获取角色对应Mark并初始化为table
----@param name string @ 标记
----@return table
-function Player:getTableMark(name)
-  local mark = self.mark[name]
-  if type(mark) == "table" then return table.simpleClone(mark) end
-  return {}
-end
-
---- 获取角色有哪些Mark。
----@return string[]
-function Player:getMarkNames()
-  local ret = {}
-  for k, _ in pairs(self.mark) do
-    table.insert(ret, k)
-  end
-  return ret
-end
-
---- 检索角色是否拥有指定Mark，考虑后缀(find)。返回检索到的的第一个标记名与标记值
----@param mark string @ 标记名
----@param suffixes? string[] @ 后缀，默认为```MarkEnum.TempMarkSuffix```
----@return [string, any]|nil @ 返回一个表，包含标记名与标记值，或nil
-function Player:hasMark(mark, suffixes)
-  if suffixes == nil then suffixes = MarkEnum.TempMarkSuffix end
-  for m, _ in pairs(self.mark) do
-    if m == mark then return {self.mark[m], m} end
-    if m:startsWith(mark .. "-") then
-      for _, suffix in ipairs(suffixes) do
-        if m:find(suffix, 1, true) then return {self.mark[m], m} end
-      end
-    end
-  end
-  return nil
 end
 
 --- 将指定数量的牌加入玩家的对应区域。
@@ -1822,26 +1727,22 @@ end
 
 
 function Player:toJsonObject()
-  local ptable = {}
-  for _, k in ipairs(self.property_keys) do
-    ptable[k] = self[k]
-  end
+  local o = basePlayer.toJsonObject(self)
 
-  return {
-    properties = ptable,
-    card_history = self.cardUsedHistory,
-    skill_history = self.skillUsedHistory,
-    mark = cbor.encode(self.mark),
-    skills = table.map(self.player_skills, Util.NameMapper),
-    player_cards = self.player_cards,
-    special_cards = self.special_cards,
-    buddy_list = self.buddy_list,
-    virtual_equips = self.virtual_equips,
-  }
+  o.card_history = self.cardUsedHistory
+  o.skill_history = self.skillUsedHistory
+  o.skills = table.map(self.player_skills, Util.NameMapper)
+  o.player_cards = self.player_cards
+  o.special_cards = self.special_cards
+  o.buddy_list = self.buddy_list
+  o.virtual_equips = self.virtual_equips
+
+  return o
 end
 
 function Player:loadJsonObject(o)
-  for k, v in pairs(o.properties) do self[k] = v end
+  basePlayer.loadJsonObject(self, o)
+
   self.cardUsedHistory = o.card_history
   self.skillUsedHistory = o.skill_history
   for _, sname in ipairs(o.skills) do self:addSkill(sname) end
@@ -1849,8 +1750,6 @@ function Player:loadJsonObject(o)
   self.special_cards = o.special_cards
   self.buddy_list = o.buddy_list
   self.virtual_equips = o.virtual_equips
-
-  self.mark = cbor.decode(o.mark)
 
   local pid = self.id
   local room = Fk:currentRoom()
