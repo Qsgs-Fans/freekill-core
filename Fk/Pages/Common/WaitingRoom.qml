@@ -592,6 +592,7 @@ W.PageBase {
     if (typeof(model) !== "undefined") {
       model.id = -1;
       model.screenName = "";
+      model.avatar = "";
       model.general = "";
       model.isOwner = false;
       roomScene.isFull = false;

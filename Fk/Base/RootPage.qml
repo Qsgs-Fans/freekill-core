@@ -176,7 +176,7 @@ W.PageBase {
       log = qsTr(data);
     }
 
-    console.log("ERROR: " + log);
+    // console.log("ERROR: " + log);
     Cpp.showDialog("warning", log, data);
     busy = false;
   }

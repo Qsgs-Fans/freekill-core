@@ -73,7 +73,7 @@ Player.JudgeSlot = 'JudgeSlot'
 function Player:initialize()
   basePlayer.initialize(self)
 
-  self.property_keys = table.insertTable(self.property_keys, {
+  table.insertTable(self.property_keys, {
     "general", "deputyGeneral", "maxHp", "hp", "shield", "gender", "kingdom",
     "dead", "role", "role_shown", "rest", "phase", "faceup", "chained",
     "equipSlots", "sealedSlots",
