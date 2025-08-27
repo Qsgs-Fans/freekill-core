@@ -448,7 +448,7 @@ Item {
 
         onDoubleTappedChanged: {
           if (doubleTapped && enabled) {
-            lcall("UpdateRequestUI", "Photo", playerid, "doubleClick", { selected, doubleClickUse: config.doubleClickUse, autoTarget: config.autoTarget } )
+            //lcall("UpdateRequestUI", "Photo", playerid, "doubleClick", { selected, doubleClickUse: config.doubleClickUse, autoTarget: config.autoTarget } )
             doubleTapped = false;
           }
         }
