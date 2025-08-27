@@ -1090,6 +1090,19 @@ function Room:askToCards(player, params)
   params.pattern = params.pattern or (params.include_equip and "." or ".|.|.|hand")
   params.prompt = params.prompt or ("#AskForCard:::" .. maxNum .. ":" .. minNum)
 
+  local canChosenCards = player:getCardIds(params.include_equip and "he" or "h")
+  if type(expand_pile) == "string" then
+    table.insertTable(canChosenCards, player:getPile(expand_pile))
+  elseif type(expand_pile) == "table" then
+    table.insertTable(canChosenCards, expand_pile)
+  end
+  canChosenCards = table.filter(canChosenCards, function(cid)
+    return Exppattern:Parse(params.pattern):match(Fk:getCardById(cid))
+  end)
+  if not params.cancelable and #canChosenCards < minNum then
+    minNum = #canChosenCards -- 防止牌不够的情况无法按确定和取消
+  end
+
   local chosenCards = {}
   local data = {
     num = maxNum,
@@ -1111,17 +1124,7 @@ function Room:askToCards(player, params)
     chosenCards = ret.cards
   else
     if params.cancelable then return {} end
-    local cards = player:getCardIds(params.include_equip and "he" or "h")
-    if type(expand_pile) == "string" then
-      table.insertTable(cards, player:getPile(expand_pile))
-    elseif type(expand_pile) == "table" then
-      table.insertTable(cards, expand_pile)
-    end
-    local exp = Exppattern:Parse(params.pattern)
-    cards = table.filter(cards, function(cid)
-      return exp:match(Fk:getCardById(cid))
-    end)
-    chosenCards = table.random(cards, minNum)
+    chosenCards = table.random(canChosenCards, minNum)
   end
 
   return chosenCards
