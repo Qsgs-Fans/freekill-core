@@ -73,7 +73,7 @@ function ClientPlayer:sendDataToUI()
     end
   end
 
-  local f = fk.client_callback["SetSkillUseHistory"]
+  local f = c.SetSkillUseHistory
   for k, v in pairs(self.skillUsedHistory) do
     if v[4] > 0 then
       f(c, { id, k, v[1], 1 })

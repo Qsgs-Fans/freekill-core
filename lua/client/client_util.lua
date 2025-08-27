@@ -505,7 +505,7 @@ function ResetClientLua()
 end
 
 function ResetAddPlayer(j)
-  fk.client_callback["AddPlayer"](ClientInstance, j)
+  ClientInstance:addPlayer(j)
 end
 
 function GetRoomConfig()

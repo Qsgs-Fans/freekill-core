@@ -19,6 +19,44 @@ function Client:initialize(_client)
   AbstractRoom.initialize(self)
   self:initClientMixin(_client)
 
+  self:addCallback("SetCardFootnote", self.SetCardFootnote)
+  self:addCallback("PropertyUpdate", self.PropertyUpdate)
+  self:addCallback("PlayCard", self.PlayCard)
+  self:addCallback("AskForCardChosen", self.AskForCardChosen)
+  self:addCallback("MoveCards", self.MoveCards)
+  self:addCallback("ShowCard", self.ShowCard)
+  self:addCallback("LoseSkill", self.LoseSkill)
+  self:addCallback("AddSkill", self.AddSkill)
+  self:addCallback("AddStatusSkill", self.AddStatusSkill)
+  self:addCallback("AskForSkillInvoke", self.AskForSkillInvoke)
+  self:addCallback("AskForUseActiveSkill", self.AskForUseActiveSkill)
+  self:addCallback("AskForUseCard", self.AskForUseCard)
+  self:addCallback("AskForResponseCard", self.AskForResponseCard)
+  self:addCallback("SetCurrent", self.SetCurrent)
+  self:addCallback("SetCardMark", self.SetCardMark)
+  self:addCallback("GameLog", self.appendLog)
+  self:addCallback("LogEvent", self.LogEvent)
+  self:addCallback("AddCardUseHistory", self.AddCardUseHistory)
+  self:addCallback("SetCardUseHistory", self.SetCardUseHistory)
+  self:addCallback("AddSkillUseHistory", self.AddSkillUseHistory)
+  self:addCallback("AddSkillBranchUseHistory", self.AddSkillBranchUseHistory)
+  self:addCallback("SetSkillUseHistory", self.SetSkillUseHistory)
+  self:addCallback("SetSkillBranchUseHistory", self.SetSkillBranchUseHistory)
+  self:addCallback("AddVirtualEquip", self.AddVirtualEquip)
+  self:addCallback("RemoveVirtualEquip", self.RemoveVirtualEquip)
+  self:addCallback("ChangeSelf", self.ChangeSelf)
+  self:addCallback("UpdateQuestSkillUI", self.UpdateQuestSkillUI)
+  self:addCallback("GameOver", self.GameOver)
+  self:addCallback("PrintCard", self.PrintCard)
+  self:addCallback("AddBuddy", self.AddBuddy)
+  self:addCallback("RmBuddy", self.RmBuddy)
+  self:addCallback("PrepareDrawPile", self.PrepareDrawPile)
+  self:addCallback("ShuffleDrawPile", self.ShuffleDrawPile)
+  self:addCallback("SyncDrawPile", self.SyncDrawPile)
+  self:addCallback("ChangeCardArea", self.ChangeCardArea)
+  self:addCallback("SetPlayerPile", self.SetPlayerPile)
+  self:addCallback("ShowVirtualCard", self.ShowVirtualCard)
+
   self.disabled_packs = {}
   self.disabled_generals = {}
 end
@@ -177,7 +215,7 @@ function Client:toJsonObject()
   return o
 end
 
-fk.client_callback["SetCardFootnote"] = function(self, data)
+function Client:SetCardFootnote(data)
   self:setCardNote(table.unpack(data));
 end
 
@@ -193,7 +231,7 @@ function Client:setPlayerProperty(player, property, value)
   end
 end
 
-fk.client_callback["PropertyUpdate"] = function(self, data)
+function Client:PropertyUpdate(data)
   -- jsonData: [ int id, string property_name, value ]
   local id, name, value = data[1], data[2], data[3]
   local p = self:getPlayerById(id)
@@ -201,13 +239,13 @@ fk.client_callback["PropertyUpdate"] = function(self, data)
   self:notifyUI("PropertyUpdate", data)
 end
 
-fk.client_callback["PlayCard"] = function(self, data)
+function Client:PlayCard(data)
   local h = Fk.request_handlers["PlayCard"]:new(Self)
   h.change = {}; h:setup(); h.scene:notifyUI()
   self:notifyUI("PlayCard", data)
 end
 
-fk.client_callback["AskForCardChosen"] = function(self, data)
+function Client:AskForCardChosen(data)
   -- jsonData: [ int target_id, string flag, int reason ]
   local id, flag, reason, prompt = data[1], data[2], data[3], data[4]
   local target = self:getPlayerById(id)
@@ -250,56 +288,6 @@ fk.client_callback["AskForCardChosen"] = function(self, data)
     ui_data._prompt = prompt
   end
   self:notifyUI("AskForCardChosen", ui_data)
-end
-
-fk.client_callback["AskForCardsChosen"] = function(self, data)
-  -- jsonData: [ int target_id, int min, int max, string flag, int reason ]
-  local id, min, max, flag, reason, prompt = table.unpack(data)
-    --data[1], data[2], data[3], data[4], data[5], data[6]
-  local target = self:getPlayerById(id)
-  local hand = table.simpleClone(target.player_cards[Player.Hand])
-  table.shuffle(hand)
-  local equip = target.player_cards[Player.Equip]
-  local judge = target.player_cards[Player.Judge]
-
-  local ui_data = flag
-  if type(flag) == "string" then
-    if not string.find(flag, "h") then
-      hand = {}
-    end
-    if not string.find(flag, "e") then
-      equip = {}
-    end
-    if not string.find(flag, "j") then
-      judge = {}
-    end
-    local visible_data = {}
-    for _, cid in ipairs(table.connect(hand, judge)) do
-      if not Self:cardVisible(cid) then
-        visible_data[tostring(cid)] = false
-      end
-    end
-    if next(visible_data) == nil then visible_data = nil end
-    ui_data = {
-      _id = id,
-      _min = min,
-      _max = max,
-      _reason = reason,
-      card_data = {},
-      _prompt = prompt,
-      visible_data = visible_data,
-    }
-    if #hand ~= 0 then table.insert(ui_data.card_data, { "$Hand", hand }) end
-    if #equip ~= 0 then table.insert(ui_data.card_data, { "$Equip", equip }) end
-    if #judge ~= 0 then table.insert(ui_data.card_data, { "$Judge", judge }) end
-  else
-    ui_data._id = id
-    ui_data._min = min
-    ui_data._max = max
-    ui_data._reason = reason
-    ui_data._prompt = prompt
-  end
-  self:notifyUI("AskForCardsChosen", ui_data)
 end
 
 --- separated moves to many moves(one card per move)
@@ -515,7 +503,7 @@ local function sendMoveCardLog(move, visible_data)
   end
 end
 
-fk.client_callback["MoveCards"] = function(self, data)
+function Client:MoveCards(data)
   -- jsonData: CardsMoveStruct[]
   local raw_moves, event_id = table.unpack(data)
   self:moveCards(raw_moves)
@@ -536,7 +524,7 @@ fk.client_callback["MoveCards"] = function(self, data)
   end
 end
 
-fk.client_callback["ShowCard"] = function(self, data)
+function Client:ShowCard(data)
   -- local from = data.from
   local cards = data.cards
   local merged = {
@@ -583,7 +571,7 @@ local function updateLimitSkill(pid, skill)
   end
 end
 
-fk.client_callback["LoseSkill"] = function(self, data)
+function Client:LoseSkill(data)
   -- jsonData: [ int player_id, string skill_name ]
   local id, skill_name, fake = data[1], data[2], data[3]
   local target = self:getPlayerById(id)
@@ -632,7 +620,7 @@ fk.client_callback["LoseSkill"] = function(self, data)
   updateLimitSkill(id, skill)
 end
 
-fk.client_callback["AddSkill"] = function(self, data)
+function Client:AddSkill(data)
   -- jsonData: [ int player_id, string skill_name ]
   local id, skill_name, fake = data[1], data[2], data[3]
   local target = self:getPlayerById(id)
@@ -686,7 +674,7 @@ fk.client_callback["AddSkill"] = function(self, data)
   updateLimitSkill(id, skill)
 end
 
-fk.client_callback["AddStatusSkill"] = function(self, data)
+function Client:AddStatusSkill(data)
   -- jsonData: [ string skill_name ]
   local skill_name = data[1]
   local skill = Fk.skills[skill_name]
@@ -694,7 +682,7 @@ fk.client_callback["AddStatusSkill"] = function(self, data)
   table.insertIfNeed(self.status_skills[skill.class], skill)
 end
 
-fk.client_callback["AskForSkillInvoke"] = function(self, data)
+function Client:AskForSkillInvoke(data)
   -- jsonData: [ string name, string prompt ]
 
   local h = Fk.request_handlers["AskForSkillInvoke"]:new(Self)
@@ -705,7 +693,7 @@ fk.client_callback["AskForSkillInvoke"] = function(self, data)
   self:notifyUI("AskForSkillInvoke", data)
 end
 
-fk.client_callback["AskForUseActiveSkill"] = function(self, data)
+function Client:AskForUseActiveSkill(data)
   -- jsonData: [ string skill_name, string prompt, bool cancelable. json extra_data ]
   local skill = Fk.skills[data[1]]
   local extra_data = data[4]
@@ -719,7 +707,7 @@ fk.client_callback["AskForUseActiveSkill"] = function(self, data)
   self:notifyUI("AskForUseActiveSkill", data)
 end
 
-fk.client_callback["AskForUseCard"] = function(self, data)
+function Client:AskForUseCard(data)
   -- jsonData: card, pattern, prompt, cancelable, {}
   Fk.currentResponsePattern = data[2]
   local h = Fk.request_handlers["AskForUseCard"]:new(Self, data)
@@ -729,7 +717,7 @@ fk.client_callback["AskForUseCard"] = function(self, data)
   self:notifyUI("AskForUseCard", data)
 end
 
-fk.client_callback["AskForResponseCard"] = function(self, data)
+function Client:AskForResponseCard(data)
   -- jsonData: card, pattern, prompt, cancelable, {}
   Fk.currentResponsePattern = data[2]
   local h = Fk.request_handlers["AskForResponseCard"]:new(Self, data)
@@ -739,13 +727,13 @@ fk.client_callback["AskForResponseCard"] = function(self, data)
   self:notifyUI("AskForResponseCard", data)
 end
 
-fk.client_callback["SetCurrent"] = function(self, data)
+function Client:SetCurrent(data)
   -- jsonData: [ int id ]
   local playerId = data[1]
   self:setCurrent(self:getPlayerById(playerId))
 end
 
-fk.client_callback["SetCardMark"] = function(self, data)
+function Client:SetCardMark(data)
   -- jsonData: [ int id, string mark, int value ]
   local card, mark, value = data[1], data[2], data[3]
   Fk:getCardById(card):setMark(mark, value)
@@ -753,9 +741,7 @@ fk.client_callback["SetCardMark"] = function(self, data)
   self:notifyUI("UpdateCard", card)
 end
 
-fk.client_callback["GameLog"] = Client.appendLog
-
-fk.client_callback["LogEvent"] = function(self, data)
+function Client:LogEvent(data)
   if data.type == "Death" then
     table.removeOne(
       self.alive_players,
@@ -765,19 +751,19 @@ fk.client_callback["LogEvent"] = function(self, data)
   self:notifyUI("LogEvent", data)
 end
 
-fk.client_callback["AddCardUseHistory"] = function(self, data)
+function Client:AddCardUseHistory(data)
   local playerid, card_name, num = table.unpack(data)
   local player = self:getPlayerById(playerid)
   player:addCardUseHistory(card_name, num)
 end
 
-fk.client_callback["SetCardUseHistory"] = function(self, data)
+function Client:SetCardUseHistory(data)
   local playerid, card_name, num, scope = table.unpack(data)
   local player = self:getPlayerById(playerid)
   player:setCardUseHistory(card_name, num, scope)
 end
 
-fk.client_callback["AddSkillUseHistory"] = function(self, data)
+function Client:AddSkillUseHistory(data)
   local playerid, skill_name, time = data[1], data[2], data[3]
   local player = self:getPlayerById(playerid)
   player:addSkillUseHistory(skill_name, time)
@@ -787,7 +773,7 @@ fk.client_callback["AddSkillUseHistory"] = function(self, data)
   updateLimitSkill(playerid, Fk.skills[skill_name])
 end
 
-fk.client_callback["AddSkillBranchUseHistory"] = function(self, data)
+function Client:AddSkillBranchUseHistory(data)
   local playerid, skill_name, branch, time = data[1], data[2], data[3], data[4]
   local player = self:getPlayerById(playerid)
   player:addSkillBranchUseHistory(skill_name, branch, time)
@@ -798,7 +784,7 @@ fk.client_callback["AddSkillBranchUseHistory"] = function(self, data)
   -- updateLimitSkill(playerid, Fk.skills[skill_name])
 end
 
-fk.client_callback["SetSkillUseHistory"] = function(self, data)
+function Client:SetSkillUseHistory(data)
   local id, skill_name, time, scope = data[1], data[2], data[3], data[4]
   local player = self:getPlayerById(id)
   player:setSkillUseHistory(skill_name, time, scope)
@@ -808,7 +794,7 @@ fk.client_callback["SetSkillUseHistory"] = function(self, data)
   updateLimitSkill(id, Fk.skills[skill_name])
 end
 
-fk.client_callback["SetSkillBranchUseHistory"] = function(self, data)
+function Client:SetSkillBranchUseHistory(data)
   local id, skill_name, branch, time, scope =
                                     data[1], data[2], data[3], data[4], data[5]
   local player = self:getPlayerById(id)
@@ -820,7 +806,7 @@ fk.client_callback["SetSkillBranchUseHistory"] = function(self, data)
   -- updateLimitSkill(id, Fk.skills[skill_name])
 end
 
-fk.client_callback["AddVirtualEquip"] = function(self, data)
+function Client:AddVirtualEquip(data)
   local cname = data.name
   local player = self:getPlayerById(data.player)
   local subcards = data.subcards
@@ -829,24 +815,24 @@ fk.client_callback["AddVirtualEquip"] = function(self, data)
   player:addVirtualEquip(c)
 end
 
-fk.client_callback["RemoveVirtualEquip"] = function(self, data)
+function Client:RemoveVirtualEquip(data)
   local player = self:getPlayerById(data.player)
   player:removeVirtualEquip(data.id)
 end
 
-fk.client_callback["ChangeSelf"] = function(self, data)
+function Client:ChangeSelf(data)
   local pid = tonumber(data)
   self.client:changeSelf(pid) -- for qml
   Self = self:getPlayerById(pid)
   self:notifyUI("ChangeSelf", pid)
 end
 
-fk.client_callback["UpdateQuestSkillUI"] = function(self, data)
+function Client:UpdateQuestSkillUI(data)
   local playerId, skillName = data[1], data[2]
   updateLimitSkill(playerId, Fk.skills[skillName])
 end
 
-fk.client_callback["GameOver"] = function(self, jsonData)
+function Client:GameOver(jsonData)
   if self.recording then
     self:stopRecording(jsonData)
     if not self.observing and not self.replaying then
@@ -868,49 +854,49 @@ fk.client_callback["GameOver"] = function(self, jsonData)
   self:notifyUI("GameOver", jsonData)
 end
 
-fk.client_callback["PrintCard"] = function(self, data)
+function Client:PrintCard(data)
   local n, s, num = table.unpack(data)
   self:printCard(n, s, num)
 end
 
-fk.client_callback["AddBuddy"] = function(self, data)
+function Client:AddBuddy(data)
   local fromid, id = table.unpack(data)
   local from = self:getPlayerById(fromid)
   local to = self:getPlayerById(id)
   from:addBuddy(to)
 end
 
-fk.client_callback["RmBuddy"] = function(self, data)
+function Client:RmBuddy(data)
   local fromid, id = table.unpack(data)
   local from = self:getPlayerById(fromid)
   local to = self:getPlayerById(id)
   from:removeBuddy(to)
 end
 
-fk.client_callback["PrepareDrawPile"] = function(self, data)
+function Client:PrepareDrawPile(data)
   self:prepareDrawPile(data)
 end
 
-fk.client_callback["ShuffleDrawPile"] = function(self, data)
+function Client:ShuffleDrawPile(data)
   self:shuffleDrawPile(data)
 end
 
-fk.client_callback["SyncDrawPile"] = function(self, data)
+function Client:SyncDrawPile(data)
   self.draw_pile = data
 end
 
-fk.client_callback["ChangeCardArea"] = function(self, data)
+function Client:ChangeCardArea(data)
   local cards, area, areaCards = table.unpack(data)
   self:changeCardArea(cards, area, areaCards)
 end
 
-fk.client_callback["SetPlayerPile"] = function(self, data)
+function Client:SetPlayerPile(data)
   local pid, pile, ids = table.unpack(data)
   local player = ClientInstance:getPlayerById(pid)
   player.special_cards[pile] = ids
 end
 
-fk.client_callback["ShowVirtualCard"] = function(self, data)
+function Client:ShowVirtualCard(data)
   local card, playerid, msg, event_id = table.unpack(data)
   if msg then msg = parseMsg(msg, true) end
   if type(card) == "table" and card.class and card:isInstanceOf(Card) then
