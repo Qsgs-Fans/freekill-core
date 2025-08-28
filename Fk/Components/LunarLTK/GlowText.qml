@@ -2,7 +2,6 @@
 
 import QtQuick
 import Qt5Compat.GraphicalEffects
-import Fk
 
 Item {
   property alias text: textItem.text

@@ -40,7 +40,7 @@ Item {
 
   Timer {
     interval: 1000
-    running: roomScene.isStarted
+    running: true
     repeat: true
     onTriggered: {
       playedTime++;

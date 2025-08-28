@@ -1469,7 +1469,7 @@ callbacks["GameOver"] = (sender, jsonData) => {
 callbacks["FillAG"] = (sender, data) => {
   const ids = data[0];
   roomScene.manualBox.sourceComponent =
-    Qt.createComponent("../../Components/LunarLTK/AG.qml");
+    Qt.createComponent("AG.qml");
   roomScene.manualBox.item.addIds(ids);
 }
 

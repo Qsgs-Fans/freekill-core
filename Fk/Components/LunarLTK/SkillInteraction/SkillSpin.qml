@@ -3,6 +3,8 @@
 import QtQuick
 import QtQuick.Controls
 
+import Fk
+
 SpinBox {
   background: Rectangle { color: "#88EEEEEE" }
   property int answer: value

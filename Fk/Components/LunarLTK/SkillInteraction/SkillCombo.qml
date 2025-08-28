@@ -2,7 +2,7 @@
 
 import QtQuick
 import Fk
-import Fk.Pages
+import Fk.Components.Common
 
 MetroButton {
   id: root

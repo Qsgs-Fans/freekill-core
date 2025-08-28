@@ -32,7 +32,7 @@ end
 
 -- 仅用于断线重连或者旁观时：将数据同步到qml界面中
 function ClientPlayer:sendDataToUI()
-  local c = ClientInstance
+  local c = ClientInstance --[[@as Client]]
   local id = self.id
   for _, k in ipairs(self.property_keys) do
     c:notifyUI("PropertyUpdate", { id, k, self[k] })
@@ -73,13 +73,12 @@ function ClientPlayer:sendDataToUI()
     end
   end
 
-  local f = c.setSkillUseHistory
   for k, v in pairs(self.skillUsedHistory) do
     if v[4] > 0 then
-      f(c, { id, k, v[1], 1 })
-      f(c, { id, k, v[2], 2 })
-      f(c, { id, k, v[3], 3 })
-      f(c, { id, k, v[4], 4 })
+      c:setSkillUseHistory({ id, k, v[1], 1 })
+      c:setSkillUseHistory({ id, k, v[2], 2 })
+      c:setSkillUseHistory({ id, k, v[3], 3 })
+      c:setSkillUseHistory({ id, k, v[4], 4 })
     end
   end
 end

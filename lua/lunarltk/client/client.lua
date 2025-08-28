@@ -32,7 +32,7 @@ function Client:initialize(_client)
   self:addCallback("AskForUseActiveSkill", self.askForUseActiveSkill)
   self:addCallback("AskForUseCard", self.askForUseCard)
   self:addCallback("AskForResponseCard", self.askForResponseCard)
-  self:addCallback("SetCurrent", self.setCurrent)
+  self:addCallback("SetCurrent", self.handleSetCurrent)
   self:addCallback("SetCardMark", self.setCardMark)
   self:addCallback("GameLog", self.appendLog)
   self:addCallback("LogEvent", self.logEvent)
@@ -53,7 +53,7 @@ function Client:initialize(_client)
   self:addCallback("PrepareDrawPile", self.prepareDrawPile)
   self:addCallback("ShuffleDrawPile", self.shuffleDrawPile)
   self:addCallback("SyncDrawPile", self.syncDrawPile)
-  self:addCallback("ChangeCardArea", self.changeCardArea)
+  self:addCallback("ChangeCardArea", self.handleChangeCardArea)
   self:addCallback("SetPlayerPile", self.setPlayerPile)
   self:addCallback("ShowVirtualCard", self.showVirtualCard)
 
@@ -76,18 +76,6 @@ end
 function Client:startGame()
   self.alive_players = table.simpleClone(self.players)
   ClientMixin.startGame(self)
-end
-
----@param moves MoveCardsData[]
-function Client:moveCards(moves)
-  for _, data in ipairs(moves) do
-    if #data.moveInfo > 0 then
-      for _, info in ipairs(data.moveInfo) do
-        self:applyMoveInfo(data, info)
-        Fk:filterCard(info.cardId, self:getPlayerById(data.to))
-      end
-    end
-  end
 end
 
 ---@param msg LogMessage
@@ -506,7 +494,15 @@ end
 function Client:moveCards(data)
   -- jsonData: CardsMoveStruct[]
   local raw_moves, event_id = table.unpack(data)
-  self:moveCards(raw_moves)
+  for _, d in ipairs(raw_moves) do
+    if #d.moveInfo > 0 then
+      for _, info in ipairs(d.moveInfo) do
+        self:applyMoveInfo(d, info)
+        Fk:filterCard(info.cardId, self:getPlayerById(d.to))
+      end
+    end
+  end
+
   local visible_data = {}
   for _, move in ipairs(raw_moves) do
     for _, info in ipairs(move.moveInfo) do
@@ -727,7 +723,7 @@ function Client:askForResponseCard(data)
   self:notifyUI("AskForResponseCard", data)
 end
 
-function Client:setCurrent(data)
+function Client:handleSetCurrent(data)
   -- jsonData: [ int id ]
   local playerId = data[1]
   self:setCurrent(self:getPlayerById(playerId))
@@ -821,7 +817,7 @@ function Client:removeVirtualEquip(data)
 end
 
 function Client:changeSelf(data)
-  local pid = tonumber(data)
+  local pid = tonumber(data) --[[@as integer]]
   self.client:changeSelf(pid) -- for qml
   Self = self:getPlayerById(pid)
   self:notifyUI("ChangeSelf", pid)
@@ -856,7 +852,7 @@ end
 
 function Client:printCard(data)
   local n, s, num = table.unpack(data)
-  self:printCard(n, s, num)
+  AbstractRoom.printCard(self, n, s, num)
 end
 
 function Client:addBuddy(data)
@@ -873,19 +869,11 @@ function Client:rmBuddy(data)
   from:removeBuddy(to)
 end
 
-function Client:prepareDrawPile(data)
-  self:prepareDrawPile(data)
-end
-
-function Client:shuffleDrawPile(data)
-  self:shuffleDrawPile(data)
-end
-
 function Client:syncDrawPile(data)
   self.draw_pile = data
 end
 
-function Client:changeCardArea(data)
+function Client:handleChangeCardArea(data)
   local cards, area, areaCards = table.unpack(data)
   self:changeCardArea(cards, area, areaCards)
 end
