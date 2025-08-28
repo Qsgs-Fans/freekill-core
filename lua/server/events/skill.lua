@@ -52,7 +52,7 @@ function SkillEffect:main()
       if cost_data.anim_type then anim_type = cost_data.anim_type end
     end
     if not mute then
-      if skill:getSkeleton() and skill:getSkeleton().attached_equip then
+      if skill:getSkeleton().attached_equip then
         local equip = Fk.all_card_types[skill:getSkeleton().attached_equip]
         if equip then
           local pkgPath = "./packages/" .. equip.package.extensionName

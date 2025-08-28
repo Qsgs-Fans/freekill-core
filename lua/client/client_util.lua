@@ -365,7 +365,7 @@ function GetPlayerSkills(id)
   local p = ClientInstance:getPlayerById(id)
   if p == Self then
     return table.map(p.player_skills, function(s)
-      local skel = s:getSkeleton() or s
+      local skel = s:getSkeleton()
       return s.visible and {
         name = Fk:getSkillName(skel.name, nil, p, true),
         description = Fk:getDescription(s.name, nil, p),
@@ -373,7 +373,7 @@ function GetPlayerSkills(id)
     end)
   else
     return table.map(p.player_skills, function(s)
-      local skel = s:getSkeleton() or s
+      local skel = s:getSkeleton()
       return s.visible and not (s.attached_equip or s.name:endsWith("&")) and {
         name = Fk:getSkillName(skel.name, nil, p, true),
         description = Fk:getDescription(s.name, nil, p),

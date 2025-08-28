@@ -835,7 +835,7 @@ function Room:notifySkillInvoked(player, skill_name, skill_type, tos)
       skill_type = skill_type,
     })
   else
-    skill_name = (skill:getSkeleton() or skill).name
+    skill_name = skill:getSkeleton().name
     self:doAnimate("InvokeUltSkill", {
       name = skill_name,
       player = player.id,
@@ -3904,7 +3904,7 @@ function Room:filterCard(id, player, JudgeEvent)
       local new_card = f:viewAs(player, card)
       if new_card then
         modify = true
-        local skill_name = (f:getSkeleton() or f).name
+        local skill_name = f:getSkeleton().name
         new_card.id = id
         new_card.skillName = skill_name
         if not f.mute then

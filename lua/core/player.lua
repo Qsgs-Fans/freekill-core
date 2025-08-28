@@ -939,7 +939,7 @@ end
 function Player:clearSkillHistory(skill_name, scope)
   local skill = Fk.skills[skill_name]
   local skel = skill:getSkeleton()
-  if skel and skel.name == skill_name then
+  if skel.name == skill_name then
     if scope then
       for _, effect in ipairs(skel.effect_names) do
         self:setSkillUseHistory(effect, 0, scope)
@@ -954,13 +954,9 @@ function Player:clearSkillHistory(skill_name, scope)
   end
 
   if scope then
-    for _, effect in ipairs(skill_name) do
-      self:setSkillUseHistory(effect, 0, scope)
-    end
+    self:setSkillUseHistory(skill_name, 0, scope)
   else
-    for _, effect in ipairs(skill_name) do
-      self:setSkillUseHistory(effect)
-    end
+    self:setSkillUseHistory(skill_name)
   end
 end
 
@@ -1485,7 +1481,7 @@ function Player:getSkillNameList()
   for _, skill in ipairs(self.player_skills) do
     if not skill.name:startsWith("#") and not skill.name:endsWith("&") then
       local skel = skill:getSkeleton()
-      if skel and not skel.attached_equip then
+      if not skel.attached_equip then
         table.insertIfNeed(names, skel.name)
       end
     end
