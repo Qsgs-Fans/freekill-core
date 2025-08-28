@@ -78,18 +78,26 @@ function ReqActiveSkill:setup(ignoreInteraction)
   self:expandPiles()
 
   scene:unselectAllCards()
-  if ignoreInteraction then -- 修改Interaction时重新筛选一次原选择牌
-    for _, cid in ipairs(old_pendings) do
-      local ret = self:cardValidity(cid)
-      if ret then table.insert(self.pendings, cid) end
-      scene:update("CardItem", cid, { selected = not not ret })
-    end
-  end
-
   scene:unselectAllTargets()
 
   self:updateUnselectedCards()
   self:updateUnselectedTargets()
+
+  if ignoreInteraction then -- 修改Interaction时重新筛选一次原选择牌
+    for _, cid in ipairs(old_pendings) do
+      local item -- 必须确定此牌是否还在UI内
+      for _cid, _item in pairs(scene:getAllItems("CardItem")) do
+        if _cid == cid then
+          item = _item
+          break
+        end
+      end
+      if item and self:cardValidity(cid) then -- 直接调用封装模拟选牌，这下不能出错了吧？
+        self:selectCard(cid, { selected = true })
+        self:initiateTargets()
+      end
+    end
+  end
 
   self:updateButtons()
   self:updatePrompt()
@@ -132,6 +140,7 @@ function ReqActiveSkill:updatePrompt()
   end
 end
 
+--- 初始化Interaction
 function ReqActiveSkill:setupInteraction()
   local skill = Fk.skills[self.skill_name]---@type ActiveSkill
   if skill and skill.interaction then
@@ -161,7 +170,7 @@ function ReqActiveSkill:expandPile(pile, extra_ids, extra_footnote)
   if pile == "_equip" then
     ids = player:getCardIds("e")
     footnote = "$Equip"
-  elseif pile == "_extra" then
+  elseif pile == "_extra" and extra_ids then
     -- expand_pile为id表的情况
     ids = extra_ids
     footnote = extra_footnote
