@@ -12,10 +12,8 @@ local GameEventWrappers = {} -- mixin
 
 local tmp
 tmp = require "lunarltk.server.events.misc"
-GameEvent.Game = tmp[1]
-GameEvent.ChangeProperty = tmp[2]
-GameEvent.ClearEvent = tmp[3]
-table.assign(GameEventWrappers, tmp[4])
+GameEvent.ChangeProperty = tmp[1]
+table.assign(GameEventWrappers, tmp[2])
 
 tmp = require "lunarltk.server.events.hp"
 GameEvent.ChangeHp = tmp[1]

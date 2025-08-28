@@ -68,7 +68,6 @@ function RoomMixin:resume(reason)
   return true
 end
 
-
 function RoomMixin:checkNoHuman(chkOnly)
   if #self.players == 0 then return end
 
@@ -122,6 +121,49 @@ function RoomMixin:delay(ms)
   self.room:delay(math.ceil(ms))
   if self._test_disable_delay then return end
   coroutine.yield("__handleRequest", ms)
+end
+
+--- 将触发技或状态技添加到房间
+---@param skill Skill|string
+function RoomMixin:addSkill(skill)
+  if type(skill) == "string" then
+    skill = Fk.skills[skill]
+  end
+  if skill == nil then return end
+  if skill:isInstanceOf(StatusSkill) then
+    self.status_skills[skill.class] = self.status_skills[skill.class] or {}
+    table.insertIfNeed(self.status_skills[skill.class], skill)
+    -- add status_skill to cilent room
+    self:doBroadcastNotify("AddStatusSkill", { skill.name })
+  elseif skill:isInstanceOf(TriggerSkill) then
+    ---@cast skill TriggerSkill
+    self.logic:addTriggerSkill(skill)
+  end
+  for _, s in ipairs(skill.related_skills) do
+    self:addSkill(s)
+  end
+end
+
+--- 检查房间是否已经被加入了触发技或状态技
+---@param skill Skill|string
+---@return boolean
+function RoomMixin:hasSkill(skill)
+  if type(skill) == "string" then
+    skill = Fk.skills[skill]
+  end
+  if skill == nil then return false end
+  if skill:isInstanceOf(StatusSkill) then
+    if type(self.status_skills[skill.class]) == "table" then
+      return table.contains(self.status_skills[skill.class], skill)
+    end
+  elseif skill:isInstanceOf(TriggerSkill) then
+    ---@cast skill TriggerSkill
+    local event = skill.event
+    if type(self.logic.skill_table[event]) == "table" then
+      return table.contains(self.logic.skill_table[event], skill)
+    end
+  end
+  return false
 end
 
 -- TODO gameOver至少得拆出协程相关

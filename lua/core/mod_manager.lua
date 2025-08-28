@@ -5,8 +5,10 @@
 ---@field public extensions table<string, string[]> @ 所有mod列表及其包含的拓展包
 ---@field public extension_names string[] @ Mod名字的数组，为了方便排序
 ---@field public translations table<string, table<string, string>> @ 翻译表
----@field public boardgames { [string] : Base.BoardGame } @ name -> game
+---@field public boardgames { [string] : BoardGame } @ name -> game
 local ModManager = {}
+
+local BoardGame = require "core.boardgame"
 
 function ModManager:initModManager()
   self.extensions = {
@@ -111,9 +113,19 @@ function ModManager:translate(src, lang)
   return ret or src
 end
 
----@param game Base.BoardGame
+---@param game BoardGameSpec
 function ModManager:addBoardGame(game)
-  self.boardgames[game.name] = game
+  self.boardgames[game.name] = BoardGame:new(game)
 end
+
+--- 获知当前的Engine是跑在服务端还是客户端，并返回相应的实例。
+---@return AbstractRoom
+function ModManager:currentRoom()
+  if RoomInstance then
+    return RoomInstance
+  end
+  return ClientInstance
+end
+
 
 return ModManager
