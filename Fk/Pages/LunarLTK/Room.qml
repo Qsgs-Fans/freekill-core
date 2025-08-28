@@ -302,7 +302,7 @@ W.PageBase {
 
         onDoubleTappedChanged: {
           if (doubleTapped && enabled) {
-            Lua.call("UpdateRequestUI", "Photo", playerid, "doubleClick", { selected, doubleClickUse: Config.doubleClickUse, autoTarget: Config.autoTarget } )
+            // Lua.call("UpdateRequestUI", "Photo", playerid, "doubleClick", { selected, doubleClickUse: Config.doubleClickUse, autoTarget: Config.autoTarget } )
             doubleTapped = false;
           }
         }

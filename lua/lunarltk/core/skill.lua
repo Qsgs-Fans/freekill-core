@@ -142,7 +142,7 @@ function Skill:isEquipmentSkill(player)
     end
   end
 
-  return self:getSkeleton() ~= nil and type(self:getSkeleton().attached_equip) == "string"
+  return type(self:getSkeleton().attached_equip) == "string"
 end
 
 --- 判断技能是不是对于某玩家而言失效了。
@@ -238,16 +238,9 @@ function Skill:getDynamicDescription(player, lang)
 end
 
 --- 找到效果的技能骨架。可能为nil
----@return SkillSkeleton?
+---@return SkillSkeleton
 function Skill:getSkeleton()
   return self.skeleton
-  --[[
-  for _, skel in pairs(Fk.skill_skels) do
-    if table.contains(skel.effects, self) then
-      return skel
-    end
-  end
-  --]]
 end
 
 --- 判断技能是否有某标签
@@ -256,22 +249,7 @@ end
 ---@return boolean
 function Skill:hasTag(tag, compulsory_expand)
   local expand = (compulsory_expand == nil or compulsory_expand)
-  --兼容牢代码，注意牢代码没有skel
-  if self.frequency == tag then
-    return true
-  end
-  if expand then
-    if tag == Skill.Compulsory and table.contains({Skill.Compulsory, Skill.Wake}, self.frequency) then
-      return true
-    elseif tag == Skill.Limited and table.contains({Skill.Limited, Skill.Wake}, self.frequency) then
-      return true
-    end
-  end
-  if self.relate_to_place == "m" and tag == Skill.MainPlace then return true end
-  if self.relate_to_place == "d" and tag == Skill.DeputyPlace then return true end
-
   local skel = self:getSkeleton()
-  if skel == nil then return false end
   if expand then
     if tag == Skill.Compulsory then
       return table.contains(skel.tags, Skill.Compulsory) or table.contains(skel.tags, Skill.Wake)

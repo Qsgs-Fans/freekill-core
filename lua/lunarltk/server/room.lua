@@ -684,7 +684,7 @@ function Room:notifySkillInvoked(player, skill_name, skill_type, tos)
   local bigAnim = false
   local skill = Fk.skills[skill_name]
   if not skill then skill_type = "" else
-    if not skill.mute and (skill:hasTag(Skill.Limited) or skill:hasTag(Skill.Wake)) then
+    if not (skill.mute or skill.is_delay_effect) and skill:hasTag(Skill.Limited) then
       bigAnim = true -- 优先大招特效
     end
     if not skill_type then
@@ -723,7 +723,7 @@ function Room:notifySkillInvoked(player, skill_name, skill_type, tos)
       skill_type = skill_type,
     })
   else
-    skill_name = (skill:getSkeleton() or skill).name
+    skill_name = skill:getSkeleton().name
     self:doAnimate("InvokeUltSkill", {
       name = skill_name,
       player = player.id,
@@ -978,6 +978,19 @@ function Room:askToCards(player, params)
   params.pattern = params.pattern or (params.include_equip and "." or ".|.|.|hand")
   params.prompt = params.prompt or ("#AskForCard:::" .. maxNum .. ":" .. minNum)
 
+  local canChosenCards = player:getCardIds(params.include_equip and "he" or "h")
+  if type(expand_pile) == "string" then
+    table.insertTable(canChosenCards, player:getPile(expand_pile))
+  elseif type(expand_pile) == "table" then
+    table.insertTable(canChosenCards, expand_pile)
+  end
+  canChosenCards = table.filter(canChosenCards, function(cid)
+    return Exppattern:Parse(params.pattern):match(Fk:getCardById(cid))
+  end)
+  if not params.cancelable and #canChosenCards < minNum then
+    minNum = #canChosenCards -- 防止牌不够的情况无法按确定和取消
+  end
+
   local chosenCards = {}
   local data = {
     num = maxNum,
@@ -999,17 +1012,7 @@ function Room:askToCards(player, params)
     chosenCards = ret.cards
   else
     if params.cancelable then return {} end
-    local cards = player:getCardIds(params.include_equip and "he" or "h")
-    if type(expand_pile) == "string" then
-      table.insertTable(cards, player:getPile(expand_pile))
-    elseif type(expand_pile) == "table" then
-      table.insertTable(cards, expand_pile)
-    end
-    local exp = Exppattern:Parse(params.pattern)
-    cards = table.filter(cards, function(cid)
-      return exp:match(Fk:getCardById(cid))
-    end)
-    chosenCards = table.random(cards, minNum)
+    chosenCards = table.random(canChosenCards, minNum)
   end
 
   return chosenCards
@@ -3789,7 +3792,7 @@ function Room:filterCard(id, player, JudgeEvent)
       local new_card = f:viewAs(player, card)
       if new_card then
         modify = true
-        local skill_name = (f:getSkeleton() or f).name
+        local skill_name = f:getSkeleton().name
         new_card.id = id
         new_card.skillName = skill_name
         if not f.mute then

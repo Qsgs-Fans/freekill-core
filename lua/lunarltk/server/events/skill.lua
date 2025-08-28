@@ -52,7 +52,7 @@ function SkillEffect:main()
       if cost_data.anim_type then anim_type = cost_data.anim_type end
     end
     if not mute then
-      if skill:getSkeleton() and skill:getSkeleton().attached_equip then
+      if skill:getSkeleton().attached_equip then
         local equip = Fk.all_card_types[skill:getSkeleton().attached_equip]
         if equip then
           local pkgPath = "./packages/" .. equip.package.extensionName
@@ -95,7 +95,10 @@ function SkillEffect:main()
       )
     end
 
-    local branch = cost_data.history_branch
+    local branch
+    if type(cost_data) == "table" then
+      branch = cost_data.history_branch
+    end
     if not branch then
       if type(skill.history_branch) == "function" then
         branch = skill:history_branch(player, skill_data)
