@@ -2306,6 +2306,7 @@ function Room:askToUseRealCard(player, params)
   local extra_data = params.extra_data and table.simpleClone(params.extra_data) or {}
   if extra_data.bypass_times == nil then extra_data.bypass_times = true end
   if extra_data.extraUse == nil then extra_data.extraUse = true end
+  if extra_data.not_passive == nil then extra_data.not_passive = true end
   local pattern, skillName, prompt, cancelable, skipUse = params.pattern, params.skill_name, params.prompt, params.cancelable, params.skip
 
   local pile = params.expand_pile or extra_data.expand_pile
@@ -2323,7 +2324,8 @@ function Room:askToUseRealCard(player, params)
   for _, cid in ipairs(cards) do
     local card = Fk:getCardById(cid)
     if Exppattern:Parse(pattern):match(card) then
-      if #card:getAvailableTargets(player, extra_data) > 0 then
+      if #card:getAvailableTargets(player, extra_data) > 0 or
+        (card.is_passive and not extra_data.not_passive and not player:prohibitUse(card)) then
         table.insert(cardIds, cid)
       end
     end
@@ -2341,8 +2343,8 @@ function Room:askToUseRealCard(player, params)
   if (not cancelable) and (not dat) then
     for _, cid in ipairs(cardIds) do
       local card = Fk:getCardById(cid)
-      local temp = card:getDefaultTarget (player, extra_data)
-      if #temp > 0 then
+      local temp = card:getDefaultTarget(player, extra_data)
+      if #temp > 0 or (card.is_passive and not extra_data.not_passive and not player:prohibitUse(card)) then
         dat = {targets = temp, cards = {cid}}
         break
       end
