@@ -236,15 +236,18 @@ function Room:getPlayerBySeat(seat)
 end
 
 ---@param players ServerPlayer[]
-function Room:sortByAction(players)
+---@param player? ServerPlayer @ 以该角色为起点（缺省值为当前回合角色）
+function Room:sortByAction(players, player)
   table.sort(players, function(prev, next)
     return prev.seat < next.seat
   end)
 
-  if self.current and table.find(players, function(p)
-    return p.seat >= self.current.seat
+  local org_player = player or self.current
+
+  if org_player and table.find(players, function(p)
+    return p.seat >= org_player.seat
   end) then
-    while players[1].seat < self.current.seat do
+    while players[1].seat < org_player.seat do
       local toPlayerId = table.remove(players, 1)
       table.insert(players, toPlayerId)
     end
