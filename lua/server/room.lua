@@ -3171,14 +3171,14 @@ end
 ---@return ServerPlayer[] @ 选择的两个玩家的列表，若未选择，返回空表
 function Room:askToChooseToMoveCardInBoard(player, params)
   if params.flag then
-    assert(params.flag == "e" or params.flag == "j")
+    assert(table.contains({"e", "j", "ej", "je"}, params.flag))
   end
   params.cancelable = (params.cancelable == nil) and true or params.cancelable
   params.no_indicate = (params.no_indicate == nil) and true or params.no_indicate
   params.exclude_ids = type(params.exclude_ids) == "table" and params.exclude_ids or {}
   params.froms = params.froms or self.alive_players
   params.tos = params.tos or self.alive_players
-  params.prompt = params.prompt or ""
+  params.prompt = params.prompt or ("#AskToChooseToMoveCardInBoard:::"..params.skill_name)
 
   if #self:canMoveCardInBoard(params.flag, nil, params.exclude_ids) == 0 and not params.cancelable then return {} end
 
@@ -3186,8 +3186,8 @@ function Room:askToChooseToMoveCardInBoard(player, params)
     flag = params.flag,
     skillName = params.skill_name,
     excludeIds = params.exclude_ids,
-    froms = table.map(params.froms, Util.IdMapper),
-    tos = table.map(params.tos, Util.IdMapper),
+    froms = params.froms,
+    tos = params.tos,
   }
   local activeParams = { ---@type AskToUseActiveSkillParams
     skill_name = "choose_players_to_move_card_in_board",
@@ -3526,14 +3526,14 @@ function Room:getGameSummary()
 end
 
 --- 获取可以移动场上牌的第一对目标。用于判断场上是否可以移动的牌
----@param flag? "e"|"j" @ 判断移动的区域
+---@param flag? "e"|"j"|"ej" @ 判断移动的区域
 ---@param players? ServerPlayer[] @ 可被移动的玩家列表
 ---@param excludeIds? integer[] @ 不能移动的卡牌id
 ---@param targets? ServerPlayer[] @ 可移动至的玩家列表，默认为```players```
 ---@return ServerPlayer[] @ 第一对玩家列表，第一个是来源，第二个是目标 可能为空表
 function Room:canMoveCardInBoard(flag, players, excludeIds, targets)
   if flag then
-    assert(flag == "e" or flag == "j")
+    assert(table.contains({"e", "j", "ej", "je"}, flag))
   end
 
   players = players or self.alive_players
@@ -3971,7 +3971,6 @@ function Room:getPlayerClientCards(player)
 end
 
 --- 同步一名角色的客户端手牌顺序
---- 本bug由玄蝶提供
 ---@param player ServerPlayer @ 角色
 ---@return integer[] @ 卡牌ID，有元素检测就是了……
 function Room:syncPlayerClientCards(player)

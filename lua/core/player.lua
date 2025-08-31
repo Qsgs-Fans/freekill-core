@@ -1528,7 +1528,7 @@ end
 
 --- 是否能移动特定区域牌至特定角色
 --- @param to Player @ 移动至的角色
---- @param flag? string @ 移动的区域，`e`为装备区，`j`为判定区，`nil`为装备区和判定区
+--- @param flag? string @ 移动的区域，`e`为装备区，`j`为判定区，`ej``nil`为装备区和判定区
 --- @param excludeIds? integer[] @ 排除的牌
 ---@return boolean
 function Player:canMoveCardsInBoardTo(to, flag, excludeIds)
@@ -1536,7 +1536,7 @@ function Player:canMoveCardsInBoardTo(to, flag, excludeIds)
     return false
   end
 
-  assert(flag == nil or flag == "e" or flag == "j")
+  assert(flag == nil or table.contains({"e", "j", "ej", "je"}, flag))
   excludeIds = type(excludeIds) == "table" and excludeIds or {}
 
   local areas = {}
