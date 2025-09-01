@@ -118,6 +118,22 @@ function RoomMixin:run()
   logic:start()
 end
 
+--- 按输入的角色表重新改变座位。若无输入，仅更新角色座位UI
+function RoomMixin:arrangeSeats(players)
+  assert(players == nil or #players == #self.players)
+  players = players or self.players
+  self.players = players
+
+  for i = 1, #players do
+    players[i].seat = i
+    players[i].next = players[i + 1] or players[1]
+  end
+
+  local player_circle = table.map(players, Util.IdMapper)
+  self:doBroadcastNotify("ArrangeSeats", player_circle)
+end
+
+
 --- 向多名玩家广播一条消息。
 ---@param command string @ 发出这条消息的消息类型
 ---@param jsonData any @ 消息的数据，一般是JSON字符串，也可以是普通字符串，取决于client怎么处理了
@@ -217,7 +233,79 @@ function RoomMixin:hasSkill(skill)
   return false
 end
 
--- TODO gameOver至少得拆出协程相关
+function RoomMixin:shouldUpdateWinRate()
+  if self.settings.enableFreeAssign then
+    return false
+  end
+  if os.time() - self.start_time < 45 then
+    return false
+  end
+  for _, p in ipairs(self.players) do
+    if p.id < 0 then return false end
+  end
+  return Fk.game_modes[self.settings.gameMode]:countInFunc(self)
+end
+
+--- 获取一名角色一局游戏的胜负结果。
+--- 胜利1；失败2；平局3。
+---@param winner string @ 获胜的身份，空字符串表示平局
+---@param role string @ 角色的身份
+---@return integer @ 胜负结果
+function RoomMixin:victoryResult(winner, role)
+  local ret
+  if winner == "" then
+    ret = 3
+  elseif table.contains(winner:split("+"), role) then
+    ret = 1
+  else
+    ret = 2
+  end
+  return ret
+end
+
+function RoomMixin:gameOver(winner)
+  if not self.game_started then return end
+  self.room:destroyRequestTimer()
+
+  if table.contains(
+    { "running", "normal" },
+    coroutine.status(self.main_co)
+  ) then
+    self.logic:trigger(fk.GameFinished, nil, winner)
+  end
+
+  self:doBroadcastNotify("GameOver", winner)
+  fk.qInfo(string.format("[GameOver] %d, %s, %s, in %ds", self.id, self.settings.gameMode, winner, os.time() - self.start_time))
+
+  self.game_started = false
+  self.game_finished = true
+
+  -- 兜底一个player胜率？
+  if self:shouldUpdateWinRate() then
+    for _, p in ipairs(self.players) do
+      local id = p.id
+      local mode = self.settings.gameMode
+      local result
+
+      if p.id > 0 then
+        result = self:victoryResult(winner, p.role)
+        self.room:updatePlayerWinRate(id, mode, p.role, result)
+      end
+    end
+  end
+
+  self.room:gameOver()
+
+  if table.contains(
+    { "running", "normal" },
+    coroutine.status(self.main_co)
+  ) then
+    coroutine.yield("__handleRequest", "over")
+  else
+    coroutine.close(self.main_co)
+    self.main_co = nil
+  end
+end
 
 function RoomMixin:playerReconnect(id)
   local p = self:getPlayerById(id)

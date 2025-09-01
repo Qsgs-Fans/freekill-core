@@ -366,7 +366,10 @@ function Game:__tostring()
 end
 
 function Game:main()
-  self.room.logic:run()
+  local room = self.room
+  room.game_started = true
+  room:doBroadcastNotify("StartGame", "")
+  room.logic:run()
 end
 
 ---@class GameEvent.ClearEvent : GameEvent

@@ -24,9 +24,7 @@ end
 function GameLogic:run()
   -- default logic
   local room = self.room
-  table.shuffle(self.room.players)
-  self.room.game_started = true
-  room:doBroadcastNotify("StartGame", "")
+  table.shuffle(room.players)
   self:assignRoles()
   self:adjustSeats()
   self:chooseGenerals()
@@ -62,28 +60,6 @@ function GameLogic:assignRoles()
     end
     room:broadcastProperty(p, "role")
   end
-end
-
---- 安排座位。若有主公则作为1号位
-function GameLogic:adjustSeats()
-  local player_circle = {}
-  local players = self.room.players
-  local p = 1
-
-  for i = 1, #players do
-    if players[i].role == "lord" then
-      p = i
-      break
-    end
-  end
-  for j = p, #players do
-    table.insert(player_circle, players[j])
-  end
-  for j = 1, p - 1 do
-    table.insert(player_circle, players[j])
-  end
-
-  self.room:arrangeSeats(player_circle)
 end
 
 --- 进行选将

@@ -48,6 +48,28 @@ function GameLogic:run()
   print "Hello, world."
 end
 
+--- 安排座位。若有主公则作为1号位
+function GameLogic:adjustSeats()
+  local player_circle = {}
+  local players = self.room.players
+  local p = 1
+
+  for i = 1, #players do
+    if players[i].role == "lord" then
+      p = i
+      break
+    end
+  end
+  for j = p, #players do
+    table.insert(player_circle, players[j])
+  end
+  for j = 1, p - 1 do
+    table.insert(player_circle, players[j])
+  end
+
+  self.room:arrangeSeats(player_circle)
+end
+
 --- 将一个触发技和它的关联触发技添加到房间（触发技必须添加到房间才能正常触发）
 ---@param skill TriggerSkill --|LegacyTriggerSkill
 function GameLogic:addTriggerSkill(skill)

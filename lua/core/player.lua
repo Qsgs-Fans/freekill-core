@@ -1,5 +1,6 @@
 ---@class Base.Player : Object
 ---@field public id integer @ 玩家的id，每名玩家的id是唯一的，为正数。机器人的id是负数。
+---@field public role string @ 身份 涉及胜负结算
 ---@field public seat integer @ 座位号
 ---@field public next Base.Player @ 下家
 ---@field public mark table<string, any> @ 当前拥有的所有标记，键为标记名，值为标记值
@@ -9,9 +10,10 @@ function Player:initialize()
   self.id = 0
 
   self.property_keys = {
-    "seat",
+    "seat", "role",
   }
 
+  self.role = ""
   self.seat = 0
   self.next = nil
   self.mark = {}

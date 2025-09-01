@@ -13,7 +13,6 @@ local basePlayer = require "core.player"
 ---@field public maxHp integer @ 体力上限
 ---@field public shield integer @ 护甲数
 ---@field public kingdom string @ 势力
----@field public role string @ 身份
 ---@field public role_shown boolean @ 身份是否明置
 ---@field public general string @ 武将
 ---@field public deputyGeneral string @ 副将
@@ -78,7 +77,7 @@ function Player:initialize()
 
   table.insertTable(self.property_keys, {
     "general", "deputyGeneral", "maxHp", "hp", "shield", "gender", "kingdom",
-    "dead", "role", "role_shown", "rest", "phase", "faceup", "chained",
+    "dead", "role_shown", "rest", "phase", "faceup", "chained",
     "equipSlots", "sealedSlots",
 
     "surrendered",
@@ -86,7 +85,6 @@ function Player:initialize()
   self.hp = 0
   self.maxHp = 0
   self.kingdom = "qun"
-  self.role = ""
   self.general = ""
   self.deputyGeneral = ""
   self.gender = General.Male
