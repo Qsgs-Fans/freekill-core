@@ -3,11 +3,16 @@
 ---@class Client : AbstractRoom, ClientMixin
 Client = AbstractRoom:subclass('Client')
 
+-- 此为勾式的手写泛型. 本意是extends AbstractRoom<Player>
 ---@class Client
----@field public players ClientPlayer[] @ 所有参战玩家的数组
+---@field public players ClientPlayer[]
 ---@field public alive_players ClientPlayer[] @ 所有存活玩家的数组
----@field public observers ClientPlayer[] @ 观察者的数组
----@field public current ClientPlayer @ 当前回合玩家
+---@field public observers ClientPlayer[]
+---@field public current ClientPlayer
+---@field public getPlayerById fun(self: AbstractRoom, id: integer): ClientPlayer
+---@field public getPlayerBySeat fun(self: AbstractRoom, seat: integer): ClientPlayer
+---@field public setCurrent fun(self: AbstractRoom, p: ClientPlayer)
+---@field public getCurrent fun(self: AbstractRoom): ClientPlayer
 
 -- load client classes
 ClientPlayer = require "lunarltk.client.clientplayer"

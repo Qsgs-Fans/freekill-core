@@ -8,6 +8,7 @@
 ---@field public logic GameLogic @ 这个房间使用的游戏逻辑，可能根据游戏模式而变动
 ---@field public last_request Request @ 上一次完成的request
 ---@field public _test_disable_delay boolean? 测试专用 会禁用delay和烧条
+---@field public callbacks { [string|integer]: fun(self, sender: integer, data) }
 local RoomMixin = {}
 
 ---@param _room fk.Room
@@ -25,6 +26,18 @@ function RoomMixin:initRoomMixin(_room)
 
   self.timeout = _room:getTimeout()
   self.settings = cbor.decode(self.room:settings())
+
+  self.callbacks = {}
+  ------------------------
+  self:addCallback("reconnect", self.playerReconnect)
+  self:addCallback("observe", self.addObserver)
+  self:addCallback("leave", self.removeObserver)
+  self:addCallback("surrender", self.handleSurrender)
+end
+
+---@param func fun(self, sender: integer, data)
+function RoomMixin:addCallback(command, func)
+  self.callbacks[command] = func
 end
 
 -- 供调度器使用的函数。能让房间开始运行/从挂起状态恢复。
@@ -115,6 +128,43 @@ function RoomMixin:doBroadcastNotify(command, jsonData, players)
   end
 end
 
+--- 向所有角色广播一名角色的某个property，让大家都知道
+---@param player ServerPlayer @ 要被广而告之的那名角色
+---@param property string @ 这名角色的某种属性，像是"hp"之类的，其实就是Player类的属性名
+function RoomMixin:broadcastProperty(player, property)
+  for _, p in ipairs(self.players) do
+    self:notifyProperty(p, player, property)
+  end
+end
+
+--- 将player的属性property告诉p。
+---@param p ServerPlayer @ 要被告知相应属性的那名玩家
+---@param player ServerPlayer @ 拥有那个属性的玩家
+---@param property string @ 属性名称
+function RoomMixin:notifyProperty(p, player, property)
+  p:doNotify("PropertyUpdate", {
+    player.id,
+    property,
+    player[property],
+  })
+end
+
+--- 向战报中发送一条log。
+---@param log LogMessage @ Log的实际内容
+function RoomMixin:sendLog(log)
+  self:doBroadcastNotify("GameLog", log)
+end
+
+--- 播放某种动画效果给players看。
+---@param type string @ 动画名字
+---@param data any @ 这个动画附加的额外信息，在这个函数将会被转成json字符串
+---@param players? ServerPlayer[] @ 要观看动画的玩家们，默认为全员
+function RoomMixin:doAnimate(type, data, players)
+  players = players or self.players
+  data.type = type
+  self:doBroadcastNotify("Animate", data, players)
+end
+
 --- 延迟一段时间。
 ---@param ms integer @ 要延迟的毫秒数
 function RoomMixin:delay(ms)
@@ -167,5 +217,66 @@ function RoomMixin:hasSkill(skill)
 end
 
 -- TODO gameOver至少得拆出协程相关
+
+function RoomMixin:playerReconnect(id)
+  local p = self:getPlayerById(id)
+  if p then
+    p:reconnect()
+  end
+end
+
+function RoomMixin:tellRoomToObserver(player)
+  local observee = self.players[1]
+  local start_time = os.getms()
+  local summary = self:toJsonObject(observee)
+  player:doNotify("Observe", cbor.encode(summary))
+
+  fk.qInfo(string.format("[Observe] %d, %s, in %.3fms",
+    self.id, player:getScreenName(), (os.getms() - start_time) / 1000))
+
+  table.insert(self.observers, {observee.id, player, player:getId()})
+end
+
+function RoomMixin:addObserver(id)
+  local all_observers = self.room:getObservers()
+  for _, p in fk.qlist(all_observers) do
+    if p:getId() == id then
+      self:tellRoomToObserver(p)
+      self:doBroadcastNotify("AddObserver", {
+        p:getId(),
+        p:getScreenName(),
+        p:getAvatar()
+      })
+      break
+    end
+  end
+end
+
+function RoomMixin:removeObserver(id)
+  for _, t in ipairs(self.observers) do
+    local pid = t[3]
+    if pid == id then
+      table.removeOne(self.observers, t)
+      self:doBroadcastNotify("RemoveObserver", { pid })
+      break
+    end
+  end
+end
+
+function RoomMixin:handleSurrender(id, data)
+-- request_handlers["surrender"] = function(room, id, reqlist)
+  local player = self:getPlayerById(id)
+  if not player then return end
+
+  player.surrendered = true
+  if Fk.game_modes[self.settings.gameMode]:getWinner(player) == "" then
+    player.surrendered = false
+    return
+  end
+
+  self.hasSurrendered = true
+  self:doBroadcastNotify("CancelRequest", "")
+  ResumeRoom(self.id)
+end
 
 return RoomMixin

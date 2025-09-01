@@ -1,5 +1,9 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 
+Request = require "server.request"
+GameEvent = require "server.gameevent"
+GameLogic = require "lunarltk.server.gamelogic"
+ServerPlayer = require "lunarltk.server.serverplayer"
 Room = require "lunarltk.server.room"
 
 for _, l in ipairs(Fk._custom_events) do
@@ -40,6 +44,12 @@ local requestRoom = setmetatable({
     runningRooms[room.id] = room
   end,
 
+  callbacks = {
+    ["newroom"] = function(s, id)
+      s:registerRoom(id)
+      ResumeRoom(id)
+    end,
+  }
 }, {
   __tostring = function()
     return "<Request Room>"
@@ -59,9 +69,20 @@ function IsConsoleStart()
   return requestRoom.thread:isConsoleStart()
 end
 
-local Req = require "server.request"
 function HandleRequest(req)
-  Req(requestRoom, req)
+  local reqlist = req:split(",")
+  local roomId = tonumber(table.remove(reqlist, 1))
+  local room = requestRoom:getRoom(roomId)
+
+  if room then
+    RoomInstance = room
+    local id = tonumber(reqlist[1])
+    local command = reqlist[2]
+    local fn = room.callbacks[command] or Util.DummyFunc
+    Pcall(fn, room, id, reqlist)
+    RoomInstance = nil
+  end
+
   return true
 end
 

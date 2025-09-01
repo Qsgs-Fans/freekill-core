@@ -1,31 +1,28 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 
----@class ServerPlayer : Player
----@field public serverplayer fk.ServerPlayer
----@field public room Room
----@field public next ServerPlayer
----@field public request_data string
+---@class ServerPlayer : Player, ServerPlayerMixin
 ---@field public mini_game_data any
----@field public client_reply string
----@field public default_reply string
----@field public reply_ready boolean
----@field public reply_cancel boolean
 ---@field public phases Phase[]
 ---@field public phase_state table[]
 ---@field public phase_index integer
 ---@field private _manually_fake_skills Skill[]
 ---@field public prelighted_skills Skill[]
----@field private _timewaste_count integer
 ---@field public ai SmartAI
 ---@field public ai_data any
 local ServerPlayer = Player:subclass("ServerPlayer")
 
+---@class ServerPlayer
+---@field public room Room
+---@field public next ServerPlayer
+
+local ServerPlayerMixin = require "server.serverplayer_mixin"
+ServerPlayer:include(ServerPlayerMixin)
+
+---@param _self fk.ServerPlayer
 function ServerPlayer:initialize(_self)
   Player.initialize(self)
-  self.serverplayer = _self -- 控制者
-  self._splayer = _self -- 真正在玩的玩家
-  self._observers = { _self } -- "旁观"中的玩家，然而不包括真正的旁观者
-  self.id = _self:getId()
+  self:initializeServerPlayerMixin(_self)
+
   self.room = nil
 
   self.phases = {}
@@ -35,76 +32,7 @@ function ServerPlayer:initialize(_self)
   self.prelighted_skills = {}
   self._prelighted_skills = {}
 
-  self._timewaste_count = 0
   self.ai = SmartAI:new(self)
-end
-
----@param command string
----@param data any
-function ServerPlayer:doNotify(command, data)
-  if type(data) == "string" then
-    local err, dat = pcall(json.decode, data)
-    if err ~= false then
-      fk.qWarning("Don't use json.encode. Pass value directly to ServerPlayer:doNotify.\n"..debug.traceback())
-      data = dat
-    end
-  end
-
-  local cbordata = cbor.encode(data)
-
-  local room = self.room
-  for _, p in ipairs(self._observers) do
-    if p:getState() ~= fk.Player_Robot then
-      room.notify_count = room.notify_count + 1
-      p:doNotify(command, cbordata)
-    end
-  end
-
-  for _, t in ipairs(room.observers) do
-    local id, p = table.unpack(t)
-    if id == self.id and room.room:hasObserver(p) and p:getState() ~= fk.Player_Robot then
-      p:doNotify(command, cbordata)
-    end
-  end
-
-  if room.notify_count >= room.notify_max and
-    coroutine.status(room.main_co) == "normal" then
-    room:delay(100)
-  end
-end
-
--- FIXME: 基本都改成新写法后删了这个兼容玩意
-function ServerPlayer:__index(k)
-  local request = self.room.last_request
-  if not request then return nil end
-  if k == "client_reply" then
-    return request.result[self.id]
-  elseif k == "reply_ready" then
-    return request.result[self.id] and request.result[self.id] ~= ""
-  end
-end
-
--- FIXME: 理由同上，垃圾request体系赶紧狠狠重构
-function ServerPlayer:__newindex(k, v)
-  if k == "client_reply" then
-    local request = self.room.last_request
-    if not request then return end
-    request.result[self.id] = v
-    return
-  elseif k == "reply_ready" then
-    return
-  end
-  rawset(self, k, v)
-end
-
---- 发送一句聊天
----@param msg string
-function ServerPlayer:chat(msg)
-  self.room:doBroadcastNotify("Chat", {
-    type = 2,
-    sender = self.id,
-    msg = msg,
-  })
 end
 
 function ServerPlayer:toJsonObject()
@@ -120,15 +48,8 @@ function ServerPlayer:toJsonObject()
   return o
 end
 
--- 似乎没有必要
--- function ServerPlayer:loadJsonObject() end
-
 function ServerPlayer:reconnect()
-  local room = self.room
-
-  local summary = room:toJsonObject(self)
-  self:doNotify("Reconnect", summary)
-  self:doNotify("RoomOwner", { room.room:getOwner():getId() })
+  ServerPlayerMixin.reconnect(self)
 
   -- send fake skills
   for _, s in ipairs(self._manually_fake_skills) do
@@ -138,13 +59,11 @@ function ServerPlayer:reconnect()
     end
   end
 
-  for _, skills in ipairs(room.status_skills) do
+  for _, skills in ipairs(self.room.status_skills) do
     for _, skill in ipairs(skills) do
       self:doNotify("AddStatusSkill", { skill.name })
     end
   end
-
-  room:broadcastProperty(self, "state")
 end
 
 --- 翻面

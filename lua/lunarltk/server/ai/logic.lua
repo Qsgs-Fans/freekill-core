@@ -7,6 +7,8 @@
 ---@field public benefit integer
 local AIGameLogic = class("AIGameLogic")
 
+local GameEventWrappers = require "lunarltk.server.events"
+
 ---@param ai SmartAI
 function AIGameLogic:initialize(ai, base_benefit)
   self.benefit = base_benefit or 0

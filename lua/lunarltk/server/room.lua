@@ -12,25 +12,23 @@
 ---@field public current_cost_skill TriggerSkill? @ AI用
 local Room = AbstractRoom:subclass("Room")
 
--- 比较蠢的数据类型覆写这一块 但凡有个AbstractRoom<T>都好
+-- 此为勾式的手写泛型. 本意是extends AbstractRoom<ServerPlayer>
 ---@class Room
----@field public players ServerPlayer[] @ 这个房间中所有参战玩家
----@field public alive_players ServerPlayer[] @ 所有还活着的玩家
----@field public observers fk.ServerPlayer[] @ 旁观者清单，这是c++玩家列表，别乱动
----@field public current ServerPlayer @ 当前回合玩家
+---@field public players ServerPlayer[]
+---@field public alive_players ServerPlayer[] @ 所有存活玩家的数组
+---@field public observers ServerPlayer[]
+---@field public current ServerPlayer
+---@field public getPlayerById fun(self: AbstractRoom, id: integer): ServerPlayer
+---@field public getPlayerBySeat fun(self: AbstractRoom, seat: integer): ServerPlayer
+---@field public setCurrent fun(self: AbstractRoom, p: ServerPlayer)
+---@field public getCurrent fun(self: AbstractRoom): ServerPlayer
 
 local RoomMixin = require "server.room_mixin"
 Room:include(RoomMixin)
 
--- load classes used by the game
-Request = require "server.network"
-GameEvent = require "server.gameevent"
-GameEventWrappers = require "lunarltk.server.events"
+local GameEventWrappers = require "lunarltk.server.events"
+local CompatAskFor = require "compat.askfor"
 Room:include(GameEventWrappers)
-GameLogic = require "lunarltk.server.gamelogic"
-ServerPlayer = require "lunarltk.server.serverplayer"
-
-CompatAskFor = require "compat.askfor"
 Room:include(CompatAskFor)
 
 -- 唉，兼容个锤子牢函数
@@ -75,7 +73,30 @@ function Room:initialize(_room)
 
   table.insertTable(self.disabled_packs, Fk.game_mode_disabled[self.settings.gameMode])
   self.disabled_generals = self.settings.disabledGenerals
+
+  self:addCallback("prelight", self.handlePrelight)
+  self:addCallback("updatemini", self.handleUpdateMini)
 end
+
+function Room:handlePrelight(id, data)
+  local p = self:getPlayerById(id)
+  if p then
+    p:prelightSkill(data[3], data[4] == "true")
+  end
+end
+
+function Room:handleUpdateMini(id, reqlist)
+  local player = self:getPlayerById(id)
+  local data = player.mini_game_data
+  if not data then return end
+  local game = Fk.mini_games[data.type]
+  if not (game and game.update_func) then return end
+  local dat = table.simpleClone(reqlist)
+  table.remove(dat, 1)
+  table.remove(dat, 1)
+  game.update_func(player, dat)
+end
+
 
 -- 构造武将牌堆。同名武将只留下一张
 function Room:makeGeneralPile()
@@ -527,27 +548,6 @@ end
 -- 网络通信有关
 ------------------------------------------------------------------------
 
---- 向所有角色广播一名角色的某个property，让大家都知道
----@param player ServerPlayer @ 要被广而告之的那名角色
----@param property string @ 这名角色的某种属性，像是"hp"之类的，其实就是Player类的属性名
-function Room:broadcastProperty(player, property)
-  for _, p in ipairs(self.players) do
-    self:notifyProperty(p, player, property)
-  end
-end
-
---- 将player的属性property告诉p。
----@param p ServerPlayer @ 要被告知相应属性的那名玩家
----@param player ServerPlayer @ 拥有那个属性的玩家
----@param property string @ 属性名称
-function Room:notifyProperty(p, player, property)
-  p:doNotify("PropertyUpdate", {
-    player.id,
-    property,
-    player[property],
-  })
-end
-
 --- 延迟一段时间。界面上会显示所有人读条了。注意这个只能延迟多少秒。
 ---@param sec integer @ 要延迟的秒数
 function Room:animDelay(sec)
@@ -590,12 +590,6 @@ function Room:notifyMoveFocus(players, command, timeout)
   })
 end
 
---- 向战报中发送一条log。
----@param log LogMessage @ Log的实际内容
-function Room:sendLog(log)
-  self:doBroadcastNotify("GameLog", log)
-end
-
 -- 为一些牌设置脚注
 ---@param ids integer[] @ 要设置虚拟牌名的牌的id列表
 ---@param log LogMessage @ Log的实际内容
@@ -610,16 +604,6 @@ end
 ---@param virtual? boolean @ 是否为虚拟牌
 function Room:sendCardVirtName(ids, name, virtual)
   self:doBroadcastNotify("SetCardVirtName", { ids, name, not not virtual })
-end
-
---- 播放某种动画效果给players看。
----@param type string @ 动画名字
----@param data any @ 这个动画附加的额外信息，在这个函数将会被转成json字符串
----@param players? ServerPlayer[] @ 要观看动画的玩家们，默认为全员
-function Room:doAnimate(type, data, players)
-  players = players or self.players
-  data.type = type
-  self:doBroadcastNotify("Animate", data, players)
 end
 
 --- 在player脸上展示名为name的emotion动效。

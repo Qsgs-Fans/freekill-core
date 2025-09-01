@@ -39,6 +39,9 @@ local basePlayer = require "core.player"
 ---@field public sealedSlots string[] @ 被废除的装备栏列表
 local Player = basePlayer:subclass("Player")
 
+---@class Player
+---@field public next Player
+
 ---@alias Phase integer
 
 Player.RoundStart = 1

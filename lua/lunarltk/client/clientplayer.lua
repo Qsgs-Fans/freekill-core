@@ -4,6 +4,9 @@
 ---@field public player fk.Player
 local ClientPlayer = Player:subclass("ClientPlayer")
 
+---@class ClientPlayer
+---@field public next ClientPlayer
+
 function ClientPlayer:initialize(cp)
   Player.initialize(self)
   self.id = cp:getId()

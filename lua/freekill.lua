@@ -38,11 +38,6 @@ AbstractRoom = require "lunarltk.core.room.abstract_room"
 RequestHandler = require "core.request_handler"
 UI = require "ui-util"
 
--- TODO 剥出基类后都改掉
-Room = require "lunarltk.server.room"
-GameEvent = require "server.gameevent"
-GameLogic = require "lunarltk.server.gamelogic"
-
 -- 读取配置文件。
 -- 因为io马上就要被禁用了，所以赶紧先在这里读取配置文件。
 local function loadConf()
