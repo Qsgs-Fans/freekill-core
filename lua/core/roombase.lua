@@ -7,6 +7,7 @@
 ---@field public capacity integer @ 房间的最大参战人数
 ---@field public timeout integer @ 出牌时长上限
 ---@field public settings table @ 房间的额外设置，差不多是json对象
+---@field public request_handlers table<string, RequestHandler> @ 请求处理程序
 ---@field public current_request_handler RequestHandler @ 当前正处理的请求数据
 ---@field public banners table<string, any> @ 全局mark
 local RoomBase = class("Base.RoomBase")
@@ -17,6 +18,23 @@ function RoomBase:initialize()
   self.current = nil
 
   self.banners = {}
+
+  self.request_handlers = {}
+end
+
+---@param command string
+---@param handler RequestHandler
+function RoomBase:addRequestHandler(command, handler)
+  self.request_handlers[command] = handler
+end
+
+---@param command string
+function RoomBase:setupRequestHandler(player, command, data)
+  local handler = self.request_handlers[command]
+  local h = handler:new(player, data)
+  h.change = {}
+  h:setup()
+  h.scene:notifyUI()
 end
 
 -- 仅供注释，其余空函数一样

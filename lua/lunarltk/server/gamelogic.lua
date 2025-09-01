@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 
-local baseGameLogic = require "lua.server.gamelogic"
+local baseGameLogic = require "server.gamelogic"
 
 ---@class GameLogic: Base.GameLogic --, GameLogicLegacyMixin
 ---@field public role_table string[][]

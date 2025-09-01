@@ -1,16 +1,18 @@
----@class ClientMixin : Base.AbstractRoom
+---@class ClientMixin : Base.RoomBase
 ---@field public client fk.Client
 ---@field public observing boolean 客户端是否在旁观
 ---@field public replaying boolean 客户端是否在重放
 ---@field public replaying_show boolean 重放时是否要看到全部牌
 ---@field public record any
 ---@field public callbacks { [string|integer]: fun(self, data) }
+---@field public disabled_packs string[] FIXME:拓展包设置依赖这玩意，看看能不能把他赶出通用Mixin
 local ClientMixin = {}
 
 function ClientMixin:initClientMixin(_client)
   self.client = _client
   self.recording = false
   self.callbacks = {}
+  self.disabled_packs = {}
   ------------------------
   self:addCallback("NetworkDelayTest", self.sendSetupPacket)
   self:addCallback("Setup", self.setup)
@@ -119,14 +121,16 @@ end
 
 function ClientMixin:enterRoom(_data)
   Self = ClientPlayer:new(self.client:getSelf())
+  local data = _data[3]
+
   -- FIXME: 需要改Qml
   local ob = self.observing
   local replaying = self.replaying
   local showcards = self.replaying_show
   local recording = self.recording
 
-  -- TODO 看情况
-  ClientInstance = Client:new(self.client)
+  local client_klass = Fk:getBoardGame(data.gameMode).client_klass
+  ClientInstance = client_klass:new(self.client)
   self = ClientInstance
 
   self.observing = ob
@@ -141,7 +145,6 @@ function ClientMixin:enterRoom(_data)
   self.players = {Self}
   self.alive_players = {Self}
 
-  local data = _data[3]
   self.enter_room_data = cbor.encode(_data);
   -- 补一个，防止爆炸
   if self.recording then

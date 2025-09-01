@@ -6,6 +6,7 @@
 ---@field public extension_names string[] @ Mod名字的数组，为了方便排序
 ---@field public translations table<string, table<string, string>> @ 翻译表
 ---@field public boardgames { [string] : BoardGame } @ name -> game
+---@field public Base table
 local ModManager = {}
 
 local BoardGame = require "core.boardgame"
@@ -21,8 +22,15 @@ function ModManager:initModManager()
 
   self.translations = {}  -- srcText --> translated
 
-  self.boardgames = {
-    -- FIXME 我们就当有个默认的lunarltk在此
+  self.boardgames = {}
+
+  self.Base = {
+    Player = require "core.player",
+    RoomBase = require "core.roombase",
+    ClientMixin = require "client.client_mixin",
+    RoomMixin = require "server.room_mixin",
+    GameLogic = require "server.gamelogic",
+    Engine = require "core.engine",
   }
 end
 
@@ -118,6 +126,25 @@ function ModManager:addBoardGame(game)
   self.boardgames[game.name] = BoardGame:new(game)
 end
 
+---@param name string 游戏模式名 并非桌游类型
+---@return BoardGame
+function ModManager:getBoardGame(name)
+  local gameMode = Fk.game_modes[name or ""]
+  local gameName = gameMode and gameMode.game_name
+  local ret = self.boardgames[gameName or "lunarltk"]
+  if ret then return ret end
+  return BoardGame {
+    name = "lunarltk",
+    room_klass = Room,
+    client_klass = Client,
+    engine = Fk,
+    page = {
+      uri = "Fk.Pages.LunarLTK",
+      name = "Room",
+    }
+  }
+end
+
 --- 获知当前的Engine是跑在服务端还是客户端，并返回相应的实例。
 ---@return AbstractRoom
 function ModManager:currentRoom()
@@ -126,6 +153,5 @@ function ModManager:currentRoom()
   end
   return ClientInstance
 end
-
 
 return ModManager

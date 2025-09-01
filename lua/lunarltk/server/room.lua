@@ -62,6 +62,8 @@ function Room:initialize(_room)
   AbstractRoom.initialize(self)
   self:initRoomMixin(_room)
 
+  self.logic_klass = GameLogic
+
   self.extra_turn_list = {}
   self.tag = {}
   self.general_pile = {}

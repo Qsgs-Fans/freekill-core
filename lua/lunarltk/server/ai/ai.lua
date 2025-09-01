@@ -23,7 +23,7 @@ end
 
 -- activeSkill, responseCard, useCard, playCard 四巨头专属
 function AI:isInDashboard()
-  if not (self.handler and self.handler:isInstanceOf(Fk.request_handlers["AskForUseActiveSkill"])) then
+  if not (self.handler and self.handler:isInstanceOf(self.room.request_handlers["AskForUseActiveSkill"])) then
     fk.qWarning("请检查是否在AI中调用了专属于dashboard操作的一系列函数")
     fk.qWarning(debug.traceback())
     return false
@@ -212,7 +212,7 @@ function AI:makeReply()
   end
   local ret = "__cancel"
   if fn then
-    local handler_class = Fk.request_handlers[self.command]
+    local handler_class = self.room.request_handlers[self.command] --[[@as ReqActiveSkill]]
     if handler_class then
       self.handler = handler_class:new(self.player, self.data)
       self.handler:setup()

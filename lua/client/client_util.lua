@@ -842,7 +842,7 @@ function GetCardProhibitReason(cid)
   local card = Fk:getCardById(cid)
   if not card then return "" end
   local handler = ClientInstance.current_request_handler
-  if (not handler) or (not handler:isInstanceOf(Fk.request_handlers["AskForUseActiveSkill"])) then return "" end
+  if (not handler) or (not handler:isInstanceOf(ClientInstance.request_handlers["AskForUseActiveSkill"])) then return "" end
   local method, pattern = "", handler.pattern or "."
 
   if handler.class.name == "ReqPlayCard" then
@@ -896,7 +896,7 @@ end
 
 function GetTargetTip(pid)
   local handler = ClientInstance.current_request_handler --[[@as ReqPlayCard ]]
-  if (not handler) or (not handler:isInstanceOf(Fk.request_handlers["AskForUseActiveSkill"])) then return "" end
+  if (not handler) or (not handler:isInstanceOf(ClientInstance.request_handlers["AskForUseActiveSkill"])) then return "" end
 
   local to_select = pid
   local selected = handler.selected_targets
@@ -1042,14 +1042,14 @@ end
 
 function GetPendingSkill()
   local h = ClientInstance.current_request_handler
-  local reqActive = Fk.request_handlers["AskForUseActiveSkill"]
+  local reqActive = ClientInstance.request_handlers["AskForUseActiveSkill"]
   return h and h:isInstanceOf(reqActive) and
       (h.selected_card == nil and h.skill_name) or ""
 end
 
 function RevertSelection()
   local h = ClientInstance.current_request_handler ---@type ReqActiveSkill
-  local reqActive = Fk.request_handlers["AskForUseActiveSkill"]
+  local reqActive = ClientInstance.request_handlers["AskForUseActiveSkill"]
   if not (h and h:isInstanceOf(reqActive) and h.pendings) then return end
   h.change = {}
   -- 1. 取消选中所有已选 2. 尝试选中所有之前未选的牌

@@ -233,8 +233,7 @@ function Client:propertyUpdate(data)
 end
 
 function Client:playCard(data)
-  local h = Fk.request_handlers["PlayCard"]:new(Self)
-  h.change = {}; h:setup(); h.scene:notifyUI()
+  self:setupRequestHandler(Self, "PlayCard")
   self:notifyUI("PlayCard", data)
 end
 
@@ -686,11 +685,8 @@ end
 function Client:askForSkillInvoke(data)
   -- jsonData: [ string name, string prompt ]
 
-  local h = Fk.request_handlers["AskForSkillInvoke"]:new(Self)
-  h.prompt = data[2]
-  h.change = {}
-  h:setup()
-  h.scene:notifyUI()
+  self:setupRequestHandler(Self, "AskForSkillInvoke")
+  self.current_request_handler.prompt = data[2]
   self:notifyUI("AskForSkillInvoke", data)
 end
 
@@ -701,30 +697,21 @@ function Client:askForUseActiveSkill(data)
   skill._extra_data = extra_data
   Fk.currentResponseReason = extra_data.skillName
 
-  local h = Fk.request_handlers["AskForUseActiveSkill"]:new(Self, data)
-  h.change = {}
-  h:setup()
-  h.scene:notifyUI()
+  self:setupRequestHandler(Self, "AskForUseActiveSkill", data)
   self:notifyUI("AskForUseActiveSkill", data)
 end
 
 function Client:askForUseCard(data)
   -- jsonData: card, pattern, prompt, cancelable, {}
   Fk.currentResponsePattern = data[2]
-  local h = Fk.request_handlers["AskForUseCard"]:new(Self, data)
-  h.change = {}
-  h:setup()
-  h.scene:notifyUI()
+  self:setupRequestHandler(Self, "AskForUseCard", data)
   self:notifyUI("AskForUseCard", data)
 end
 
 function Client:askForResponseCard(data)
   -- jsonData: card, pattern, prompt, cancelable, {}
   Fk.currentResponsePattern = data[2]
-  local h = Fk.request_handlers["AskForResponseCard"]:new(Self, data)
-  h.change = {}
-  h:setup()
-  h.scene:notifyUI()
+  self:setupRequestHandler(Self, "AskForResponseCard", data)
   self:notifyUI("AskForResponseCard", data)
 end
 

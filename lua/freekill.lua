@@ -34,8 +34,8 @@ UsableSkill = require "lunarltk.core.skill_type.usable_skill"
 StatusSkill = require "lunarltk.core.skill_type.status_skill"
 Player = require "lunarltk.core.player"
 GameMode = require "core.game_mode"
-AbstractRoom = require "lunarltk.core.room.abstract_room"
 RequestHandler = require "core.request_handler"
+AbstractRoom = require "lunarltk.core.room.abstract_room"
 UI = require "ui-util"
 
 -- 读取配置文件。

@@ -23,6 +23,12 @@ local AbstractRoom = RoomBase:subclass("AbstractRoom")
 local CardManager = require 'lunarltk.core.room.card_manager'
 AbstractRoom:include(CardManager)
 
+local ReqInvoke = require 'lunarltk.core.request_type.invoke'
+local ReqActive = require 'lunarltk.core.request_type.active_skill'
+local ReqResponse = require 'lunarltk.core.request_type.response_card'
+local ReqUse = require 'lunarltk.core.request_type.use_card'
+local ReqPlay = require 'lunarltk.core.request_type.play_card'
+
 function AbstractRoom:initialize()
   RoomBase.initialize(self)
   self.alive_players = {}
@@ -34,6 +40,12 @@ function AbstractRoom:initialize()
   end
 
   self.skill_costs = {}
+
+  self:addRequestHandler("AskForSkillInvoke", ReqInvoke)
+  self:addRequestHandler("AskForUseActiveSkill", ReqActive)
+  self:addRequestHandler("AskForResponseCard", ReqResponse)
+  self:addRequestHandler("AskForUseCard", ReqUse)
+  self:addRequestHandler("PlayCard", ReqPlay)
 end
 
 --- 获得拥有某一张牌的玩家。

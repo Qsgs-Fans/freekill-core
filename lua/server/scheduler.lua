@@ -38,9 +38,17 @@ local requestRoom = setmetatable({
   end,
 
   registerRoom = function(self, id)
-    local cRoom = self.thread:getRoom(id)
-    local room = Room:new(cRoom)
-    cRoom:increaseRefCount()
+    local cRoom = self.thread:getRoom(id) ---@type fk.Room
+
+    local gameMode
+    local ok, settings = pcall(cbor.decode, cRoom:settings())
+    if ok then
+      gameMode = settings.gameMode
+    end
+
+    local room_klass = Fk:getBoardGame(gameMode).room_klass
+    local room = room_klass:new(cRoom)
+    cRoom:increaseRefCount() -- FIXME: 这行理应不需要了 但是Qt版服务端还依赖着
     runningRooms[room.id] = room
   end,
 

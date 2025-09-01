@@ -647,7 +647,8 @@ W.PageBase {
     kickOwnerTimer.stop();
     Backend.playSound("./audio/system/gamestart");
 
-    const data = Lua.evaluate(`Fk.game_modes[ClientInstance.settings.gameMode].room_page`);
+    const data = Lua.evaluate(`Fk:getBoardGame(ClientInstance.settings.gameMode).page`);
+    console.log(JSON.stringify(data))
     if (!(data instanceof Object)) {
       App.enterNewPage("Fk.Pages.LunarLTK", "Room");
     } else {

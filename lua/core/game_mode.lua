@@ -162,10 +162,5 @@ function GameMode:friendEnemyJudge (targetOne, targetTwo)
   return targetOne.role == targetTwo.role
 end
 
--- TODO 以下为试水
-function GameMode:setRoomPage(data)
-  self.room_page = data
-end
-
 return GameMode
 

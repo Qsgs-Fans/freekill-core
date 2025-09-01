@@ -5,7 +5,8 @@
 ---@field public main_co any @ 本房间的主协程
 ---@field public game_started boolean @ 游戏是否已经开始
 ---@field public game_finished boolean @ 游戏是否已经结束
----@field public logic GameLogic @ 这个房间使用的游戏逻辑，可能根据游戏模式而变动
+---@field public logic_klass any
+---@field public logic Base.GameLogic @ 这个房间使用的游戏逻辑，可能根据游戏模式而变动
 ---@field public last_request Request @ 上一次完成的request
 ---@field public _test_disable_delay boolean? 测试专用 会禁用delay和烧条
 ---@field public callbacks { [string|integer]: fun(self, sender: integer, data) }
@@ -111,7 +112,7 @@ function RoomMixin:run()
   end
 
   local mode = Fk.game_modes[self.settings.gameMode]
-  local logic = (mode.logic and mode.logic() or GameLogic):new(self)
+  local logic = (mode.logic and mode.logic() or self.logic_klass):new(self)
   self.logic = logic
   if mode.rule then self:addSkill(mode.rule) end
   logic:start()
