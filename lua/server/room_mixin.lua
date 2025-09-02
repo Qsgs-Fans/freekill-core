@@ -5,6 +5,7 @@
 ---@field public main_co any @ 本房间的主协程
 ---@field public game_started boolean @ 游戏是否已经开始
 ---@field public game_finished boolean @ 游戏是否已经结束
+---@field public serverplayer_klass any
 ---@field public logic_klass any
 ---@field public logic Base.GameLogic @ 这个房间使用的游戏逻辑，可能根据游戏模式而变动
 ---@field public last_request Request @ 上一次完成的request
@@ -106,8 +107,9 @@ end
 function RoomMixin:run()
   self.start_time = os.time()
   for _, p in fk.qlist(self.room:getPlayers()) do
-    local player = ServerPlayer:new(p)
+    local player = self.serverplayer_klass:new(p)
     player.room = self
+    print(self, player)
     table.insert(self.players, player)
   end
 
@@ -165,6 +167,30 @@ function RoomMixin:notifyProperty(p, player, property)
     player[property],
   })
 end
+
+--- 将焦点转移给一名或者多名角色，并广而告之。
+---
+--- 形象点说，就是在那些玩家下面显示一个“弃牌 思考中...”之类的烧条提示。
+---@param players ServerPlayer | ServerPlayer[] @ 要获得焦点的一名或者多名角色
+---@param command string @ 烧条的提示文字
+---@param timeout integer? @ focus的烧条时长
+function RoomMixin:notifyMoveFocus(players, command, timeout)
+  if (players.class) then
+    players = {players}
+  end
+
+  local ids = {}
+  for _, p in ipairs(players) do
+    table.insert(ids, p.id)
+  end
+
+  self:doBroadcastNotify("MoveFocus", {
+    ids,
+    command,
+    timeout
+  })
+end
+
 
 --- 向战报中发送一条log。
 ---@param log LogMessage @ Log的实际内容
@@ -367,5 +393,8 @@ function RoomMixin:handleSurrender(id, data)
   self:doBroadcastNotify("CancelRequest", "")
   ResumeRoom(self.id)
 end
+
+-- 没用
+function RoomMixin:getTag() end
 
 return RoomMixin

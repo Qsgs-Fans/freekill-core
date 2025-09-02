@@ -63,6 +63,7 @@ function Room:initialize(_room)
   AbstractRoom.initialize(self)
   self:initRoomMixin(_room)
 
+  self.serverplayer_klass = ServerPlayer
   self.logic_klass = GameLogic
 
   self.extra_turn_list = {}
@@ -572,25 +573,16 @@ function Room:notifyMoveFocus(players, command, timeout)
     players = {players}
   end
 
-  local ids = {}
-  for _, p in ipairs(players) do
-    table.insert(ids, p.id)
-  end
-
   local tempSk = Fk.skills[command]
   if tempSk and #players == 1 then
     local p = players[1]
     if p:isFakeSkill(tempSk) then
       command = ""
-      ids = table.map(self.alive_players, Util.IdMapper)
+      players = self.alive_players
     end
   end
 
-  self:doBroadcastNotify("MoveFocus", {
-    ids,
-    command,
-    timeout
-  })
+  RoomMixin.notifyMoveFocus(self, players, command, timeout)
 end
 
 -- 为一些牌设置脚注

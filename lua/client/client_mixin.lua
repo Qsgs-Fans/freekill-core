@@ -37,6 +37,7 @@ function ClientMixin:initClientMixin(_client)
   self:addCallback("Observe", self.observe)
 end
 
+---@param func fun(self, data)
 ---@param ui_func boolean?
 function ClientMixin:addCallback(command, func, ui_func)
   self.callbacks[command] = ui_func and function(s, data)

@@ -29,6 +29,7 @@ function ModManager:initModManager()
     RoomBase = require "core.roombase",
     ClientMixin = require "client.client_mixin",
     RoomMixin = require "server.room_mixin",
+    ServerPlayerMixin = require "server.serverplayer_mixin",
     GameLogic = require "server.gamelogic",
     Engine = require "core.engine",
   }
