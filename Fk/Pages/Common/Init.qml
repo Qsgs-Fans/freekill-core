@@ -229,9 +229,30 @@ W.PageBase {
     Config.saveConf();
   }
 
+  function setDetectedServer(sender, data) {
+    const item = serverDialogLoader.item;
+    if (item) {
+      // App.showToast(qsTr("Detected Server %1").arg(j.slice(7)), 10000);
+      item.addLANServer(data.slice(7))
+    }
+  }
+
+  function getServerDetail(sender, data) {
+    const [ver, icon, desc, capacity, count, addr] = JSON.parse(data);
+    const item = serverDialogLoader.item;
+    if (item) {
+      let [_addr, port] = addr.split(',');
+      port = parseInt(port);
+      item.updateServerDetail(_addr, port, [ver, icon, desc, capacity, count]);
+    }
+  }
+
   Component.onCompleted: {
     lady.source = Config.ladyImg;
 
     addCallback(Command.EnterLobby, enterLobby);
+
+    addCallback(Command.ServerDetected, setDetectedServer);
+    addCallback(Command.GetServerDetail, getServerDetail);
   }
 }

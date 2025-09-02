@@ -181,6 +181,20 @@ W.PageBase {
     busy = false;
   }
 
+  function updateAvatar(sender, data) {
+    App.setBusy(false);
+    Self.avatar = data;
+    App.showToast(Lua.tr("Update avatar done."));
+  }
+
+  function updatePassword(sender, data) {
+    App.setBusy(false);
+    if (data === "1")
+      App.showToast(Lua.tr("Update password done."));
+    else
+      App.showToast(Lua.tr("Old password wrong!"), 5000);
+  }
+
   function setServerSettings(sender, data) {
     const [ motd, hiddenPacks, enableBots ] = data;
     Config.serverMotd = motd;
@@ -241,6 +255,11 @@ W.PageBase {
     current.addToChat(pid, data, text);
   }
 
+  function makeServerMessage(sender, data) {
+    const current = mainStack.currentItem;  // lobby or room
+    current.sendDanmu('<font color="grey"><b>[Server] </b></font>' + data);
+  }
+
 
   Component.onCompleted: {
     Config.loadConf();
@@ -258,14 +277,17 @@ W.PageBase {
     // 此为cpp手误 不加入Command
     addCallback("ErrorDialog", errorDialog);
 
+    addCallback(Command.UpdateAvatar, updateAvatar);
+    addCallback(Command.UpdatePassword, updatePassword);
     addCallback(Command.SetServerSettings, setServerSettings);
     addCallback(Command.AddTotalGameTime, addTotalGameTime);
 
     addCallback(Command.UpdatePackage, setDownloadData);
     addCallback(Command.BackToStart, backToStart);
 
-    // FIXME 我偷懒了
+    // FIXME: 放进一个Lobby和Room的共同基类内
     addCallback(Command.Chat, chat);
+    addCallback(Command.ServerMessage, makeServerMessage);
 
     mainStack.push(Qt.createComponent("Fk.Pages.Common", "Init"));
   }

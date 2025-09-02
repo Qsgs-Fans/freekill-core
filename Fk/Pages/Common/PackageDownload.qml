@@ -20,7 +20,7 @@ W.PageBase {
 
   property int currentPackageIndex: 0
 
-  function downloadComplete() {
+  function downloadComplete(sender, data) {
     const item = packageRepeater.itemAt(root.currentPackageIndex);
     if (!item.hasError) {
       item.subTitle = "<font color='lime'>✓</font> Download Complete.";
@@ -44,7 +44,7 @@ W.PageBase {
     backButton.visible = true;
   }
 
-  function setDownloadingPackage(name) {
+  function setDownloadingPackage(sender, name) {
     for (let i = 0; i < packageRepeater.count; i++) {
       const item = packageRepeater.itemAt(i);
       if (item.myName === name) {
@@ -60,13 +60,13 @@ W.PageBase {
     }
   }
 
-  function setDownloadError(msg) {
+  function setDownloadError(sender, msg) {
     const item = packageRepeater.itemAt(root.currentPackageIndex);
     item.subTitle = "<font color='red'>✗</font> " + msg;
     item.hasError = true;
   }
 
-  function showTransferProgress(data) {
+  function showTransferProgress(sender, data) {
     const item = packageRepeater.itemAt(root.currentPackageIndex);
     let msg = '';
     if (data.received_objects == data.total_objects) {
@@ -169,5 +169,12 @@ W.PageBase {
         }
       }
     }
+  }
+
+  Component.onCompleted: {
+    addCallback(Command.DownloadComplete, downloadComplete);
+    addCallback(Command.SetDownloadingPackage, setDownloadingPackage);
+    addCallback(Command.PackageDownloadError, setDownloadError);
+    addCallback(Command.PackageTransferProgress, showTransferProgress);
   }
 }

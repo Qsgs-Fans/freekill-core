@@ -200,9 +200,29 @@ W.PageBase {
     const idx = packageList.currentIndex;
     updatePackageList();
     packageList.currentIndex = idx;
+    App.setBusy(false);
+  }
+
+  function showTransferProgress(sender, data) {
+    let msg = '';
+    if (data.received_objects == data.total_objects) {
+      msg = ("Resolving deltas %1/%2")
+                     .arg(data.indexed_deltas)
+                     .arg(data.total_deltas);
+    } else if (data.total_objects > 0) {
+      msg = ("Received %1/%2 objects (%3) in %4 KiB")
+                     .arg(data.received_objects)
+                     .arg(data.total_objects)
+                     .arg(data.indexed_objects)
+                     .arg(data.received_bytes / 1024);
+    }
+    console.log(msg);
   }
 
   Component.onCompleted: {
     updatePackageList();
+  
+    addCallback(Command.DownloadComplete, downloadComplete);
+    addCallback(Command.PackageTransferProgress, showTransferProgress);
   }
 }

@@ -6,32 +6,41 @@ export const PopPage = 'PopPage';
 export const ShowToast = 'ShowToast';
 export const SetBusyUI = 'SetBusyUI';
 
-export const ErrorMsg = "ErrorMsg";
-export const ErrorDlg = "ErrorDlg";
+// RootPage 基底页面
 export const SetServerSettings = "SetServerSettings";
-
-// WaitingRoom
-export const BackToRoom = "BackToRoom";
-
-// Misc
+export const BackToStart = "BackToStart";
+export const EnterLobby = "EnterLobby";
+export const AddTotalGameTime = "AddTotalGameTime";
 export const UpdateAvatar = "UpdateAvatar";
 export const UpdatePassword = "UpdatePassword";
+
+// 错误信息
+export const ErrorMsg = "ErrorMsg";
+export const ErrorDlg = "ErrorDlg";
+
+// Base 基本信息，一般为服务器信息
 export const ServerDetected = "ServerDetected";
 export const GetServerDetail = "GetServerDetail";
+export const ServerMessage = "ServerMessage";
+
+// Lobby 服务器内大厅相关
+export const UpdateRoomList = "UpdateRoomList";
+export const UpdatePlayerNum = "UpdatePlayerNum";
+export const EnterRoom = "EnterRoom";
+
+// Package 包加载
 export const UpdatePackage = "UpdatePackage";
 export const UpdateBusyText = "UpdateBusyText";
 export const DownloadComplete = "DownloadComplete";
 export const SetDownloadingPackage = "SetDownloadingPackage";
 export const PackageDownloadError = "PackageDownloadError";
 export const PackageTransferProgress = "PackageTransferProgress";
-export const BackToStart = "BackToStart";
-export const EnterLobby = "EnterLobby";
-export const EnterRoom = "EnterRoom";
-export const UpdateRoomList = "UpdateRoomList";
-export const UpdatePlayerNum = "UpdatePlayerNum";
+
+// WaitingRoom 等待房间
+export const BackToRoom = "BackToRoom";
+
+// Misc
 export const Chat = "Chat";
-export const ServerMessage = "ServerMessage";
-export const AddTotalGameTime = "AddTotalGameTime";
 
 // LunarLTK.Room
 export const SetCardFootnote = "SetCardFootnote";
