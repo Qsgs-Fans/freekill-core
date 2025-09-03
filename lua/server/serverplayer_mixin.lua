@@ -4,6 +4,7 @@
 ---@field public _splayer fk.ServerPlayer @ 对应的C++玩家
 ---@field public room RoomMixin
 ---@field public _timewaste_count integer
+---@field public ai Base.AI
 local ServerPlayerMixin = {}
 
 function ServerPlayerMixin:initializeServerPlayerMixin(_self)

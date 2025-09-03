@@ -3,6 +3,7 @@
 ---@field public id integer @ 房间的id
 ---@field public room fk.Room @ C++层面的Room类实例，别管他就是了，用不着
 ---@field public main_co any @ 本房间的主协程
+---@field public tag table<string, any> @ tag类似banner，但是只存在于服务端，可用于强行制造信息不对等
 ---@field public game_started boolean @ 游戏是否已经开始
 ---@field public game_finished boolean @ 游戏是否已经结束
 ---@field public serverplayer_klass any
@@ -17,6 +18,8 @@ local RoomMixin = {}
 function RoomMixin:initRoomMixin(_room)
   self.room = _room
   self.id = _room:getId()
+
+  self.tag = {}
 
   self.game_started = false
   self.game_finished = false
@@ -139,7 +142,7 @@ end
 --- 向多名玩家广播一条消息。
 ---@param command string @ 发出这条消息的消息类型
 ---@param jsonData any @ 消息的数据，一般是JSON字符串，也可以是普通字符串，取决于client怎么处理了
----@param players? ServerPlayer[] @ 要告知的玩家列表，默认为所有人
+---@param players? ServerPlayerMixin[] @ 要告知的玩家列表，默认为所有人
 function RoomMixin:doBroadcastNotify(command, jsonData, players)
   players = players or self.players
   for _, p in ipairs(players) do
@@ -148,7 +151,7 @@ function RoomMixin:doBroadcastNotify(command, jsonData, players)
 end
 
 --- 向所有角色广播一名角色的某个property，让大家都知道
----@param player ServerPlayer @ 要被广而告之的那名角色
+---@param player Base.Player @ 要被广而告之的那名角色
 ---@param property string @ 这名角色的某种属性，像是"hp"之类的，其实就是Player类的属性名
 function RoomMixin:broadcastProperty(player, property)
   for _, p in ipairs(self.players) do
@@ -156,9 +159,17 @@ function RoomMixin:broadcastProperty(player, property)
   end
 end
 
+--- 设置角色的某个属性，并广播给所有人
+---@param player Base.Player
+---@param property string @ 属性名称
+function RoomMixin:setPlayerProperty(player, property, value)
+  player[property] = value
+  self:broadcastProperty(player, property)
+end
+
 --- 将player的属性property告诉p。
----@param p ServerPlayer @ 要被告知相应属性的那名玩家
----@param player ServerPlayer @ 拥有那个属性的玩家
+---@param p ServerPlayerMixin @ 要被告知相应属性的那名玩家
+---@param player Base.Player @ 拥有那个属性的玩家
 ---@param property string @ 属性名称
 function RoomMixin:notifyProperty(p, player, property)
   p:doNotify("PropertyUpdate", {
@@ -171,7 +182,7 @@ end
 --- 将焦点转移给一名或者多名角色，并广而告之。
 ---
 --- 形象点说，就是在那些玩家下面显示一个“弃牌 思考中...”之类的烧条提示。
----@param players ServerPlayer | ServerPlayer[] @ 要获得焦点的一名或者多名角色
+---@param players Base.Player | Base.Player[] @ 要获得焦点的一名或者多名角色
 ---@param command string @ 烧条的提示文字
 ---@param timeout integer? @ focus的烧条时长
 function RoomMixin:notifyMoveFocus(players, command, timeout)
@@ -201,7 +212,7 @@ end
 --- 播放某种动画效果给players看。
 ---@param type string @ 动画名字
 ---@param data any @ 这个动画附加的额外信息，在这个函数将会被转成json字符串
----@param players? ServerPlayer[] @ 要观看动画的玩家们，默认为全员
+---@param players? ServerPlayerMixin[] @ 要观看动画的玩家们，默认为全员
 function RoomMixin:doAnimate(type, data, players)
   players = players or self.players
   data.type = type
@@ -394,7 +405,94 @@ function RoomMixin:handleSurrender(id, data)
   ResumeRoom(self.id)
 end
 
--- 没用
-function RoomMixin:getTag() end
+--- 将房间中某个tag设为特定值。
+--- 
+--- 注意：客户端无法获取room tag，请改用```setBanner```
+--- 
+--- 当想在服务端搞点全局变量时，不要自己设置全局变量或者上值，而应该使用room的tag。
+---@param tag_name string @ tag名字
+---@param value any @ 值
+function RoomMixin:setTag(tag_name, value)
+  self.tag[tag_name] = value
+end
+
+--- 获得某个tag的值。
+---@param tag_name string @ tag名字
+function RoomMixin:getTag(tag_name)
+  return self.tag[tag_name]
+end
+
+--- 删除某个tag。
+---@param tag_name string @ tag名字
+function RoomMixin:removeTag(tag_name)
+  self.tag[tag_name] = nil
+end
+
+--- 将一名玩家的某种标记设置为某值，并通知所有客户端更新。
+--- 
+--- 值可以是数字、字符串、表、键值表等。注意键值表做值时键值表的键不能是数字。
+--- 
+--- 通用的mark名称及后缀参见`mark_enum.lua`。
+--- 
+-- mark name and UI:
+--
+-- ```xxx```: invisible mark
+--
+-- ```@xxx```: mark with extra data (maybe string or number) 表会显示所有元素，以空格分隔
+--
+-- ```@@xxx```: mark with invisible extra data
+--
+-- ```@$xxx```: mark with card_name[] data
+--
+-- ```@&xxx```: mark with general_name[] data
+--
+-- ```@!xxx```: picMark shown on the bottom-right corner of the photo, @!! for notation
+---@param player Base.Player @ 更新标记的玩家
+---@param mark string @ 标记的名称
+---@param value any @ 设置的值，可以是数字、字符串、表、键值表等
+function RoomMixin:setPlayerMark(player, mark, value)
+  player:setMark(mark, value)
+  self:doBroadcastNotify("SetPlayerMark", {
+    player.id,
+    mark,
+    value
+  })
+end
+
+--- 将一名玩家的```mark```标记增加```count```个，并通知所有客户端更新。
+--- 
+--- tableMark有封装方法```addTableMark```和```addTableMarkIfNeed```
+---@param player Base.Player @ 加标记的玩家
+---@param mark string @ 标记名称
+---@param count? integer @ 增加的数量，默认为1
+function RoomMixin:addPlayerMark(player, mark, count)
+  count = count or 1
+  local num = player:getMark(mark)
+  num = num or 0
+  self:setPlayerMark(player, mark, math.max(num + count, 0))
+end
+
+--- 将一名玩家的```mark```标记减少```count```个，并通知所有客户端更新。
+--- 
+--- tableMark有封装方法```removeTableMark```
+---@param player Base.Player @ 减标记的玩家
+---@param mark string @ 标记名称
+---@param count? integer  @ 减少的数量，默认为1
+function RoomMixin:removePlayerMark(player, mark, count)
+  count = count or 1
+  local num = player:getMark(mark)
+  num = num or 0
+  self:setPlayerMark(player, mark, math.max(num - count, 0))
+end
+
+--- 设置房间banner，显示于左上角，用于模式介绍、仁区等
+--- 
+--- 房间版mark
+---@param name string @ banner的名称
+---@param value any
+function RoomMixin:setBanner(name, value)
+  Fk.Base.RoomBase.setBanner(self, name, value)
+  self:doBroadcastNotify("SetBanner", { name, value })
+end
 
 return RoomMixin

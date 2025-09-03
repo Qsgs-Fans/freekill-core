@@ -1,5 +1,6 @@
 ---@class ClientMixin : Base.RoomBase
 ---@field public client fk.Client
+---@field public clientplayer_klass any
 ---@field public observing boolean 客户端是否在旁观
 ---@field public replaying boolean 客户端是否在重放
 ---@field public replaying_show boolean 重放时是否要看到全部牌
@@ -35,6 +36,11 @@ function ClientMixin:initClientMixin(_client)
   self:addCallback("SetBanner", self.handleSetBanner)
   self:addCallback("Reconnect", self.reconnect)
   self:addCallback("Observe", self.observe)
+
+  self:addCallback("PropertyUpdate", self.propertyUpdate)
+  self:addCallback("GameLog", self.appendLog)
+
+  self:addCallback("GameOver", self.gameOver)
 end
 
 ---@param func fun(self, data)
@@ -91,8 +97,8 @@ function ClientMixin:stopRecording(jsonData)
     self.record[2],
     Self.player:getScreenName():gsub("%.", "%%2e"),
     self.settings.gameMode,
-    Self.general,
-    Self.role,
+    Self.general or "",
+    Self.role or "unknown",
     jsonData,
   }, ".")
   self.recording = false
@@ -110,7 +116,7 @@ function ClientMixin:setup(data)
   self_player:setId(id)
   self_player:setScreenName(name)
   self_player:setAvatar(avatar)
-  Self = ClientPlayer:new(self_player)
+  Self = self.clientplayer_klass:new(self_player)
   if msec then
     self.client:setupServerLag(msec)
   end
@@ -121,7 +127,6 @@ function ClientMixin:heartbeat()
 end
 
 function ClientMixin:enterRoom(_data)
-  Self = ClientPlayer:new(self.client:getSelf())
   local data = _data[3]
 
   -- FIXME: 需要改Qml
@@ -129,15 +134,19 @@ function ClientMixin:enterRoom(_data)
   local replaying = self.replaying
   local showcards = self.replaying_show
   local recording = self.recording
+  -- FIXME: 写出record的时候就该好好反省一下哪里设计出问题了
+  local record = self.record
 
   local client_klass = Fk:getBoardGame(data.gameMode).client_klass
   ClientInstance = client_klass:new(self.client)
   self = ClientInstance
+  Self = self.clientplayer_klass:new(self.client:getSelf())
 
   self.observing = ob
   self.replaying = replaying
   self.replaying_show = showcards
   self.recording = recording -- 重连/旁观的录像后面那段EnterRoom会触发该函数
+  self.record = record
 
   -- FIXME: 应该在C++中修改，这种改法错大发了
   -- FIXME: C++中加入房间时需要把Self也纳入players列表
@@ -161,7 +170,9 @@ function ClientMixin:quitRoom()
 end
 
 function ClientMixin:startGame(data)
-  self:startRecording()
+  if not self.replaying then
+    self:startRecording()
+  end
 
   -- FIXME 这是个给cpp擦屁股的行为 cpp中播放录像会立刻播一句StartGame
   -- FIXME 而新UI中必须先AddPlayer再StartGame（进入页面）
@@ -194,7 +205,7 @@ function ClientMixin:addTotalGameTime(data)
 end
 
 function ClientMixin:createPlayer(_player)
-  return ClientPlayer:new(_player)
+  return self.clientplayer_klass:new(_player)
 end
 
 function ClientMixin:addPlayer(data)
@@ -234,7 +245,7 @@ function ClientMixin:addObserver(data)
     getScreenName = function() return name end,
     getAvatar = function() return avatar end,
   }
-  local p = ClientPlayer:new(player)
+  local p = self.clientplayer_klass:new(player)
   table.insert(self.observers, p)
   -- self:notifyUI("ServerMessage", string.format(Fk:translate("$AddObserver"), name))
 end
@@ -326,7 +337,7 @@ function ClientMixin:handleSetBanner(data)
   end
 end
 
-function ClientMixin:sendDataToUI()
+function ClientMixin:sendDataToUI(data)
   for k, v in pairs(self.banners) do
     if k[1] == "@" then
       self:notifyUI("SetBanner", { k, v })
@@ -337,9 +348,13 @@ end
 function ClientMixin:loadRoomSummary(data)
   local enter_room_data = { #data.circle, data.timeout, data.settings }
   self:enterRoom(enter_room_data)
+  -- enterRoom会换掉client，重新赋值！
+  self = ClientInstance --[[@as ClientMixin]]
   self:notifyUI("EnterRoom", enter_room_data)
 
   local players = data.players
+
+  self:startGame()
 
   for _, pid in ipairs(data.circle) do
     if pid ~= data.you then
@@ -347,15 +362,13 @@ function ClientMixin:loadRoomSummary(data)
     end
   end
 
-  self:startGame()
-
   self:arrangeSeats(data.circle)
 
   self:loadJsonObject(data)
 
   -- 此处已同步全部数据 剩下就是更新UI
   -- 交给各种Client复写了
-  self:sendDataToUI()
+  self:sendDataToUI(data)
   for _, p in ipairs(self.players) do p:sendDataToUI() end
 end
 
@@ -393,5 +406,69 @@ function ClientMixin:observe(data)
 
   self:loadRoomSummary(data)
 end
+
+function ClientMixin:setPlayerProperty(player, property, value)
+  player[property] = value
+end
+
+function ClientMixin:propertyUpdate(data)
+  -- jsonData: [ int id, string property_name, value ]
+  local id, name, value = data[1], data[2], data[3]
+  local p = self:getPlayerById(id)
+  self:setPlayerProperty(p, name, value)
+  self:notifyUI("PropertyUpdate", data)
+end
+
+-- TODO 想想办法啊
+function ClientMixin:parseMsg(msg, nocolor)
+  local data = msg
+  local function parseArg(arg)
+    arg = arg or ""
+    arg = Fk:translate(arg)
+    arg = string.format('<font color="%s"><b>%s</b></font>', nocolor and "white" or "#0598BC", arg)
+    return arg
+  end
+
+  local arg = parseArg(data.arg)
+  local arg2 = parseArg(data.arg2)
+  local arg3 = parseArg(data.arg3)
+
+  local log = Fk:translate(data.type)
+  log = string.gsub(log, "%%arg2", arg2)
+  log = string.gsub(log, "%%arg3", arg3)
+  log = string.gsub(log, "%%arg", arg)
+  return log
+end
+
+function ClientMixin:appendLog(msg)
+  local text = self:parseMsg(msg, nil)
+  self:notifyUI("GameLog", text)
+  if msg.toast then
+    self:notifyUI("ShowToast", text)
+  end
+end
+
+function ClientMixin:gameOver(jsonData)
+  if self.recording then
+    self:stopRecording(jsonData)
+    if not self.observing and not self.replaying then
+      local result
+      local winner = jsonData
+      if table.contains(winner:split("+"), Self.role) then
+        result = 1
+      elseif winner == "" then
+        result = 3
+      else
+        result = 2
+      end
+      self.client:saveGameData(self.settings.gameMode, Self.general or "",
+        Self.deputyGeneral or "", Self.role or "", result, self.record[2],
+        cbor.encode(self:toJsonObject()), cbor.encode(self.record))
+    end
+  end
+  Self.buddy_list = table.map(self.players, Util.IdMapper)
+  self:notifyUI("GameOver", jsonData)
+end
+
 
 return ClientMixin

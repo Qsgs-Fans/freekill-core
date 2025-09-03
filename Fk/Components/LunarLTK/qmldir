@@ -4,7 +4,6 @@ CardArea 1.0 CardArea.qml
 CardItem 1.0 CardItem.qml
 Dashboard 1.0 Dashboard.qml
 GeneralCardItem 1.0 GeneralCardItem.qml
-GlowText 1.0 GlowText.qml
 BigGlowText 1.0 BigGlowText.qml
 HandcardArea 1.0 HandcardArea.qml
 IndicatorLine 1.0 IndicatorLine.qml

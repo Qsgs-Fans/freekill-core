@@ -24,8 +24,9 @@ function Client:initialize(_client)
   AbstractRoom.initialize(self)
   self:initClientMixin(_client)
 
+  self.clientplayer_klass = ClientPlayer
+
   self:addCallback("SetCardFootnote", self.setCardFootnote)
-  self:addCallback("PropertyUpdate", self.propertyUpdate)
   self:addCallback("PlayCard", self.playCard)
   self:addCallback("AskForCardChosen", self.askForCardChosen)
   self:addCallback("MoveCards", self.moveCards)
@@ -39,7 +40,6 @@ function Client:initialize(_client)
   self:addCallback("AskForResponseCard", self.askForResponseCard)
   self:addCallback("SetCurrent", self.handleSetCurrent)
   self:addCallback("SetCardMark", self.setCardMark)
-  self:addCallback("GameLog", self.appendLog)
   self:addCallback("LogEvent", self.logEvent)
   self:addCallback("AddCardUseHistory", self.addCardUseHistory)
   self:addCallback("SetCardUseHistory", self.setCardUseHistory)
@@ -51,7 +51,6 @@ function Client:initialize(_client)
   self:addCallback("RemoveVirtualEquip", self.removeVirtualEquip)
   self:addCallback("ChangeSelf", self.changeSelf)
   self:addCallback("UpdateQuestSkillUI", self.updateQuestSkillUI)
-  self:addCallback("GameOver", self.gameOver)
   self:addCallback("PrintCard", self.printCard)
   self:addCallback("AddBuddy", self.addBuddy)
   self:addCallback("RmBuddy", self.rmBuddy)
@@ -84,8 +83,7 @@ function Client:startGame()
 end
 
 ---@param msg LogMessage
-local function parseMsg(msg, nocolor, visible_data)
-  local self = ClientInstance
+function Client:parseMsg(msg, nocolor, visible_data)
   local data = msg
   local function getPlayerStr(pid, color)
     if nocolor then color = "white" end
@@ -186,7 +184,7 @@ end
 
 ---@param msg LogMessage
 function Client:appendLog(msg, visible_data)
-  local text = parseMsg(msg, nil, visible_data)
+  local text = self:parseMsg(msg, nil, visible_data)
   self:notifyUI("GameLog", text)
   if msg.toast then
     self:notifyUI("ShowToast", text)
@@ -197,7 +195,7 @@ end
 function Client:setCardNote(ids, msg, virtual)
   for _, id in ipairs(ids) do
     if id ~= -1 then
-      self:notifyUI("SetCardFootnote", { id, parseMsg(msg, true), virtual })
+      self:notifyUI("SetCardFootnote", { id, self:parseMsg(msg, true), virtual })
     end
   end
 end
@@ -213,7 +211,7 @@ function Client:setCardFootnote(data)
 end
 
 function Client:setPlayerProperty(player, property, value)
-  player[property] = value
+  ClientMixin.setPlayerProperty(self, player, property, value)
 
   if property == "dead" then
     if value == true then
@@ -222,14 +220,6 @@ function Client:setPlayerProperty(player, property, value)
       table.insertIfNeed(self.alive_players, player)
     end
   end
-end
-
-function Client:propertyUpdate(data)
-  -- jsonData: [ int id, string property_name, value ]
-  local id, name, value = data[1], data[2], data[3]
-  local p = self:getPlayerById(id)
-  self:setPlayerProperty(p, name, value)
-  self:notifyUI("PropertyUpdate", data)
 end
 
 function Client:playCard(data)
@@ -820,28 +810,6 @@ function Client:updateQuestSkillUI(data)
   updateLimitSkill(playerId, Fk.skills[skillName])
 end
 
-function Client:gameOver(jsonData)
-  if self.recording then
-    self:stopRecording(jsonData)
-    if not self.observing and not self.replaying then
-      local result
-      local winner = jsonData
-      if table.contains(winner:split("+"), Self.role) then
-        result = 1
-      elseif winner == "" then
-        result = 3
-      else
-        result = 2
-      end
-      self.client:saveGameData(self.settings.gameMode, Self.general,
-        Self.deputyGeneral or "", Self.role, result, self.record[2],
-        cbor.encode(self:toJsonObject()), cbor.encode(self.record))
-    end
-  end
-  Self.buddy_list = table.map(self.players, Util.IdMapper)
-  self:notifyUI("GameOver", jsonData)
-end
-
 function Client:printCard(data)
   local n, s, num = table.unpack(data)
   AbstractRoom.printCard(self, n, s, num)
@@ -878,7 +846,7 @@ end
 
 function Client:showVirtualCard(data)
   local card, playerid, msg, event_id = table.unpack(data)
-  if msg then msg = parseMsg(msg, true) end
+  if msg then msg = self:parseMsg(msg, true) end
   if type(card) == "table" and card.class and card:isInstanceOf(Card) then
     card = {card}
   end

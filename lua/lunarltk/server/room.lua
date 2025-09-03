@@ -5,7 +5,6 @@
 --- 一个房间中只有一个Room实例，保存在RoomInstance全局变量中。
 ---@class Room : AbstractRoom, RoomMixin, GameEventWrappers, CompatAskFor
 ---@field public extra_turn_list table @ 待执行的额外回合表
----@field public tag table<string, any> @ Tag清单，其实跟Player的标记是差不多的东西
 ---@field public general_pile string[] @ 武将牌堆，这是可用武将名的数组
 ---@field public skill_costs table<string, any> @ 存放skill.cost_data用
 ---@field public card_marks table<integer, any> @ 存放card.mark之用
@@ -67,7 +66,6 @@ function Room:initialize(_room)
   self.logic_klass = GameLogic
 
   self.extra_turn_list = {}
-  self.tag = {}
   self.general_pile = {}
 
   self.disabled_packs = self.settings.disabledPack
@@ -316,63 +314,6 @@ function Room:getNCards(num, from)
   return cardIds
 end
 
---- 将一名玩家的某种标记设置为某值，并通知所有客户端更新。
---- 
---- 值可以是数字、字符串、表、键值表等。注意键值表做值时键值表的键不能是数字。
---- 
---- 通用的mark名称及后缀参见`mark_enum.lua`。
---- 
--- mark name and UI:
---
--- ```xxx```: invisible mark
---
--- ```@xxx```: mark with extra data (maybe string or number) 表会显示所有元素，以空格分隔
---
--- ```@@xxx```: mark with invisible extra data
---
--- ```@$xxx```: mark with card_name[] data
---
--- ```@&xxx```: mark with general_name[] data
---
--- ```@!xxx```: picMark shown on the bottom-right corner of the photo, @!! for notation
----@param player ServerPlayer @ 更新标记的玩家
----@param mark string @ 标记的名称
----@param value any @ 设置的值，可以是数字、字符串、表、键值表等
-function Room:setPlayerMark(player, mark, value)
-  player:setMark(mark, value)
-  self:doBroadcastNotify("SetPlayerMark", {
-    player.id,
-    mark,
-    value
-  })
-end
-
---- 将一名玩家的```mark```标记增加```count```个，并通知所有客户端更新。
---- 
---- tableMark有封装方法```addTableMark```和```addTableMarkIfNeed```
----@param player ServerPlayer @ 加标记的玩家
----@param mark string @ 标记名称
----@param count? integer @ 增加的数量，默认为1
-function Room:addPlayerMark(player, mark, count)
-  count = count or 1
-  local num = player:getMark(mark)
-  num = num or 0
-  self:setPlayerMark(player, mark, math.max(num + count, 0))
-end
-
---- 将一名玩家的```mark```标记减少```count```个，并通知所有客户端更新。
---- 
---- tableMark有封装方法```removeTableMark```
----@param player ServerPlayer @ 减标记的玩家
----@param mark string @ 标记名称
----@param count? integer  @ 减少的数量，默认为1
-function Room:removePlayerMark(player, mark, count)
-  count = count or 1
-  local num = player:getMark(mark)
-  num = num or 0
-  self:setPlayerMark(player, mark, math.max(num - count, 0))
-end
-
 --- 清除一名角色手牌中的某种标记
 ---@param player ServerPlayer @ 要清理标记的角色
 ---@param name string @ 要清理的标记名
@@ -423,47 +364,6 @@ function Room:removeCardMark(card, mark, count)
   local num = card:getMark(mark)
   num = num or 0
   self:setCardMark(card, mark, math.max(num - count, 0))
-end
-
---- 设置角色的某个属性，并广播给所有人
----@param player ServerPlayer
----@param property string @ 属性名称
-function Room:setPlayerProperty(player, property, value)
-  player[property] = value
-  self:broadcastProperty(player, property)
-end
-
---- 将房间中某个tag设为特定值。
---- 
---- 注意：客户端无法获取room tag，请改用```setBanner```
---- 
---- 当想在服务端搞点全局变量时，不要自己设置全局变量或者上值，而应该使用room的tag。
----@param tag_name string @ tag名字
----@param value any @ 值
-function Room:setTag(tag_name, value)
-  self.tag[tag_name] = value
-end
-
---- 获得某个tag的值。
----@param tag_name string @ tag名字
-function Room:getTag(tag_name)
-  return self.tag[tag_name]
-end
-
---- 删除某个tag。
----@param tag_name string @ tag名字
-function Room:removeTag(tag_name)
-  self.tag[tag_name] = nil
-end
-
---- 设置房间banner，显示于左上角，用于模式介绍、仁区等
---- 
---- 房间版mark
----@param name string @ banner的名称
----@param value any
-function Room:setBanner(name, value)
-  AbstractRoom.setBanner(self, name, value)
-  self:doBroadcastNotify("SetBanner", { name, value })
 end
 
 --- 设置房间的当前行动者

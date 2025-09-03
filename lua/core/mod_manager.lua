@@ -32,6 +32,7 @@ function ModManager:initModManager()
     ServerPlayerMixin = require "server.serverplayer_mixin",
     GameLogic = require "server.gamelogic",
     Engine = require "core.engine",
+    AI = require "server.ai",
   }
 end
 

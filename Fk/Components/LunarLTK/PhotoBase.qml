@@ -2,6 +2,7 @@ import QtQuick
 import Qt5Compat.GraphicalEffects
 
 import Fk
+import Fk.Components.Common
 import Fk.Components.GameCommon as Game
 import Fk.Components.LunarLTK.Photo
 
@@ -180,7 +181,7 @@ Game.BasicItem {
     glow.radius: 8
   }
 
-  ChatBubble {
+  Game.ChatBubble {
     id: chat
     width: parent.width
   }

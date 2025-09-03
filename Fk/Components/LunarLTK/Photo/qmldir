@@ -11,5 +11,4 @@ PicMarkArea 1.0 PicMarkArea.qml
 RoleComboBox 1.0 RoleComboBox.qml
 Shield 1.0 Shield.qml
 SpecialMarkArea 1.0 SpecialMarkArea.qml
-ChatBubble 1.0 ChatBubble.qml
 HandcardViewer 1.0 HandcardViewer.qml

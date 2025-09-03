@@ -5,6 +5,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import Fk
+import Fk.Components.Common
 import Fk.Components.LunarLTK.Photo
 import Fk.Widgets as W
 

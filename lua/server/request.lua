@@ -59,13 +59,13 @@ function Request:__tostring()
   return string.format("<Request '%s'>", self.command)
 end
 
----@param player ServerPlayer
+---@param player Base.Player
 ---@param data any
 function Request:setData(player, data)
   self.data[player.id] = data
 end
 
----@param player ServerPlayer
+---@param player Base.Player
 ---@param data any @ 注意不要json.encode
 function Request:setDefaultReply(player, data)
   self.default_reply[player.id] = data
@@ -74,7 +74,7 @@ end
 --- 获取本次Request中此人的回复，若还未询问过，那么先询问
 --- * <any>: 成功发出回复 获取的是decode后的回复
 --- * "" (空串): 发出了“取消” 或者烧完了绳子 反正就是取消
----@param player ServerPlayer
+---@param player Base.Player
 ---@return any
 function Request:getResult(player)
   if not self._asked then self:ask() end
@@ -83,7 +83,7 @@ end
 
 -- 将相应请求数据发给player
 -- 不能向thinking中的玩家发送，这种情况下暂存起来等待收到答复后
----@param player ServerPlayer
+---@param player ServerPlayerMixin
 function Request:_sendPacket(player)
   local controller = player.serverplayer
 
@@ -100,10 +100,12 @@ function Request:_sendPacket(player)
       return table.contains(p._observers, controller)
     end)
 
-    -- 切换视角
-    table.removeOne(from._observers, controller)
-    table.insert(player._observers, controller)
-    controller:doNotify("ChangeSelf", cbor.encode(player.id))
+    if from then
+      -- 切换视角
+      table.removeOne(from._observers, controller)
+      table.insert(player._observers, controller)
+      controller:doNotify("ChangeSelf", cbor.encode(player.id))
+    end
   end
 
   -- 发送请求数据并将控制者标记为烧条中

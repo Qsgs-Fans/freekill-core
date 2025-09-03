@@ -3,23 +3,11 @@
 -- AI base class.
 -- Do nothing.
 
----@class AI: Object
+---@class AI: Base.AI
 ---@field public room Room
 ---@field public player ServerPlayer
----@field public command string
----@field public data any
----@field public handler ReqActiveSkill 可能空，但是没打问号（免得一堆警告）
-local AI = class("AI")
-
-function AI:initialize(player)
-  ---@diagnostic disable-next-line
-  self.room = RoomInstance
-  self.player = player
-end
-
-function AI:__tostring()
-  return string.format("%s: %s", self.class.name, tostring(self.player))
-end
+---@field public handler ReqActiveSkill
+local AI = Fk.Base.AI:subclass("AI")
 
 -- activeSkill, responseCard, useCard, playCard 四巨头专属
 function AI:isInDashboard()
@@ -202,30 +190,19 @@ function AI:currentSkill()
 end
 
 function AI:makeReply()
-  Self = self.player
-  local now = os.getms()
-  local fn = self["handle" .. self.command]
   local is_active = self.command == "AskForUseActiveSkill"
   if is_active then
     local skill = Fk.skills[self.data[1]]
     skill._extra_data = self.data[4]
   end
-  local ret = "__cancel"
-  if fn then
-    local handler_class = self.room.request_handlers[self.command] --[[@as ReqActiveSkill]]
-    if handler_class then
-      self.handler = handler_class:new(self.player, self.data)
-      self.handler:setup()
-    end
-    ret = fn(self, self.data)
-  end
-  if ret == nil or ret == "" then ret = "__cancel" end
-  self.handler = nil
+
+  local ret = Fk.Base.AI.makeReply(self)
+
   if is_active then
     local skill = Fk.skills[self.data[1]]
     skill._extra_data = Util.DummyTable
   end
-  verbose(1,"%s 在%.2fms后得出结果：%s", self.command, (os.getms() - now) / 1000, json.encode(ret))
+
   return ret
 end
 

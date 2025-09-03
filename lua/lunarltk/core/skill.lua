@@ -250,6 +250,7 @@ end
 function Skill:hasTag(tag, compulsory_expand)
   local expand = (compulsory_expand == nil or compulsory_expand)
   local skel = self:getSkeleton()
+  if not skel then return false end
   if expand then
     if tag == Skill.Compulsory then
       return table.contains(skel.tags, Skill.Compulsory) or table.contains(skel.tags, Skill.Wake)
