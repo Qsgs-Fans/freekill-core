@@ -1208,7 +1208,7 @@ end
 function ToUIString(v)
   local ok, obj = pcall(cbor.decode, v)
   if not ok then return "未知类型" end
-  local f = getmetatable(obj).__touistring
+  local f = getmetatable(obj) ~= nil and getmetatable(obj).__touistring or nil
   if f then
     local ret = f(obj)
     if type(ret) == "string" then
