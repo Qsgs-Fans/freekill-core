@@ -65,7 +65,7 @@ ganglie:addAI({
     ---@type DamageData
     local dmg = ai.room.logic:getCurrentEvent().data
     local from = dmg.from
-    if not from then return false end
+    if not from or ai:isFriend(dmg.from) then return false end
     local dmg_val = ai:getBenefitOfEvents(function(logic)
       logic:damage{
         from = ai.player,
