@@ -166,15 +166,18 @@ function Room:getPlayerBySeat(seat)
 end
 
 ---@param players ServerPlayer[]
-function Room:sortByAction(players)
+---@param player? ServerPlayer @ 以该角色为起点（缺省值为当前回合角色）
+function Room:sortByAction(players, player)
   table.sort(players, function(prev, next)
     return prev.seat < next.seat
   end)
 
-  if self.current and table.find(players, function(p)
-    return p.seat >= self.current.seat
+  local org_player = player or self.current
+
+  if org_player and table.find(players, function(p)
+    return p.seat >= org_player.seat
   end) then
-    while players[1].seat < self.current.seat do
+    while players[1].seat < org_player.seat do
       local toPlayerId = table.remove(players, 1)
       table.insert(players, toPlayerId)
     end
@@ -2073,6 +2076,7 @@ function Room:askToUseRealCard(player, params)
   local extra_data = params.extra_data and table.simpleClone(params.extra_data) or {}
   if extra_data.bypass_times == nil then extra_data.bypass_times = true end
   if extra_data.extraUse == nil then extra_data.extraUse = true end
+  if extra_data.not_passive == nil then extra_data.not_passive = true end
   local pattern, skillName, prompt, cancelable, skipUse = params.pattern, params.skill_name, params.prompt, params.cancelable, params.skip
 
   local pile = params.expand_pile or extra_data.expand_pile
@@ -2090,7 +2094,8 @@ function Room:askToUseRealCard(player, params)
   for _, cid in ipairs(cards) do
     local card = Fk:getCardById(cid)
     if Exppattern:Parse(pattern):match(card) then
-      if #card:getAvailableTargets(player, extra_data) > 0 then
+      if #card:getAvailableTargets(player, extra_data) > 0 or
+        (card.is_passive and not extra_data.not_passive and not player:prohibitUse(card)) then
         table.insert(cardIds, cid)
       end
     end
@@ -2108,8 +2113,8 @@ function Room:askToUseRealCard(player, params)
   if (not cancelable) and (not dat) then
     for _, cid in ipairs(cardIds) do
       local card = Fk:getCardById(cid)
-      local temp = card:getDefaultTarget (player, extra_data)
-      if #temp > 0 then
+      local temp = card:getDefaultTarget(player, extra_data)
+      if #temp > 0 or (card.is_passive and not extra_data.not_passive and not player:prohibitUse(card)) then
         dat = {targets = temp, cards = {cid}}
         break
       end
@@ -2936,14 +2941,14 @@ end
 ---@return ServerPlayer[] @ 选择的两个玩家的列表，若未选择，返回空表
 function Room:askToChooseToMoveCardInBoard(player, params)
   if params.flag then
-    assert(params.flag == "e" or params.flag == "j")
+    assert(table.contains({"e", "j", "ej", "je"}, params.flag))
   end
   params.cancelable = (params.cancelable == nil) and true or params.cancelable
   params.no_indicate = (params.no_indicate == nil) and true or params.no_indicate
   params.exclude_ids = type(params.exclude_ids) == "table" and params.exclude_ids or {}
   params.froms = params.froms or self.alive_players
   params.tos = params.tos or self.alive_players
-  params.prompt = params.prompt or ""
+  params.prompt = params.prompt or ("#AskToChooseToMoveCardInBoard:::"..params.skill_name)
 
   if #self:canMoveCardInBoard(params.flag, nil, params.exclude_ids) == 0 and not params.cancelable then return {} end
 
@@ -2951,8 +2956,8 @@ function Room:askToChooseToMoveCardInBoard(player, params)
     flag = params.flag,
     skillName = params.skill_name,
     excludeIds = params.exclude_ids,
-    froms = table.map(params.froms, Util.IdMapper),
-    tos = table.map(params.tos, Util.IdMapper),
+    froms = params.froms,
+    tos = params.tos,
   }
   local activeParams = { ---@type AskToUseActiveSkillParams
     skill_name = "choose_players_to_move_card_in_board",
@@ -3218,14 +3223,14 @@ function Room:getGameSummary()
 end
 
 --- 获取可以移动场上牌的第一对目标。用于判断场上是否可以移动的牌
----@param flag? "e"|"j" @ 判断移动的区域
+---@param flag? "e"|"j"|"ej" @ 判断移动的区域
 ---@param players? ServerPlayer[] @ 可被移动的玩家列表
 ---@param excludeIds? integer[] @ 不能移动的卡牌id
 ---@param targets? ServerPlayer[] @ 可移动至的玩家列表，默认为```players```
 ---@return ServerPlayer[] @ 第一对玩家列表，第一个是来源，第二个是目标 可能为空表
 function Room:canMoveCardInBoard(flag, players, excludeIds, targets)
   if flag then
-    assert(flag == "e" or flag == "j")
+    assert(table.contains({"e", "j", "ej", "je"}, flag))
   end
 
   players = players or self.alive_players
@@ -3618,7 +3623,6 @@ function Room:getPlayerClientCards(player)
 end
 
 --- 同步一名角色的客户端手牌顺序
---- 本bug由玄蝶提供
 ---@param player ServerPlayer @ 角色
 ---@return integer[] @ 卡牌ID，有元素检测就是了……
 function Room:syncPlayerClientCards(player)

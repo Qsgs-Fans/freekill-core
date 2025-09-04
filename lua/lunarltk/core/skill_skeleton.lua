@@ -200,6 +200,7 @@ function SkillSkeleton:createSkill()
     end
     main_skill = Skill:new(self.name, frequency)
     fk.readCommonSpecToSkill(main_skill, self)
+    main_skill.skeleton = self
   end
   return main_skill
 end
