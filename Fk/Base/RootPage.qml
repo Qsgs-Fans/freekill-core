@@ -181,6 +181,11 @@ W.PageBase {
     busy = false;
   }
 
+  function errorPopup(sender, data) {
+    errDialog.txt = data;
+    errDialog.open();
+  }
+
   function updateAvatar(sender, data) {
     App.setBusy(false);
     Self.avatar = data;
@@ -275,7 +280,7 @@ W.PageBase {
     addCallback(Command.ErrorMsg, errorMessage);
     addCallback(Command.ErrorDlg, errorDialog);
     // 此为cpp手误 不加入Command
-    addCallback("ErrorDialog", errorDialog);
+    addCallback("ErrorDialog", errorPopup);
 
     addCallback(Command.UpdateAvatar, updateAvatar);
     addCallback(Command.UpdatePassword, updatePassword);

@@ -104,6 +104,6 @@ ColumnLayout {
   FileDialog {
     id: fdialog
     property string configKey
-    onAccepted: { config[configKey] = selectedFile; }
+    onAccepted: { Config[configKey] = selectedFile; }
   }
 }
