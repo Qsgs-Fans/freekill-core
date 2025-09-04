@@ -14,7 +14,7 @@ W.PageBase {
   property string busyText: ""
   property bool closing: false
 
-  property string sheduledDownload: ""
+  property var sheduledDownload
 
   signal confLoaded
 
@@ -223,12 +223,12 @@ W.PageBase {
   }
 
   function tryUpdatePackage() {
-    if (sheduledDownload !== "") {
+    if (sheduledDownload) {
       mainStack.push(Qt.createComponent("Fk.Pages.Common", "PackageDownload"));
       const downloadPage = mainStack.currentItem;
       downloadPage.setPackages(sheduledDownload);
       Pacman.loadSummary(JSON.stringify(sheduledDownload), true);
-      sheduledDownload = "";
+      sheduledDownload = null;
     }
   }
 
