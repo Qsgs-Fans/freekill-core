@@ -170,6 +170,7 @@ function ClientMixin:quitRoom()
 end
 
 function ClientMixin:startGame(data)
+  if self.gameStarted then return end
   if not self.replaying then
     self:startRecording()
   end
@@ -181,6 +182,8 @@ function ClientMixin:startGame(data)
   if self.replaying and self.capacity > 1 and #self.players == 1 then
     return
   end
+
+  self.gameStarted = true
 
   self:notifyUI("StartGame", data)
 end
@@ -354,8 +357,6 @@ function ClientMixin:loadRoomSummary(data)
 
   local players = data.players
 
-  self:startGame()
-
   for _, pid in ipairs(data.circle) do
     if pid ~= data.you then
       self:addPlayer(players[pid].setup_data)
@@ -363,6 +364,8 @@ function ClientMixin:loadRoomSummary(data)
   end
 
   self:arrangeSeats(data.circle)
+
+  self:startGame()
 
   self:loadJsonObject(data)
 
