@@ -127,7 +127,7 @@ function SkillSkeleton:addEffect(key, data, attribute)
     local param_prio = getTypePriority(key)
     if main_prio == 5 then
       if param_prio == 5 then
-        fk.qCritical("You can only add 1 'active'/'viewas' effect in one skill.")
+        fk.qCritical("You can only add 1 'active'/'viewas' effect in one skill [Skill: " .. self.name .. "]")
         return
       end
       first = false
