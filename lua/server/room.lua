@@ -2217,14 +2217,17 @@ function Room:handleUseCardReply(player, data, params)
         from = player,
         cards = selected_cards,
         tos = table.map(targets, Util.Id2PlayerMapper),
+        interaction_data = data.interaction_data,
       }
       local use_data = SkillUseData:new(use_spec)
       use_data.cost_data = skill:onCost(player, use_data)
       if not use_data.cost_data.history_branch then
-        if type(skill.history_branch) == "function" then
-          use_data.cost_data.history_branch = skill:history_branch(player, use_data)
-        else
-          use_data.cost_data.history_branch = skill.history_branch
+        local branch = skill.history_branch
+        if type(branch) == "function" then
+          branch = skill:history_branch(player, use_data)
+        end
+        if type(branch) == "string" then
+          use_data.cost_data.history_branch = branch
         end
       end
 
@@ -2242,14 +2245,17 @@ function Room:handleUseCardReply(player, data, params)
         from = player,
         cards = selected_cards,
         tos = table.map(targets, Util.Id2PlayerMapper),
+        interaction_data = data.interaction_data,
       }
       local use_data = SkillUseData:new(use_spec)
       use_data.cost_data = skill:onCost(player, use_data)
       if not use_data.cost_data.history_branch then
-        if type(skill.history_branch) == "function" then
-          use_data.cost_data.history_branch = skill:history_branch(player, use_data)
-        else
-          use_data.cost_data.history_branch = skill.history_branch
+        local branch = skill.history_branch
+        if type(branch) == "function" then
+          branch = skill:history_branch(player, use_data)
+        end
+        if type(branch) == "string" then
+          use_data.cost_data.history_branch = branch
         end
       end
 
@@ -2371,7 +2377,7 @@ end
 ---@class askToUseVirtualCardParams: AskToSkillInvokeParams
 ---@field name string|string[] @ 可以选择的虚拟卡名，可以多个
 ---@field subcards? integer[] @ 虚拟牌的子牌，默认空
----@field card_filter? { cards: integer[]?, n: integer[]?, pattern: string? } @选牌规则，优先级低于```subcards```，可选参数：```n```（牌数，填数字表示此只能此数量，填{a, b}表示至少为a至多为b）```pattern```（选牌规则）```cards```（可选牌的范围）
+---@field card_filter? { cards: integer[]?, n: integer|integer[]?, pattern: string? } @选牌规则，优先级低于```subcards```，可选参数：```n```（牌数，填数字表示此只能此数量，填{a, b}表示至少为a至多为b）```pattern```（选牌规则）```cards```（可选牌的范围）
 ---@field prompt? string @ 询问提示信息。默认为：请视为使用xx
 ---@field extra_data? UseExtraData|table @ 额外信息，因技能而异了
 ---@field cancelable? boolean @ 是否可以取消。默认可以取消
@@ -2403,7 +2409,7 @@ function Room:askToUseVirtualCard(player, params)
   params.card_filter = params.card_filter or {}
   params.card_filter.n = params.card_filter.n or {0, 0}
   if type(params.card_filter.n) == "number" then
-    params.card_filter.n = {params.card_filter.n, params.card_filter.n}
+    params.card_filter.n = { params.card_filter.n, params.card_filter.n }
   end
   params.card_filter.pattern = params.card_filter.pattern or "."
   params.card_filter.cards = params.card_filter.cards or table.connect(player:getCardIds("he"), player:getHandlyIds(false))
