@@ -176,12 +176,14 @@ function SkillSkeleton:createSkill()
       sk = self:createTriggerSkill(self, i, k, attr, data)
     end
     if sk then
+      local sk_name = sk.name
       if not main_skill then
         main_skill = sk
         main_skill.name = self.name
         local name_split = self.name:split("__")
         main_skill.trueName = name_split[#name_split]
         main_skill.visible = self.name[1] ~= "#"
+        sk_name = string.format("#%s_main_skill", main_skill.name)
       else
         if not sk.is_delay_effect then
           sk.main_skill = main_skill
@@ -189,7 +191,7 @@ function SkillSkeleton:createSkill()
         main_skill:addRelatedSkill(sk)
       end
       table.insert(self.effects, sk)
-      table.insert(self.effect_names, sk.name)
+      table.insert(self.effect_names, sk_name)
       sk.skeleton = self
     end
   end

@@ -108,15 +108,18 @@ function SkillEffect:main()
     end
 
     player:addSkillUseHistory(skill.name)
-    if skill.name ~= skill:getSkeleton().name and not skill.is_delay_effect then
-      player:addSkillUseHistory(skill:getSkeleton().name)
+    if not skill.is_delay_effect then
+      if skill.name ~= skill:getSkeleton().name then
+        player:addSkillUseHistory(skill:getSkeleton().name)
 
-      if branch then
-        player:addSkillBranchUseHistory(skill:getSkeleton().name, branch)
-      end
-    else
-      if branch then
-        player:addSkillBranchUseHistory(skill.name, branch)
+        if branch then
+          player:addSkillBranchUseHistory(skill:getSkeleton().name, branch)
+        end
+      else
+        player:addSkillUseHistory("#" .. skill.name .. "_main_skill")
+        if branch then
+          player:addSkillBranchUseHistory(skill.name, branch)
+        end
       end
     end
   end

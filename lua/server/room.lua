@@ -2220,7 +2220,19 @@ function Room:handleUseCardReply(player, data, params)
         interaction_data = data.interaction_data,
       }
       local use_data = SkillUseData:new(use_spec)
-      use_data.cost_data = skill:onCost(player, use_data)
+      use_data.cost_data = skill:onCost(player, use_spec)
+      if use_data.cost_data.from then
+        use_data.from = use_data.cost_data.from
+      end
+      if use_data.cost_data.cards then
+        use_data.cards = use_data.cost_data.cards
+      end
+      if use_data.cost_data.tos then
+        use_data.tos = use_data.cost_data.tos
+      end
+      if use_data.cost_data.interaction_data then
+        use_data.interaction_data = use_data.cost_data.interaction_data
+      end
       if not use_data.cost_data.history_branch then
         local branch = skill.history_branch
         if type(branch) == "function" then
@@ -2248,7 +2260,19 @@ function Room:handleUseCardReply(player, data, params)
         interaction_data = data.interaction_data,
       }
       local use_data = SkillUseData:new(use_spec)
-      use_data.cost_data = skill:onCost(player, use_data)
+      use_data.cost_data = skill:onCost(player, use_spec)
+      if use_data.cost_data.from then
+        use_data.from = use_data.cost_data.from
+      end
+      if use_data.cost_data.cards then
+        use_data.cards = use_data.cost_data.cards
+      end
+      if use_data.cost_data.tos then
+        use_data.tos = use_data.cost_data.tos
+      end
+      if use_data.cost_data.interaction_data then
+        use_data.interaction_data = use_data.cost_data.interaction_data
+      end
       if not use_data.cost_data.history_branch then
         local branch = skill.history_branch
         if type(branch) == "function" then
