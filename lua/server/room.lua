@@ -4004,12 +4004,6 @@ function Room:syncPlayerClientCards(player)
   -- printf("客户端返回组合：%s", table.concat(table.map(result, function(e) return tostring(Fk:getCardById(e)) end), ","))
   -- assert(table.isEqual(cards, result), "客户端和服务端信息不符！")
   if not table.isEqual(cards, result) then
-    self:sendLog{
-      type = "你的客户端手牌信息（%arg）<br>与服务端手牌信息（%arg2）不符！<br>请将本战报截图、保存本局录像并联系开发者！",
-      arg = json.encode(result),
-      arg2 = json.encode(cards),
-      toast = true,
-    }
     result = cards
   end
   player.player_cards[Player.Hand] = result
