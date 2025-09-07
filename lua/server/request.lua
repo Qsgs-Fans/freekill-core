@@ -83,7 +83,7 @@ end
 
 -- 将相应请求数据发给player
 -- 不能向thinking中的玩家发送，这种情况下暂存起来等待收到答复后
----@param player ServerPlayerMixin
+---@param player ServerPlayerBase
 function Request:_sendPacket(player)
   local controller = player.serverplayer
 

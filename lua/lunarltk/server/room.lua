@@ -3,7 +3,7 @@
 --- Room是fk游戏逻辑运行的主要场所，同时也提供了许多API函数供编写技能使用。
 ---
 --- 一个房间中只有一个Room实例，保存在RoomInstance全局变量中。
----@class Room : AbstractRoom, RoomMixin, GameEventWrappers, CompatAskFor
+---@class Room : AbstractRoom, ServerRoomBase, GameEventWrappers, CompatAskFor
 ---@field public extra_turn_list table @ 待执行的额外回合表
 ---@field public general_pile string[] @ 武将牌堆，这是可用武将名的数组
 ---@field public skill_costs table<string, any> @ 存放skill.cost_data用
@@ -23,8 +23,8 @@ local Room = AbstractRoom:subclass("Room")
 ---@field public getCurrent fun(self: AbstractRoom): ServerPlayer
 ---@field public logic GameLogic
 
-local RoomMixin = require "server.room_mixin"
-Room:include(RoomMixin)
+local ServerRoomBase = Fk.Base.ServerRoomBase
+Room:include(ServerRoomBase)
 
 local GameEventWrappers = require "lunarltk.server.events"
 local CompatAskFor = require "compat.askfor"
@@ -60,7 +60,7 @@ Room:include(CompatAskFor)
 ---@param _room fk.Room
 function Room:initialize(_room)
   AbstractRoom.initialize(self)
-  self:initRoomMixin(_room)
+  ServerRoomBase.initialize(self, _room)
 
   self.serverplayer_klass = ServerPlayer
   self.logic_klass = GameLogic
@@ -122,7 +122,7 @@ end
 
 function Room:run()
   self:makeGeneralPile()
-  RoomMixin.run(self)
+  ServerRoomBase.run(self)
 end
 
 function Room:__tostring()
@@ -443,11 +443,8 @@ function Room:prepareGeneral(player, general, deputy, broadcast)
 end
 
 function Room:toJsonObject(player)
-  local o = AbstractRoom.toJsonObject(self)
+  local o = ServerRoomBase.toJsonObject(self, player)
   o.round_count = self:getBanner("RoundCount") or 0
-  if player then
-    o.you = player.id
-  end
   return o
 end
 
@@ -485,7 +482,7 @@ function Room:notifyMoveFocus(players, command, timeout)
     end
   end
 
-  RoomMixin.notifyMoveFocus(self, players, command, timeout)
+  ServerRoomBase.notifyMoveFocus(self, players, command, timeout)
 end
 
 -- 为一些牌设置脚注
@@ -3152,7 +3149,7 @@ function Room:gameOver(winner)
     end
   end
 
-  RoomMixin.gameOver(self, winner)
+  ServerRoomBase.gameOver(self, winner)
 end
 
 --- 获取一局游戏的总结，包括每个玩家的回合数、回血、伤害、受伤、击杀

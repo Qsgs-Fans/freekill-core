@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 
----@class Client : AbstractRoom, ClientMixin
+---@class Client : AbstractRoom, ClientBase
 Client = AbstractRoom:subclass('Client')
 
 -- 此为勾式的手写泛型. 本意是extends AbstractRoom<Player>
@@ -17,12 +17,12 @@ Client = AbstractRoom:subclass('Client')
 -- load client classes
 ClientPlayer = require "lunarltk.client.clientplayer"
 
-local ClientMixin = require "client.client_mixin"
-Client:include(ClientMixin)
+local ClientBase = Fk.Base.ClientBase
+Client:include(ClientBase)
 
 function Client:initialize(_client)
   AbstractRoom.initialize(self)
-  self:initClientMixin(_client)
+  ClientBase.initialize(self, _client)
 
   self.clientplayer_klass = ClientPlayer
 
@@ -66,7 +66,7 @@ function Client:initialize(_client)
 end
 
 function Client:enterRoom(_data)
-  ClientMixin.enterRoom(self, _data)
+  ClientBase.enterRoom(self, _data)
 
   local data = _data[3]
   table.insertTableIfNeed(
@@ -79,7 +79,7 @@ end
 
 function Client:startGame()
   self.alive_players = table.simpleClone(self.players)
-  ClientMixin.startGame(self)
+  ClientBase.startGame(self)
 end
 
 ---@param msg LogMessage
@@ -200,18 +200,12 @@ function Client:setCardNote(ids, msg, virtual)
   end
 end
 
-function Client:toJsonObject()
-  local o = AbstractRoom.toJsonObject(self)
-  o.you = Self.id
-  return o
-end
-
 function Client:setCardFootnote(data)
   self:setCardNote(table.unpack(data));
 end
 
 function Client:setPlayerProperty(player, property, value)
-  ClientMixin.setPlayerProperty(self, player, property, value)
+  ClientBase.setPlayerProperty(self, player, property, value)
 
   if property == "dead" then
     if value == true then
@@ -854,7 +848,7 @@ function Client:showVirtualCard(data)
 end
 
 function Client:sendDataToUI(data)
-  ClientMixin.sendDataToUI(self)
+  ClientBase.sendDataToUI(self)
 
   self:notifyUI("UpdateDrawPile", #self.draw_pile)
   self:notifyUI("UpdateRoundNum", data.round_count)

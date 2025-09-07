@@ -6,7 +6,6 @@
 ---@field public extension_names string[] @ Mod名字的数组，为了方便排序
 ---@field public translations table<string, table<string, string>> @ 翻译表
 ---@field public boardgames { [string] : BoardGame } @ name -> game
----@field public Base table
 local ModManager = {}
 
 local BoardGame = require "core.boardgame"
@@ -27,9 +26,10 @@ function ModManager:initModManager()
   self.Base = {
     Player = require "core.player",
     RoomBase = require "core.roombase",
-    ClientMixin = require "client.client_mixin",
-    RoomMixin = require "server.room_mixin",
-    ServerPlayerMixin = require "server.serverplayer_mixin",
+    ClientBase = require "client.clientbase",
+    ClientPlayerBase = require "client.clientplayer_base",
+    ServerRoomBase = require "server.roombase",
+    ServerPlayerBase = require "server.serverplayer_base",
     GameLogic = require "server.gamelogic",
     Engine = require "core.engine",
     AI = require "server.ai",

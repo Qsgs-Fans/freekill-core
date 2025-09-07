@@ -1,13 +1,13 @@
 --- 各种ServerPlayer的第二基类
----@class ServerPlayerMixin
+---@class ServerPlayerBase : Base.Player
 ---@field public serverplayer fk.ServerPlayer @ 控制者对应的C++玩家
 ---@field public _splayer fk.ServerPlayer @ 对应的C++玩家
----@field public room RoomMixin
+---@field public room ServerRoomBase
 ---@field public _timewaste_count integer
 ---@field public ai Base.AI
-local ServerPlayerMixin = {}
+local ServerPlayerBase = {}
 
-function ServerPlayerMixin:initializeServerPlayerMixin(_self)
+function ServerPlayerBase:initialize(_self)
   self.serverplayer = _self -- 控制者
   self._splayer = _self -- 真正在玩的玩家
   self._observers = { _self } -- "旁观"中的玩家，然而不包括真正的旁观者
@@ -18,7 +18,7 @@ end
 
 ---@param command string
 ---@param data any
-function ServerPlayerMixin:doNotify(command, data)
+function ServerPlayerBase:doNotify(command, data)
   if type(data) == "string" then
     local err, dat = pcall(json.decode, data)
     if err ~= false then
@@ -52,7 +52,7 @@ end
 
 --- 发送一句聊天
 ---@param msg string
-function ServerPlayerMixin:chat(msg)
+function ServerPlayerBase:chat(msg)
   self.room:doBroadcastNotify("Chat", {
     type = 2,
     sender = self.id,
@@ -60,7 +60,7 @@ function ServerPlayerMixin:chat(msg)
   })
 end
 
-function ServerPlayerMixin:reconnect()
+function ServerPlayerBase:reconnect()
   local room = self.room
 
   local summary = room:toJsonObject(self)
@@ -70,4 +70,18 @@ function ServerPlayerMixin:reconnect()
   room:broadcastProperty(self, "state")
 end
 
-return ServerPlayerMixin
+function ServerPlayerBase:toJsonObject()
+  local klass = self.class.super --[[@as Base.Player]]
+  local o = klass.toJsonObject(self)
+  local sp = self._splayer
+  o.setup_data = {
+    self.id,
+    sp:getScreenName(),
+    sp:getAvatar(),
+    false,
+    sp:getTotalGameTime(),
+  }
+  return o
+end
+
+return ServerPlayerBase

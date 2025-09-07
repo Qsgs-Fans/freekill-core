@@ -1,16 +1,15 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 
----@class ClientPlayer: Player
----@field public player fk.Player
+---@class ClientPlayer: Player, ClientPlayerBase
 local ClientPlayer = Player:subclass("ClientPlayer")
+ClientPlayer:include(Fk.Base.ClientPlayerBase)
 
 ---@class ClientPlayer
 ---@field public next ClientPlayer
 
 function ClientPlayer:initialize(cp)
   Player.initialize(self)
-  self.id = cp:getId()
-  self.player = cp
+  Fk.Base.ClientPlayerBase.initialize(self, cp)
 end
 
 local function fillMoveData(card_moves, visible_data, self, area, specialName)
@@ -84,19 +83,6 @@ function ClientPlayer:sendDataToUI()
       c:setSkillUseHistory({ id, k, v[4], 4 })
     end
   end
-end
-
-function ClientPlayer:toJsonObject()
-  local o = Player.toJsonObject(self)
-  local sp = self.player
-  o.setup_data = {
-    self.id,
-    sp:getScreenName(),
-    sp:getAvatar(),
-    false,
-    sp:getTotalGameTime(),
-  }
-  return o
 end
 
 return ClientPlayer

@@ -1,4 +1,4 @@
----@class ClientMixin : Base.RoomBase
+---@class ClientBase : Base.RoomBase
 ---@field public client fk.Client
 ---@field public clientplayer_klass any
 ---@field public observing boolean 客户端是否在旁观
@@ -7,9 +7,9 @@
 ---@field public record any
 ---@field public callbacks { [string|integer]: fun(self, data) }
 ---@field public disabled_packs string[] FIXME:拓展包设置依赖这玩意，看看能不能把他赶出通用Mixin
-local ClientMixin = {}
+local ClientBase = {}
 
-function ClientMixin:initClientMixin(_client)
+function ClientBase:initialize(_client)
   self.client = _client
   self.recording = false
   self.callbacks = {}
@@ -45,18 +45,18 @@ end
 
 ---@param func fun(self, data)
 ---@param ui_func boolean?
-function ClientMixin:addCallback(command, func, ui_func)
+function ClientBase:addCallback(command, func, ui_func)
   self.callbacks[command] = ui_func and function(s, data)
     func(s, data)
     self.client:notifyUI(command, data)
   end or func
 end
 
-function ClientMixin:notifyUI(command, data)
+function ClientBase:notifyUI(command, data)
   self.client:notifyUI(command, data)
 end
 
-function ClientMixin:startRecording()
+function ClientBase:startRecording()
   if self.recording then return end
   if self.replaying then return end
   self.record = {
@@ -91,7 +91,7 @@ function ClientMixin:startRecording()
   self.recording = true
 end
 
-function ClientMixin:stopRecording(jsonData)
+function ClientBase:stopRecording(jsonData)
   if not self.recording then return end
   self.record[2] = table.concat({
     self.record[2],
@@ -106,11 +106,11 @@ end
 
 -- callbacks
 
-function ClientMixin:sendSetupPacket(data)
+function ClientBase:sendSetupPacket(data)
   self.client:sendSetupPacket(data)
 end
 
-function ClientMixin:setup(data)
+function ClientBase:setup(data)
   local id, name, avatar, msec = data[1], data[2], data[3], data[4]
   local self_player = self.client:getSelf()
   self_player:setId(id)
@@ -122,11 +122,11 @@ function ClientMixin:setup(data)
   end
 end
 
-function ClientMixin:heartbeat()
+function ClientBase:heartbeat()
   self.client:notifyServer("Heartbeat", "")
 end
 
-function ClientMixin:enterRoom(_data)
+function ClientBase:enterRoom(_data)
   local data = _data[3]
 
   -- FIXME: 需要改Qml
@@ -165,11 +165,11 @@ function ClientMixin:enterRoom(_data)
   self.settings = data
 end
 
-function ClientMixin:quitRoom()
+function ClientBase:quitRoom()
   self:stopRecording("")
 end
 
-function ClientMixin:startGame(data)
+function ClientBase:startGame(data)
   if self.gameStarted then return end
   if not self.replaying then
     self:startRecording()
@@ -188,7 +188,7 @@ function ClientMixin:startGame(data)
   self:notifyUI("StartGame", data)
 end
 
-function ClientMixin:updateGameData(data)
+function ClientBase:updateGameData(data)
   local player, total, win, run = data[1], data[2], data[3], data[4]
   player = self:getPlayerById(player)
   if player then
@@ -196,7 +196,7 @@ function ClientMixin:updateGameData(data)
   end
 end
 
-function ClientMixin:addTotalGameTime(data)
+function ClientBase:addTotalGameTime(data)
   local player, time = data[1], data[2]
   player = self:getPlayerById(player)
   if player then
@@ -207,11 +207,11 @@ function ClientMixin:addTotalGameTime(data)
   end
 end
 
-function ClientMixin:createPlayer(_player)
+function ClientBase:createPlayer(_player)
   return self.clientplayer_klass:new(_player)
 end
 
-function ClientMixin:addPlayer(data)
+function ClientBase:addPlayer(data)
   local id, name, avatar, time = data[1], data[2], data[3], data[5]
   local player = self.client:addPlayer(id, name, avatar)
   player:addTotalGameTime(time or 0)
@@ -225,7 +225,7 @@ function ClientMixin:addPlayer(data)
   end
 end
 
-function ClientMixin:removePlayer(data)
+function ClientBase:removePlayer(data)
   -- jsonData: [ int id ]
   local id = data[1]
   for _, p in ipairs(self.players) do
@@ -241,7 +241,7 @@ function ClientMixin:removePlayer(data)
   end
 end
 
-function ClientMixin:addObserver(data)
+function ClientBase:addObserver(data)
   local id, name, avatar = data[1], data[2], data[3]
   local player = {
     getId = function() return id end,
@@ -253,7 +253,7 @@ function ClientMixin:addObserver(data)
   -- self:notifyUI("ServerMessage", string.format(Fk:translate("$AddObserver"), name))
 end
 
-function ClientMixin:removeObserver(data)
+function ClientBase:removeObserver(data)
   local id = data[1]
   for _, p in ipairs(self.observers) do
     if p.player:getId() == id then
@@ -264,7 +264,7 @@ function ClientMixin:removeObserver(data)
   end
 end
 
-function ClientMixin:chat(data)
+function ClientBase:chat(data)
   -- jsonData: { int type, int sender, string msg }
   if data.type == 1 then
     data.general = ""
@@ -290,7 +290,7 @@ function ClientMixin:chat(data)
   self:notifyUI("Chat", data)
 end
 
-function ClientMixin:arrangeSeats(player_circle)
+function ClientBase:arrangeSeats(player_circle)
   local n = #self.players
   local players = {}
 
@@ -310,7 +310,7 @@ function ClientMixin:arrangeSeats(player_circle)
   self:notifyUI("ArrangeSeats", player_circle)
 end
 
-function ClientMixin:handleSetPlayerMark(data)
+function ClientBase:handleSetPlayerMark(data)
   -- jsonData: [ int id, string mark, int value ]
   local player, mark, value = data[1], data[2], data[3]
   local p = self:getPlayerById(player)
@@ -330,7 +330,7 @@ function ClientMixin:handleSetPlayerMark(data)
   end
 end
 
-function ClientMixin:handleSetBanner(data)
+function ClientBase:handleSetBanner(data)
   -- jsonData: [ int id, string mark, int value ]
   local mark, value = data[1], data[2]
   self:setBanner(mark, value)
@@ -340,7 +340,7 @@ function ClientMixin:handleSetBanner(data)
   end
 end
 
-function ClientMixin:sendDataToUI(data)
+function ClientBase:sendDataToUI(data)
   for k, v in pairs(self.banners) do
     if k[1] == "@" then
       self:notifyUI("SetBanner", { k, v })
@@ -348,11 +348,11 @@ function ClientMixin:sendDataToUI(data)
   end
 end
 
-function ClientMixin:loadRoomSummary(data)
+function ClientBase:loadRoomSummary(data)
   local enter_room_data = { #data.circle, data.timeout, data.settings }
   self:enterRoom(enter_room_data)
   -- enterRoom会换掉client，重新赋值！
-  self = ClientInstance --[[@as ClientMixin]]
+  self = ClientInstance --[[@as ClientBase]]
   self:notifyUI("EnterRoom", enter_room_data)
 
   local players = data.players
@@ -375,7 +375,7 @@ function ClientMixin:loadRoomSummary(data)
   for _, p in ipairs(self.players) do p:sendDataToUI() end
 end
 
-function ClientMixin:reconnect(data)
+function ClientBase:reconnect(data)
   local players = data.players
 
   self:stopRecording("")
@@ -395,7 +395,7 @@ function ClientMixin:reconnect(data)
   self:addTotalGameTime { setup_data[1], setup_data[5] }
 end
 
-function ClientMixin:observe(data)
+function ClientBase:observe(data)
   local players = data.players
 
   if not self.replaying then
@@ -410,11 +410,11 @@ function ClientMixin:observe(data)
   self:loadRoomSummary(data)
 end
 
-function ClientMixin:setPlayerProperty(player, property, value)
+function ClientBase:setPlayerProperty(player, property, value)
   player[property] = value
 end
 
-function ClientMixin:propertyUpdate(data)
+function ClientBase:propertyUpdate(data)
   -- jsonData: [ int id, string property_name, value ]
   local id, name, value = data[1], data[2], data[3]
   local p = self:getPlayerById(id)
@@ -423,7 +423,7 @@ function ClientMixin:propertyUpdate(data)
 end
 
 -- TODO 想想办法啊
-function ClientMixin:parseMsg(msg, nocolor)
+function ClientBase:parseMsg(msg, nocolor)
   local data = msg
   local function parseArg(arg)
     arg = arg or ""
@@ -443,7 +443,7 @@ function ClientMixin:parseMsg(msg, nocolor)
   return log
 end
 
-function ClientMixin:appendLog(msg)
+function ClientBase:appendLog(msg)
   local text = self:parseMsg(msg, nil)
   self:notifyUI("GameLog", text)
   if msg.toast then
@@ -451,7 +451,7 @@ function ClientMixin:appendLog(msg)
   end
 end
 
-function ClientMixin:gameOver(jsonData)
+function ClientBase:gameOver(jsonData)
   if self.recording then
     self:stopRecording(jsonData)
     if not self.observing and not self.replaying then
@@ -473,5 +473,11 @@ function ClientMixin:gameOver(jsonData)
   self:notifyUI("GameOver", jsonData)
 end
 
+function ClientBase:toJsonObject()
+  local klass = self.class.super --[[@as Base.RoomBase]]
+  local o = klass.toJsonObject(self)
+  o.you = Self.id
+  return o
+end
 
-return ClientMixin
+return ClientBase

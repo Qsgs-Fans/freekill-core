@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 
----@class ServerPlayer : Player, ServerPlayerMixin
+---@class ServerPlayer : Player, ServerPlayerBase
 ---@field public mini_game_data any
 ---@field public phases Phase[]
 ---@field public phase_state table[]
@@ -15,15 +15,13 @@ local ServerPlayer = Player:subclass("ServerPlayer")
 ---@field public room Room
 ---@field public next ServerPlayer
 
-local ServerPlayerMixin = require "server.serverplayer_mixin"
-ServerPlayer:include(ServerPlayerMixin)
+local ServerPlayerBase = Fk.Base.ServerPlayerBase
+ServerPlayer:include(ServerPlayerBase)
 
 ---@param _self fk.ServerPlayer
 function ServerPlayer:initialize(_self)
   Player.initialize(self)
-  self:initializeServerPlayerMixin(_self)
-
-  self.room = nil
+  ServerPlayerBase.initialize(self, _self)
 
   self.phases = {}
   self.phase_state = {}
@@ -35,21 +33,8 @@ function ServerPlayer:initialize(_self)
   self.ai = SmartAI:new(self)
 end
 
-function ServerPlayer:toJsonObject()
-  local o = Player.toJsonObject(self)
-  local sp = self._splayer
-  o.setup_data = {
-    self.id,
-    sp:getScreenName(),
-    sp:getAvatar(),
-    false,
-    sp:getTotalGameTime(),
-  }
-  return o
-end
-
 function ServerPlayer:reconnect()
-  ServerPlayerMixin.reconnect(self)
+  ServerPlayerBase.reconnect(self)
 
   -- send fake skills
   for _, s in ipairs(self._manually_fake_skills) do

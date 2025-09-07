@@ -1,5 +1,5 @@
 --- 各种Room的第二基类 提供最基本的与Cpp交互 和scheduler协作运行的设施与方法
----@class RoomMixin
+---@class ServerRoomBase : Base.RoomBase
 ---@field public id integer @ 房间的id
 ---@field public room fk.Room @ C++层面的Room类实例，别管他就是了，用不着
 ---@field public main_co any @ 本房间的主协程
@@ -12,10 +12,10 @@
 ---@field public last_request Request @ 上一次完成的request
 ---@field public _test_disable_delay boolean? 测试专用 会禁用delay和烧条
 ---@field public callbacks { [string|integer]: fun(self, sender: integer, data) }
-local RoomMixin = {}
+local ServerRoomBase = {}
 
 ---@param _room fk.Room
-function RoomMixin:initRoomMixin(_room)
+function ServerRoomBase:initialize(_room)
   self.room = _room
   self.id = _room:getId()
 
@@ -41,13 +41,13 @@ function RoomMixin:initRoomMixin(_room)
 end
 
 ---@param func fun(self, sender: integer, data)
-function RoomMixin:addCallback(command, func)
+function ServerRoomBase:addCallback(command, func)
   self.callbacks[command] = func
 end
 
 -- 供调度器使用的函数。能让房间开始运行/从挂起状态恢复。
 ---@param reason string?
-function RoomMixin:resume(reason)
+function ServerRoomBase:resume(reason)
   -- 如果还没运行的话就先创建自己的主协程
   if not self.main_co then
     self.main_co = coroutine.create(function()
@@ -86,7 +86,7 @@ function RoomMixin:resume(reason)
   return true
 end
 
-function RoomMixin:checkNoHuman(chkOnly)
+function ServerRoomBase:checkNoHuman(chkOnly)
   if #self.players == 0 then return end
 
   for _, p in ipairs(self.players) do
@@ -107,12 +107,11 @@ end
 ---
 --- 当这个函数返回之后，整个Room线程也宣告结束。
 ---@return nil
-function RoomMixin:run()
+function ServerRoomBase:run()
   self.start_time = os.time()
   for _, p in fk.qlist(self.room:getPlayers()) do
     local player = self.serverplayer_klass:new(p)
     player.room = self
-    print(self, player)
     table.insert(self.players, player)
   end
 
@@ -124,7 +123,7 @@ function RoomMixin:run()
 end
 
 --- 按输入的角色表重新改变座位。若无输入，仅更新角色座位UI
-function RoomMixin:arrangeSeats(players)
+function ServerRoomBase:arrangeSeats(players)
   assert(players == nil or #players == #self.players)
   players = players or self.players
   self.players = players
@@ -142,8 +141,8 @@ end
 --- 向多名玩家广播一条消息。
 ---@param command string @ 发出这条消息的消息类型
 ---@param jsonData any @ 消息的数据，一般是JSON字符串，也可以是普通字符串，取决于client怎么处理了
----@param players? ServerPlayerMixin[] @ 要告知的玩家列表，默认为所有人
-function RoomMixin:doBroadcastNotify(command, jsonData, players)
+---@param players? ServerPlayerBase[] @ 要告知的玩家列表，默认为所有人
+function ServerRoomBase:doBroadcastNotify(command, jsonData, players)
   players = players or self.players
   for _, p in ipairs(players) do
     p:doNotify(command, jsonData)
@@ -153,7 +152,7 @@ end
 --- 向所有角色广播一名角色的某个property，让大家都知道
 ---@param player Base.Player @ 要被广而告之的那名角色
 ---@param property string @ 这名角色的某种属性，像是"hp"之类的，其实就是Player类的属性名
-function RoomMixin:broadcastProperty(player, property)
+function ServerRoomBase:broadcastProperty(player, property)
   for _, p in ipairs(self.players) do
     self:notifyProperty(p, player, property)
   end
@@ -162,16 +161,16 @@ end
 --- 设置角色的某个属性，并广播给所有人
 ---@param player Base.Player
 ---@param property string @ 属性名称
-function RoomMixin:setPlayerProperty(player, property, value)
+function ServerRoomBase:setPlayerProperty(player, property, value)
   player[property] = value
   self:broadcastProperty(player, property)
 end
 
 --- 将player的属性property告诉p。
----@param p ServerPlayerMixin @ 要被告知相应属性的那名玩家
+---@param p ServerPlayerBase @ 要被告知相应属性的那名玩家
 ---@param player Base.Player @ 拥有那个属性的玩家
 ---@param property string @ 属性名称
-function RoomMixin:notifyProperty(p, player, property)
+function ServerRoomBase:notifyProperty(p, player, property)
   p:doNotify("PropertyUpdate", {
     player.id,
     property,
@@ -185,7 +184,7 @@ end
 ---@param players Base.Player | Base.Player[] @ 要获得焦点的一名或者多名角色
 ---@param command string @ 烧条的提示文字
 ---@param timeout integer? @ focus的烧条时长
-function RoomMixin:notifyMoveFocus(players, command, timeout)
+function ServerRoomBase:notifyMoveFocus(players, command, timeout)
   if (players.class) then
     players = {players}
   end
@@ -205,15 +204,15 @@ end
 
 --- 向战报中发送一条log。
 ---@param log LogMessage @ Log的实际内容
-function RoomMixin:sendLog(log)
+function ServerRoomBase:sendLog(log)
   self:doBroadcastNotify("GameLog", log)
 end
 
 --- 播放某种动画效果给players看。
 ---@param type string @ 动画名字
 ---@param data any @ 这个动画附加的额外信息，在这个函数将会被转成json字符串
----@param players? ServerPlayerMixin[] @ 要观看动画的玩家们，默认为全员
-function RoomMixin:doAnimate(type, data, players)
+---@param players? ServerPlayerBase[] @ 要观看动画的玩家们，默认为全员
+function ServerRoomBase:doAnimate(type, data, players)
   players = players or self.players
   data.type = type
   self:doBroadcastNotify("Animate", data, players)
@@ -221,7 +220,7 @@ end
 
 --- 延迟一段时间。
 ---@param ms integer @ 要延迟的毫秒数
-function RoomMixin:delay(ms)
+function ServerRoomBase:delay(ms)
   self.room:delay(math.ceil(ms))
   if self._test_disable_delay then return end
   coroutine.yield("__handleRequest", ms)
@@ -229,7 +228,7 @@ end
 
 --- 将触发技或状态技添加到房间
 ---@param skill Skill|string
-function RoomMixin:addSkill(skill)
+function ServerRoomBase:addSkill(skill)
   if type(skill) == "string" then
     skill = Fk.skills[skill]
   end
@@ -251,7 +250,7 @@ end
 --- 检查房间是否已经被加入了触发技或状态技
 ---@param skill Skill|string
 ---@return boolean
-function RoomMixin:hasSkill(skill)
+function ServerRoomBase:hasSkill(skill)
   if type(skill) == "string" then
     skill = Fk.skills[skill]
   end
@@ -270,7 +269,7 @@ function RoomMixin:hasSkill(skill)
   return false
 end
 
-function RoomMixin:shouldUpdateWinRate()
+function ServerRoomBase:shouldUpdateWinRate()
   if self.settings.enableFreeAssign then
     return false
   end
@@ -288,7 +287,7 @@ end
 ---@param winner string @ 获胜的身份，空字符串表示平局
 ---@param role string @ 角色的身份
 ---@return integer @ 胜负结果
-function RoomMixin:victoryResult(winner, role)
+function ServerRoomBase:victoryResult(winner, role)
   local ret
   if winner == "" then
     ret = 3
@@ -300,7 +299,7 @@ function RoomMixin:victoryResult(winner, role)
   return ret
 end
 
-function RoomMixin:gameOver(winner)
+function ServerRoomBase:gameOver(winner)
   if not self.game_started then return end
   self.room:destroyRequestTimer()
 
@@ -344,14 +343,14 @@ function RoomMixin:gameOver(winner)
   end
 end
 
-function RoomMixin:playerReconnect(id)
+function ServerRoomBase:playerReconnect(id)
   local p = self:getPlayerById(id)
   if p then
     p:reconnect()
   end
 end
 
-function RoomMixin:tellRoomToObserver(player)
+function ServerRoomBase:tellRoomToObserver(player)
   local observee = self.players[1]
   local start_time = os.getms()
   local summary = self:toJsonObject(observee)
@@ -363,7 +362,7 @@ function RoomMixin:tellRoomToObserver(player)
   table.insert(self.observers, {observee.id, player, player:getId()})
 end
 
-function RoomMixin:addObserver(id)
+function ServerRoomBase:addObserver(id)
   local all_observers = self.room:getObservers()
   for _, p in fk.qlist(all_observers) do
     if p:getId() == id then
@@ -378,7 +377,7 @@ function RoomMixin:addObserver(id)
   end
 end
 
-function RoomMixin:removeObserver(id)
+function ServerRoomBase:removeObserver(id)
   for _, t in ipairs(self.observers) do
     local pid = t[3]
     if pid == id then
@@ -389,7 +388,7 @@ function RoomMixin:removeObserver(id)
   end
 end
 
-function RoomMixin:handleSurrender(id, data)
+function ServerRoomBase:handleSurrender(id, data)
 -- request_handlers["surrender"] = function(room, id, reqlist)
   local player = self:getPlayerById(id)
   if not player then return end
@@ -412,19 +411,19 @@ end
 --- 当想在服务端搞点全局变量时，不要自己设置全局变量或者上值，而应该使用room的tag。
 ---@param tag_name string @ tag名字
 ---@param value any @ 值
-function RoomMixin:setTag(tag_name, value)
+function ServerRoomBase:setTag(tag_name, value)
   self.tag[tag_name] = value
 end
 
 --- 获得某个tag的值。
 ---@param tag_name string @ tag名字
-function RoomMixin:getTag(tag_name)
+function ServerRoomBase:getTag(tag_name)
   return self.tag[tag_name]
 end
 
 --- 删除某个tag。
 ---@param tag_name string @ tag名字
-function RoomMixin:removeTag(tag_name)
+function ServerRoomBase:removeTag(tag_name)
   self.tag[tag_name] = nil
 end
 
@@ -450,7 +449,7 @@ end
 ---@param player Base.Player @ 更新标记的玩家
 ---@param mark string @ 标记的名称
 ---@param value any @ 设置的值，可以是数字、字符串、表、键值表等
-function RoomMixin:setPlayerMark(player, mark, value)
+function ServerRoomBase:setPlayerMark(player, mark, value)
   player:setMark(mark, value)
   self:doBroadcastNotify("SetPlayerMark", {
     player.id,
@@ -465,7 +464,7 @@ end
 ---@param player Base.Player @ 加标记的玩家
 ---@param mark string @ 标记名称
 ---@param count? integer @ 增加的数量，默认为1
-function RoomMixin:addPlayerMark(player, mark, count)
+function ServerRoomBase:addPlayerMark(player, mark, count)
   count = count or 1
   local num = player:getMark(mark)
   num = num or 0
@@ -478,7 +477,7 @@ end
 ---@param player Base.Player @ 减标记的玩家
 ---@param mark string @ 标记名称
 ---@param count? integer  @ 减少的数量，默认为1
-function RoomMixin:removePlayerMark(player, mark, count)
+function ServerRoomBase:removePlayerMark(player, mark, count)
   count = count or 1
   local num = player:getMark(mark)
   num = num or 0
@@ -490,9 +489,18 @@ end
 --- 房间版mark
 ---@param name string @ banner的名称
 ---@param value any
-function RoomMixin:setBanner(name, value)
+function ServerRoomBase:setBanner(name, value)
   Fk.Base.RoomBase.setBanner(self, name, value)
   self:doBroadcastNotify("SetBanner", { name, value })
 end
 
-return RoomMixin
+function ServerRoomBase:toJsonObject(player)
+  local klass = self.class.super --[[@as Base.RoomBase]]
+  local o = klass.toJsonObject(self)
+  if player then
+    o.you = player.id
+  end
+  return o
+end
+
+return ServerRoomBase
