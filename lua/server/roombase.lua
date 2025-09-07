@@ -353,7 +353,7 @@ end
 function ServerRoomBase:tellRoomToObserver(player)
   local observee = self.players[1]
   local start_time = os.getms()
-  local summary = self:toJsonObject(observee)
+  local summary = self:serialize(observee)
   player:doNotify("Observe", cbor.encode(summary))
 
   fk.qInfo(string.format("[Observe] %d, %s, in %.3fms",
@@ -494,9 +494,9 @@ function ServerRoomBase:setBanner(name, value)
   self:doBroadcastNotify("SetBanner", { name, value })
 end
 
-function ServerRoomBase:toJsonObject(player)
+function ServerRoomBase:serialize(player)
   local klass = self.class.super --[[@as Base.RoomBase]]
-  local o = klass.toJsonObject(self)
+  local o = klass.serialize(self)
   if player then
     o.you = player.id
   end

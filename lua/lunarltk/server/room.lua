@@ -442,8 +442,8 @@ function Room:prepareGeneral(player, general, deputy, broadcast)
   end
 end
 
-function Room:toJsonObject(player)
-  local o = ServerRoomBase.toJsonObject(self, player)
+function Room:serialize(player)
+  local o = ServerRoomBase.serialize(self, player)
   o.round_count = self:getBanner("RoundCount") or 0
   return o
 end

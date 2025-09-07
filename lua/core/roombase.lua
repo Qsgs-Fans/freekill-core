@@ -83,10 +83,10 @@ end
 
 -- 底层逻辑这一块之序列化和反序列化
 
-function RoomBase:toJsonObject()
+function RoomBase:serialize()
   local players = {}
   for _, p in ipairs(self.players) do
-    players[p.id] = p:toJsonObject()
+    players[p.id] = p:serialize()
   end
 
   return {
@@ -101,7 +101,7 @@ function RoomBase:toJsonObject()
   }
 end
 
-function RoomBase:loadJsonObject(o)
+function RoomBase:deserialize(o)
   self.current = self:getPlayerById(o.current)
   self.capacity = o.capacity or #self.players
   self.timeout = o.timeout
@@ -109,7 +109,7 @@ function RoomBase:loadJsonObject(o)
 
   -- 需要上层（目前是Client）自己根据circle添加玩家
   for k, v in pairs(o.players) do
-    self:getPlayerById(k):loadJsonObject(v)
+    self:getPlayerById(k):deserialize(v)
   end
 
   self.banners = cbor.decode(o.banners)

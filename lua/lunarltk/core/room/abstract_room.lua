@@ -68,18 +68,18 @@ function AbstractRoom:getCurrent()
 end
 
 
-function AbstractRoom:toJsonObject()
-  local o = RoomBase.toJsonObject(self)
-  local card_manager = CardManager.toJsonObject(self)
+function AbstractRoom:serialize()
+  local o = RoomBase.serialize(self)
+  local card_manager = CardManager.serialize(self)
   o.card_manager = card_manager
 
   return o
 end
 
-function AbstractRoom:loadJsonObject(o)
-  CardManager.loadJsonObject(self, o.card_manager)
+function AbstractRoom:deserialize(o)
+  CardManager.deserialize(self, o.card_manager)
 
-  RoomBase.loadJsonObject(self, o)
+  RoomBase.deserialize(self, o)
 
   self.alive_players = table.filter(self.players, function(p)
     return p:isAlive()

@@ -111,7 +111,7 @@ end
 
 -- 底层逻辑之序列化
 
-function Player:toJsonObject()
+function Player:serialize()
   local ptable = {}
   for _, k in ipairs(self.property_keys) do
     ptable[k] = self[k]
@@ -124,7 +124,7 @@ function Player:toJsonObject()
   }
 end
 
-function Player:loadJsonObject(o)
+function Player:deserialize(o)
   for k, v in pairs(o.properties) do self[k] = v end
 
   self.mark = cbor.decode(o.mark)

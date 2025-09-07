@@ -1722,8 +1722,8 @@ function Player:canAttachSkill(skill, relate_to_place)
   return true
 end
 
-function Player:toJsonObject()
-  local o = basePlayer.toJsonObject(self)
+function Player:serialize()
+  local o = basePlayer.serialize(self)
 
   o.card_history = self.cardUsedHistory
   o.skill_history = self.skillUsedHistory
@@ -1736,8 +1736,8 @@ function Player:toJsonObject()
   return o
 end
 
-function Player:loadJsonObject(o)
-  basePlayer.loadJsonObject(self, o)
+function Player:deserialize(o)
+  basePlayer.deserialize(self, o)
 
   self.cardUsedHistory = o.card_history
   self.skillUsedHistory = o.skill_history

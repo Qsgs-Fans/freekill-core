@@ -367,7 +367,7 @@ function ClientBase:loadRoomSummary(data)
 
   self:startGame()
 
-  self:loadJsonObject(data)
+  self:deserialize(data)
 
   -- 此处已同步全部数据 剩下就是更新UI
   -- 交给各种Client复写了
@@ -466,16 +466,16 @@ function ClientBase:gameOver(jsonData)
       end
       self.client:saveGameData(self.settings.gameMode, Self.general or "",
         Self.deputyGeneral or "", Self.role or "", result, self.record[2],
-        cbor.encode(self:toJsonObject()), cbor.encode(self.record))
+        cbor.encode(self:serialize()), cbor.encode(self.record))
     end
   end
   Self.buddy_list = table.map(self.players, Util.IdMapper)
   self:notifyUI("GameOver", jsonData)
 end
 
-function ClientBase:toJsonObject()
+function ClientBase:serialize()
   local klass = self.class.super --[[@as Base.RoomBase]]
-  local o = klass.toJsonObject(self)
+  local o = klass.serialize(self)
   o.you = Self.id
   return o
 end

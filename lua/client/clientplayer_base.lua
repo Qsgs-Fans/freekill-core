@@ -7,9 +7,9 @@ function ClientPlayerBase:initialize(cp)
   self.id = cp:getId()
 end
 
-function ClientPlayerBase:toJsonObject()
+function ClientPlayerBase:serialize()
   local klass = self.class.super --[[@as Base.Player]]
-  local o = klass.toJsonObject(self)
+  local o = klass.serialize(self)
   local sp = self.player
   o.setup_data = {
     self.id,

@@ -329,7 +329,7 @@ function CardManager:getCardsFromPileByRule(pattern, num, fromPile)
   return cardPack
 end
 
-function CardManager:toJsonObject()
+function CardManager:serialize()
   local printed_cards = {}
   for i = -2, -math.huge, -1 do
     local c = self.printed_cards[i]
@@ -354,7 +354,7 @@ function CardManager:toJsonObject()
   }
 end
 
-function CardManager:loadJsonObject(o)
+function CardManager:deserialize(o)
   self.draw_pile = o.draw_pile
   self.discard_pile = o.discard_pile
   self.processing_area = o.processing_area

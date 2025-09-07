@@ -63,16 +63,16 @@ end
 function ServerPlayerBase:reconnect()
   local room = self.room
 
-  local summary = room:toJsonObject(self)
+  local summary = room:serialize(self)
   self:doNotify("Reconnect", summary)
   self:doNotify("RoomOwner", { room.room:getOwner():getId() })
 
   room:broadcastProperty(self, "state")
 end
 
-function ServerPlayerBase:toJsonObject()
+function ServerPlayerBase:serialize()
   local klass = self.class.super --[[@as Base.Player]]
-  local o = klass.toJsonObject(self)
+  local o = klass.serialize(self)
   local sp = self._splayer
   o.setup_data = {
     self.id,
