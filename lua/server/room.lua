@@ -3980,21 +3980,12 @@ end
 ---@deprecated @ 用actExtraTurn代替
 Room.ActExtraTurn = Room.actExtraTurn
 
-local function isSame(table1, table2)
-  if #table1 ~= #table2 then return false end
-  local tabledup = table.simpleClone(table2)
-  for _, j in ipairs(table1) do
-    if not table.removeOne(tabledup, j) then return false end
-  end
-  return #tabledup == 0
-end
-
 --- 获得一名角色的客户端手牌顺序
 --- 本bug由玄蝶提供
 ---@param player ServerPlayer @ 角色
 ---@return integer[] @ 卡牌ID，有元素检测就是了……
 function Room:getPlayerClientCards(player)
-  local req = Request:new({player}, "GetPlayerHandcards")
+  local req = Request:new({player}, "GetPlayerHandcards") --FIXME: 需要一个假request
   local cards = player.player_cards[Player.Hand]
   req:setDefaultReply(player, cards)
   local result = req:getResult(player)
@@ -4011,8 +4002,18 @@ function Room:syncPlayerClientCards(player)
   local result = self:getPlayerClientCards(player)
   -- printf("服务端此时组合：%s", table.concat(table.map(cards, function(e) return tostring(Fk:getCardById(e)) end), ","))
   -- printf("客户端返回组合：%s", table.concat(table.map(result, function(e) return tostring(Fk:getCardById(e)) end), ","))
-  assert(isSame(cards, result), "客户端和服务端信息不符！")
+  -- assert(table.isEqual(cards, result), "客户端和服务端信息不符！")
+  if not table.isEqual(cards, result) then
+    self:sendLog{
+      type = "你的客户端手牌信息（%arg）<br>与服务端手牌信息（%arg2）不符！<br>请将本战报截图、保存本局录像并联系开发者！",
+      arg = json.encode(result),
+      arg2 = json.encode(cards),
+      toast = true,
+    }
+    result = cards
+  end
   player.player_cards[Player.Hand] = result
+  self:doBroadcastNotify("SetPlayerHandCards", { player.id, result })
   return result
 end
 

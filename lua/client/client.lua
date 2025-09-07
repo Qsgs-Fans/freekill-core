@@ -1337,6 +1337,12 @@ fk.client_callback["ChangeCardArea"] = function(self, data)
   self:changeCardArea(cards, area, areaCards)
 end
 
+fk.client_callback["SetPlayerHandCards"] = function(self, data)
+  local pid, ids = table.unpack(data)
+  local player = ClientInstance:getPlayerById(pid)
+  player.player_cards[Player.Hand] = ids
+end
+
 fk.client_callback["SetPlayerPile"] = function(self, data)
   local pid, pile, ids = table.unpack(data)
   local player = ClientInstance:getPlayerById(pid)
