@@ -121,6 +121,11 @@ W.PageBase {
     id: toast
   }
 
+  Loader {
+    id: splashLoader
+    anchors.fill: parent
+  }
+
   Connections {
     target: Mediator
     function onCommandGot(sender, command, data) {
@@ -265,7 +270,6 @@ W.PageBase {
     current.sendDanmu('<font color="grey"><b>[Server] </b></font>' + data);
   }
 
-
   Component.onCompleted: {
     Config.loadConf();
     confLoaded();
@@ -295,5 +299,18 @@ W.PageBase {
     addCallback(Command.ServerMessage, makeServerMessage);
 
     mainStack.push(Qt.createComponent("Fk.Pages.Common", "Init"));
+    if (Config.firstRun) {
+      Config.firstRun = false;
+      mainStack.push(Qt.createComponent("Tutorial.qml").createObject());
+    }
+    if (!Cpp.debug) {
+      splashLoader.source = "Splash.qml";
+      splashLoader.item.disappeared.connect(() => {
+        splashLoader.source = "";
+      });
+    }
+
+    const tips = Backend.loadTips();
+    tipList = tips.trim().split("\n");
   }
 }

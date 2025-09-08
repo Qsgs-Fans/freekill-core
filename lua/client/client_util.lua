@@ -499,6 +499,7 @@ function ResetClientLua()
   local _data = self.enter_room_data
 
   self = client_klass:new(cpp_client) -- clear old client data
+  ClientInstance = self
   self.players = table.map(cpp_players, function(p)
     local cp = self:createPlayer(p[1])
     cp.ready = p[2]
