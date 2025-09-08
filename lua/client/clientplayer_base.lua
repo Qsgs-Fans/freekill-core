@@ -1,10 +1,15 @@
 ---@class ClientPlayerBase: Base.Player
 ---@field public player fk.Player
+---@field public ready boolean
+---@field public owner boolean
 local ClientPlayerBase = {}
 
 function ClientPlayerBase:initialize(cp)
   self.player = cp
   self.id = cp:getId()
+
+  self.ready = false
+  self.owner = false
 end
 
 function ClientPlayerBase:serialize()
@@ -18,6 +23,8 @@ function ClientPlayerBase:serialize()
     false,
     sp:getTotalGameTime(),
   }
+  o.ready = self.ready
+  o.owner = self.owner
   return o
 end
 

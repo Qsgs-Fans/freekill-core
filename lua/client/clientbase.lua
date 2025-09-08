@@ -27,6 +27,9 @@ function ClientBase:initialize(_client)
   self:addCallback("RemoveObserver", self.removeObserver)
   self:addCallback("UpdateGameData", self.updateGameData, true)
   self:addCallback("AddTotalGameTime", self.addTotalGameTime)
+  self:addCallback("NetstateChanged", self.changeNetState, true)
+  self:addCallback("ReadyChanged", self.changeReady, true)
+  self:addCallback("RoomOwner", self.changeRoomOwner, true)
   self:addCallback("Chat", self.chat)
 
   self:addCallback("StartGame", self.startGame)
@@ -160,8 +163,8 @@ function ClientBase:enterRoom(_data)
   if self.recording then
     self.record[3] = self.enter_room_data
   end
-  self.timeout = _data[2]
   self.capacity = _data[1]
+  self.timeout = _data[2]
   self.settings = data
 end
 
@@ -207,15 +210,52 @@ function ClientBase:addTotalGameTime(data)
   end
 end
 
+function ClientBase:changeNetState(data)
+  local pid, state = data[1], data[2]
+  local p = self:getPlayerById(pid) --[[@as ClientPlayer]]
+  if not p then return end
+
+  -- 被蠢到了，怎么没给Lua开放setStateString
+  if state == "online" then
+    p.player:setState(fk.Player_Online)
+  elseif state == "trust" then
+    p.player:setState(fk.Player_Trust)
+  elseif state == "run" then
+    p.player:setState(fk.Player_Run)
+  elseif state == "robot" then
+    p.player:setState(fk.Player_Robot)
+  elseif state == "offline" then
+    p.player:setState(fk.Player_Offline)
+  else
+    p.player:setState(fk.Player_Invalid)
+  end
+end
+
+function ClientBase:changeReady(data)
+  local pid, ready = data[1], data[2]
+  local p = self:getPlayerById(pid) --[[@as ClientPlayer]]
+  if not p then return end
+
+  p.ready = ready
+end
+
+function ClientBase:changeRoomOwner(data)
+  local pid = data[1]
+  for _, p in ipairs(self.players) do
+    p.owner = p.id == pid
+  end
+end
+
 function ClientBase:createPlayer(_player)
   return self.clientplayer_klass:new(_player)
 end
 
 function ClientBase:addPlayer(data)
-  local id, name, avatar, time = data[1], data[2], data[3], data[5]
+  local id, name, avatar, ready, time = data[1], data[2], data[3], data[4], data[5]
   local player = self.client:addPlayer(id, name, avatar)
   player:addTotalGameTime(time or 0)
   local p = self:createPlayer(player)
+  p.ready = ready
   table.insert(self.players, p)
   self:notifyUI("AddPlayer", data)
 

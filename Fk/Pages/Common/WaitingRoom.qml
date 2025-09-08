@@ -620,25 +620,29 @@ W.PageBase {
     isFull = false;
   }
 
-  function loadPlayerData(sender, datalist: list<var>) {
-    datalist.forEach(d => {
-      const model = getPhotoModel(d.id);
-      d.ready = model.ready;
-      d.isOwner = model.isOwner;
-    });
+  function loadPlayerData(sender) {
+    const datalist = Lua.evaluate(`table.map(ClientInstance.players, function(p)
+      local cp = p.player
+      return {
+        id = p.id,
+        name = cp:getScreenName(),
+        avatar = cp:getAvatar(),
+        ready = p.ready,
+        isOwner = p.owner,
+        gameTime = cp:getTotalGameTime(),
+      }
+    end)`);
+
     resetPhotos();
     for (const d of datalist) {
-      if (Lua.evaluate(`ClientInstance:getPlayerById(${d.id}) == nil`)) {
-        continue;
-      }
       if (d.id === Self.id) {
         roomScene.isOwner = d.isOwner;
       } else {
-        Lua.call("ResetAddPlayer",
-          [d.id, d.name, d.avatar, d.ready, d.gameData[3]]);
+        addPlayer(null, [d.id, d.name, d.avatar, d.ready, d.gameTime]);
       }
-      Lua.call("SetPlayerGameData", d.id, d.gameData);
-      getPhotoModel(d.id).isOwner = d.isOwner;
+      const model = getPhotoModel(d.id);
+      model.ready = d.ready;
+      model.isOwner = d.isOwner;
     }
   }
 

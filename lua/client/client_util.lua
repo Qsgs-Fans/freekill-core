@@ -486,22 +486,35 @@ function GetPlayerJudges(pid)
   return p.player_cards[Player.Judge]
 end
 
+-- 重新创建Lua client，但是继承ClientBase之类的数据，将和游戏状态有关的数据抹杀
+-- 继承的数据只要足以支持等待界面的房间就行
 function ResetClientLua()
   local self = ClientInstance
-  local _data = self.enter_room_data;
-  local data = self.settings
-  Self = ClientPlayer:new(self.client:getSelf())
-  self:initialize(self.client) -- clear old client data
-  self.players = { Self }
-  self.alive_players = { Self }
-  self.discard_pile = {}
+  local client_klass = self.class --[[@as Client]]
+  local cpp_client = self.client
+  local cpp_players = table.map(self.players, function(p)
+    return { p.player, p.ready, p.owner }
+  end)
+
+  local _data = self.enter_room_data
+
+  self = client_klass:new(cpp_client) -- clear old client data
+  self.players = table.map(cpp_players, function(p)
+    local cp = self:createPlayer(p[1])
+    cp.ready = p[2]
+    cp.owner = p[3]
+    return cp
+  end)
 
   self.enter_room_data = _data;
-  self.settings = data
+  local data = cbor.decode(_data)
+  self.capacity = data[1]
+  self.timeout = data[2]
+  self.settings = data[3]
 
-  self.disabled_packs = data.disabledPack
-  self.disabled_generals = data.disabledGenerals
-  -- ClientInstance:notifyUI("EnterRoom", jsonData)
+  -- FIXME 怎么混入三国杀要素了，非常坏
+  self.disabled_packs = data[3].disabledPack
+  self.disabled_generals = data[3].disabledGenerals
 end
 
 function ResetAddPlayer(j)

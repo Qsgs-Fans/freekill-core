@@ -1260,32 +1260,10 @@ W.PageBase {
   }
 
   function resetToInit() {
-    const datalist = [];
-    for (let i = 0; i < photoModel.count; i++) {
-      const item = photoModel.get(i);
-      let gameData;
-      try {
-        gameData = Lua.call("GetPlayerGameData", item.id);
-      } catch (e) {
-        console.log(e);
-        gameData = [0, 0, 0, 0];
-      }
-      if (item.id > 0) {
-        datalist.push({
-          id: item.id,
-          avatar: item.avatar,
-          name: item.screenName,
-          isOwner: item.isOwner,
-          ready: item.ready,
-          gameData: gameData,
-        });
-      }
-    }
     App.quitPage();
     Lua.call("ResetClientLua");
 
-    Mediator.notify(this, Command.BackToRoom, datalist);
-    // mainStack.currentItem.loadPlayerData(datalist);
+    Mediator.notify(this, Command.BackToRoom);
   }
 
   function setPrompt(text, iscur) {
