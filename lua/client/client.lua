@@ -682,11 +682,24 @@ local function sendMoveCardLog(move, visible_data)
       }, visible_data)
     end
   elseif move.toArea == Card.PlayerEquip then
-    client:appendLog({
-      type = "$InstallEquip",
-      from = move.to,
-      card = move.ids,
-    }, visible_data)
+    local vcard
+    if move.to and client:getPlayerById(move.to) then
+      vcard = client:getPlayerById(move.to):getVirtualEquip(move.ids[1])
+    end
+    if vcard then
+      client:appendLog({
+        type = "$InstallVirtualEquip",
+        from = move.to,
+        card = move.ids,
+        arg = vcard:toLogString(),
+      }, visible_data)
+    else
+      client:appendLog({
+        type = "$InstallEquip",
+        from = move.to,
+        card = move.ids,
+      }, visible_data)
+    end
   elseif move.toArea == Card.PlayerJudge then
     if move.from ~= move.to and move.fromArea == Card.PlayerJudge then
       client:appendLog({
@@ -712,6 +725,7 @@ local function sendMoveCardLog(move, visible_data)
       card = move.ids,
     }, visible_data)
   elseif move.fromArea == Card.PlayerEquip then
+    --- TODO: 此时VirtualEquip信息已移除，没法获取虚拟装备
     client:appendLog({
       type = "$UninstallEquip",
       from = move.from,

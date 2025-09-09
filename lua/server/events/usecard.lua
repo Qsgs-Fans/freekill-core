@@ -647,6 +647,16 @@ function UseCardEventWrappers:doCardUseEffect(useCardData)
         existingEquipId = target:getEquipment(useCardData.card.sub_type)
       end
 
+      local move = { ---@type CardsMoveInfo
+        ids = realCardIds,
+        to = target,
+        toArea = Card.PlayerEquip,
+        moveReason = fk.ReasonUse,
+      }
+      if Fk:getCardById(realCardIds[1], true).name ~= useCardData.card.name then
+        move.virtualEquip = useCardData.card
+      end
+
       if existingEquipId then
         self:moveCards(
           {
@@ -655,20 +665,10 @@ function UseCardEventWrappers:doCardUseEffect(useCardData)
             toArea = Card.DiscardPile,
             moveReason = fk.ReasonPutIntoDiscardPile,
           },
-          {
-            ids = realCardIds,
-            to = target,
-            toArea = Card.PlayerEquip,
-            moveReason = fk.ReasonUse,
-          }
+          move
         )
       else
-        self:moveCards({
-          ids = realCardIds,
-          to = target,
-          toArea = Card.PlayerEquip,
-          moveReason = fk.ReasonUse,
-        })
+        self:moveCards(move)
       end
     end
 
@@ -680,31 +680,20 @@ function UseCardEventWrappers:doCardUseEffect(useCardData)
 
     local target = useCardData.tos[1]
     if not target.dead and aimEventCollaborators[target] and not aimEventCollaborators[target][1]:isNullified() then
-      local findSameCard = false
-      for _, cardId in ipairs(target:getCardIds(Player.Judge)) do
-        if Fk:getCardById(cardId).trueName == useCardData.card.trueName then
-          findSameCard = true
-        end
-      end
 
-      if not findSameCard then
-        if useCardData.card:isVirtual() then
-          target:addVirtualEquip(useCardData.card)
-        elseif useCardData.card.name ~= Fk:getCardById(useCardData.card.id, true).name then
-          local card = Fk:cloneCard(useCardData.card.name)
-          card.skillNames = useCardData.card.skillNames
-          card:addSubcard(useCardData.card.id)
-          target:addVirtualEquip(card)
-        else
-          target:removeVirtualEquip(useCardData.card.id)
-        end
-
-        self:moveCards({
+      if not table.contains(target.sealedSlots, Player.JudgeSlot) and
+       (useCardData.card.stackable_delayed or not target:hasDelayedTrick(useCardData.card.name)) then
+        local move = { ---@type CardsMoveInfo
           ids = realCardIds,
           to = target,
           toArea = Card.PlayerJudge,
           moveReason = fk.ReasonUse,
-        })
+        }
+        if useCardData.card:isVirtual() then
+          move.virtualEquip = useCardData.card
+        end
+
+        self:moveCards(move)
 
         return
       end

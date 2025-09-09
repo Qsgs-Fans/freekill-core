@@ -249,8 +249,8 @@ function sortHandcards(sortMethods) {
     ["delayed_trick"]: Card.SubtypeDelayedTrick,
     ["weapon"]: Card.SubtypeWeapon,
     ["armor"]: Card.SubtypeArmor,
-    ["defensive_horse"]: Card.SubtypeDefensiveRide,
-    ["offensive_horse"]: Card.SubtypeOffensiveRide,
+    ["defensive_ride"]: Card.SubtypeDefensiveRide,
+    ["offensive_ride"]: Card.SubtypeOffensiveRide,
     ["treasure"]: Card.SubtypeTreasure,
   }
 
@@ -1138,7 +1138,7 @@ callbacks["AskForCardChosen"] = (data) => {
     const arr = [];
     const ids = d[1];
 
-    ids.forEach(id => arr.push(lcall("GetCardData", id)));
+    ids.forEach(id => arr.push(lcall("GetCardData", id, true)));
     box.addCustomCards(d[0], arr);
   }
 
@@ -1218,8 +1218,8 @@ callbacks["AskForMoveCardInBoard"] = (data) => {
 
   const boxCards = [];
   cards.forEach(id => {
-    const cardPos = cardsPosition[cards.findIndex(cid => cid === id)];
-    const d = lcall("GetCardData", id, playerIds[cardPos]);
+    //const cardPos = cardsPosition[cards.findIndex(cid => cid === id)];
+    const d = lcall("GetCardData", id, true);
     boxCards.push(d);
   });
 

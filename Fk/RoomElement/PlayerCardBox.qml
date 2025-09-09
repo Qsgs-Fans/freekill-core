@@ -75,6 +75,7 @@ GraphicsBox {
             name: model.name || ""
             suit: model.suit || ""
             number: model.number || 0
+            virt_name: model.virt_name || ''
             autoBack: false
             known: {
               if (visible_data[cid.toString()] == false) return false;

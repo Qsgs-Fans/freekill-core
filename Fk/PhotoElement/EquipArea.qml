@@ -25,7 +25,7 @@ Item {
   property var items: [treasureItem, weaponItem, armorItem,
     defensiveHorseItem, offensiveHorseItem]
   property var subtypes: ["treasure", "weapon", "armor",
-    "defensive_horse", "offensive_horse"]
+    "defensive_ride", "offensive_ride"]
   property int length: area.length
 
   // FIXME: Qt 6.6
@@ -106,15 +106,23 @@ Column {
     if (inputs instanceof Array) {
       for (let i = 0; i < inputs.length; i++) {
         card = inputs[i];
+        const vcard = lcall("GetVirtualEquip", parent.playerid, card.cid);
+        card = vcard || card;
         item = items[subtypes.indexOf(card.subtype)];
-        item.setCard(card);
-        item.show();
+        if (item) {
+          item.setCard(card);
+          item.show();
+        }
       }
     } else {
       card = inputs;
+      const vcard = lcall("GetVirtualEquip", parent.playerid, card.cid);
+      card = vcard || card;
       item = items[subtypes.indexOf(card.subtype)];
-      item.setCard(card);
-      item.show();
+      if (item) {
+        item.setCard(card);
+        item.show();
+      }
     }
   }
 

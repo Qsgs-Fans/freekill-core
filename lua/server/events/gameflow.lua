@@ -394,7 +394,7 @@ function Phase:main()
         if data.phase_end then break end
         local cid = table.remove(cards)
         if not cid then return end
-        local card = player:getVirualEquip(cid)
+        local card = player:getVirtualEquip(cid)
         if not card then
           card = Fk:getCardById(cid)
         end

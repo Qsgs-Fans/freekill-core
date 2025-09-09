@@ -376,7 +376,7 @@ Item {
       loadAudio(card.name, "equip_effect", extension, orig_extension);
       if (audioRow.count === 0) {
         let subType = "";
-        if (card.subtype === "defensive_horse" || card.subtype === "offensive_horse") {
+        if (card.subtype === "defensive_ride" || card.subtype === "offensive_ride") {
           subType = "horse";
         } else if (card.subtype === "weapon") {
           subType = "weapon";

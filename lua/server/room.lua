@@ -3081,7 +3081,7 @@ end
 --- 询问移动场上的一张牌。不可取消
 ---@param player ServerPlayer @ 移动的操作者
 ---@param params AskToMoveCardInBoardParams @ 各种变量
----@return { card: Card | integer, from: ServerPlayer, to: ServerPlayer }? @ 选择的卡牌、起点玩家id和终点玩家id列表
+---@return { card: Card, from: ServerPlayer, to: ServerPlayer }? @ 选择的卡牌、起点玩家id和终点玩家id列表
 function Room:askToMoveCardInBoard(player, params)
   params.exclude_ids = type(params.exclude_ids) == "table" and params.exclude_ids or {}
 
@@ -3175,7 +3175,7 @@ function Room:askToMoveCardInBoard(player, params)
   else
     from, to = targetTwo, targetOne
   end
-  local cardToMove = self:getCardOwner(result.cardId):getVirualEquip(result.cardId) or Fk:getCardById(result.cardId)
+  local cardToMove = self:getCardOwner(result.cardId):getVirtualEquip(result.cardId) or Fk:getCardById(result.cardId)
   if not skip then
     self:moveCardTo(
       cardToMove,

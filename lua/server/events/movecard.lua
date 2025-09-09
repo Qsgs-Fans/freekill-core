@@ -116,7 +116,7 @@ function MoveCards:main()
     room.logic:breakEvent()
   end
 
-  room:notifyMoveCards(nil, moveCardsData, self.id)
+  local uninstalls, installs = {}, {}
 
   for _, data in ipairs(moveCardsData) do
     if #data.moveInfo > 0 then
@@ -130,13 +130,12 @@ function MoveCards:main()
         end
 
         local beforeCard = Fk:getCardById(info.cardId) --[[@as EquipCard]]
-        if
-          realFromArea == Player.Equip and
-          beforeCard.type == Card.TypeEquip and
-          data.from ~= nil and
-          #beforeCard:getEquipSkills(data.from) > 0
-        then
-          beforeCard:onUninstall(room, data.from)
+        if data.from and data.from:getVirtualEquip(info.cardId) then
+          beforeCard = data.from:getVirtualEquip(info.cardId)
+          data.from:removeVirtualEquip(info.cardId)
+        end
+        if realFromArea == Player.Equip and data.from then
+          table.insert(uninstalls, {beforeCard, data.from})
         end
 
         Fk:filterCard(info.cardId, data.to)
@@ -164,17 +163,30 @@ function MoveCards:main()
             room:setCardMark(currentCard, mark[1], mark[2])
           end
         end
-        if
-          data.toArea == Player.Equip and
-          currentCard.type == Card.TypeEquip and
-          data.to ~= nil and
-          data.to:isAlive() and
-          #currentCard:getEquipSkills(data.to) > 0
-        then
-          currentCard:onInstall(room, data.to)
+
+        if data.virtualEquip and data.virtualEquip:getEffectiveId() == info.cardId then
+          currentCard = data.virtualEquip
+          ---@cast currentCard -nil
+          data.to:addVirtualEquip(currentCard)
+        end
+        if data.toArea == Player.Equip and currentCard.type == Card.TypeEquip and data.to and data.to:isAlive() then
+          table.insert(installs, {currentCard, data.to})
         end
       end
     end
+
+  end
+
+  room:notifyMoveCards(nil, moveCardsData, self.id)
+
+  for _, v in ipairs(uninstalls) do
+    local card, from = table.unpack(v)
+    ---@cast card EquipCard
+    card:onUninstall(room, from)
+  end
+  for _, v in ipairs(installs) do
+    local card, to = table.unpack(v)
+    card:onInstall(room, to)
   end
 
   room.logic:trigger(fk.AfterCardsMove, nil, moveCardsData)
@@ -212,7 +224,7 @@ local function convertOldMoveInfo(info)
   end
 end
 
---- 将填入room:moveCards的参数，根据情况转为正确的data（防止非法移动）
+--- 将填入room:moveCards的参数（类型CardsMoveInfo），根据情况转为正确的移动数据（类型MoveCardsData）（并防止非法移动）
 ---@param room Room
 ---@param ... CardsMoveInfo
 ---@return MoveCardsData[]
@@ -224,7 +236,7 @@ local function moveInfoTranslate(room, ...)
     if #cardsMoveInfo.ids == 0 then goto continue end
     infoCheck(cardsMoveInfo)
 
-    -- 若移动到被废除的装备栏，则修改，否则原样
+    -- 若移动到被废除的装备栏，则修改为置入弃牌堆
     local infos = {} ---@type MoveInfo[]
     local abortMoveInfos = {} ---@type MoveInfo[]
     for _, id in ipairs(cardsMoveInfo.ids) do
@@ -232,7 +244,7 @@ local function moveInfoTranslate(room, ...)
       if cardsMoveInfo.toArea == Card.PlayerEquip and cardsMoveInfo.to then
         local moveToPlayer = cardsMoveInfo.to
         ---@cast moveToPlayer -nil 防止判空波浪线
-        local card = moveToPlayer:getVirualEquip(id) or Fk:getCardById(id)
+        local card = cardsMoveInfo.virtualEquip or Fk:getCardById(id)
         if card.type == Card.TypeEquip and #moveToPlayer:getAvailableEquipSlots(card.sub_type) == 0 then
           table.insert(abortMoveInfos, {
             cardId = id,
@@ -249,6 +261,14 @@ local function moveInfoTranslate(room, ...)
           fromArea = room:getCardArea(id),
           fromSpecialName = cardsMoveInfo.from and cardsMoveInfo.from:getPileNameOfId(id),
         })
+      end
+
+      -- 虚拟装备/延时锦囊在装备区/判定区内移动时，保留虚拟数据
+      if (cardsMoveInfo.toArea == Card.PlayerJudge or cardsMoveInfo.toArea == Card.PlayerEquip)
+      and cardsMoveInfo.toArea == room:getCardArea(id)
+      and cardsMoveInfo.to and not cardsMoveInfo.virtualEquip
+      and cardsMoveInfo.from and cardsMoveInfo.from:getVirtualEquip(id) then
+        cardsMoveInfo.virtualEquip = cardsMoveInfo.from:getVirtualEquip(id)
       end
     end
 
@@ -268,6 +288,7 @@ local function moveInfoTranslate(room, ...)
         drawPilePosition = cardsMoveInfo.drawPilePosition,
         moveMark = cardsMoveInfo.moveMark,
         visiblePlayers = cardsMoveInfo.visiblePlayers,
+        virtualEquip = cardsMoveInfo.virtualEquip,
         extra_data = cardsMoveInfo.extra_data,
       })
     end
@@ -302,25 +323,13 @@ end
 --- 向多名玩家告知一次移牌行为。
 ---@param players? ServerPlayer[] @ 要被告知的玩家列表，默认为全员
 ---@param moveDatas MoveCardsData[] @ 要告知的移牌信息列表
+---@param event_id? integer @ 当前事件id
 function MoveEventWrappers:notifyMoveCards(players, moveDatas, event_id)
   ---@cast self Room
   if players == nil or #players == 0 then players = self.players end
   for _, p in ipairs(players) do
     local arg = {}
     for _, move in ipairs(moveDatas) do
-      for _, info in ipairs(move.moveInfo) do
-        local realFromArea = self:getCardArea(info.cardId)
-        local playerAreas = { Player.Hand, Player.Equip, Player.Judge, Player.Special }
-        local virtualEquip
-
-        if table.contains(playerAreas, realFromArea) and move.from then
-          virtualEquip = move.from:getVirualEquip(info.cardId)
-        end
-
-        if table.contains(playerAreas, move.toArea) and move.to and virtualEquip then
-          move.to:addVirtualEquip(virtualEquip)
-        end
-      end
 
       -- 在转成json传输之前先变一下
       local _data = rawget(move, "_data")
@@ -688,14 +697,11 @@ function MoveEventWrappers:swapCards(player, card_data, skillName, toArea)
   ---@cast self Room
   toArea = toArea or Card.PlayerHand
   local target1, cards1, target2, cards2 = card_data[1][1], card_data[1][2], card_data[2][1], card_data[2][2]
-  local virualEquips = {}
+  local virtualData = {} -- 移动前的虚拟装备/延时锦囊数据
   local moveInfos = {}
   if #cards1 > 0 then
-    local judge = target1:getCardIds("j")
     for _, id in ipairs(cards1) do
-      if table.contains(judge, id) then
-        virualEquips[id] = target1:getVirualEquip(id)
-      end
+      virtualData[id] = target1:getVirtualEquip(id)
     end
     table.insert(moveInfos, {
       from = target1,
@@ -708,11 +714,8 @@ function MoveEventWrappers:swapCards(player, card_data, skillName, toArea)
     })
   end
   if #cards2 > 0 then
-    local judge = target2:getCardIds("j")
     for _, id in ipairs(cards2) do
-      if table.contains(judge, id) then
-        virualEquips[id] = target2:getVirualEquip(id)
-      end
+      virtualData[id] = target2:getVirtualEquip(id)
     end
     table.insert(moveInfos, {
       from = target2,
@@ -729,67 +732,82 @@ function MoveEventWrappers:swapCards(player, card_data, skillName, toArea)
   end
   moveInfos = {}
 
-  --- 判断某牌能否进入目标区域
+  --- 筛选能够进入目标区域的牌
+  --- 目前逻辑：不替换，多张同副类别牌进入区域时，自动保留最前的
+  ---@param ids integer[]
   ---@param to ServerPlayer @ 目标角色
-  local function canMoveIn(id, to)
-    if self:getCardArea(id) == Card.Processing then
+  ---@return integer[]
+  local function canMoveIn(ids, to)
+    local slotMap = {} -- 记录本次移动中，每种副类型的装备牌已移入了几张
+    return table.filter(ids, function (id)
+      if self:getCardArea(id) ~= Card.Processing then return false end
+      local card = virtualData[id] or Fk:getCardById(id)
       if toArea == Card.PlayerEquip then
-        return #to:getAvailableEquipSlots(Fk:getCardById(id).sub_type) > 0  --多个同副类别装备如何处理，待定
+        if #to:getAvailableEquipSlots(card.sub_type) > (slotMap[card.sub_type] or 0) then
+          slotMap[card.sub_type] = (slotMap[card.sub_type] or 0) + 1
+          return true
+        end
       elseif toArea == Card.PlayerJudge then
-        local vcard = virualEquips[id] or Fk:getCardById(id)
-        return not table.contains(to.sealedSlots, Player.JudgeSlot) and not to:isProhibitedTarget(vcard)
+        if not to:isProhibitedTarget(card) then
+          if card.stackable_delayed then return true end
+          if slotMap[card.name] == nil then
+            slotMap[card.name] = 1
+            return true
+          end
+        end
       else
         return true
       end
-    end
-    return false
+      return false
+    end)
   end
 
-  if not target2.dead then
-    local to_ex_cards = table.filter(cards1, function (id)
-      return canMoveIn(id, target2)
-    end)
-    if #to_ex_cards > 0 then
-      table.insert(moveInfos, {
-        ids = to_ex_cards,
-        fromArea = Card.Processing,
-        to = target2,
-        toArea = toArea,
-        moveReason = fk.ReasonExchange,
-        proposer = player,
-        skillName = skillName,
-        moveVisible = (toArea ~= Card.PlayerHand),
-        visiblePlayers = target2,
-      })
-    end
-  end
-  if not target1.dead then
-    local to_ex_cards = table.filter(cards2, function (id)
-      return canMoveIn(id, target1)
-    end)
-    if #to_ex_cards > 0 then
-      table.insert(moveInfos, {
-        ids = to_ex_cards,
-        fromArea = Card.Processing,
-        to = target1,
-        toArea = toArea,
-        moveReason = fk.ReasonExchange,
-        proposer = player,
-        skillName = skillName,
-        moveVisible = (toArea ~= Card.PlayerHand),
-        visiblePlayers = target2,
-      })
-    end
-  end
-  if #moveInfos > 0 then
-    self:moveCards(table.unpack(moveInfos))
-    for cid, vcard in pairs(virualEquips) do
-      local owner = self:getCardOwner(cid)
-      if owner and self:getCardArea(cid) == toArea then
-        owner:addVirtualEquip(vcard)
+  ---@param ids integer[]
+  ---@param to ServerPlayer @ 目标角色
+  local function moveCardsIn(ids, to)
+    if to.dead then return end
+    local to_ex_cards = canMoveIn(ids, to)
+    local realCards = {}
+    for _, id in ipairs(to_ex_cards) do
+      if virtualData[id] then
+        table.insert(moveInfos, {
+          ids = {id},
+          fromArea = Card.Processing,
+          to = to,
+          toArea = toArea,
+          moveReason = fk.ReasonExchange,
+          proposer = player,
+          skillName = skillName,
+          moveVisible = (toArea ~= Card.PlayerHand),
+          visiblePlayers = to,
+          virtualEquip = virtualData[id],
+        })
+      else
+        table.insert(realCards, id)
       end
     end
+    if #realCards > 0 then
+      table.insert(moveInfos, {
+        ids = realCards,
+        fromArea = Card.Processing,
+        to = to,
+        toArea = toArea,
+        moveReason = fk.ReasonExchange,
+        proposer = player,
+        skillName = skillName,
+        moveVisible = (toArea ~= Card.PlayerHand),
+        visiblePlayers = to,
+      })
+    end
   end
+
+  moveCardsIn(cards1, target2)
+  moveCardsIn(cards2, target1)
+
+  if #moveInfos > 0 then
+    self:moveCards(table.unpack(moveInfos))
+  end
+
   self:cleanProcessingArea(table.connect(cards1, cards2), skillName)
 end
 

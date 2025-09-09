@@ -259,19 +259,21 @@ Flickable {
         skillDesc.append(skillText);
       });
 
-      lcall("GetPlayerEquips", id).forEach(cid => {
-        const t = lcall("GetCardData", cid);
-        skillDesc.append("------------------------------------")
-        skillDesc.append("<b>" + luatr(t.name) + "</b>: " + luatr(":" + t.name));
-      });
-
-      const judge = lcall("GetPlayerJudges", id);
+      var ej = lcall("GetPlayerEquips", id).concat(lcall("GetPlayerJudges", id));
       let unknownCardsNum = 0;
-      judge.forEach(cid => {
+      ej.forEach(cid => {
         const t = lcall("GetCardData", cid);
         if (lcall("CardVisibility", cid)) {
           skillDesc.append("------------------------------------")
-          skillDesc.append("<b>" + luatr(t.name) + "</b>: " + luatr(":" + t.name));
+          const v = lcall("GetVirtualEquip", id, cid);
+          if (v) {
+            skillDesc.append(
+              "<b>" + "(" + luatr(t.name) + luatr("log_" + t.suit) + luatr(t.number.toString()) + ")" 
+              + luatr(v.name) + "</b>: " + luatr(":" + v.name)
+            );
+          } else {
+            skillDesc.append("<b>" + luatr(t.name) + "</b>: " + luatr(":" + t.name));
+          }
         } else {
           unknownCardsNum++;
         }

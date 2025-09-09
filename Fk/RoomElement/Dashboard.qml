@@ -188,6 +188,10 @@ RowLayout {
         card.footnoteVisible = true;
         card.markVisible = false;
         card.footnote = luatr(dat.ui_data.footnote);
+        const vcard = lcall("GetVirtualEquip", 0, dat.data.id);
+        if (vcard) {
+          card.virt_name = vcard.name;
+        }
         handcardAreaItem.add(card);
       }
     });

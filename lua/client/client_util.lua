@@ -70,12 +70,14 @@ local cardSubtypeStrings = {
   [Card.SubtypeDelayedTrick] = "delayed_trick",
   [Card.SubtypeWeapon] = "weapon",
   [Card.SubtypeArmor] = "armor",
-  [Card.SubtypeDefensiveRide] = "defensive_horse",
-  [Card.SubtypeOffensiveRide] = "offensive_horse",
+  [Card.SubtypeDefensiveRide] = "defensive_ride",
+  [Card.SubtypeOffensiveRide] = "offensive_ride",
   [Card.SubtypeTreasure] = "treasure",
 }
 
-function GetCardData(id, virtualCardForm)
+---@param id integer
+---@param virtualCard? boolean @ 是否获取虚拟装备/延时锦囊信息
+function GetCardData(id, virtualCard)
   local card = Fk:getCardById(id)
   if card == nil then
     return {
@@ -108,11 +110,14 @@ function GetCardData(id, virtualCardForm)
     ret.name = orig.name
     ret.virt_name = card.name
   end
-  if virtualCardForm then
-    local virtualCard = ClientInstance:getPlayerById(virtualCardForm):getVirualEquip(id)
-    if virtualCard then
-      ret.virt_name = virtualCard.name
-      ret.subtype = cardSubtypeStrings[virtualCard.sub_type]
+  if virtualCard then
+    for _, p in ipairs(ClientInstance.players) do
+      local vcard = p:getVirtualEquip(id)
+      if vcard then
+        ret.virt_name = vcard.name
+        ret.subtype = cardSubtypeStrings[vcard.sub_type]
+        break
+      end
     end
   end
   return ret
@@ -445,12 +450,28 @@ function CardFitPattern(card_name, pattern)
   return ret
 end
 
-function GetVirtualEquip(player, cid)
-  local c = ClientInstance:getPlayerById(player):getVirualEquip(cid)
+--- 获取某牌的虚拟装备/延时锦囊信息
+---@param playerid integer @ 拥有此牌的角色id，找不到时会在全场找此牌拥有者
+---@param cid integer @ 牌的id
+function GetVirtualEquip(playerid, cid)
+  local c, player
+  player = ClientInstance:getPlayerById(playerid)
+  if not player then
+    for _, p in ipairs(ClientInstance.players) do
+      c = p:getVirtualEquip(cid)
+      if c then break end
+    end
+  end
+  if player then
+    c = player:getVirtualEquip(cid)
+  end
   if not c then return nil end
   return {
     name = c.name,
     cid = c.subcards[1],
+    suit = c:getSuitString(),
+    number = c.number,
+    subtype = c:getSubtypeString(),
   }
 end
 
