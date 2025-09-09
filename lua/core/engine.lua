@@ -842,6 +842,11 @@ end
 ---@return Card @ 这个id对应的卡牌
 function Engine:getCardById(id, ignoreFilter)
   if id == nil then return nil end
+  if Fk:currentRoom():getCardArea(id) == Card.PlayerEquip or Fk:currentRoom():getCardArea(id) == Card.PlayerJudge then
+    if Fk:currentRoom():getCardOwner(id):getVirtualEquip(id) ~= nil then
+      return Fk:currentRoom():getCardOwner(id):getVirtualEquip(id)
+    end
+  end
   local card_tab = (id >= -1) and self.cards or self.printed_cards
   local ret = card_tab[id]
   if not ignoreFilter then
