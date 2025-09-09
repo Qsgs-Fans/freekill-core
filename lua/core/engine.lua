@@ -841,16 +841,16 @@ end
 ---@param ignoreFilter? boolean @ 是否要无视掉锁定视为技，直接获得真牌
 ---@return Card @ 这个id对应的卡牌
 function Engine:getCardById(id, ignoreFilter)
-  if id == nil then return nil end
-  if Fk:currentRoom():getCardArea(id) == Card.PlayerEquip or Fk:currentRoom():getCardArea(id) == Card.PlayerJudge then
-    if Fk:currentRoom():getCardOwner(id):getVirtualEquip(id) ~= nil then
-      return Fk:currentRoom():getCardOwner(id):getVirtualEquip(id)
-    end
-  end
+  if id == nil then return {} end
   local card_tab = (id >= -1) and self.cards or self.printed_cards
   local ret = card_tab[id]
   if not ignoreFilter then
     ret = self.filtered_cards[id] or card_tab[id]
+    if Fk:currentRoom():getCardArea(id) == Card.PlayerEquip or Fk:currentRoom():getCardArea(id) == Card.PlayerJudge then
+      if Fk:currentRoom():getCardOwner(id):getVirtualEquip(id) ~= nil then
+        ret = Fk:currentRoom():getCardOwner(id):getVirtualEquip(id)
+      end
+    end
   end
   return ret
 end

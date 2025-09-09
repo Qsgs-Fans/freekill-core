@@ -478,21 +478,12 @@ end
 
 ---@param target ServerPlayer
 function SmartAI:isFriend(target)
-  if self.player:isFriend(target) then return true end
-  local t = { "lord", "loyalist" }
-  local players = table.filter(self.room.alive_players, function(p) return p.role ~= "renegade" end)
-  local rebels = #table.filter(players, function(p) return p.role == "rebel" end)
-  local loyalists = #players - rebels
-  if rebels >= loyalists then
-    table.insert(t, "renegade")
-  end
-  if table.contains(t, self.player.role) and table.contains(t, target.role) then return true end
-  return false
+  return self.player:isFriend(target)
 end
 
 ---@param target ServerPlayer
 function SmartAI:isEnemy(target)
-  return not self:isFriend(target)
+  return not self.player:isFriend(target)
 end
 
 -- 排序相关函数。
