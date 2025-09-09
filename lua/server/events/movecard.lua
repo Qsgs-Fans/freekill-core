@@ -581,20 +581,32 @@ end
 ---@param skillName? string @ 技能名
 ---@param convert? boolean @ 是否可以替换装备（默认可以）
 ---@param proposer? ServerPlayer @ 操作者
+---@param virtualEquip? Card|Card[] @ 虚拟装备数据
 ---@return integer[] @ 成功置入装备区的牌
-function MoveEventWrappers:moveCardIntoEquip(target, cards, skillName, convert, proposer)
+function MoveEventWrappers:moveCardIntoEquip(target, cards, skillName, convert, proposer, virtualEquip)
   ---@cast self Room
   convert = (convert == nil) and true or convert
   skillName = skillName or ""
   cards = type(cards) == "table" and cards or {cards}
   ---@cast cards integer[]
   proposer = type(proposer) == "number" and self:getPlayerById(proposer) or proposer
+  if virtualEquip and virtualEquip:isInstanceOf(Card) then
+    virtualEquip = { virtualEquip }
+  end
   local moves = {}
   local ids = {}
   for _, cardId in ipairs(cards) do
     local card = Fk:getCardById(cardId)
+    if virtualEquip ~= nil then
+      for _, c in ipairs(virtualEquip) do
+        if table.contains(c.subcards, cardId) then
+          card = c
+          break
+        end
+      end
+    end
     local from = self:getCardOwner(cardId)
-    if target:canMoveCardIntoEquip(cardId, convert) then
+    if target:canMoveCardIntoEquip(card, convert) then
       if not target:hasEmptyEquipSlot(card.sub_type) then
         local existingEquip = target:getEquipments(card.sub_type)
         local throw = #existingEquip == 1 and existingEquip[1] or
@@ -621,6 +633,7 @@ function MoveEventWrappers:moveCardIntoEquip(target, cards, skillName, convert, 
         moveReason = fk.ReasonPut,
         skillName = skillName,
         proposer = proposer,
+        virtualEquip = virtualEquip ~= nil and card or nil,
       })
       table.insert(ids, cardId)
     else
