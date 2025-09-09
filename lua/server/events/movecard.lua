@@ -575,44 +575,36 @@ function MoveEventWrappers:doYiji(list, proposer, skillName, moveMark)
   return move_ids
 end
 
---- 将一张牌移动至某角色的装备区，若不合法则置入弃牌堆。目前没做相同副类别装备同时置入的适配(甘露神典韦)
+--- 将一张牌移动至某角色的装备区，若不合法则置入弃牌堆。
 ---@param target ServerPlayer @ 接受牌的角色
----@param cards integer|integer[] @ 移动的牌
+---@param cards integer|integer[]|Card|Card[] @ 移动的牌，这些牌同副类别不可相同
 ---@param skillName? string @ 技能名
 ---@param convert? boolean @ 是否可以替换装备（默认可以）
 ---@param proposer? ServerPlayer @ 操作者
----@param virtualEquip? Card|Card[] @ 虚拟装备数据
 ---@return integer[] @ 成功置入装备区的牌
-function MoveEventWrappers:moveCardIntoEquip(target, cards, skillName, convert, proposer, virtualEquip)
+function MoveEventWrappers:moveCardIntoEquip(target, cards, skillName, convert, proposer)
   ---@cast self Room
   convert = (convert == nil) and true or convert
   skillName = skillName or ""
-  cards = type(cards) == "table" and cards or {cards}
-  ---@cast cards integer[]
+  cards = (type(cards) == "table" and cards[1] ~= nil) and cards or {cards}
+  cards = table.map(cards, function (id)
+    return type(id) == "number" and Fk:getCardById(id) or id
+  end)
+  ---@cast cards Card[]
   proposer = type(proposer) == "number" and self:getPlayerById(proposer) or proposer
-  if virtualEquip and virtualEquip:isInstanceOf(Card) then
-    virtualEquip = { virtualEquip }
-  end
   local moves = {}
-  local ids = {}
-  for _, cardId in ipairs(cards) do
-    local card = Fk:getCardById(cardId)
-    if virtualEquip ~= nil then
-      for _, c in ipairs(virtualEquip) do
-        if table.contains(c.subcards, cardId) then
-          card = c
-          break
-        end
-      end
-    end
-    local from = self:getCardOwner(cardId)
+  local ret = {}
+  for _, card in ipairs(cards) do
+    local cardId = card:getEffectiveId()
+    local from = self:getCardOwner(card)
     if target:canMoveCardIntoEquip(card, convert) then
       if not target:hasEmptyEquipSlot(card.sub_type) then
         local existingEquip = target:getEquipments(card.sub_type)
+        -- 选择被替换的装备
         local throw = #existingEquip == 1 and existingEquip[1] or
         self:askToChooseCard(proposer or target, {
           target = target,
-          flag = { card_data = { { Util.convertSubtypeAndEquipSlot(card.sub_type),existingEquip } } },
+          flag = { card_data = { { Util.convertSubtypeAndEquipSlot(card.sub_type), existingEquip } } },
           skill_name = "replaceEquip",
           prompt = "#replaceEquip",
         })
@@ -633,9 +625,9 @@ function MoveEventWrappers:moveCardIntoEquip(target, cards, skillName, convert, 
         moveReason = fk.ReasonPut,
         skillName = skillName,
         proposer = proposer,
-        virtualEquip = virtualEquip ~= nil and card or nil,
+        virtualEquip = card:isVirtual() and card or nil,
       })
-      table.insert(ids, cardId)
+      table.insert(ret, cardId)
     else
       table.insert(moves, {
         ids = { cardId },
@@ -648,7 +640,7 @@ function MoveEventWrappers:moveCardIntoEquip(target, cards, skillName, convert, 
     end
   end
   self:moveCards(table.unpack(moves))
-  return ids
+  return ret
 end
 
 --- 从牌堆亮出一些牌移动到处理区
