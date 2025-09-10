@@ -56,7 +56,7 @@ Item {
 
   Item {
     id: topPanel
-    height: parent.height * 0.1
+    height: parent.height * (0.5 - shadowRect.scale / 2)
     width: parent.width
 
     Text {
@@ -68,10 +68,9 @@ Item {
 
   Item {
     id: bottomPanel
-    height: parent.height * 0.1
+    height: parent.height * (0.5 - shadowRect.scale / 2)
     width: parent.width
     anchors.bottom: parent.bottom
-
 
     Rectangle {
       id: replayControls
@@ -158,7 +157,7 @@ Item {
     anchors.top: parent.top
     anchors.topMargin: parent.height * 0.1
     spacing: 16
-    width: parent.width - shadowRect.width * 0.8 - 40 - 40
+    width: parent.width - shadowRect.width * shadowRect.scale - 40 - 40
     // height: shadowRect.height * shadowRect.scale
 
     W.ButtonContent {
