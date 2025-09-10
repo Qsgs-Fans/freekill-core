@@ -223,7 +223,7 @@ W.PageBase {
           }
           return false;
         }
-        onClicked: roomScene.startCheat("../RoomElement/ChooseHandcard");
+        onClicked: roomScene.startCheat("../../Components/LunarLTK/ChooseHandcard.qml");
       }
       MetroButton {
         id: revertSelectionBtn
@@ -787,6 +787,7 @@ W.PageBase {
   Timer {
     id: statusSkillTimer
     interval: 200
+    running: true
     repeat: true
     onTriggered: {
       Lua.call("RefreshStatusSkills");
@@ -968,7 +969,11 @@ W.PageBase {
   }
 
   function startCheat(type, data) {
-    cheatLoader.sourceComponent = Qt.createComponent("Fk.Components.LunarLTK.Cheat", type);
+    let component = Qt.createComponent(type);
+    if (component.status !== Component.Ready) {
+      component = Qt.createComponent("Fk.Components.LunarLTK.Cheat", type);
+    }
+    cheatLoader.sourceComponent = component;
     cheatLoader.item.extra_data = data;
     cheatLoader.open();
   }

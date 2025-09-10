@@ -38,6 +38,8 @@ Item {
       })
     }
 
+    area.lengthChanged(); // 唉
+
     return area.remove(datas, roomScene.dynamicCardArea);
   }
 

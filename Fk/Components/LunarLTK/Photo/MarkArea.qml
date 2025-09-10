@@ -69,7 +69,7 @@ Item {
           // @& 武将牌
           if (mark_name.startsWith('@&')) {
             params.cardNames = mark_extra.split(',');
-            roomScene.startCheat("../RoomElement/ViewGeneralPile", params);
+            roomScene.startCheat("../../Components/LunarLTK/ViewGeneralPile.qml", params);
             return;
           }
 
@@ -107,7 +107,7 @@ Item {
           }
 
           // Just for using right drawer of the room
-          roomScene.startCheat("../RoomElement/ViewPile", params);
+          roomScene.startCheat("../../Components/LunarLTK/ViewPile.qml", params);
         }
       }
     }

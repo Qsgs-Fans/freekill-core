@@ -240,9 +240,7 @@ PhotoBase {
     Text {
       text: {
         let n = root.handcards;
-        if (root.playerid === Self.id) {
-          n = Lua.call("GetPlayerHandcards", Self.id).length; // 不计入expand_pile
-        }
+        n = Lua.call("GetPlayerHandcards", root.playerid).length;
         if (root.maxCard === root.hp || root.hp < 0) {
           return n;
         } else {
@@ -258,25 +256,6 @@ PhotoBase {
       anchors.bottom: parent.bottom
       anchors.bottomMargin: 4
       style: Text.Outline
-    }
-
-    W.TapHandler { // 手牌图标点击查看手牌
-      enabled: {
-        if (root.playerid === Self.id) return false;
-        if (root.handcards === 0) return false; // 优先绑定再判buddy，否则不会更新
-        if (!Lua.call("IsMyBuddy", Self.id, root.playerid) &&
-          !Lua.call("HasVisibleCard", Self.id, root.playerid)) return false;
-        return true;
-      }
-      onTapped: {
-        const params = { name: "hand_card" };
-        let data = Lua.call("GetPlayerHandcards", root.playerid);
-        data = data.filter((e) => Lua.call("CardVisibility", e));
-
-        params.ids = data;
-
-        roomScene.startCheat("../RoomElement/ViewPile", params);
-      }
     }
   }
 

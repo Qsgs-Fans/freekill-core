@@ -510,6 +510,7 @@ function ResetClientLua()
     cp.owner = p[3]
     return cp
   end)
+  Self = self:getPlayerById(Self.id)
 
   self.enter_room_data = _data;
   local data = cbor.decode(_data)
