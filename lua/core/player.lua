@@ -1236,7 +1236,7 @@ end
 ---@param card Card @ 特定牌
 ---@param extra_data? UseExtraData @ 额外数据
 function Player:canUse(card, extra_data)
-  return not self:prohibitUse(card) and card.skill:canUse(self, card, extra_data)
+  return not self:prohibitUse(card) and not not card.skill:canUse(self, card, extra_data)
 end
 
 --- 确认玩家是否可以对特定玩家使用特定牌。
