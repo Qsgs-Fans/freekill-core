@@ -41,7 +41,7 @@ W.PageBase {
       anchors.left: left.right
       width: parent.width - left.width
       height: parent.height
-      color: "#88EEEEEE"
+      color: "#AAFAFAFB"
       radius: 16
 
       ColumnLayout {
