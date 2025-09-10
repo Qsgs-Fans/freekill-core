@@ -632,6 +632,7 @@ W.PageBase {
         gameTime = cp:getTotalGameTime(),
       }
     end)`);
+    console.log(JSON.stringify(datalist));
 
     resetPhotos();
     for (const d of datalist) {
@@ -652,17 +653,18 @@ W.PageBase {
     Backend.playSound("./audio/system/gamestart");
 
     const data = Lua.evaluate(`Fk:getBoardGame(ClientInstance.settings.gameMode).page`);
-    console.log(JSON.stringify(data))
+    let c;
     if (!(data instanceof Object)) {
-      App.enterNewPage("Fk.Pages.LunarLTK", "Room");
+      c = Qt.createComponent("Fk.Pages.LunarLTK", "Room");
     } else {
       if (data.uri && data.name) {
         // TODO 还不可用，需要让Lua能添加import path
-        App.enterNewPage(data.uri, data.name);
+        c = Qt.createComponent(data.uri, data.name);
       } else {
-        App.enterNewPage(Cpp.path + "/" + data.url);
+        c = Qt.createComponent(Cpp.path + "/" + data.url);
       }
     }
+    App.enterNewPage("Fk.Pages.Common", "RoomPage", { gameComponent: c });
   }
 
   function specialChat(pid, data, msg) {

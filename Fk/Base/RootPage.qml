@@ -130,7 +130,7 @@ W.PageBase {
     target: Mediator
     function onCommandGot(sender, command, data) {
       for (let i = mainStack.depth; i >= 0; i--) {
-        const page = mainStack.get(i, StackView.DontLoad) as W.PageBase;
+        const page = mainStack.get(i, StackView.DontLoad);
         if (!page) continue;
         if (page.canHandleCommand(command)) {
           page.handleCommand(sender, command, data);
@@ -147,7 +147,8 @@ W.PageBase {
   }
 
   function pushPage(sender, data) {
-    mainStack.push(data);
+    const { component, prop } = data;
+    mainStack.push(component, prop);
   }
 
   function popPage(sender, data) {

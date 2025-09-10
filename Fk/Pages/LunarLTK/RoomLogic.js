@@ -1580,15 +1580,3 @@ callbacks["GetPlayerHandcards"] = (sender, data) => {
 callbacks["ReplyToServer"] = (sender, data) => {
   replyToServer(data);
 }
-
-callbacks["ReplayerDurationSet"] = (sender, j) => {
-  roomScene.replayerDuration = parseInt(j);
-}
-
-callbacks["ReplayerElapsedChange"] = (sender, j) => {
-  roomScene.replayerElapsed = parseInt(j);
-}
-
-callbacks["ReplayerSpeedChange"] = (sender, j) => {
-  roomScene.replayerSpeed = parseFloat(j);
-}

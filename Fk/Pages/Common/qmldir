@@ -11,3 +11,5 @@ PackageManage 1.0 PackageManage.qml
 PackageDownload 1.0 PackageDownload.qml
 ResourcePackManage 1.0 ResourcePackManage.qml
 WaitingRoom 1.0 WaitingRoom.qml
+RoomPage 1.0 RoomPage.qml
+RoomOverlay 1.0 RoomOverlay.qml

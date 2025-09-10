@@ -2,7 +2,6 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Dialogs
 import QtQuick.Layouts
 import QtMultimedia
 
@@ -11,7 +10,6 @@ import Fk.Components.Common
 import Fk.Components.LunarLTK
 import Fk.Components.LunarLTK.Photo as PhotoElement
 import Fk.Widgets as W
-import Fk.Pages.Lobby as L
 import "RoomLogic.js" as Logic
 
 W.PageBase {
@@ -43,16 +41,6 @@ W.PageBase {
   property var extra_data: ({})
   property var skippedUseEventId: []
 
-  property real replayerSpeed
-  property int replayerElapsed
-  property int replayerDuration
-
-  Image {
-    source: Config.roomBg
-    anchors.fill: parent
-    fillMode: Image.PreserveAspectCrop
-  }
-
   MediaPlayer {
     id: bgm
     source: Config.bgmFile
@@ -64,125 +52,6 @@ W.PageBase {
     }
     audioOutput: AudioOutput {
       volume: Config.bgmVolume / 100
-    }
-  }
-
-  Button {
-    id: menuButton
-    anchors.top: parent.top
-    anchors.topMargin: 12
-    anchors.right: parent.right
-    anchors.rightMargin: 12
-    text: Lua.tr("Menu")
-    onClicked: {
-      if (menuContainer.visible){
-        menuContainer.close();
-      } else {
-        menuContainer.open();
-      }
-    }
-
-    Menu {
-      id: menuContainer
-      y: menuButton.height - 12
-      width: parent.width * 1.8
-
-      MenuItem {
-        id: quitButton
-        text: Lua.tr("Quit")
-        icon.source: Cpp.path + "/image/modmaker/back"
-        onClicked: {
-          if (Config.replaying) {
-            Backend.controlReplayer("shutdown");
-            App.quitPage();
-            App.quitPage();
-          } else if (Config.observing) {
-            Cpp.notifyServer("QuitRoom", "");
-          } else {
-            quitDialog.open();
-          }
-        }
-      }
-
-      MenuItem {
-        id: volumeButton
-        text: Lua.tr("Settings")
-        icon.source: Cpp.path + "/image/button/tileicon/configure"
-        onClicked: {
-          settingsDialog.open();
-        }
-      }
-
-      /*
-      Menu {
-        title: Lua.tr("Overview")
-        icon.source: Cpp.path + "/image/button/tileicon/rule_summary"
-        icon.width: 24
-        icon.height: 24
-        icon.color: palette.windowText
-        MenuItem {
-          id: generalButton
-          text: Lua.tr("Generals Overview")
-          icon.source: Cpp.path + "/image/button/tileicon/general_overview"
-          onClicked: {
-            overviewLoader.overviewType = "Generals";
-            overviewDialog.open();
-            overviewLoader.item.loadPackages();
-          }
-        }
-        MenuItem {
-          id: cardslButton
-          text: Lua.tr("Cards Overview")
-          icon.source: Cpp.path + "/image/button/tileicon/card_overview"
-          onClicked: {
-            overviewLoader.overviewType = "Cards";
-            overviewDialog.open();
-            overviewLoader.item.loadPackages();
-          }
-        }
-        MenuItem {
-          id: modesButton
-          text: Lua.tr("Modes Overview")
-          icon.source: Cpp.path + "/image/misc/paper"
-          onClicked: {
-            overviewLoader.overviewType = "Modes";
-            overviewDialog.open();
-          }
-        }
-      }
-      */
-
-      MenuItem {
-        id: banSchemaButton
-        text: Lua.tr("Ban List")
-        icon.source: Cpp.path + "/image/button/tileicon/create_room"
-        onClicked: {
-          overviewLoader.overviewType = "GeneralPool";
-          overviewDialog.open();
-        }
-      }
-
-      MenuItem {
-        id: surrenderButton
-        enabled: !Config.observing && !Config.replaying
-        text: Lua.tr("Surrender")
-        icon.source: Cpp.path + "/image/misc/surrender"
-        onClicked: {
-          const photo = getPhoto(Self.id);
-          if (!(photo.dead && photo.rest <= 0)) {
-            const surrenderCheck = Lua.call('CheckSurrenderAvailable', miscStatus.playedTime);
-            if (!surrenderCheck.length) {
-              surrenderDialog.informativeText =
-                Lua.tr('Surrender is disabled in this mode');
-            } else {
-              surrenderDialog.informativeText = surrenderCheck
-                .map(str => `${Lua.tr(str.text)}（${str.passed ? '✓' : '✗'}）`)
-                .join('<br>');
-            }
-            surrenderDialog.open();
-          }
-        }
-      }
     }
   }
 
@@ -478,73 +347,6 @@ W.PageBase {
     width: roomScene.width - dashboardBtn.width
     anchors.top: roomArea.bottom
     anchors.left: dashboardBtn.right
-  }
-
-  Rectangle {
-    id: replayControls
-    visible: Config.replaying
-    anchors.bottom: dashboard.top
-    anchors.bottomMargin: -60
-    anchors.horizontalCenter: parent.horizontalCenter
-    width: childrenRect.width + 8
-    height: childrenRect.height + 8
-
-    color: "#88EEEEEE"
-    radius: 4
-
-    RowLayout {
-      x: 4; y: 4
-      Text {
-        font.pixelSize: 20
-        font.bold: true
-        text: {
-          const elapsedMin = Math.floor(replayerElapsed / 60);
-          const elapsedSec = addZero(replayerElapsed % 60);
-          const totalMin = Math.floor(replayerDuration / 60);
-          const totalSec = addZero(replayerDuration % 60);
-
-          return elapsedMin.toString() + ":" + elapsedSec + "/" + totalMin
-               + ":" + totalSec;
-        }
-      }
-
-      Switch {
-        text: Lua.tr("Show All Cards")
-        checked: Config.replayingShowCards
-        onCheckedChanged: Config.replayingShowCards = checked;
-      }
-
-      Switch {
-        text: Lua.tr("Speed Resume")
-        checked: false
-        onCheckedChanged: Backend.controlReplayer("uniform");
-      }
-
-      Button {
-        text: Lua.tr("Speed Down")
-        onClicked: Backend.controlReplayer("slowdown");
-      }
-
-      Text {
-        font.pixelSize: 20
-        font.bold: true
-        text: "x" + replayerSpeed;
-      }
-
-      Button {
-        text: Lua.tr("Speed Up")
-        onClicked: Backend.controlReplayer("speedup");
-      }
-
-      Button {
-        property bool running: true
-        text: Lua.tr(running ? "Pause" : "Resume")
-        onClicked: {
-          running = !running;
-          Backend.controlReplayer("toggle");
-        }
-      }
-    }
   }
 
   Item {
@@ -877,88 +679,6 @@ W.PageBase {
     anchors.fill: parent
   }
 
-  MessageDialog {
-    id: quitDialog
-    title: Lua.tr("Quit")
-    informativeText: Lua.tr("Are you sure to quit?")
-    buttons: MessageDialog.Ok | MessageDialog.Cancel
-    onButtonClicked: function (button) {
-      switch (button) {
-        case MessageDialog.Ok: {
-          Cpp.notifyServer("QuitRoom", "[]");
-          break;
-        }
-        case MessageDialog.Cancel: {
-          quitDialog.close();
-        }
-      }
-    }
-  }
-
-  MessageDialog {
-    id: surrenderDialog
-    title: Lua.tr("Surrender")
-    informativeText: ''
-    buttons: MessageDialog.Ok | MessageDialog.Cancel
-    onButtonClicked: function (button, role) {
-      switch (button) {
-        case MessageDialog.Ok: {
-          const surrenderCheck =
-            Lua.call('CheckSurrenderAvailable', miscStatus.playedTime);
-          if (surrenderCheck.length &&
-                !surrenderCheck.find(check => !check.passed)) {
-
-            Cpp.notifyServer("PushRequest", [
-              "surrender", true
-            ].join(","));
-          }
-          surrenderDialog.close();
-          break;
-        }
-        case MessageDialog.Cancel: {
-          surrenderDialog.close();
-        }
-      }
-    }
-  }
-
-  W.PopupLoader {
-    id: settingsDialog
-    padding: 0
-    width: Config.winWidth * 0.6
-    height: Config.winHeight * 0.75
-    anchors.centerIn: parent
-    background: Rectangle {
-      color: "#EEEEEEEE"
-      radius: 5
-      border.color: "#A6967A"
-      border.width: 1
-    }
-
-    sourceComponent: RowLayout {
-      W.SideBarSwitcher {
-        id: settingBar
-        Layout.preferredWidth: 200
-        Layout.fillHeight: true
-        model: ListModel {
-          ListElement { name: "Audio Settings" }
-          ListElement { name: "Control Settings" }
-        }
-      }
-
-      SwipeView {
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        interactive: false
-        orientation: Qt.Vertical
-        currentIndex: settingBar.currentIndex
-        clip: true
-        L.AudioSetting {}
-        L.ControlSetting {}
-      }
-    }
-  }
-
   W.PopupLoader {
     id: overviewDialog
     width: Config.winWidth * 0.75
@@ -1007,9 +727,9 @@ W.PageBase {
 
   MiscStatus {
     id: miscStatus
-    anchors.right: menuButton.left
+    anchors.right: parent.right
     anchors.top: parent.top
-    anchors.rightMargin: 16
+    anchors.rightMargin: 108
     anchors.topMargin: 8
   }
 
@@ -1368,20 +1088,6 @@ W.PageBase {
     });
   }
 
-  function addZero(temp) {
-    if (temp < 10) return "0" + temp;
-    else return temp;
-  }
-
-  function enterLobby(sender, data) {
-    App.quitPage(); // 退到等待页了，再退
-    App.quitPage();
-
-    App.setBusy(false);
-    Cpp.notifyServer("RefreshRoomList", "");
-    Config.saveConf();
-  }
-
   function netStateChanged(sender, data) {
     const id = data[0];
     let state = data[1];
@@ -1395,9 +1101,6 @@ W.PageBase {
   }
 
   Component.onCompleted: {
-    // TODO 虽然这里很多都要杀成Waiting界面 但现在还是得以跑起来为头等大事
-    addCallback(Command.EnterLobby, enterLobby);
-
     addCallback(Command.NetStateChanged, netStateChanged);
 
     // TODO 摆烂了 反正这些后面也是得重构 懒得搬砖了
@@ -1457,9 +1160,6 @@ W.PageBase {
     addCallback(Command.UpdateRequestUI, Logic.callbacks["UpdateRequestUI"]);
     addCallback(Command.GetPlayerHandcards, Logic.callbacks["GetPlayerHandcards"]);
     addCallback(Command.ReplyToServer, Logic.callbacks["ReplyToServer"]);
-    addCallback(Command.ReplayerDurationSet, Logic.callbacks["ReplayerDurationSet"]);
-    addCallback(Command.ReplayerElapsedChange, Logic.callbacks["ReplayerElapsedChange"]);
-    addCallback(Command.ReplayerSpeedChange, Logic.callbacks["ReplayerSpeedChange"]);
 
     playerNum = Config.roomCapacity;
     bgm.play();

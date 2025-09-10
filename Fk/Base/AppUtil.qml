@@ -5,9 +5,12 @@ import Fk
 // 一些Qml代码可能常用到的封装函数 省得写一堆notify
 
 QtObject {
-  function enterNewPage(uri, name) {
+  function enterNewPage(uri, name, prop) {
     const component = Qt.createComponent(uri, name);
-    Mediator.notify(null, Command.PushPage, component);
+    Mediator.notify(null, Command.PushPage, {
+      component,
+      prop,
+    });
   }
 
   function quitPage() {

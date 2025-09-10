@@ -495,6 +495,10 @@ function ResetClientLua()
   local cpp_players = table.map(self.players, function(p)
     return { p.player, p.ready, p.owner }
   end)
+  -- FIXME 擦屁股之Qt版server没给机器人发removePlayer
+  cpp_players = table.filter(cpp_players, function(arr)
+    return arr[1]:getId() > 0
+  end)
 
   local _data = self.enter_room_data
 
@@ -581,8 +585,9 @@ function SetReplayingShowCards(o)
   end
 end
 
-function CheckSurrenderAvailable(playedTime)
+function CheckSurrenderAvailable()
   local curMode = ClientInstance.settings.gameMode
+  local playedTime = os.time() - ClientInstance.gameStartTime
   return Fk.game_modes[curMode]:surrenderFunc(playedTime)
 end
 

@@ -187,6 +187,7 @@ function ClientBase:startGame(data)
   end
 
   self.gameStarted = true
+  self.gameStartTime = os.time()
 
   self:notifyUI("StartGame", data)
 end
