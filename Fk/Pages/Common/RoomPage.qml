@@ -398,6 +398,10 @@ Item {
     Config.saveConf();
   }
 
+  function addToChat(pid, raw, msg) {
+    gameLoader.item.addToChat(pid, raw, msg);
+  }
+
   Component.onCompleted: {
     overlay.addCallback(Command.EnterLobby, enterLobby);
 
