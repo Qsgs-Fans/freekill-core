@@ -157,6 +157,8 @@ function ClientBase:enterRoom(_data)
   local sp = Self.player
   local new_sp = self.client:addPlayer(sp:getId(), sp:getScreenName(), sp:getAvatar())
   new_sp:addTotalGameTime(sp:getTotalGameTime())
+  local gameData = sp:getGameData()
+  new_sp:setGameData(gameData:at(0), gameData:at(1), gameData:at(2))
   Self.player = new_sp
   self.players = {Self}
   self.alive_players = {Self}
@@ -475,6 +477,7 @@ function ClientBase:propertyUpdate(data)
   -- jsonData: [ int id, string property_name, value ]
   local id, name, value = data[1], data[2], data[3]
   local p = self:getPlayerById(id)
+  if not p then return end
   self:setPlayerProperty(p, name, value)
   self:notifyUI("PropertyUpdate", data)
 end

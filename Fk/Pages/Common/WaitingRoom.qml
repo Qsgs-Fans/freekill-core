@@ -145,6 +145,9 @@ W.PageBase {
         isOwner: model.isOwner
         ready: model.ready
         opacity: model.sealed ? 0 : 1
+        winGame: model.win
+        runGame: model.run
+        totalGame: model.total
 
         onClicked: {
           if (photoMenu.visible){
@@ -314,11 +317,11 @@ W.PageBase {
     const total = data[1];
     const win = data[2];
     const run = data[3];
-    const photo = getPhoto(id);
+    const photo = getPhotoModel(id);
     if (photo) {
-      photo.totalGame = total;
-      photo.winGame = win;
-      photo.runGame = run;
+      photo.total = total;
+      photo.win = win;
+      photo.run = run;
     }
   }
 
@@ -406,6 +409,9 @@ W.PageBase {
         isOwner: false,
         ready: false,
         sealed: i >= playerNum,
+        win: 0,
+        run: 0,
+        total: 0,
       });
     }
 
@@ -417,6 +423,7 @@ W.PageBase {
   function loadPlayerData(sender) {
     const datalist = Lua.evaluate(`table.map(ClientInstance.players, function(p)
       local cp = p.player
+      local gameData = cp:getGameData()
       return {
         id = p.id,
         name = cp:getScreenName(),
@@ -424,10 +431,14 @@ W.PageBase {
         ready = p.ready,
         isOwner = p.owner,
         gameTime = cp:getTotalGameTime(),
+        total = gameData:at(0),
+        win = gameData:at(1),
+        run = gameData:at(2),
       }
     end)`);
 
     resetPhotos();
+
     for (const d of datalist) {
       if (d.id === Self.id) {
         roomScene.isOwner = d.isOwner;
@@ -437,6 +448,9 @@ W.PageBase {
       const model = getPhotoModel(d.id);
       model.ready = d.ready;
       model.isOwner = d.isOwner;
+      model.total = d.total;
+      model.win = d.win;
+      model.run = d.run;
     }
   }
 

@@ -56,7 +56,7 @@ PhotoBase {
           timeStr = `${h} h`;
         }
 
-        let ret = `时长：${timeStr}\n`
+        let ret = `时长: ${timeStr}\n`
 
         if (totalGame === 0) {
           ret += Lua.tr("Newbie");
