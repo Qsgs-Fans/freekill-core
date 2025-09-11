@@ -12,6 +12,9 @@ Item {
   property var selectedCards: []
   property var movepos
 
+  property var draggingCard
+  property var draggingClickedPhoto
+
   signal cardSelected(int cardId, bool selected)
   signal cardDoubleClicked(int cardId, bool selected)
 
@@ -76,7 +79,9 @@ Item {
     });
 
     if (animated) {
-      cards.forEach(card => card.goBack(true));
+      cards.forEach(card => {
+        if (!card.dragging) card.goBack(true);
+      });
     }
   }
 
@@ -84,12 +89,68 @@ Item {
     if (!_card) return;
     _card.goBackAnim.stop();
     _card.opacity = 0.8
+
+    draggingCard = _card;
+    draggingClickedPhoto = null;
+    _card.xChanged.connect(dragMovement);
+    _card.yChanged.connect(dragMovement);
+  }
+
+  function dragMovement() {
+    const card = draggingCard;
+    if (!card) return;
+    const x = card.x + card.dragCenter.x;
+    const y = card.y + card.dragCenter.y;
+    if (y >= roomScene.dashboard.y && x <= roomScene.getPhoto(Self.id).x) {
+      return;
+    }
+    if (!card.selectable) return;
+
+    if (!card.selected) {
+      cardSelected(card.cid, true);
+    }
+
+    const pids = Lua.evaluate('table.map(ClientInstance.players, Util.IdMapper)');
+    let belowPhoto;
+    for (const pid of pids) {
+      const photo = roomScene.getPhoto(pid);
+      const actualW = photo.width * photo.scale;
+      const actualH = photo.height * photo.scale;
+      const actualX = photo.x + (photo.width - actualW) / 2;
+      const actualY = photo.y + (photo.height - actualH) / 2;
+
+      if (x >= actualX && x <= actualX + actualW && y >= actualY && y <= actualY + actualH) {
+        belowPhoto = photo;
+        if (draggingClickedPhoto === photo) continue;
+        draggingClickedPhoto = photo;
+        photo.selected = photo.selectable ? !photo.selected : false;
+      }
+    }
+
+    if (!belowPhoto) draggingClickedPhoto = null;
   }
 
   function updateCardReleased(_card) {
     let i;
     let c;
     let index;
+
+    const inDragUse = (_card === draggingCard);
+    draggingCard = null;
+    draggingClickedPhoto = null;
+    _card.xChanged.disconnect(dragMovement);
+    _card.yChanged.disconnect(dragMovement);
+
+    if (inDragUse) {
+      const x = _card.x + _card.dragCenter.x;
+      const y = _card.y + _card.dragCenter.y;
+      if ((y < roomScene.dashboard.y || x > roomScene.getPhoto(Self.id).x) && roomScene.okButton.enabled) {
+        roomScene.okButton.clicked();
+        return;
+      } else if (_card.selected) {
+        cardSelected(_card.cid, false);
+      }
+    }
 
     let card;
     movepos = null;

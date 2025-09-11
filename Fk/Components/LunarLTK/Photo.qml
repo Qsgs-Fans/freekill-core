@@ -58,6 +58,16 @@ PhotoBase {
   }
 
   PixmapAnimation {
+    id: animSelected
+    source: SkinBank.PIXANIM_DIR + "selected"
+    anchors.centerIn: parent
+    loop: true
+    scale: 1.1
+    visible: root.state === "candidate" && root.selected
+    running: visible
+  }
+
+  PixmapAnimation {
     id: animSelectable
     source: SkinBank.PIXANIM_DIR + "selectable"
     anchors.centerIn: parent
@@ -259,30 +269,8 @@ PhotoBase {
     }
   }
 
-  W.TapHandler {
-    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.NoButton
-    gesturePolicy: TapHandler.WithinBounds
-
-    onTapped: (p, btn) => {
-      if (btn === Qt.LeftButton || btn === Qt.NoButton) {
-        if (parent.state != "candidate" || !parent.selectable) {
-          return;
-        }
-        parent.selected = !parent.selected;
-      } else if (btn === Qt.RightButton) {
-        parent.showDetail();
-      }
-    }
-
-    onLongPressed: {
-      parent.showDetail();
-    }
-
-    onDoubleTapped: (p, btn) => {
-      if (btn === Qt.LeftButton || btn === Qt.NoButton) {
-        parent.doubleTapped = true;
-      }
-    }
+  onRightClicked: {
+    showDetail();
   }
 
   RoleComboBox {

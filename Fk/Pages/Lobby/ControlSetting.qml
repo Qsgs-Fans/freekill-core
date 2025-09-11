@@ -10,43 +10,49 @@ W.PreferencePage {
 
   W.PreferenceGroup {
 
-  W.SwitchRow {
-    title: Lua.tr("Hide unselectable cards")
-    subTitle: Lua.tr("help: Hide unselectable cards")
-    checked: Config.hideUseless
-    onCheckedChanged: Config.hideUseless = checked;
-  }
+    W.SwitchRow {
+      title: Lua.tr("Hide unselectable cards")
+      subTitle: Lua.tr("help: Hide unselectable cards")
+      checked: Config.hideUseless
+      onCheckedChanged: Config.hideUseless = checked;
+    }
 
-  W.SwitchRow {
-    title: Lua.tr("Rotate table card")
-    subTitle: Lua.tr("help: Rotate table card")
-    checked: Config.rotateTableCard
-    onCheckedChanged: Config.rotateTableCard = checked;
-  }
+    W.SwitchRow {
+      title: Lua.tr("Rotate table card")
+      subTitle: Lua.tr("help: Rotate table card")
+      checked: Config.rotateTableCard
+      onCheckedChanged: Config.rotateTableCard = checked;
+    }
 
-  W.SwitchRow {
-    title: Lua.tr("Auto select the only target")
-    subTitle: Lua.tr("help: Auto select the only target")
-    checked: Config.autoTarget
-    onCheckedChanged: Config.autoTarget = checked;
-  }
+    W.SwitchRow {
+      title: Lua.tr("Auto select the only target")
+      subTitle: Lua.tr("help: Auto select the only target")
+      checked: Config.autoTarget
+      onCheckedChanged: Config.autoTarget = checked;
+    }
 
-  /*
-  W.SwitchRow {
-    title: Lua.tr("Double click to use card or skill")
-    subTitle: Lua.tr("help: Double click to use card or skill")
-    checked: Config.doubleClickUse
-    onCheckedChanged: Config.doubleClickUse = checked;
-  }
-  */
+    /*
+     W.SwitchRow {
+       title: Lua.tr("Double click to use card or skill")
+       subTitle: Lua.tr("help: Double click to use card or skill")
+       checked: Config.doubleClickUse
+       onCheckedChanged: Config.doubleClickUse = checked;
+     }
+     */
 
-  W.SwitchRow {
-    title: Lua.tr("Do not use nullification to own one-target trick")
-    subTitle: Lua.tr("help: Do not use nullification to own one-target trick")
-    checked: Config.noSelfNullification
-    onCheckedChanged: Config.noSelfNullification = checked;
-  }
+    W.SwitchRow {
+      title: Lua.tr("Do not use nullification to own one-target trick")
+      subTitle: Lua.tr("help: Do not use nullification to own one-target trick")
+      checked: Config.noSelfNullification
+      onCheckedChanged: Config.noSelfNullification = checked;
+    }
 
+    W.SwitchRow {
+      title: "关闭拖动出牌提示文本"
+      subTitle: "那个文本是提示你操作方法的，已了解的话请关闭"
+      checked: Config.disableDragUseHint
+      onCheckedChanged: Config.disableDragUseHint = checked;
+    }
   }
 
 }

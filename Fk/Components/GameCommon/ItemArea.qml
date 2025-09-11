@@ -54,8 +54,9 @@ InvisibleItemArea {
     }
 
     if (animated) {
-      for (i = 0; i < items.length; i++)
-        items[i].goBack(true);
+      for (i = 0; i < items.length; i++) {
+        if (!items[i].dragging) items[i].goBack(true);
+      }
     }
   }
 }

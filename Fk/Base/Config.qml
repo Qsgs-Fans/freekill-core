@@ -55,6 +55,8 @@ QtObject {
   property bool enableFreeAssign
   property bool enableDeputy
 
+  property bool disableDragUseHint
+
   property bool firstRun: true
 
   // Player property of client
@@ -173,6 +175,7 @@ QtObject {
     preferredLuckTime = conf.preferredLuckTime ?? 0;
     enableFreeAssign = conf.enableFreeAssign ?? false;
     enableDeputy = conf.enableDeputy ?? false;
+    disableDragUseHint = conf.disableDragUseHint ?? false;
     firstRun = conf.firstRun ?? true;
     // disabledGenerals = conf.disabledGenerals ?? [];
     // disableGeneralSchemes = conf.disableGeneralSchemes ?? [ disabledGenerals ];
@@ -223,6 +226,7 @@ QtObject {
     conf.preferredLuckTime = preferredLuckTime;
     conf.enableFreeAssign = enableFreeAssign;
     conf.enableDeputy = enableDeputy;
+    conf.disableDragUseHint = disableDragUseHint;
     conf.firstRun = firstRun;
     // conf.disabledGenerals = disabledGenerals;
     // conf.disableGeneralSchemes = disableGeneralSchemes;

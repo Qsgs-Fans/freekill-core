@@ -152,16 +152,6 @@ Game.BasicItem {
     NumberAnimation { duration: 600; easing.type: Easing.InOutQuad }
   }
 
-  PixmapAnimation {
-    id: animSelected
-    source: SkinBank.PIXANIM_DIR + "selected"
-    anchors.centerIn: parent
-    loop: true
-    scale: 1.1
-    visible: root.state === "candidate" && root.selected
-    running: visible
-  }
-
   GlowText {
     id: playerName
     anchors.horizontalCenter: parent.horizontalCenter

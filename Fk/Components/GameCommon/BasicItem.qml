@@ -10,6 +10,7 @@ Item {
   property bool selected: false
   property bool draggable: false
   property alias dragging: drag.active
+  property alias dragCenter: drag.centroid.position
 
   property bool enabled: true   // if false the card will be grey
 
@@ -130,6 +131,9 @@ Item {
   }
 
   function goBack(animated) {
+    if (dragging) {
+      console.warn(this, "goBack when dragging", new Error().stack)
+    }
     if (animated) {
       moveAborted = true;
       goBackAnimation.stop();

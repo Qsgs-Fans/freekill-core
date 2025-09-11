@@ -509,6 +509,30 @@ W.PageBase {
     }
   }
 
+  Rectangle {
+    id: dragUseHint
+    anchors.centerIn: parent
+    opacity: (dashboard.handcardArea.draggingCard && dashboard.handcardArea.draggingCard.selected) ? 1 : 0
+    visible: !Config.disableDragUseHint
+    height: 200
+    width: getPhoto(Self.id).x - 20
+    color: "#F0F3F3F4"
+    radius: 16
+
+    Behavior on opacity {
+      NumberAnimation {
+        duration: 300
+      }
+    }
+
+    Text {
+      anchors.centerIn: parent
+      font.pixelSize: 26
+      horizontalAlignment: Text.AlignHCenter
+      text: "<b>您正在拖动出牌</b><br>1. 在手牌区外松开相当于点确定, 在手牌区内松开无事发生<br>2. 拖动时将手指移入目标角色即可选择目标，再次移入则取消选择<br>3. 已经明白的话，可在设置界面关闭这个框的显示"
+    }
+  }
+
   // manualBox: same as popupBox, but must be closed manually
   Loader {
     id: manualBox
