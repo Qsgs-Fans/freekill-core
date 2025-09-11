@@ -773,6 +773,11 @@ end
 ---@param scope? integer @ 查询历史范围，若你填了num则必须填具体时机
 function Player:setSkillUseHistory(skill_name, num, scope)
   skill_name = skill_name or ""
+  local _, _, ismatch = string.find(skill_name, "#([^%s]+)_main_skill")
+  if ismatch then
+    skill_name = ismatch
+  end
+
   if num == nil and scope == nil then
     if skill_name ~= "" then
       self.skillUsedHistory[skill_name] = {0, 0, 0, 0}
