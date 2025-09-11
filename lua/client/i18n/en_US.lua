@@ -317,7 +317,7 @@ Fk:loadTranslationTable({
   ["#NoGeneralDraw"] = "General Pile is empty",
   ["#NoEventDraw"] = "All game events terminated",
   ["#NoEnoughGeneralDraw"] = "No enough generals! (%arg/%arg2)",
-  ["#TimeOutDraw"] = "It's over 9999 Round!",
+  ["#TimeOutDraw"] = "It's over thousands Round!",
 
   ["$GameOver"] = "Game Over",
   ["$Winner"] = "Winner is %1",

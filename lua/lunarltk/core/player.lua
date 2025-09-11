@@ -799,15 +799,16 @@ end
 
 --- 设定玩家使用特定技能分支的历史次数。
 --- `num`和`scope`均不写则为清空特定区域的历史次数
----@param skill_name? string @ 技能名，不写则默认改变**所有技能**之所有分支的历史次数
----@param branch? string @ 技能分支名，不写则默认改变某技能**所有分支**的历史次数
+---@param skill_name? string @ 技能名，不写（或写空字符串）则默认改变**所有技能**之所有分支的历史次数
+---@param branch? string @ 技能分支名，不写（或写空字符串）则默认改变某技能**所有分支**的历史次数
 ---@param num? integer @ 次数 默认0
----@param scope? integer @ 查询历史范围
+---@param scope? integer @ 查询历史范围，若你填了num则必须填具体时机
 function Player:setSkillBranchUseHistory(skill_name, branch, num, scope)
   skill_name = skill_name or ""
+  branch = branch or ""
   if num == nil and scope == nil then
     if skill_name ~= "" then
-      if branch then
+      if branch ~= "" then
         self.skillBranchUsedHistory[skill_name][branch] = {0, 0, 0, 0}
       else
         self.skillBranchUsedHistory[skill_name] = {}
@@ -822,7 +823,8 @@ function Player:setSkillBranchUseHistory(skill_name, branch, num, scope)
   assert(scope)
   if skill_name == "" then
     for _, v in pairs(self.skillBranchUsedHistory) do
-      if branch then
+      if branch ~= "" then
+        v[branch] = v[branch] or {0, 0, 0, 0}
         v[branch][scope] = num
       else
         for _, history in pairs(v) do
@@ -832,7 +834,7 @@ function Player:setSkillBranchUseHistory(skill_name, branch, num, scope)
     end
   else
     self.skillBranchUsedHistory[skill_name] = self.skillBranchUsedHistory[skill_name] or {}
-    if branch then
+    if branch ~= "" then
       self.skillBranchUsedHistory[skill_name][branch] = self.skillBranchUsedHistory[skill_name][branch] or {0, 0, 0, 0}
       self.skillBranchUsedHistory[skill_name][branch][scope] = num
     else
