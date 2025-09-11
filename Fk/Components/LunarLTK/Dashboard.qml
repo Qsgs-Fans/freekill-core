@@ -182,6 +182,7 @@ RowLayout {
       }
     });
     uiUpdate["_new"]?.forEach(dat => {
+      const sortable = Lua.call("CanSortHandcards", Self.id);
       if (dat.type == "CardItem") {
         const data = Lua.call("GetCardData", dat.data.id);
         data.x = parentPos.x;
@@ -194,6 +195,7 @@ RowLayout {
         if (vcard) {
           card.virt_name = vcard.name;
         }
+        card.draggable = sortable;
         handcardAreaItem.add(card);
       }
     });

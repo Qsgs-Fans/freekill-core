@@ -681,9 +681,11 @@ callbacks["UpdateHandcard"] = (sender) => {
 
   roomScene.dashboard.handcardArea.cards.forEach((v) => {
     const id = v.cid;
-    v.setData(Lua.call("GetCardData", id));
-    v.known = Lua.call("CardVisibility", id);
-    v.draggable = sortable;
+    if (Lua.evaluate(`ClientInstance:getCardArea(${id}) == Card.PlayerHand and ClientInstance:getCardOwner(${id}) == Self`)) {
+      v.setData(Lua.call("GetCardData", id));
+      v.known = Lua.call("CardVisibility", id);
+      v.draggable = sortable;
+    }
   });
 }
 

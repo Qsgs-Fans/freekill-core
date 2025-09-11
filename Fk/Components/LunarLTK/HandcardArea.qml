@@ -172,7 +172,12 @@ Item {
 
     if (sortable && movepos != null) {
       const handcardnum = Lua.call("GetPlayerHandcards", Self.id).length; // 不计入expand_pile
-      if (movepos >= handcardnum) movepos = handcardnum - 1;
+      const isMyHandcard = Lua.evaluate(`ClientInstance:getCardArea(${_card.cid}) == Card.PlayerHand and ClientInstance:getCardOwner(${_card.cid}) == Self`);
+      if (isMyHandcard) {
+        if (movepos >= handcardnum) movepos = handcardnum - 1;
+      } else {
+        if (movepos < handcardnum) movepos = handcardnum;
+      }
       i = cards.indexOf(_card);
       cards.splice(i, 1);
       cards.splice(movepos, 0, _card);
