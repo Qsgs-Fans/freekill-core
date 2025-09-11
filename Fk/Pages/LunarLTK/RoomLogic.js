@@ -161,12 +161,6 @@ function getPhoto(id) {
   return undefined;
 }
 
-function getPhotoOrDashboard(id) {
-  if (id === Self.id)
-    return dashboard;
-  return getPhoto(id);
-}
-
 function getAreaItem(area, id) {
   if (area === Card.DrawPile) {
     return drawPile;
@@ -1232,10 +1226,6 @@ callbacks["AskForUseActiveSkill"] = (sender, data) => {
 
 callbacks["CancelRequest"] = () => {
   roomScene.state = "notactive";
-}
-
-callbacks["GameLog"] = (sender, jsonData) => {
-  roomScene.addToLog(jsonData)
 }
 
 callbacks["AskForUseCard"] = (sender, data) => {

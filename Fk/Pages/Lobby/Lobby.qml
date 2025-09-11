@@ -321,7 +321,9 @@ W.PageBase {
     const roomSettings = data[2];
     Config.enableFreeAssign = roomSettings.enableFreeAssign;
     Config.heg = roomSettings.gameMode.includes('heg_mode');
-    App.enterNewPage("Fk.Pages.Common", "WaitingRoom");
+    App.enterNewPage("Fk.Pages.Common", "RoomPage", {
+      gameComponent: Qt.createComponent("Fk.Pages.Common", "WaitingRoom"),
+    });
     App.setBusy(false);
   }
 

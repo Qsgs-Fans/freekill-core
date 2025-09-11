@@ -255,6 +255,12 @@ function ClientBase:addPlayer(data)
   local id, name, avatar, ready, time = data[1], data[2], data[3], data[4], data[5]
   local player = self.client:addPlayer(id, name, avatar)
   player:addTotalGameTime(time or 0)
+  -- cpp连这个都没做？
+  if id > 0 then
+    player:setState(fk.Player_Online)
+  else
+    player:setState(fk.Player_Robot)
+  end
   local p = self:createPlayer(player)
   p.ready = ready
   table.insert(self.players, p)
@@ -288,6 +294,7 @@ function ClientBase:addObserver(data)
     getId = function() return id end,
     getScreenName = function() return name end,
     getAvatar = function() return avatar end,
+    getState = function() return fk.Player_Online end,
   }
   local p = self.clientplayer_klass:new(player)
   table.insert(self.observers, p)
@@ -325,6 +332,9 @@ function ClientBase:chat(data)
     data.general = ""
   else
     data.general = p.general
+  end
+  if data.general == nil or data.general == "" then
+    data.general = p.player:getAvatar()
   end
   data.userName = p.player:getScreenName()
   data.time = os.date("%H:%M:%S")
@@ -511,6 +521,7 @@ function ClientBase:gameOver(jsonData)
     end
   end
   Self.buddy_list = table.map(self.players, Util.IdMapper)
+  self.gameStarted = false
   self:notifyUI("GameOver", jsonData)
 end
 

@@ -523,10 +523,6 @@ function ResetClientLua()
   self.disabled_generals = data[3].disabledGenerals
 end
 
-function ResetAddPlayer(j)
-  ClientInstance:addPlayer(j)
-end
-
 function GetRoomConfig()
   return ClientInstance.settings
 end
@@ -1213,12 +1209,17 @@ function GetPlayersAndObservers()
   local players = table.connect(self.observers, self.players)
   local ret = {}
   for _, p in ipairs(players) do
+    local state = p.player:getState()
+    if state == fk.Player_Run and p.dead then
+      state = fk.Player_Offline
+    end
     table.insert(ret, {
       id = table.contains(self.players, p) and p.id or p.player:getId(),
       general = p.general,
       deputy = p.deputyGeneral,
       name = p.player:getScreenName(),
       observing = table.contains(self.observers, p),
+      state = state,
       avatar = p.player:getAvatar(),
     })
   end

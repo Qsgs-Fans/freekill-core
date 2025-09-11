@@ -100,7 +100,7 @@ GraphicsBox {
       visible: !Config.observing
 
       onClicked: {
-        roomScene.resetToInit();
+        Mediator.notify(root, Command.ResetRoomPage);
         finished();
       }
     }
@@ -109,13 +109,7 @@ GraphicsBox {
       text: Lua.tr("Back To Lobby")
 
       onClicked: {
-        if (Config.replaying) {
-          App.quitPage();
-          App.quitPage();
-          Backend.controlReplayer("shutdown");
-        } else {
-          ClientInstance.notifyServer("QuitRoom", "");
-        }
+        Mediator.notify(root, Command.IWantToQuitRoom);
       }
     }
 
@@ -126,8 +120,7 @@ GraphicsBox {
 
       onClicked: {
         repBtn.visible = false;
-        Lua.call("SaveRecord");
-        App.showToast("OK.");
+        Mediator.notify(root, Command.IWantToSaveRecord);
       }
     }
 
@@ -138,8 +131,7 @@ GraphicsBox {
 
       onClicked: {
         bkmBtn.visible = false;
-        Backend.saveBlobRecordToFile(ClientInstance.getMyGameData()[0].id); // 建立在自动保存录像基础上
-        App.showToast("OK.");
+        Mediator.notify(root, Command.IWantToBookmarkRecord);
       }
     }
   }

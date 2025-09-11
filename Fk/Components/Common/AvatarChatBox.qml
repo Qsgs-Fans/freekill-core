@@ -17,12 +17,11 @@ Rectangle {
     if (general == "__server") {
       general = "";
       avatar = "__server"
-    } else if (!roomScene.getPhoto(data.sender)) {
+    } else if (Lua.evaluate(`ClientInstance:getPlayerById(${data.sender}) == nil`)) {
       avatar = "__observer";
     }
     chatLogBox.append({
-      avatar: data.general || roomScene.getPhoto(data.sender)?.general ||
-              avatar || "unknown",
+      avatar: data.general || avatar || "unknown",
       general: general,
       msg: data.msg,
       userName: data.userName,
@@ -81,13 +80,13 @@ Rectangle {
 
   function loadSkills() {
     skills.clear();
-    const general = roomScene.getPhoto(Self.id)?.general;
+    const general = Lua.evaluate(`Self.general`);
     if (general) {
       loadGeneralSkillAudios(general);
       findWinDeathAudio(general, true);
       findWinDeathAudio(general, false);
     }
-    const deputyGeneral = roomScene.getPhoto(Self.id)?.deputyGeneral;
+    const deputyGeneral = Lua.evaluate(`Self.deputyGeneral`);
     if (deputyGeneral) {
       loadGeneralSkillAudios(deputyGeneral);
       findWinDeathAudio(deputyGeneral, true);
@@ -231,7 +230,7 @@ Rectangle {
 
         onClicked: {
           opTimer.start();
-          const general = roomScene.getPhoto(Self.id).general;
+          const general = Lua.evaluate(`Self.general`);
           if ( name === "fastchat_m" ) {
             if (general !== "") {
               const data = Lua.call("GetGeneralDetail", general);

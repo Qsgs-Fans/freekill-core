@@ -13,6 +13,22 @@ QtObject {
     });
   }
 
+  function changeRoomPage(data) {
+    let c;
+    if (!(data instanceof Object)) {
+      c = Qt.createComponent("Fk.Pages.LunarLTK", "Room");
+    } else {
+      if (data.uri && data.name) {
+        // TODO 还不可用，需要让Lua能添加import path
+        c = Qt.createComponent(data.uri, data.name);
+      } else {
+        c = Qt.createComponent(Cpp.path + "/" + data.url);
+      }
+    }
+
+    Mediator.notify(null, Command.ChangeRoomPage, c);
+  }
+
   function quitPage() {
     Mediator.notify(null, Command.PopPage, null);
   }

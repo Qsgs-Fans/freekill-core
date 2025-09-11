@@ -44,6 +44,11 @@ W.PageBase {
     }
   }
 
+  Shortcut {
+    sequence: "Escape"
+    onActivated: menuButton.clicked();
+  }
+
   function openOverlay() {
     gameContent.scale = root.gameScale;
     // 左右各留20px

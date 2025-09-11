@@ -184,6 +184,7 @@ Game.BasicItem {
   Game.ChatBubble {
     id: chat
     width: parent.width
+    z: 9
   }
 
   function chat(msg) {

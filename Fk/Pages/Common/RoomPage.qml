@@ -5,6 +5,7 @@ import Qt5Compat.GraphicalEffects
 import QtQuick.Dialogs
 
 import Fk
+import Fk.Components.Common
 import Fk.Widgets as W
 import Fk.Pages.Lobby as L
 
@@ -158,7 +159,7 @@ Item {
     anchors.topMargin: parent.height * 0.1
     spacing: 16
     width: parent.width - shadowRect.width * shadowRect.scale - 40 - 40
-    // height: shadowRect.height * shadowRect.scale
+    height: shadowRect.height * shadowRect.scale
 
     W.ButtonContent {
       id: quitButton
@@ -166,17 +167,8 @@ Item {
       icon.source: "http://175.178.66.93/symbolic/actions/application-exit-rtl-symbolic.svg"
       font.bold: true
       Layout.fillWidth: true
-      Layout.fillHeight: true
       onClicked: {
-        if (Config.replaying) {
-          Backend.controlReplayer("shutdown");
-          App.quitPage();
-          App.quitPage();
-        } else if (Config.observing) {
-          Cpp.notifyServer("QuitRoom", "");
-        } else {
-          quitDialog.open();
-        }
+        root.tryQuitRoom();
       }
     }
 
@@ -186,7 +178,6 @@ Item {
       icon.source: "http://175.178.66.93/symbolic/categories/applications-system-symbolic.svg"
       font.bold: true
       Layout.fillWidth: true
-      Layout.fillHeight: true
       onClicked: {
         settingsDialog.open();
       }
@@ -237,7 +228,6 @@ Item {
       icon.source: "http://175.178.66.93/symbolic/mimetypes/x-office-document-symbolic.svg"
       font.bold: true
       Layout.fillWidth: true
-      Layout.fillHeight: true
       onClicked: {
         overviewLoader.overviewType = "GeneralPool";
         overviewDialog.open();
@@ -251,7 +241,6 @@ Item {
       icon.source: Cpp.path + "/image/misc/surrender"
       font.bold: true
       Layout.fillWidth: true
-      Layout.fillHeight: true
       onClicked: {
         if (Lua.evaluate('Self.dead and (Self.rest <= 0)')) {
           return;
@@ -266,6 +255,21 @@ Item {
           .join('<br>');
         }
         surrenderDialog.open();
+      }
+    }
+
+    Item {
+      Layout.fillHeight: true
+    }
+
+    W.ButtonContent {
+      id: chatButton
+      text: Lua.tr("Chat")
+      icon.source: "http://175.178.66.93/symbolic/actions/chat-message-new-symbolic.svg"
+      font.bold: true
+      Layout.fillWidth: true
+      onClicked: {
+        roomDrawer.open();
       }
     }
   }
@@ -352,7 +356,6 @@ Item {
     }
   }
 
-
   Loader {
     id: gameLoader
     width: parent.width
@@ -375,6 +378,128 @@ Item {
     gameContent: gameLoader
   }
 
+  W.PopupLoader {
+    id: roomDrawer
+    width: Config.winWidth * 0.4
+    height: Config.winHeight * 0.95
+    x: Config.winHeight * 0.025
+    y: Config.winHeight * 0.025
+
+    property int rememberedIdx: 0
+
+    background: Rectangle {
+      radius: 12 * Config.winScale
+      color: "#FAFAFB"
+      opacity: 0.9
+    }
+
+    ColumnLayout {
+      // anchors.fill: parent
+      width: parent.width / Config.winScale
+      height: parent.height / Config.winScale
+      scale: Config.winScale
+      transformOrigin: Item.TopLeft
+
+      W.ViewSwitcher {
+        id: drawerBar
+        Layout.alignment: Qt.AlignHCenter
+        model: [
+          Lua.tr("Log"),
+          Lua.tr("Chat"),
+          Lua.tr("PlayerList"),
+        ]
+      }
+
+      SwipeView {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        interactive: false
+        currentIndex: drawerBar.currentIndex
+        clip: true
+
+        Item {
+          LogEdit {
+            id: log
+            anchors.fill: parent
+          }
+        }
+
+        Item {
+          visible: !Config.replaying
+          AvatarChatBox {
+            id: chat
+            anchors.fill: parent
+          }
+        }
+
+        ListView {
+          id: playerList
+
+          clip: true
+          ScrollBar.vertical: ScrollBar {}
+          model: ListModel {
+            id: playerListModel
+          }
+
+          delegate: ItemDelegate {
+            width: playerList.width
+            height: 30
+            text: {
+              let ret = screenName;
+              if (observing) {
+                ret = '*旁观* ' + ret;
+              }
+              if (netState == 3) {
+                ret = '<font color="red">*逃跑*</font> ' + ret;
+              } else if (netState == 5) {
+                ret = '<font color="blue">*人机*</font> ' + ret;
+              } else if (netState == 6) {
+                ret = '<font color="gray">*离线*</font> ' + ret;
+              }
+              return ret;
+            }
+          }
+        }
+      }
+    }
+
+    onAboutToHide: {
+      // 安卓下在聊天时关掉Popup会在下一次点开时完全卡死
+      // 可能是Qt的bug 总之为了伺候安卓需要把聊天框赶走
+      rememberedIdx = drawerBar.currentIndex;
+      drawerBar.currentIndex = 0;
+    }
+
+    onAboutToShow: {
+      drawerBar.currentIndex = rememberedIdx;
+      playerListModel.clear();
+      const ps = Lua.call("GetPlayersAndObservers");
+      ps.forEach(p => {
+        playerListModel.append({
+          id: p.id,
+          screenName: p.name,
+          general: p.general ?? "",
+          deputyGeneral: p.deputy ?? "",
+          observing: p.observing,
+          netState: p.state,
+          avatar: p.avatar,
+        });
+      });
+    }
+  }
+
+  Danmu {
+    id: danmu
+    width: parent.width
+  }
+
+  Shortcut {
+    sequence: "T"
+    onActivated: {
+      roomDrawer.open();
+    }
+  }
+
   function canHandleCommand(cmd) {
     return gameContent.canHandleCommand(cmd) || overlay.canHandleCommand(cmd);
   }
@@ -389,7 +514,6 @@ Item {
   }
 
   function enterLobby(sender, data) {
-    App.quitPage(); // 退到等待页了，再退
     App.quitPage();
 
     App.setBusy(false);
@@ -397,12 +521,202 @@ Item {
     Config.saveConf();
   }
 
+  function specialChat(pid, data, msg) {
+    // skill audio: %s%d[%s]
+    // death audio: ~%s
+    // something special: !%s:...
+
+    const time = data.time;
+    const userName = data.userName;
+    const general = Lua.tr(data.general);
+    const room = gameLoader.item;
+
+    if (msg.startsWith("@")) { // 蛋花
+      if (Config.hidePresents)
+        return true;
+
+      const splited = msg.split(":");
+      const type = splited[0].slice(1);
+      switch (type) {
+        case "Egg":
+        case "GiantEgg":
+        case "Shoe":
+        case "Wine":
+        case "Flower": {
+          const fromId = pid;
+          const toId = parseInt(splited[1]);
+          const component = Qt.createComponent("Fk.Components.LunarLTK.ChatAnim", type);
+          if (component.status !== Component.Ready) {
+            console.warn(component.errorString());
+            return false;
+          }
+
+          const fromGetter = room.getPhotoOrDashboard || room.getPhoto || null;
+          const toGetter = room.getPhoto || null;
+          if (!fromGetter || !toGetter) return false;
+          const fromItem = fromGetter(fromId);
+          const fromPos = mapFromItem(fromItem, fromItem.width / 2,
+                                      fromItem.height / 2);
+          const toItem = toGetter(toId);
+          const toPos = mapFromItem(toItem, toItem.width / 2,
+                                    toItem.height / 2);
+          const egg = component.createObject(room, { start: fromPos, end: toPos });
+          egg.finished.connect(() => egg.destroy());
+          egg.running = true;
+
+          return true;
+        }
+        default:
+          return false;
+      }
+    } else if (msg.startsWith("!") || msg.startsWith("~")) { // 胜利、阵亡
+      const g = msg.slice(1);
+      const extension = Lua.call("GetGeneralData", g).extension;
+      if (!Config.disableMsgAudio) {
+        const path = SkinBank.getAudio(g, extension, msg.startsWith("!") ? "win" : "death");
+        Backend.playSound(path);
+      }
+
+      const m = Lua.tr(msg);
+      data.msg = m;
+    } else { // 技能
+      const split = msg.split(":");
+      if (split.length < 2) return false;
+      const skill = split[0];
+      const idx = parseInt(split[1]);
+      const gene = split[2];
+
+      if (!Config.disableMsgAudio) {
+        let i = idx;
+        let general = gene;
+
+        // let extension = data.extension;
+        let extension;
+        let path;
+        let dat;
+        const tryPlaySound = (general) => {
+          if (general) {
+            const dat = Lua.call("GetGeneralData", general);
+            const extension = dat.extension;
+            const path = SkinBank.getAudio(skill + "_" + general, extension, "skill");
+            if (path !== undefined) {
+              Backend.playSound(path, i);
+              return true;
+            }
+          }
+          return false;
+        };
+
+        // Try main general first, then deputy general
+        if (!tryPlaySound(general)) {
+          // finally normal skill
+          dat = Lua.call("GetSkillData", skill);
+          extension = dat.extension;
+          path = SkinBank.getAudio(skill, extension, "skill");
+          Backend.playSound(path, i);
+        }
+      }
+
+      const m = Lua.tr("$" + skill + (gene ? "_" + gene : "")
+                          + (idx ? idx.toString() : ""));
+      data.msg = m;
+    }
+  }
+
   function addToChat(pid, raw, msg) {
-    gameLoader.item.addToChat(pid, raw, msg);
+    if (raw.type === 1) return;
+    const room = gameLoader.item;
+
+    const photo = typeof room.getPhoto === 'function' ? room.getPhoto(pid) : null;
+    if (!photo && Config.hideObserverChatter)
+      return;
+
+    msg = msg.replace(/\{emoji([0-9]+)\}/g,
+      `<img src="${Cpp.path}/image/emoji/$1.png" height="24" width="24" />`);
+    raw.msg = raw.msg.replace(/\{emoji([0-9]+)\}/g,
+      `<img src="${Cpp.path}/image/emoji/$1.png" height="24" width="24" />`);
+
+    if (raw.msg.startsWith("$")) {
+      if (specialChat(pid, raw, raw.msg.slice(1))) return; // 蛋花、语音
+    }
+
+    chat.append(msg, raw);
+
+    if (!photo) {
+      const user = raw.userName;
+      const m = raw.msg;
+      danmu.sendLog(`${user}: ${m}`);
+      return;
+    } else if (photo.chat) {
+      photo.chat(raw.msg);
+    }
+  }
+
+  function sendDanmu(msg) {
+    danmu.sendLog(msg);
+    chat.append(null, {
+      msg: msg,
+      general: "__server", // FIXME: 基于默认读取貂蝉的数据
+      userName: "",
+      time: "Server",
+    });
+  }
+
+  function addToLog(_, msg) {
+    log.append({ logText: msg });
+  }
+
+  function replyToServer(sender, data) {
+    ClientInstance.replyToServer("", data);
+    gameContent.state = "notactive";
+  }
+
+  function changeRoomPage(_, data) {
+    gameLoader.sourceComponent = data;
+  }
+
+  function resetRoomPage() {
+    Lua.call("ResetClientLua");
+    gameLoader.sourceComponent = Qt.createComponent("Fk.Pages.Common", "WaitingRoom");
+    Mediator.notify(this, Command.BackToRoom);
+  }
+
+  function tryQuitRoom() {
+    if (Config.replaying) {
+      App.quitPage();
+      Backend.controlReplayer("shutdown");
+    } else if (Config.observing || Lua.evaluate(`not ClientInstance.gameStarted`)) {
+      Cpp.notifyServer("QuitRoom", "");
+    } else {
+      quitDialog.open();
+    }
+  }
+
+  function trySaveRecord() {
+    Lua.call("SaveRecord");
+    App.showToast("OK.");
+  }
+
+  function tryBookmarkRecord() {
+    Backend.saveBlobRecordToFile(ClientInstance.getMyGameData()[0].id); // 建立在自动保存录像基础上
+    App.showToast("OK.");
+  }
+
+  function openChat() {
+    roomDrawer.open();
   }
 
   Component.onCompleted: {
     overlay.addCallback(Command.EnterLobby, enterLobby);
+    overlay.addCallback(Command.GameLog, addToLog);
+    overlay.addCallback(Command.ReplyToServer, replyToServer);
+    overlay.addCallback(Command.ChangeRoomPage, changeRoomPage);
+    overlay.addCallback(Command.ResetRoomPage, resetRoomPage);
+
+    overlay.addCallback(Command.IWantToQuitRoom, tryQuitRoom);
+    overlay.addCallback(Command.IWantToSaveRecord, trySaveRecord);
+    overlay.addCallback(Command.IWantToBookmarkRecord, trySaveRecord);
+    overlay.addCallback(Command.IWantToChat, openChat);
 
     overlay.addCallback(Command.ReplayerDurationSet, (_, j) => {
       root.replayerDuration = parseInt(j);

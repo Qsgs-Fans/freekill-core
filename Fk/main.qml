@@ -54,6 +54,16 @@ Window {
     }
   }
 
+  Shortcut {
+    sequences: [ "F11", "Ctrl+F", "Alt+Return" ]
+    onActivated: {
+      if (root.visibility === Window.FullScreen)
+        root.showNormal();
+      else
+        root.showFullScreen();
+    }
+  }
+
   onClosing: (closeEvent) => {
     if (!mainWindow.closing) {
       closeEvent.accepted = false;

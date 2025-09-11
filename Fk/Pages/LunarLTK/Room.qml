@@ -337,7 +337,7 @@ W.PageBase {
       MetroButton {
         text: Lua.tr("Chat")
         textFont.pixelSize: 28
-        onClicked: roomDrawer.open();
+        onClicked: Mediator.notify(this, Command.IWantToChat);
       }
     }
   }
@@ -569,99 +569,6 @@ W.PageBase {
   }
 
   W.PopupLoader {
-    id: roomDrawer
-    width: Config.winWidth * 0.4
-    height: Config.winHeight * 0.95
-    x: Config.winHeight * 0.025
-    y: Config.winHeight * 0.025
-
-    property int rememberedIdx: 0
-
-    background: Rectangle {
-      radius: 12 * Config.winScale
-      color: "#FAFAFB"
-      opacity: 0.9
-    }
-
-    ColumnLayout {
-      // anchors.fill: parent
-      width: parent.width / Config.winScale
-      height: parent.height / Config.winScale
-      scale: Config.winScale
-      transformOrigin: Item.TopLeft
-
-      W.ViewSwitcher {
-        id: drawerBar
-        Layout.alignment: Qt.AlignHCenter
-        model: [
-          Lua.tr("Log"),
-          Lua.tr("Chat"),
-          Lua.tr("PlayerList"),
-        ]
-      }
-
-      SwipeView {
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        interactive: false
-        currentIndex: drawerBar.currentIndex
-        clip: true
-        Item {
-          LogEdit {
-            id: log
-            anchors.fill: parent
-          }
-        }
-        Item {
-          visible: !Config.replaying
-          AvatarChatBox {
-            id: chat
-            anchors.fill: parent
-          }
-        }
-
-        ListView {
-          id: playerList
-
-          clip: true
-          ScrollBar.vertical: ScrollBar {}
-          model: ListModel {
-            id: playerListModel
-          }
-
-          delegate: ItemDelegate {
-            width: playerList.width
-            height: 30
-            text: screenName + (observing ? "  [" + Lua.tr("Observe") +"]" : "")
-
-            onClicked: {
-              roomScene.startCheat("PlayerDetail", {
-                avatar: avatar,
-                id: id,
-                screenName: screenName,
-                general: general,
-                deputyGeneral: deputyGeneral,
-                observing: observing
-              });
-            }
-          }
-        }
-      }
-    }
-
-    onAboutToHide: {
-      // 安卓下在聊天时关掉Popup会在下一次点开时完全卡死
-      // 可能是Qt的bug 总之为了伺候安卓需要把聊天框赶走
-      rememberedIdx = drawerBar.currentIndex;
-      drawerBar.currentIndex = 0;
-    }
-
-    onAboutToShow: {
-      drawerBar.currentIndex = rememberedIdx;
-    }
-  }
-
-  W.PopupLoader {
     id: cheatLoader
     width: Config.winWidth * 0.60
     height: Config.winHeight * 0.8
@@ -742,24 +649,12 @@ W.PageBase {
     bgColor: "#BB838AEA"
   }
 
-  Danmu {
-    id: danmu
-    width: parent.width
-  }
-
   Shortcut {
     sequence: "D"
     property bool show_distance: false
     onActivated: {
       show_distance = !show_distance;
       showDistance(show_distance);
-    }
-  }
-
-  Shortcut {
-    sequence: "T"
-    onActivated: {
-      roomDrawer.open();
     }
   }
 
@@ -779,11 +674,6 @@ W.PageBase {
     }
   }
 
-  Shortcut {
-    sequence: "Escape"
-    onActivated: menuContainer.open();
-  }
-
   Timer {
     id: statusSkillTimer
     interval: 200
@@ -793,168 +683,11 @@ W.PageBase {
       Lua.call("RefreshStatusSkills");
       // FIXME 本来可以用客户端notifyUI(AddObserver)刷旁观列表的
       // FIXME 但是由于重启智慧所以还是加入一秒0.2刷得了
-      if (!roomDrawer.visible) {
-        playerListModel.clear();
-        const ps = Lua.call("GetPlayersAndObservers");
-        ps.forEach(p => {
-          playerListModel.append({
-            id: p.id,
-            screenName: p.name,
-            general: p.general,
-            deputyGeneral: p.deputy,
-            observing: p.observing,
-            avatar: p.avatar,
-          });
-        });
-      }
 
       // 刷大家的明置手牌提示框
       for (let i = 0; i < photos.count; i++)
         photos.itemAt(i).handcardsChanged();
     }
-  }
-
-  function addToChat(pid, raw, msg) {
-    if (raw.type === 1) return;
-    const photo = Logic.getPhoto(pid);
-    if (photo === undefined && Config.hideObserverChatter)
-      return;
-
-    msg = msg.replace(/\{emoji([0-9]+)\}/g,
-      `<img src="${Cpp.path}/image/emoji/$1.png" height="24" width="24" />`);
-    raw.msg = raw.msg.replace(/\{emoji([0-9]+)\}/g,
-      `<img src="${Cpp.path}/image/emoji/$1.png" height="24" width="24" />`);
-
-    if (raw.msg.startsWith("$")) {
-      if (specialChat(pid, raw, raw.msg.slice(1))) return; // 蛋花、语音
-    }
-    chat.append(msg, raw);
-
-    if (photo === undefined) {
-      const user = raw.userName;
-      const m = raw.msg;
-      danmu.sendLog(`${user}: ${m}`);
-      return;
-    }
-    photo.chat(raw.msg);
-  }
-
-  function specialChat(pid, data, msg) {
-    // skill audio: %s%d[%s]
-    // death audio: ~%s
-    // something special: !%s:...
-
-    const time = data.time;
-    const userName = data.userName;
-    const general = Lua.tr(data.general);
-
-
-    if (msg.startsWith("@")) { // 蛋花
-      if (Config.hidePresents)
-        return true;
-      const splited = msg.split(":");
-      const type = splited[0].slice(1);
-      switch (type) {
-        case "Egg":
-        case "GiantEgg":
-        case "Shoe":
-        case "Wine":
-        case "Flower": {
-          const fromId = pid;
-          const toId = parseInt(splited[1]);
-          const component = Qt.createComponent("Fk.Components.LunarLTK.ChatAnim", type);
-          //if (component.status !== Component.Ready)
-          //  return false;
-
-          const fromItem = Logic.getPhotoOrDashboard(fromId);
-          const fromPos = mapFromItem(fromItem, fromItem.width / 2,
-                                      fromItem.height / 2);
-          const toItem = Logic.getPhoto(toId);
-          const toPos = mapFromItem(toItem, toItem.width / 2,
-                                    toItem.height / 2);
-          const egg = component.createObject(roomScene, {
-                                                 start: fromPos,
-                                                 end: toPos
-                                             });
-          egg.finished.connect(() => egg.destroy());
-          egg.running = true;
-
-          return true;
-        }
-        default:
-          return false;
-      }
-    } else if (msg.startsWith("!") || msg.startsWith("~")) { // 胜利、阵亡
-      const g = msg.slice(1);
-      const extension = Lua.call("GetGeneralData", g).extension;
-      if (!Config.disableMsgAudio) {
-        const path = SkinBank.getAudio(g, extension, msg.startsWith("!") ? "win" : "death");
-        Backend.playSound(path);
-      }
-
-      const m = Lua.tr(msg);
-      data.msg = m;
-      if (general === "")
-        chat.append(`[${time}] ${userName}: ${m}`, data);
-      else
-        chat.append(`[${time}] ${userName}(${general}): ${m}`, data);
-
-      const photo = Logic.getPhoto(pid);
-      if (photo === undefined) {
-        danmu.sendLog(`${userName}: ${m}`);
-        return true;
-      }
-      photo.chat(m);
-
-      return true;
-    } else { // 技能
-      const split = msg.split(":");
-      if (split.length < 2) return false;
-      const skill = split[0];
-      const idx = parseInt(split[1]);
-      const gene = split[2];
-      if (!Config.disableMsgAudio)
-        try {
-          callbacks["LogEvent"]({
-            type: "PlaySkillSound",
-            name: skill,
-            general: gene,
-            i: idx,
-          });
-        } catch (e) {}
-      const m = Lua.tr("$" + skill + (gene ? "_" + gene : "")
-                          + (idx ? idx.toString() : ""));
-      data.msg = m;
-      if (general === "")
-        chat.append(`[${time}] ${userName}: ${m}`, data);
-      else
-        chat.append(`[${time}] ${userName}(${general}): ${m}`, data)
-
-      const photo = Logic.getPhoto(pid);
-      if (photo === undefined) {
-        danmu.sendLog(`${userName}: ${m}`);
-        return true;
-      }
-      photo.chat(m);
-
-      return true;
-    }
-
-    return false;
-  }
-
-  function addToLog(msg) {
-    log.append({ logText: msg });
-  }
-
-  function sendDanmu(msg) {
-    danmu.sendLog(msg);
-    chat.append(null, {
-      msg: msg,
-      general: "__server", // FIXME: 基于默认读取貂蝉的数据
-      userName: "",
-      time: "Server",
-    });
   }
 
   function showDistance(show) {
@@ -984,13 +717,6 @@ W.PageBase {
     cheatLoader.open();
   }
 
-  function resetToInit() {
-    App.quitPage();
-    Lua.call("ResetClientLua");
-
-    Mediator.notify(this, Command.BackToRoom);
-  }
-
   function setPrompt(text, iscur) {
     promptText = text;
     if (iscur) currentPrompt = text;
@@ -1002,6 +728,11 @@ W.PageBase {
 
   function getPhoto(id) {
     return Logic.getPhoto(id);
+  }
+
+  function getPhotoOrDashboard(id) {
+    if (id === Self.id) return dashboard;
+    return getPhoto(id);
   }
 
   function activate() {
@@ -1142,7 +873,6 @@ W.PageBase {
     addCallback(Command.PrelightSkill, Logic.callbacks["PrelightSkill"]);
     addCallback(Command.AskForUseActiveSkill, Logic.callbacks["AskForUseActiveSkill"]);
     addCallback(Command.CancelRequest, Logic.callbacks["CancelRequest"]);
-    addCallback(Command.GameLog, Logic.callbacks["GameLog"]);
     addCallback(Command.AskForUseCard, Logic.callbacks["AskForUseCard"]);
     addCallback(Command.AskForResponseCard, Logic.callbacks["AskForResponseCard"]);
     addCallback(Command.SetPlayerMark, Logic.callbacks["SetPlayerMark"]);

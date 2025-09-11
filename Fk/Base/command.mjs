@@ -36,8 +36,14 @@ export const SetDownloadingPackage = "SetDownloadingPackage";
 export const PackageDownloadError = "PackageDownloadError";
 export const PackageTransferProgress = "PackageTransferProgress";
 
-// WaitingRoom 等待房间
+// RoomPage 房间基底页
+export const ChangeRoomPage = "ChangeRoomPage";
+export const ResetRoomPage = "ResetRoomPage";
 export const BackToRoom = "BackToRoom";
+export const IWantToQuitRoom = "IWantToQuitRoom";
+export const IWantToSaveRecord = "IWantToSaveRecord";
+export const IWantToBookmarkRecord = "IWantToBookmarkRecord";
+export const IWantToChat = "IWantToChat";
 
 // Misc
 export const Chat = "Chat";

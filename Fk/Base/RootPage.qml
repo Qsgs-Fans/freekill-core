@@ -257,11 +257,12 @@ W.PageBase {
     }
 
     let text;
-    if (general === "")
-    text = `<font color="#3598E8">[${time}] ${userName}:</font> ${msg}`;
-    else
-    text = `<font color="#3598E8">[${time}] ${userName}` +
-    `(${general}):</font> ${msg}`;
+    if (general === "") {
+      text = `<font color="#3598E8">[${time}] ${userName}:</font> ${msg}`;
+    } else {
+      text = `<font color="#3598E8">[${time}] ${userName}` +
+      `(${general}):</font> ${msg}`;
+    }
 
     current.addToChat(pid, data, text);
   }
