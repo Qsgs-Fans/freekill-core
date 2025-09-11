@@ -19,9 +19,10 @@ end
 ---@field public pattern string @ 推测参与转化的实体牌所满足的匹配器
 ---@field public subcards number[]? @ 转化底牌（用于实体牌已完全确定的情况）
 
----@param player Player @ the user
----@param name? string @ the card name
----@param selected? integer[] @ ids of selected cards
+--- 判断一个视为技会印什么样的牌
+---@param player Player @ 使用者
+---@param name? string @ 牌名
+---@param selected? integer[] @ 已选牌ID表
 ---@return ViewAsPattern?
 function ViewAsSkill:filterPattern(player, name, selected)
   return nil
@@ -29,8 +30,8 @@ end
 
 --- 判断一张牌是否可被此技能选中
 ---@param player Player @ 你自己
----@param to_select integer @ id of a card not selected
----@param selected integer[] @ ids of selected cards
+---@param to_select integer @ 等待判断的牌ID
+---@param selected integer[] @ 已选牌ID表
 ---@param selected_targets Player[] @ 已选目标
 ---@return boolean
 function ViewAsSkill:cardFilter(player, to_select, selected, selected_targets)
@@ -116,16 +117,20 @@ function ViewAsSkill:feasible(player, targets, selected_cards, card)
   return false
 end
 
----@param player ServerPlayer
----@param skillData SkillUseData
+--- 发动技能前确定cost_data的函数
+---@param player ServerPlayer @ 使用者
+---@param skillData SkillUseData @ 技能使用数据
+---@return table|CostData @ cost_data，其中的from/cards/tos会同步到skillData上。
 function ViewAsSkill:onCost(player, skillData)
   return {}
 end
 
----@param room Room
----@param cardUseEvent SkillUseData
----@param params? handleUseCardParams
----@return UseCardDataSpec|string?
+--- 发动技能时实际执行的函数
+-- 警告：建议别改
+---@param room Room @ 服务端房间
+---@param cardUseEvent SkillUseData @ 技能使用数据
+---@param params? handleUseCardParams @ 使用/打出牌的具体数据
+---@return UseCardDataSpec|string? @ 若为字符串，则禁止某些技能被发动，否则
 function ViewAsSkill:onUse(room, cardUseEvent, card, params)
   if card == nil then return "" end
   ---@type UseCardDataSpec
@@ -146,31 +151,33 @@ end
 
 -- For extra judgement, like mark or HP
 
----@param player Player
+--- 空闲时间点内是否可以使用转化技
+---@param player Player @ 想发动技能的角色
 function ViewAsSkill:enabledAtPlay(player)
   return self:isEffectable(player)
 end
 
----@param player Player
+--- 需要响应时是否可以使用转化技
+---@param player Player @ 想发动技能的角色
 ---@param cardResponsing? boolean @ 是否为打出事件
 function ViewAsSkill:enabledAtResponse(player, cardResponsing)
   return self:isEffectable(player)
 end
 
 --- 使用转化技使用/打出牌前执行的操作，注意此时牌未被使用/打出
----@param player Player
----@param cardUseStruct UseCardDataSpec
+---@param player Player @ 想发动技能的角色
+---@param cardUseStruct UseCardDataSpec|RespondCardDataSpec @ 使用/打出牌的数据
 ---@return any @ 若返回字符串，则取消本次使用
 function ViewAsSkill:beforeUse(player, cardUseStruct) end
 
 --- 使用转化技使用牌后执行的操作
----@param player Player
----@param cardUseStruct UseCardData
+---@param player Player @ 想发动技能的角色
+---@param cardUseStruct UseCardData @ 使用牌的数据
 function ViewAsSkill:afterUse(player, cardUseStruct) end
 
 --- 使用转化技打出牌后执行的操作
----@param player Player
----@param response RespondCardData
+---@param player Player @ 想发动技能的角色
+---@param response RespondCardData @ 打出牌的数据
 function ViewAsSkill:afterResponse(player, response) end
 
 
@@ -181,7 +188,7 @@ function ViewAsSkill:afterResponse(player, response) end
 function ViewAsSkill:prompt(player, selected_cards, selected_targets, extra_data) return "" end
 
 --- 转化无懈是否对特定的牌有效
----@param player Player
+---@param player Player @ 想发动技能的角色
 ---@param data CardEffectData @ 被响应的牌的数据
 ---@return boolean?
 function ViewAsSkill:enabledAtNullification(player, data)

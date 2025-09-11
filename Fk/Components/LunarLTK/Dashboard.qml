@@ -190,6 +190,10 @@ RowLayout {
         card.footnoteVisible = true;
         card.markVisible = false;
         card.footnote = Lua.tr(dat.ui_data.footnote);
+        const vcard = Lua.call("GetVirtualEquip", 0, dat.data.id);
+        if (vcard) {
+          card.virt_name = vcard.name;
+        }
         handcardAreaItem.add(card);
       }
     });

@@ -1981,14 +1981,29 @@ function Room:handleUseCardReply(player, data, params)
         from = player,
         cards = selected_cards,
         tos = table.map(targets, Util.Id2PlayerMapper),
+        interaction_data = data.interaction_data,
       }
       local use_data = SkillUseData:new(use_spec)
-      use_data.cost_data = skill:onCost(player, use_data)
+      use_data.cost_data = skill:onCost(player, use_spec)
+      if use_data.cost_data.from then
+        use_data.from = use_data.cost_data.from
+      end
+      if use_data.cost_data.cards then
+        use_data.cards = use_data.cost_data.cards
+      end
+      if use_data.cost_data.tos then
+        use_data.tos = use_data.cost_data.tos
+      end
+      if use_data.cost_data.interaction_data then
+        use_data.interaction_data = use_data.cost_data.interaction_data
+      end
       if not use_data.cost_data.history_branch then
-        if type(skill.history_branch) == "function" then
-          use_data.cost_data.history_branch = skill:history_branch(player, use_data)
-        else
-          use_data.cost_data.history_branch = skill.history_branch
+        local branch = skill.history_branch
+        if type(branch) == "function" then
+          branch = skill:history_branch(player, use_data)
+        end
+        if type(branch) == "string" then
+          use_data.cost_data.history_branch = branch
         end
       end
 
@@ -2006,14 +2021,29 @@ function Room:handleUseCardReply(player, data, params)
         from = player,
         cards = selected_cards,
         tos = table.map(targets, Util.Id2PlayerMapper),
+        interaction_data = data.interaction_data,
       }
       local use_data = SkillUseData:new(use_spec)
-      use_data.cost_data = skill:onCost(player, use_data)
+      use_data.cost_data = skill:onCost(player, use_spec)
+      if use_data.cost_data.from then
+        use_data.from = use_data.cost_data.from
+      end
+      if use_data.cost_data.cards then
+        use_data.cards = use_data.cost_data.cards
+      end
+      if use_data.cost_data.tos then
+        use_data.tos = use_data.cost_data.tos
+      end
+      if use_data.cost_data.interaction_data then
+        use_data.interaction_data = use_data.cost_data.interaction_data
+      end
       if not use_data.cost_data.history_branch then
-        if type(skill.history_branch) == "function" then
-          use_data.cost_data.history_branch = skill:history_branch(player, use_data)
-        else
-          use_data.cost_data.history_branch = skill.history_branch
+        local branch = skill.history_branch
+        if type(branch) == "function" then
+          branch = skill:history_branch(player, use_data)
+        end
+        if type(branch) == "string" then
+          use_data.cost_data.history_branch = branch
         end
       end
 
@@ -2135,7 +2165,7 @@ end
 ---@class askToUseVirtualCardParams: AskToSkillInvokeParams
 ---@field name string|string[] @ 可以选择的虚拟卡名，可以多个
 ---@field subcards? integer[] @ 虚拟牌的子牌，默认空
----@field card_filter? { cards: integer[]?, n: integer[]?, pattern: string? } @选牌规则，优先级低于```subcards```，可选参数：```n```（牌数，填数字表示此只能此数量，填{a, b}表示至少为a至多为b）```pattern```（选牌规则）```cards```（可选牌的范围）
+---@field card_filter? { cards: integer[]?, n: integer|integer[]?, pattern: string? } @选牌规则，优先级低于```subcards```，可选参数：```n```（牌数，填数字表示此只能此数量，填{a, b}表示至少为a至多为b）```pattern```（选牌规则）```cards```（可选牌的范围）
 ---@field prompt? string @ 询问提示信息。默认为：请视为使用xx
 ---@field extra_data? UseExtraData|table @ 额外信息，因技能而异了
 ---@field cancelable? boolean @ 是否可以取消。默认可以取消
@@ -2167,7 +2197,7 @@ function Room:askToUseVirtualCard(player, params)
   params.card_filter = params.card_filter or {}
   params.card_filter.n = params.card_filter.n or {0, 0}
   if type(params.card_filter.n) == "number" then
-    params.card_filter.n = {params.card_filter.n, params.card_filter.n}
+    params.card_filter.n = { params.card_filter.n, params.card_filter.n }
   end
   params.card_filter.pattern = params.card_filter.pattern or "."
   params.card_filter.cards = params.card_filter.cards or table.connect(player:getCardIds("he"), player:getHandlyIds(false))
@@ -2815,7 +2845,7 @@ end
 --- 询问移动场上的一张牌。不可取消
 ---@param player ServerPlayer @ 移动的操作者
 ---@param params AskToMoveCardInBoardParams @ 各种变量
----@return { card: Card | integer, from: ServerPlayer, to: ServerPlayer }? @ 选择的卡牌、起点玩家id和终点玩家id列表
+---@return { card: Card, from: ServerPlayer, to: ServerPlayer }? @ 选择的卡牌、起点玩家id和终点玩家id列表
 function Room:askToMoveCardInBoard(player, params)
   params.exclude_ids = type(params.exclude_ids) == "table" and params.exclude_ids or {}
 
@@ -2909,7 +2939,7 @@ function Room:askToMoveCardInBoard(player, params)
   else
     from, to = targetTwo, targetOne
   end
-  local cardToMove = self:getCardOwner(result.cardId):getVirualEquip(result.cardId) or Fk:getCardById(result.cardId)
+  local cardToMove = self:getCardOwner(result.cardId):getVirtualEquip(result.cardId) or Fk:getCardById(result.cardId)
   if not skip then
     self:moveCardTo(
       cardToMove,
@@ -3596,21 +3626,12 @@ end
 ---@deprecated @ 用actExtraTurn代替
 Room.ActExtraTurn = Room.actExtraTurn
 
-local function isSame(table1, table2)
-  if #table1 ~= #table2 then return false end
-  local tabledup = table.simpleClone(table2)
-  for _, j in ipairs(table1) do
-    if not table.removeOne(tabledup, j) then return false end
-  end
-  return #tabledup == 0
-end
-
 --- 获得一名角色的客户端手牌顺序
 --- 本bug由玄蝶提供
 ---@param player ServerPlayer @ 角色
 ---@return integer[] @ 卡牌ID，有元素检测就是了……
 function Room:getPlayerClientCards(player)
-  local req = Request:new({player}, "GetPlayerHandcards")
+  local req = Request:new({player}, "GetPlayerHandcards") --FIXME: 需要一个假request
   local cards = player.player_cards[Player.Hand]
   req:setDefaultReply(player, cards)
   local result = req:getResult(player)
@@ -3627,8 +3648,12 @@ function Room:syncPlayerClientCards(player)
   local result = self:getPlayerClientCards(player)
   -- printf("服务端此时组合：%s", table.concat(table.map(cards, function(e) return tostring(Fk:getCardById(e)) end), ","))
   -- printf("客户端返回组合：%s", table.concat(table.map(result, function(e) return tostring(Fk:getCardById(e)) end), ","))
-  assert(isSame(cards, result), "客户端和服务端信息不符！")
+  -- assert(table.isEqual(cards, result), "客户端和服务端信息不符！")
+  if not table.isEqual(cards, result) then
+    result = cards
+  end
   player.player_cards[Player.Hand] = result
+  self:doBroadcastNotify("SetPlayerHandCards", { player.id, result })
   return result
 end
 

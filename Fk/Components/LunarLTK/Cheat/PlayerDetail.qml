@@ -262,19 +262,21 @@ Flickable {
         skillDesc.append(skillText);
       });
 
-      Lua.call("GetPlayerEquips", id).forEach(cid => {
-        const t = Lua.call("GetCardData", cid);
-        skillDesc.append("------------------------------------")
-        skillDesc.append("<b>" + Lua.tr(t.name) + "</b>: " + Lua.tr(":" + t.name));
-      });
-
-      const judge = Lua.call("GetPlayerJudges", id);
+      var ej = Lua.call("GetPlayerEquips", id).concat(Lua.call("GetPlayerJudges", id));
       let unknownCardsNum = 0;
-      judge.forEach(cid => {
-        const t = Lua.call("GetCardData", cid);
+      ej.forEach(cid => {
+        const t = lcall("GetCardData", cid);
         if (Lua.call("CardVisibility", cid)) {
           skillDesc.append("------------------------------------")
-          skillDesc.append("<b>" + Lua.tr(t.name) + "</b>: " + Lua.tr(":" + t.name));
+          const v = lcall("GetVirtualEquip", id, cid);
+          if (v) {
+            skillDesc.append(
+              "<b>" + "(" + Lua.tr(t.name) + Lua.tr("log_" + t.suit) + Lua.tr(t.number.toString()) + ")" 
+              + Lua.tr(v.name) + "</b>: " + Lua.tr(":" + v.name)
+            );
+          } else {
+            skillDesc.append("<b>" + Lua.tr(t.name) + "</b>: " + Lua.tr(":" + t.name));
+          }
         } else {
           unknownCardsNum++;
         }

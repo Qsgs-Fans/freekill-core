@@ -485,6 +485,8 @@ Fk:loadTranslationTable({
   ["$DiscardOther"] = "%to discarded %arg card(s) %card from %from",
   ["$InstallEquip"] = "%from equipped %card",
   ["$UninstallEquip"] = "%from uninstalled %card",
+  ["$InstallVirtualEquip"] = "%from equipped %arg(from %card)",
+  ["$UninstallVirtualEquip"] = "%from uninstalled %arg(from %card)",
 
   ["#ShowCard"] = "%from showed card(s) %card",
   ["#Recast"] = "%from recasted %card",

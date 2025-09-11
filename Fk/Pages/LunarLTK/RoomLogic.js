@@ -245,8 +245,8 @@ function sortHandcards(sortMethods) {
     ["delayed_trick"]: Card.SubtypeDelayedTrick,
     ["weapon"]: Card.SubtypeWeapon,
     ["armor"]: Card.SubtypeArmor,
-    ["defensive_horse"]: Card.SubtypeDefensiveRide,
-    ["offensive_horse"]: Card.SubtypeOffensiveRide,
+    ["defensive_ride"]: Card.SubtypeDefensiveRide,
+    ["offensive_ride"]: Card.SubtypeOffensiveRide,
     ["treasure"]: Card.SubtypeTreasure,
   }
 
@@ -1039,7 +1039,7 @@ callbacks["AskForCardChosen"] = (sender, data) => {
     const arr = [];
     const ids = d[1];
 
-    ids.forEach(id => arr.push(Lua.call("GetCardData", id)));
+    ids.forEach(id => arr.push(Lua.call("GetCardData", id, true)));
     box.addCustomCards(d[0], arr);
   }
 
@@ -1119,8 +1119,8 @@ callbacks["AskForMoveCardInBoard"] = (sender, data) => {
 
   const boxCards = [];
   cards.forEach(id => {
-    const cardPos = cardsPosition[cards.findIndex(cid => cid === id)];
-    const d = Lua.call("GetCardData", id, playerIds[cardPos]);
+    // const cardPos = cardsPosition[cards.findIndex(cid => cid === id)];
+    const d = Lua.call("GetCardData", id, true);
     boxCards.push(d);
   });
 

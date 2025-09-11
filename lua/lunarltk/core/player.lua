@@ -284,7 +284,7 @@ end
 --- 确认玩家是否存在虚拟装备。
 ---@param cid integer @ 卡牌ID，用来定位装备
 ---@return Card?
-function Player:getVirualEquip(cid)
+function Player:getVirtualEquip(cid)
   for _, c in ipairs(self.virtual_equips) do
     for _, id in ipairs(c.subcards) do
       if id == cid then
@@ -295,11 +295,14 @@ function Player:getVirualEquip(cid)
   return nil
 end
 
+---@deprecated
+Player.getVirualEquip = Player.getVirtualEquip
+
 --- 确认玩家判定区是否存在延迟锦囊牌。
 ---@return boolean
 function Player:hasDelayedTrick(card_name)
   for _, id in ipairs(self:getCardIds(Player.Judge)) do
-    local c = self:getVirualEquip(id)
+    local c = self:getVirtualEquip(id)
     if not c then c = Fk:getCardById(id) end
     if c.name == card_name then
       return true
@@ -402,7 +405,8 @@ end
 ---@return integer? @ 返回卡牌ID或nil
 function Player:getEquipment(cardSubtype)
   for _, cardId in ipairs(self.player_cards[Player.Equip]) do
-    if Fk:getCardById(cardId).sub_type == cardSubtype then
+    local c = self:getVirtualEquip(cardId) or Fk:getCardById(cardId)
+    if c.sub_type == cardSubtype then
       return cardId
     end
   end
@@ -416,7 +420,7 @@ end
 function Player:getEquipments(cardSubtype)
   local cardIds = {}
   for _, cardId in ipairs(self.player_cards[Player.Equip]) do
-    if cardSubtype == nil or Fk:getCardById(cardId).sub_type == cardSubtype then
+    if cardSubtype == nil or (self:getVirtualEquip(cardId) or Fk:getCardById(cardId)).sub_type == cardSubtype then
       table.insert(cardIds, cardId)
     end
   end
@@ -457,14 +461,14 @@ function Player:getAttackRange(excludeIds, excludeSkills)
 
   local weapons = table.filter(self:getEquipments(Card.SubtypeWeapon), function (id)
     if not table.contains(excludeIds or {}, id) then
-      local weapon = Fk:getCardById(id) ---@class Weapon
+      local weapon = self:getVirtualEquip(id) or Fk:getCardById(id) ---@class Weapon
       return weapon:AvailableAttackRange(self)
     end
   end)
   if #weapons > 0 then
     baseValue = 0
     for _, id in ipairs(weapons) do
-      local weapon = Fk:getCardById(id) ---@class Weapon
+      local weapon = self:getVirtualEquip(id) or Fk:getCardById(id) ---@class Weapon
       baseValue = math.max(baseValue, weapon:getAttackRange(self) or 1)
     end
   end
@@ -472,7 +476,7 @@ function Player:getAttackRange(excludeIds, excludeSkills)
   excludeSkills = excludeSkills or {}
   if excludeIds then
     for _, id in ipairs(excludeIds) do
-      local equip = self:getVirualEquip(id) --[[@as EquipCard]]
+      local equip = self:getVirtualEquip(id) --[[@as EquipCard]]
       if equip == nil and table.contains(self:getCardIds("e"), id) and Fk:getCardById(id).type == Card.TypeEquip then
         equip = Fk:getCardById(id) --[[@as EquipCard]]
       end
@@ -533,7 +537,7 @@ function Player:distanceTo(other, mode, ignore_dead, excludeIds, excludeSkills)
   excludeSkills = excludeSkills or {}
   if excludeIds then
     for _, id in ipairs(excludeIds) do
-      local equip = self:getVirualEquip(id) --[[@as EquipCard]]
+      local equip = self:getVirtualEquip(id) --[[@as EquipCard]]
       if equip == nil and table.contains(self:getCardIds("e"), id) and Fk:getCardById(id).type == Card.TypeEquip then
         equip = Fk:getCardById(id) --[[@as EquipCard]]
       end
@@ -630,7 +634,7 @@ function Player:inMyAttackRange(other, fixLimit, excludeIds, excludeSkills)
   excludeSkills = excludeSkills or {}
   if excludeIds then
     for _, id in ipairs(excludeIds) do
-      local equip = self:getVirualEquip(id) --[[@as EquipCard]]
+      local equip = self:getVirtualEquip(id) --[[@as EquipCard]]
       if equip == nil and table.contains(self:getCardIds("e"), id) and Fk:getCardById(id).type == Card.TypeEquip then
         equip = Fk:getCardById(id) --[[@as EquipCard]]
       end
@@ -910,13 +914,11 @@ function Player:usedEffectTimes(skill_name, scope)
     if skel.name ~= skill_name then
       return self.skillUsedHistory[skill_name][scope]
     else
-      local total = self.skillUsedHistory[skill_name][scope]
-      for _, effect in ipairs(skel.effect_names) do
-        if effect ~= skill_name and not Fk.skills[effect].is_delay_effect and self.skillUsedHistory[effect] then
-          total = total - self.skillUsedHistory[effect][scope]
-        end
+      local main_name = string.format("#%s_main_skill", skill_name)
+      if not self.skillUsedHistory[main_name] then
+        return 0
       end
-      return total
+      return self.skillUsedHistory[main_name][scope]
     end
   end
   return self.skillUsedHistory[skill_name][scope]
@@ -1167,7 +1169,7 @@ end
 ---@param card Card @ 特定牌
 ---@param extra_data? UseExtraData @ 额外数据
 function Player:canUse(card, extra_data)
-  return not self:prohibitUse(card) and card.skill:canUse(self, card, extra_data)
+  return not self:prohibitUse(card) and not not card.skill:canUse(self, card, extra_data)
 end
 
 --- 确认玩家是否可以对特定玩家使用特定牌。
@@ -1366,14 +1368,24 @@ function Player:canPindian(to, ignoreFromKong, ignoreToKong)
 end
 
 --- 判断一张牌能否移动至某角色的装备区
----@param cardId integer @ 移动的牌
+---@param cardId integer | Card @ 移动的牌
 ---@param convert? boolean @ 是否可以替换装备（默认可以）
 ---@return boolean
 function Player:canMoveCardIntoEquip(cardId, convert)
   convert = (convert == nil) and true or convert
-  local card = Fk:getCardById(cardId)
+  local card = type(cardId) == "number" and Fk:getCardById(cardId) or cardId
+  if self.dead then return false end
+
   if not (card.sub_type >= 3 and card.sub_type <= 7) then return false end
-  if self.dead or table.contains(self:getCardIds("e"), cardId) then return false end
+  if type(cardId) == "number" then
+    if table.contains(self:getCardIds("e"), cardId) then return false end
+  else
+    if table.find(Card:getIdList(cardId), function (id)
+      return table.contains(self:getCardIds("e"), id)
+    end) then
+      return false
+    end
+  end
   if self:hasEmptyEquipSlot(card.sub_type) or (#self:getEquipments(card.sub_type) > 0 and convert) then
     return true
   end
@@ -1422,7 +1434,7 @@ function Player:canMoveCardInBoardTo(to, id)
     return false
   end
 
-  local card = self:getVirualEquip(id) or Fk:getCardById(id)
+  local card = self:getVirtualEquip(id) or Fk:getCardById(id)
   assert(card.type == Card.TypeEquip or card.sub_type == Card.SubtypeDelayedTrick)
 
   if card.type == Card.TypeEquip then

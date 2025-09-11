@@ -549,6 +549,19 @@ end
 
 ---@generic T
 ---@param self T[]
+---@param other T[]
+---@return boolean
+function table.isEqual(self, other)
+  if #self ~= #other then return false end
+  local tabledup = table.simpleClone(other)
+  for _, j in ipairs(self) do
+    if not table.removeOne(tabledup, j) then return false end
+  end
+  return #tabledup == 0
+end
+
+---@generic T
+---@param self T[]
 ---@param tbl T[]
 function table.hasIntersection(self, tbl)
   local hash = {}

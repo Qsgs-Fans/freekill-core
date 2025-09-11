@@ -127,7 +127,7 @@ function SkillSkeleton:addEffect(key, data, attribute)
     local param_prio = getTypePriority(key)
     if main_prio == 5 then
       if param_prio == 5 then
-        fk.qCritical("You can only add 1 'active'/'viewas' effect in one skill.")
+        fk.qCritical("You can only add 1 'active'/'viewas' effect in one skill [Skill: " .. self.name .. "]")
         return
       end
       first = false
@@ -176,12 +176,14 @@ function SkillSkeleton:createSkill()
       sk = self:createTriggerSkill(self, i, k, attr, data)
     end
     if sk then
+      local sk_name = sk.name
       if not main_skill then
         main_skill = sk
         main_skill.name = self.name
         local name_split = self.name:split("__")
         main_skill.trueName = name_split[#name_split]
         main_skill.visible = self.name[1] ~= "#"
+        sk_name = string.format("#%s_main_skill", main_skill.name)
       else
         if not sk.is_delay_effect then
           sk.main_skill = main_skill
@@ -189,7 +191,7 @@ function SkillSkeleton:createSkill()
         main_skill:addRelatedSkill(sk)
       end
       table.insert(self.effects, sk)
-      table.insert(self.effect_names, sk.name)
+      table.insert(self.effect_names, sk_name)
       sk.skeleton = self
     end
   end
@@ -229,6 +231,10 @@ end
 --- audio_index?: integer|table,
 --- trigger_times?: T,
 --- priority? : number,
+--- max_phase_use_time?: integer|(fun(self: TriggerSkill, player: ServerPlayer): integer?),
+--- max_turn_use_time?: integer|(fun(self: TriggerSkill, player: ServerPlayer): integer?),
+--- max_round_use_time?: integer|(fun(self: TriggerSkill, player: ServerPlayer): integer?),
+--- max_game_use_time?: integer|(fun(self: TriggerSkill, player: ServerPlayer): integer?),
 --- }
 
 ---@param _skill SkillSkeleton

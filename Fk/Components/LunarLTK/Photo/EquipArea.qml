@@ -25,83 +25,82 @@ Item {
   property var items: [treasureItem, weaponItem, armorItem,
     defensiveHorseItem, offensiveHorseItem]
   property var subtypes: ["treasure", "weapon", "armor",
-    "defensive_horse", "offensive_horse"]
+    "defensive_ride", "offensive_ride"]
   property int length: 0
 
-  // FIXME: Qt 6.6
-Column {
-  anchors.fill: parent
-  InvisibleCardArea {
-    id: area
-    anchors.centerIn: parent
-    // checkExisting: true
-    onLengthChanged: {
-      root.length = Lua.evaluate(`(function()
+  Column {
+    anchors.fill: parent
+    InvisibleCardArea {
+      id: area
+      anchors.centerIn: parent
+      // checkExisting: true
+      onLengthChanged: {
+        root.length = Lua.evaluate(`(function()
         return #ClientInstance:getPlayerById(${root.parent.playerid}):getCardIds("e")
-      end)()`);
-    }
-  }
-
-  EquipItem {
-    id: treasureItem
-    subtype: "treasure"
-    width: parent.width
-    height: (name === "" && !sealed) ? 0 : itemHeight
-    opacity: 0
-    sealed: root.parent.sealedSlots.includes('TreasureSlot')
-  }
-
-  EquipItem {
-    id: weaponItem
-    subtype: "weapon"
-    width: parent.width
-    height: itemHeight
-    opacity: 0
-    sealed: root.parent.sealedSlots.includes('WeaponSlot')
-  }
-
-  EquipItem {
-    id: armorItem
-    subtype: "armor"
-    width: parent.width
-    height: itemHeight
-    opacity: 0
-    sealed: root.parent.sealedSlots.includes('ArmorSlot')
-  }
-
-  Row {
-    width: root.width
-    height: itemHeight
-
-    Item {
-      width: Math.ceil(parent.width / 2)
-      height: itemHeight
-
-      EquipItem {
-        id: defensiveHorseItem
-        width: parent.width
-        height: itemHeight
-        icon: "horse"
-        opacity: 0
-        sealed: root.parent.sealedSlots.includes('DefensiveRideSlot')
+        end)()`);
       }
     }
 
-    Item {
-      width: Math.floor(parent.width / 2)
+    EquipItem {
+      id: treasureItem
+      subtype: "treasure"
+      width: parent.width
+      height: (name === "" && !sealed) ? 0 : itemHeight
+      opacity: 0
+      sealed: root.parent.sealedSlots.includes('TreasureSlot')
+    }
+
+    EquipItem {
+      id: weaponItem
+      subtype: "weapon"
+      width: parent.width
+      height: itemHeight
+      opacity: 0
+      sealed: root.parent.sealedSlots.includes('WeaponSlot')
+    }
+
+    EquipItem {
+      id: armorItem
+      subtype: "armor"
+      width: parent.width
+      height: itemHeight
+      opacity: 0
+      sealed: root.parent.sealedSlots.includes('ArmorSlot')
+    }
+
+    Row {
+      width: root.width
       height: itemHeight
 
-      EquipItem {
-        id: offensiveHorseItem
-        width: parent.width
+      Item {
+        width: Math.ceil(parent.width / 2)
         height: itemHeight
-        icon: "horse"
-        opacity: 0
-        sealed: root.parent.sealedSlots.includes('OffensiveRideSlot')
+
+        EquipItem {
+          id: defensiveHorseItem
+          width: parent.width
+          height: itemHeight
+          icon: "horse"
+          opacity: 0
+          sealed: root.parent.sealedSlots.includes('DefensiveRideSlot')
+        }
+      }
+
+      Item {
+        width: Math.floor(parent.width / 2)
+        height: itemHeight
+
+        EquipItem {
+          id: offensiveHorseItem
+          width: parent.width
+          height: itemHeight
+          icon: "horse"
+          opacity: 0
+          sealed: root.parent.sealedSlots.includes('OffensiveRideSlot')
+        }
       }
     }
   }
-}
 
   function add(inputs)
   {
@@ -111,15 +110,23 @@ Column {
     if (inputs instanceof Array) {
       for (let i = 0; i < inputs.length; i++) {
         card = inputs[i];
+        const vcard = lcall("GetVirtualEquip", parent.playerid, card.cid);
+        card = vcard || card;
         item = items[subtypes.indexOf(card.subtype)];
-        item.setCard(card);
-        item.show();
+        if (item) {
+          item.setCard(card);
+          item.show();
+        }
       }
     } else {
       card = inputs;
+      const vcard = lcall("GetVirtualEquip", parent.playerid, card.cid);
+      card = vcard || card;
       item = items[subtypes.indexOf(card.subtype)];
-      item.setCard(card);
-      item.show();
+      if (item) {
+        item.setCard(card);
+        item.show();
+      }
     }
   }
 

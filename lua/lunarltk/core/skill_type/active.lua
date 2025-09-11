@@ -196,14 +196,17 @@ function ActiveSkill:prompt(player, selected_cards, selected_targets, extra_data
 
 ------- }
 
----@param player ServerPlayer
----@param skillData SkillUseData
+--- 发动技能前确定cost_data的函数
+---@param player ServerPlayer @ 使用者
+---@param skillData SkillUseData @ 技能使用数据
+---@return table|CostData @ cost_data，其中的from/cards/tos会同步到skillData上。
 function ActiveSkill:onCost(player, skillData)
   return {}
 end
 
----@param room Room
----@param cardUseEvent SkillUseData
+--- 发动技能时实际执行的函数
+---@param room Room @ 服务端房间
+---@param cardUseEvent SkillUseData @ 技能使用数据
 function ActiveSkill:onUse(room, cardUseEvent) end
 
 
@@ -211,13 +214,13 @@ function ActiveSkill:onUse(room, cardUseEvent) end
 
 --- 选择目标时产生的目标提示，贴在目标脸上
 ---@param player Player @ 使用者
----@param to_select Player @ id of the target
----@param selected Player[] @ ids of selected targets
----@param selected_cards integer[] @ ids of selected cards
----@param card Card? @ helper
----@param selectable boolean? @can be selected
----@param extra_data? any @ extra_data
----@return string|table?
+---@param to_select Player @ 当前目标
+---@param selected Player[] @ 已选角色目标
+---@param selected_cards integer[] @ 已选卡牌ID表
+---@param card Card? @ (CardSkill?)所使用的牌
+---@param selectable boolean? @ 当前目标是否可选择
+---@param extra_data? table|UseExtraData @ 额外数据
+---@return string|TargetTipDataSpec?
 function ActiveSkill:targetTip(player, to_select, selected, selected_cards, card, selectable, extra_data) end
 
 return ActiveSkill

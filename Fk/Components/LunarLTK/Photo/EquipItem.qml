@@ -130,15 +130,16 @@ Item {
     name = card.name;
     suit = card.suit;
     number = card.number;
-    if (card.subtype === "defensive_horse") {
+    if (card.subtype === "defensive_ride") {
       text = "+1";
       icon = "horse";
-    } else if (card.subtype === "offensive_horse") {
+    } else if (card.subtype === "offensive_ride") {
       text = "-1"
       icon = "horse";
     } else {
       text = Lua.tr(name);
       if (card.virt_name) {
+        name = card.virt_name;
         icon = card.virt_name;
       } else {
         icon = name;

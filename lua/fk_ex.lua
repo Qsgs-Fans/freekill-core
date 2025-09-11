@@ -112,7 +112,8 @@ end
 ---@field public card_filter? fun(self: ActiveSkill, player: Player, to_select: integer, selected: integer[], selected_targets: Player[]): any @ 判断卡牌能否选择
 ---@field public target_filter? fun(self: ActiveSkill, player: Player?, to_select: Player, selected: Player[], selected_cards: integer[], card: Card?, extra_data: UseExtraData|table?): any @ 判定目标能否选择
 ---@field public feasible? fun(self: ActiveSkill, player: Player, selected: Player[], selected_cards: integer[], card: Card): any @ 判断卡牌和目标是否符合技能限制
----@field public on_cost? fun(self: UsableSkill, player: ServerPlayer, data: SkillUseData):CostData|table @ 自定义技能的消耗信息
+---@field public on_cost? fun(self: ActiveSkill, player: ServerPlayer, data: SkillUseData):CostData|table @ 自定义技能的消耗信息
+---@field public history_branch? string|fun(self: ActiveSkill, player: ServerPlayer, data: SkillUseData):string? @ 裁定本技能发动时（on_cost->on_use）将技能历史额外添加到某处分支下（内部有独立的时段细分），无法约束本技能是否可用
 ---@field public on_use? fun(self: ActiveSkill, room: Room, skillUseEvent: SkillUseData): any
 ---@field public prompt? string|fun(self: ActiveSkill, player: Player, selected_cards: integer[], selected_targets: Player[]): string @ 提示信息
 ---@field public interaction? fun(self: ActiveSkill, player: Player): table? @ 选项框
@@ -144,6 +145,7 @@ end
 ---@field public on_use? fun(self: ViewAsSkill, room: Room, skillUseEvent: SkillUseData, card: Card, params: handleUseCardParams?): UseCardDataSpec|string?
 ---@field public view_as fun(self: ViewAsSkill, player: Player, cards: integer[]): Card? @ 判断转化为什么牌
 ---@field public on_cost? fun(self: ViewAsSkill, player: ServerPlayer, data: SkillUseData):CostData|table @ 自定义技能的消耗信息
+---@field public history_branch? string|fun(self: ViewAsSkill, player: ServerPlayer, data: SkillUseData):string? @ 裁定本技能发动时（on_cost->on_use）将技能历史额外添加到某处分支下（内部有独立的时段细分），无法约束本技能是否可用
 ---@field public pattern? string
 ---@field public enabled_at_play? fun(self: ViewAsSkill, player: Player): any
 ---@field public enabled_at_response? fun(self: ViewAsSkill, player: Player, response: boolean): any

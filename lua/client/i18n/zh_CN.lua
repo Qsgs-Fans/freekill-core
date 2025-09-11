@@ -338,7 +338,7 @@ FreeKill使用的是libgit2的C API，与此同时使用Git完成拓展包的下
   ["AskForArrangeCards"] = "排列卡牌",
   ["replaceEquip"] = "替换装备",
   ["PlayCard"] = "出牌",
-  ["GetPlayerHandcards"] = "出牌 思考中...",
+  ["GetPlayerHandcards"] = "出牌",
 
   ["#AskForChooseGenerals"] = "%1：请选择%2名武将",
   ["#AskForChooseCard"] = "%1：请选择%src的一张卡牌",
@@ -645,6 +645,8 @@ Fk:loadTranslationTable {
 
   ["$InstallEquip"] = "%from 装备了 %card",
   ["$UninstallEquip"] = "%from 卸载了 %card",
+  ["$InstallVirtualEquip"] = "%from 装备了 %arg(转化自 %card)",
+  ["$UninstallVirtualEquip"] = "%from 卸载了 %arg(转化自 %card)",
 
   ["$LightningMove"] = "%card 从 %from 转移到了 %to",
   ["$PasteCard"] = "%from 给 %to 贴了张 %card",
