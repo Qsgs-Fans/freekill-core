@@ -265,10 +265,10 @@ Flickable {
       var ej = Lua.call("GetPlayerEquips", id).concat(Lua.call("GetPlayerJudges", id));
       let unknownCardsNum = 0;
       ej.forEach(cid => {
-        const t = lcall("GetCardData", cid);
+        const t = Lua.call("GetCardData", cid);
         if (Lua.call("CardVisibility", cid)) {
           skillDesc.append("------------------------------------")
-          const v = lcall("GetVirtualEquip", id, cid);
+          const v = Lua.call("GetVirtualEquip", id, cid);
           if (v) {
             skillDesc.append(
               "<b>" + "(" + Lua.tr(t.name) + Lua.tr("log_" + t.suit) + Lua.tr(t.number.toString()) + ")" 

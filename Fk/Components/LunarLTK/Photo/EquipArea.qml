@@ -110,7 +110,7 @@ Item {
     if (inputs instanceof Array) {
       for (let i = 0; i < inputs.length; i++) {
         card = inputs[i];
-        const vcard = lcall("GetVirtualEquip", parent.playerid, card.cid);
+        const vcard = Lua.call("GetVirtualEquip", parent.playerid, card.cid);
         card = vcard || card;
         item = items[subtypes.indexOf(card.subtype)];
         if (item) {
@@ -120,7 +120,7 @@ Item {
       }
     } else {
       card = inputs;
-      const vcard = lcall("GetVirtualEquip", parent.playerid, card.cid);
+      const vcard = Lua.call("GetVirtualEquip", parent.playerid, card.cid);
       card = vcard || card;
       item = items[subtypes.indexOf(card.subtype)];
       if (item) {
