@@ -422,9 +422,9 @@ function ClientBase:loadRoomSummary(data)
     end
   end
 
-  self:arrangeSeats(data.circle)
-
   self:startGame()
+
+  self:arrangeSeats(data.circle)
 
   self:deserialize(data)
 
