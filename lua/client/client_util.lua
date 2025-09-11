@@ -507,26 +507,41 @@ function GetPlayerJudges(pid)
   return p.player_cards[Player.Judge]
 end
 
+-- 重新创建Lua client，但是继承ClientBase之类的数据，将和游戏状态有关的数据抹杀
+-- 继承的数据只要足以支持等待界面的房间就行
 function ResetClientLua()
   local self = ClientInstance
-  local _data = self.enter_room_data;
-  local data = self.settings
-  Self = ClientPlayer:new(self.client:getSelf())
-  self:initialize(self.client) -- clear old client data
-  self.players = { Self }
-  self.alive_players = { Self }
-  self.discard_pile = {}
+  local client_klass = self.class --[[@as Client]]
+  local cpp_client = self.client
+  local cpp_players = table.map(self.players, function(p)
+    return { p.player, p.ready, p.owner }
+  end)
+  -- FIXME 擦屁股之Qt版server没给机器人发removePlayer
+  cpp_players = table.filter(cpp_players, function(arr)
+    return arr[1]:getId() > 0
+  end)
+
+  local _data = self.enter_room_data
+
+  self = client_klass:new(cpp_client) -- clear old client data
+  ClientInstance = self
+  self.players = table.map(cpp_players, function(p)
+    local cp = self:createPlayer(p[1])
+    cp.ready = p[2]
+    cp.owner = p[3]
+    return cp
+  end)
+  Self = self:getPlayerById(Self.id)
 
   self.enter_room_data = _data;
-  self.settings = data
+  local data = cbor.decode(_data)
+  self.capacity = data[1]
+  self.timeout = data[2]
+  self.settings = data[3]
 
-  self.disabled_packs = data.disabledPack
-  self.disabled_generals = data.disabledGenerals
-  -- ClientInstance:notifyUI("EnterRoom", jsonData)
-end
-
-function ResetAddPlayer(j)
-  fk.client_callback["AddPlayer"](ClientInstance, j)
+  -- FIXME 怎么混入三国杀要素了，非常坏
+  self.disabled_packs = data[3].disabledPack
+  self.disabled_generals = data[3].disabledGenerals
 end
 
 function GetRoomConfig()
@@ -588,8 +603,9 @@ function SetReplayingShowCards(o)
   end
 end
 
-function CheckSurrenderAvailable(playedTime)
+function CheckSurrenderAvailable()
   local curMode = ClientInstance.settings.gameMode
+  local playedTime = os.time() - ClientInstance.gameStartTime
   return Fk.game_modes[curMode]:surrenderFunc(playedTime)
 end
 
@@ -863,7 +879,7 @@ function GetCardProhibitReason(cid)
   local card = Fk:getCardById(cid)
   if not card then return "" end
   local handler = ClientInstance.current_request_handler
-  if (not handler) or (not handler:isInstanceOf(Fk.request_handlers["AskForUseActiveSkill"])) then return "" end
+  if (not handler) or (not handler:isInstanceOf(ClientInstance.request_handlers["AskForUseActiveSkill"])) then return "" end
   local method, pattern = "", handler.pattern or "."
 
   if handler.class.name == "ReqPlayCard" then
@@ -917,7 +933,7 @@ end
 
 function GetTargetTip(pid)
   local handler = ClientInstance.current_request_handler --[[@as ReqPlayCard ]]
-  if (not handler) or (not handler:isInstanceOf(Fk.request_handlers["AskForUseActiveSkill"])) then return "" end
+  if (not handler) or (not handler:isInstanceOf(ClientInstance.request_handlers["AskForUseActiveSkill"])) then return "" end
 
   local to_select = pid
   local selected = handler.selected_targets
@@ -1063,14 +1079,14 @@ end
 
 function GetPendingSkill()
   local h = ClientInstance.current_request_handler
-  local reqActive = Fk.request_handlers["AskForUseActiveSkill"]
+  local reqActive = ClientInstance.request_handlers["AskForUseActiveSkill"]
   return h and h:isInstanceOf(reqActive) and
       (h.selected_card == nil and h.skill_name) or ""
 end
 
 function RevertSelection()
   local h = ClientInstance.current_request_handler ---@type ReqActiveSkill
-  local reqActive = Fk.request_handlers["AskForUseActiveSkill"]
+  local reqActive = ClientInstance.request_handlers["AskForUseActiveSkill"]
   if not (h and h:isInstanceOf(reqActive) and h.pendings) then return end
   h.change = {}
   -- 1. 取消选中所有已选 2. 尝试选中所有之前未选的牌
@@ -1214,12 +1230,17 @@ function GetPlayersAndObservers()
   local players = table.connect(self.observers, self.players)
   local ret = {}
   for _, p in ipairs(players) do
+    local state = p.player:getState()
+    if state == fk.Player_Run and p.dead then
+      state = fk.Player_Offline
+    end
     table.insert(ret, {
       id = table.contains(self.players, p) and p.id or p.player:getId(),
       general = p.general,
       deputy = p.deputyGeneral,
       name = p.player:getScreenName(),
       observing = table.contains(self.observers, p),
+      state = state,
       avatar = p.player:getAvatar(),
     })
   end
@@ -1229,7 +1250,10 @@ end
 function ToUIString(v)
   local ok, obj = pcall(cbor.decode, v)
   if not ok then return "未知类型" end
-  local f = getmetatable(obj) ~= nil and getmetatable(obj).__touistring or nil
+  local mt = getmetatable(obj)
+  if not mt then return "未知类型" end
+
+  local f = mt.__touistring
   if f then
     local ret = f(obj)
     if type(ret) == "string" then
@@ -1243,12 +1267,14 @@ end
 
 local defaultQml = {
   -- 比照Qt.createComponent参数名而设
-  moduleUri = "QtQuick",
-  typeName = "Rectangle",
+  uri = "QtQuick",
+  name = "Rectangle",
+
+  -- 或者可以写QML文件路径
   url = nil,
 
   -- 比照Component.createObject
-  properties = {
+  prop = {
     width = 80,
     height = 100,
     color = "green",
@@ -1258,7 +1284,10 @@ local defaultQml = {
 function ToQml(v)
   local ok, obj = pcall(cbor.decode, v)
   if not ok then return defaultQml end
-  local f = getmetatable(obj).__toqml
+  local mt = getmetatable(obj)
+  if not mt then return defaultQml end
+
+  local f = mt.__toqml
   if f then
     local ret = f(obj)
     if type(ret) == "table" then

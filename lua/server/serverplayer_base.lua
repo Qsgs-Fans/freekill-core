@@ -1,0 +1,87 @@
+--- 各种ServerPlayer的第二基类
+---@class ServerPlayerBase : Base.Player
+---@field public serverplayer fk.ServerPlayer @ 控制者对应的C++玩家
+---@field public _splayer fk.ServerPlayer @ 对应的C++玩家
+---@field public room ServerRoomBase
+---@field public _timewaste_count integer
+---@field public ai Base.AI
+local ServerPlayerBase = {}
+
+function ServerPlayerBase:initialize(_self)
+  self.serverplayer = _self -- 控制者
+  self._splayer = _self -- 真正在玩的玩家
+  self._observers = { _self } -- "旁观"中的玩家，然而不包括真正的旁观者
+  self.id = _self:getId()
+
+  self._timewaste_count = 0
+end
+
+---@param command string
+---@param data any
+function ServerPlayerBase:doNotify(command, data)
+  if type(data) == "string" then
+    local err, dat = pcall(json.decode, data)
+    if err ~= false then
+      fk.qWarning("Don't use json.encode. Pass value directly to ServerPlayer:doNotify.\n"..debug.traceback())
+      data = dat
+    end
+  end
+
+  local cbordata = cbor.encode(data)
+
+  local room = self.room
+  for _, p in ipairs(self._observers) do
+    if p:getState() ~= fk.Player_Robot then
+      room.notify_count = room.notify_count + 1
+      p:doNotify(command, cbordata)
+    end
+  end
+
+  for _, t in ipairs(room.observers) do
+    local id, p = table.unpack(t)
+    if id == self.id and room.room:hasObserver(p) and p:getState() ~= fk.Player_Robot then
+      p:doNotify(command, cbordata)
+    end
+  end
+
+  if room.notify_count >= room.notify_max and
+    coroutine.status(room.main_co) == "normal" then
+    room:delay(100)
+  end
+end
+
+--- 发送一句聊天
+---@param msg string
+function ServerPlayerBase:chat(msg)
+  self.room:doBroadcastNotify("Chat", {
+    type = 2,
+    sender = self.id,
+    msg = msg,
+  })
+end
+
+function ServerPlayerBase:reconnect()
+  local room = self.room
+
+  local summary = room:serialize(self)
+  self:doNotify("Reconnect", summary)
+  self:doNotify("RoomOwner", { room.room:getOwner():getId() })
+
+  room:broadcastProperty(self, "state")
+end
+
+function ServerPlayerBase:serialize()
+  local klass = self.class.super --[[@as Base.Player]]
+  local o = klass.serialize(self)
+  local sp = self._splayer
+  o.setup_data = {
+    self.id,
+    sp:getScreenName(),
+    sp:getAvatar(),
+    false,
+    sp:getTotalGameTime(),
+  }
+  return o
+end
+
+return ServerPlayerBase

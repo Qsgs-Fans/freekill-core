@@ -1,0 +1,61 @@
+import QtQuick
+
+import Fk
+import Fk.Components.LunarLTK
+
+PhotoBase {
+  id: root
+
+  property bool isOwner: false
+  property bool ready: false
+
+  property int winGame: 0
+  property int runGame: 0
+  property int totalGame: 0
+
+  photoMask.x: winRateRect.x
+  photoMask.width: winRateRect.width
+
+  Image {
+    anchors.bottom: winRateRect.top
+    anchors.right: parent.right
+    anchors.bottomMargin: -8
+    anchors.rightMargin: 4
+    source: SkinBank.PHOTO_DIR +
+            (isOwner ? "owner" : (ready ? "ready" : "notready"))
+    visible: screenName != ""
+  }
+
+  Rectangle {
+    id: winRateRect
+    width: 163; x: 6
+    anchors.bottom: parent.bottom
+    anchors.bottomMargin: 6
+    height: childrenRect.height + 8
+    color: "#CC3C3229"
+    radius: 8
+    border.color: "white"
+    border.width: 1
+    visible: screenName != "" && !roomScene.isStarted
+
+    Text {
+      y: 4
+      anchors.horizontalCenter: parent.horizontalCenter
+      font.pixelSize: 20
+      font.family: Config.libianName
+      color: (totalGame > 0 && runGame / totalGame > 0.2) ? "red" : "white"
+      style: Text.Outline
+      text: {
+        if (totalGame === 0) {
+          return Lua.tr("Newbie");
+        }
+        const winRate = (winGame / totalGame) * 100;
+        const runRate = (runGame / totalGame) * 100;
+        return Lua.tr("Win=%1\nRun=%2\nTotal=%3")
+          .arg(winRate.toFixed(2))
+          .arg(runRate.toFixed(2))
+          .arg(totalGame);
+      }
+    }
+  }
+}

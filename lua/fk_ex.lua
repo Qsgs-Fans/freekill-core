@@ -7,31 +7,28 @@
 -- 首先加载所有详细的技能类型、卡牌类型等等，以及时机列表
 
 TriggerEvent = require "core.trigger_event"
-require "core.events"
-dofile "lua/server/event.lua"
-dofile "lua/server/system_enum.lua"
-dofile "lua/server/mark_enum.lua"
-TriggerSkill = require "core.skill_type.trigger"
+require "lunarltk.core.events"
+dofile "lua/lunarltk/server/system_enum.lua"
+dofile "lua/lunarltk/server/mark_enum.lua"
+TriggerSkill = require "lunarltk.core.skill_type.trigger"
 -- LegacyTriggerSkill = require "compat.trigger_legacy"
-ActiveSkill = require "core.skill_type.active"
-CardSkill = require "core.skill_type.cardskill"
-ViewAsSkill = require "core.skill_type.view_as"
-DistanceSkill = require "core.skill_type.distance"
-ProhibitSkill = require "core.skill_type.prohibit"
-AttackRangeSkill = require "core.skill_type.attack_range"
-MaxCardsSkill = require "core.skill_type.max_cards"
-TargetModSkill = require "core.skill_type.target_mod"
-FilterSkill = require "core.skill_type.filter"
-InvaliditySkill = require "lua.core.skill_type.invalidity"
-VisibilitySkill = require "lua.core.skill_type.visibility"
+ActiveSkill = require "lunarltk.core.skill_type.active"
+CardSkill = require "lunarltk.core.skill_type.cardskill"
+ViewAsSkill = require "lunarltk.core.skill_type.view_as"
+DistanceSkill = require "lunarltk.core.skill_type.distance"
+ProhibitSkill = require "lunarltk.core.skill_type.prohibit"
+AttackRangeSkill = require "lunarltk.core.skill_type.attack_range"
+MaxCardsSkill = require "lunarltk.core.skill_type.max_cards"
+TargetModSkill = require "lunarltk.core.skill_type.target_mod"
+FilterSkill = require "lunarltk.core.skill_type.filter"
+InvaliditySkill = require "lunarltk.core.skill_type.invalidity"
+VisibilitySkill = require "lunarltk.core.skill_type.visibility"
 
-BasicCard = require "core.card_type.basic"
-local Trick = require "core.card_type.trick"
+BasicCard = require "lunarltk.core.card_type.basic"
+local Trick = require "lunarltk.core.card_type.trick"
 TrickCard, DelayedTrickCard = table.unpack(Trick)
-local Equip = require "core.card_type.equip"
+local Equip = require "lunarltk.core.card_type.equip"
 _, Weapon, Armor, DefensiveRide, OffensiveRide, Treasure = table.unpack(Equip)
-
--- dofile "lua/compat/fk_ex.lua"
 
 ---@param skill SkillSkeleton|Skill
 ---@param spec table
