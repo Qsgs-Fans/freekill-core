@@ -67,6 +67,7 @@ end
 
 function Client:enterRoom(_data)
   ClientBase.enterRoom(self, _data)
+  self = ClientInstance
 
   local data = _data[3]
   table.insertTableIfNeed(

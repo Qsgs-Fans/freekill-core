@@ -4,6 +4,7 @@ import QtQuick.Window
 
 import Fk
 import Fk.Widgets as W
+import "Logic.js" as Logic
 
 W.PageBase {
   id: root
@@ -160,14 +161,8 @@ W.PageBase {
   }
 
   function errorMessage(sender, data) {
-    let log;
-    try {
-      const a = JSON.parse(data);
-      log = qsTr(a[0]).arg(a[1]);
-    } catch (e) {
-      log = qsTr(data);
-    }
-
+    let log = Logic.translateErrorMsg(data);
+    
     console.log("ERROR: " + log);
     App.showToast(log, 5000);
     busy = false;

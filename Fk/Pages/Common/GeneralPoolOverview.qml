@@ -197,7 +197,7 @@ Item {
   Button {
     text: Lua.tr("Quit")
     anchors.bottom: parent.bottom
-    // visible: mainStack.currentItem.objectName === "ModesOverview"
+    visible: root.parent instanceof StackView
     onClicked: {
       App.quitPage();
     }
