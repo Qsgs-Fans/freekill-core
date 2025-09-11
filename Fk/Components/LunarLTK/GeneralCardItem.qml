@@ -38,7 +38,7 @@ Game.BasicCard {
 
   footnote: ""
   cardFrontSource: SkinBank.getGeneralPicture(name)
-  cardBackSource: SkinBank.GENERALCARD_DIR + 'card-back'
+  cardBackSource: SkinBank.generalCardDir + 'card-back'
   glow.color: "white" //Engine.kingdomColor[kingdom]
 
   // FIXME: 藕！！
@@ -46,7 +46,7 @@ Game.BasicCard {
                      name.includes('heg__')
 
   Image {
-    source: parent.known ? (SkinBank.GENERALCARD_DIR + "border") : ""
+    source: parent.known ? (SkinBank.generalCardDir + "border") : ""
   }
 
   Image {

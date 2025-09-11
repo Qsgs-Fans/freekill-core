@@ -33,7 +33,7 @@ Item {
 
     source: {
       if (sealed)
-        return SkinBank.EQUIP_ICON_DIR + "sealed";
+        return SkinBank.equipIconDir + "sealed";
       return icon ? SkinBank.getEquipIcon(cid, icon) : "";
     }
   }
@@ -41,7 +41,7 @@ Item {
   Image {
     id: suitItem
     anchors.right: parent.right
-    source: (suit && !sealed) ? SkinBank.CARD_SUIT_DIR + suit : ""
+    source: (suit && !sealed) ? SkinBank.cardSuitDir + suit : ""
     width: implicitWidth / implicitHeight * height
     height: 16
   }

@@ -14,7 +14,7 @@ Item {
 
   Image {
     id: egg
-    source: SkinBank.PIXANIM_DIR + "/flower/egg"
+    source: SkinBank.pixAnimDir + "/flower/egg"
     x: start.x - width / 2
     y: start.y - height / 2
     scale: 0.7
@@ -29,13 +29,13 @@ Item {
     property int idx: 1
     opacity: 0
     scale: 0.7
-    source: SkinBank.PIXANIM_DIR + "/flower/egg" + idx
+    source: SkinBank.pixAnimDir + "/flower/egg" + idx
   }
 
   Image {
     id: star
     opacity: 0
-    source: SkinBank.PIXANIM_DIR + "/flower/star"
+    source: SkinBank.pixAnimDir + "/flower/star"
     scale: 0.7
   }
 

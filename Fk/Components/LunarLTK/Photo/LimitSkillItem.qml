@@ -13,7 +13,7 @@ Item {
 
   Image {
     id: bg
-    source: SkinBank.LIMIT_SKILL_DIR + skilltype
+    source: SkinBank.limitSkillDir + skilltype
     height: 47 * 0.6
     width: 87 * 0.6
   }
@@ -59,18 +59,18 @@ Item {
     } else if (skilltype === "limit") {
       if (usedtimes >= 1) {
         x.visible = true;
-        bg.source = SkinBank.LIMIT_SKILL_DIR + "limit-used";
+        bg.source = SkinBank.limitSkillDir + "limit-used";
       } else {
         x.visible = false;
-        bg.source = SkinBank.LIMIT_SKILL_DIR + "limit";
+        bg.source = SkinBank.limitSkillDir + "limit";
       }
     } else if (skilltype === 'switch') {
-      bg.source = SkinBank.LIMIT_SKILL_DIR +
+      bg.source = SkinBank.limitSkillDir +
         (usedtimes < 1 ? 'switch' : 'switch-yin');
     } else if (skilltype === 'quest') {
       if (usedtimes > 1) {
         x.visible = true;
-        bg.source = SkinBank.LIMIT_SKILL_DIR + "limit-used";
+        bg.source = SkinBank.limitSkillDir + "limit-used";
       }
     }
   }

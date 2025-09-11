@@ -96,7 +96,7 @@ Game.BasicItem {
 
     Image {
       id: deputySplit
-      source: SkinBank.PHOTO_DIR + "deputy-split"
+      source: SkinBank.photoDir + "deputy-split"
       opacity: deputyGeneral ? 1 : 0
     }
 

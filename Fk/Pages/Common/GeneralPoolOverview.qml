@@ -71,7 +71,7 @@ Item {
 
         Image {
           width: 24; height: 23
-          source: SkinBank.MISC_DIR + "favorite"
+          source: SkinBank.miscDir + "favorite"
           x: -8; y: 48
         }
 

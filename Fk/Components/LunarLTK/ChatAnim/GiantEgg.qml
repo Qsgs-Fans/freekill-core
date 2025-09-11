@@ -14,7 +14,7 @@ Item {
 
   Image {
     id: egg
-    source: SkinBank.PIXANIM_DIR + "/egg/egg"
+    source: SkinBank.pixAnimDir + "/egg/egg"
     x: start.x - width / 2
     y: start.y - height / 2
     scale: 2.1
@@ -28,7 +28,7 @@ Item {
     property int idx: 1
     opacity: 0
     scale: 2.1
-    source: SkinBank.PIXANIM_DIR + "/egg/egg" + idx
+    source: SkinBank.pixAnimDir + "/egg/egg" + idx
   }
 
   SequentialAnimation {

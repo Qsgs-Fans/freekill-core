@@ -411,9 +411,9 @@ function setEmotion(id, emotion, isCardId) {
   let path;
   if (OS === "Win") {
     // Windows: file:///C:/xxx/xxxx
-    path = (SkinBank.PIXANIM_DIR + emotion).replace("file:///", "");
+    path = (SkinBank.pixAnimDir + emotion).replace("file:///", "");
   } else {
-    path = (SkinBank.PIXANIM_DIR + emotion).replace("file://", "");
+    path = (SkinBank.pixAnimDir + emotion).replace("file://", "");
   }
 
   if (!Backend.exists(path)) {

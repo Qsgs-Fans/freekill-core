@@ -12,7 +12,7 @@ Item {
   PixmapAnimation {
     id: typeAnim
     anchors.centerIn: parent
-    source: SkinBank.PIXANIM_DIR + "skillInvoke/" + skill_type
+    source: SkinBank.pixAnimDir + "skillInvoke/" + skill_type
     keepAtStop: true
   }
 

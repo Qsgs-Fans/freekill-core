@@ -22,7 +22,7 @@ Item {
 
       Image {
         id: egg
-        source: SkinBank.PIXANIM_DIR + "/shoe/egg"
+        source: SkinBank.pixAnimDir + "/shoe/egg"
         x: start.x - width / 2 + xOffset
         y: start.y - height / 2 + yOffset
         scale: 0.7
@@ -36,7 +36,7 @@ Item {
         property int idx: 1
         opacity: 0
         scale: 0.7
-        source: SkinBank.PIXANIM_DIR + "/shoe/egg" + idx
+        source: SkinBank.pixAnimDir + "/shoe/egg" + idx
       }
 
       SequentialAnimation {
@@ -92,7 +92,7 @@ Item {
 
   Image {
     id: shoeS
-    source: SkinBank.PIXANIM_DIR + "/shoe/shoe_s"
+    source: SkinBank.pixAnimDir + "/shoe/shoe_s"
     x: start.x - width / 2
     y: start.y - height / 2
     scale: 0
@@ -100,7 +100,7 @@ Item {
 
   Image {
     id: shoe
-    source: SkinBank.PIXANIM_DIR + "/shoe/shoe"
+    source: SkinBank.pixAnimDir + "/shoe/shoe"
     x: start.x - width / 2
     y: start.y - height / 2
     scale: 0
@@ -113,7 +113,7 @@ Item {
     property int idx: 1
     opacity: 0
     scale: 1.2
-    source: SkinBank.PIXANIM_DIR + "/shoe/hit" + idx
+    source: SkinBank.pixAnimDir + "/shoe/hit" + idx
   }
 
   property int seqIdx: 0

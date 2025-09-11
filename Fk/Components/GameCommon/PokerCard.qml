@@ -35,7 +35,7 @@ BasicCard {
     id: colorItem
     visible: parent.known && (parent.suit === "" || parent.suit === "nosuit")
       //  && number <= 0 // <- FIXME: 需要区分“黑色有点数”和“无色有点数”
-    source: (visible && parent.color !== "") ? SkinBank.CARD_SUIT_DIR + "/" + parent.color
+    source: (visible && parent.color !== "") ? SkinBank.cardSuitDir + "/" + parent.color
                                       : ""
     x: 1
   }

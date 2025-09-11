@@ -36,7 +36,7 @@ Item {
           Layout.preferredWidth: 56
           fillMode: Image.PreserveAspectFit
           source: {
-            if (!favicon) return SkinBank.MISC_DIR + "server_icon";
+            if (!favicon) return SkinBank.miscDir + "server_icon";
             if (favicon === "default") return AppPath + "/image/icon.png";
             return favicon;
           }
@@ -136,12 +136,12 @@ Item {
         Item { Layout.fillHeight: true }
         Image {
           Layout.preferredWidth: 24; Layout.preferredHeight: 23
-          source: SkinBank.MISC_DIR + "network_local"
+          source: SkinBank.miscDir + "network_local"
           visible: lan
         }
         Image {
           Layout.preferredWidth: 24; Layout.preferredHeight: 23
-          source: SkinBank.MISC_DIR + "favorite"
+          source: SkinBank.miscDir + "favorite"
           visible: favorite
         }
       }

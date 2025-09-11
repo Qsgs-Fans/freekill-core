@@ -166,6 +166,7 @@ W.PageBase {
             id: kickButton
             text: Lua.tr("Kick From Room")
             enabled: {
+              if (!roomScene.isOwner) return false;
               if (model.id === Self.id) return false;
               if (model.id < -1) {
                 const { minComp, curComp } = Lua.call("GetCompNum");

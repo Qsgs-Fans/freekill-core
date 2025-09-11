@@ -79,7 +79,7 @@ Item {
   Image {
     id: icon
     anchors.centerIn: parent
-    source: SkinBank.TILE_ICON_DIR + iconSource
+    source: SkinBank.tileIconDir + iconSource
     scale: 0.8
   }
 

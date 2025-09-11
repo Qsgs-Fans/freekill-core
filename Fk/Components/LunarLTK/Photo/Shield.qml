@@ -7,7 +7,7 @@ Image {
   width: 20
   height: 21
   visible: (value > 0)
-  source: SkinBank.MAGATAMA_DIR + "shield"
+  source: SkinBank.magatamaDir + "shield"
 
   Text {
     text: value

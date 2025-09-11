@@ -49,7 +49,7 @@ PhotoBase {
 
   PixmapAnimation {
     id: animPlaying
-    source: SkinBank.PIXANIM_DIR + "playing"
+    source: SkinBank.pixAnimDir + "playing"
     anchors.centerIn: parent
     loop: true
     scale: 1.1
@@ -59,7 +59,7 @@ PhotoBase {
 
   PixmapAnimation {
     id: animSelected
-    source: SkinBank.PIXANIM_DIR + "selected"
+    source: SkinBank.pixAnimDir + "selected"
     anchors.centerIn: parent
     loop: true
     scale: 1.1
@@ -69,7 +69,7 @@ PhotoBase {
 
   PixmapAnimation {
     id: animSelectable
-    source: SkinBank.PIXANIM_DIR + "selectable"
+    source: SkinBank.pixAnimDir + "selectable"
     anchors.centerIn: parent
     loop: true
     visible: root.state === "candidate" && root.selectable
@@ -142,20 +142,20 @@ PhotoBase {
 
   Image {
     visible: equipAreaItem.length > 0
-    source: SkinBank.PHOTO_DIR + "equipbg"
+    source: SkinBank.photoDir + "equipbg"
     x: 31
     y: 121
   }
 
   Image {
-    source: root.status != "normal" ? SkinBank.STATUS_DIR + root.status : ""
+    source: root.status != "normal" ? SkinBank.statusDir + root.status : ""
     x: -6
   }
 
   Image {
     id: turnedOver
     visible: !root.faceup
-    source: SkinBank.PHOTO_DIR + "faceturned" + (Config.heg ? '-heg' : '')
+    source: SkinBank.photoDir + "faceturned" + (Config.heg ? '-heg' : '')
     x: 29; y: 5
   }
 
@@ -212,7 +212,7 @@ PhotoBase {
   Image {
     id: chain
     visible: root.chained
-    source: SkinBank.PHOTO_DIR + "chain"
+    source: SkinBank.photoDir + "chain"
     anchors.horizontalCenter: parent.horizontalCenter
     y: 72
   }
@@ -222,18 +222,18 @@ PhotoBase {
     visible: (root.dead && !root.rest) || root.dying || root.surrendered
     source: {
       if (root.surrendered) {
-        return SkinBank.DEATH_DIR + "surrender";
+        return SkinBank.deathDir + "surrender";
       } else if (root.dead) {
         return SkinBank.getRoleDeathPic(root.role);
       }
-      return SkinBank.DEATH_DIR + "saveme";
+      return SkinBank.deathDir + "saveme";
     }
     anchors.centerIn: photoMask
   }
 
   Image {
     id: netstat
-    source: SkinBank.STATE_DIR + root.netstate
+    source: SkinBank.stateDir + root.netstate
     x: photoMask.x
     y: photoMask.y
     scale: 0.9
@@ -242,7 +242,7 @@ PhotoBase {
 
   Image {
     id: handcardNum
-    source: SkinBank.PHOTO_DIR + "handcard"
+    source: SkinBank.photoDir + "handcard"
     anchors.bottom: parent.bottom
     anchors.bottomMargin: -6
     x: -6
@@ -296,7 +296,7 @@ PhotoBase {
 
   Image {
     visible: root.state === "candidate" && !selectable && !selected
-    source: SkinBank.PHOTO_DIR + "disable"
+    source: SkinBank.photoDir + "disable"
     x: 31; y: -21
   }
 
@@ -370,7 +370,7 @@ PhotoBase {
   Image {
     anchors.top: progressBar.bottom
     anchors.topMargin: 1
-    source: SkinBank.PHOTO_DIR + "control/tip"
+    source: SkinBank.photoDir + "control/tip"
     visible: progressTip.text != ""
     Text {
       id: progressTip

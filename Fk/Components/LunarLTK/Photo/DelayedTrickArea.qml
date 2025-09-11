@@ -11,7 +11,7 @@ Item {
   Image {
     visible: sealed
     x: -6; y: 8; z: 9
-    source: SkinBank.DELAYED_TRICK_DIR + "sealed"
+    source: SkinBank.delayedTrickDir + "sealed"
     height: 28
     fillMode: Image.PreserveAspectFit
   }

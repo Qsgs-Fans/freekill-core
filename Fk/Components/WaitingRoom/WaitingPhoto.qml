@@ -21,7 +21,7 @@ PhotoBase {
     anchors.right: parent.right
     anchors.bottomMargin: -8
     anchors.rightMargin: 4
-    source: SkinBank.PHOTO_DIR +
+    source: SkinBank.photoDir +
             (isOwner ? "owner" : (ready ? "ready" : "notready"))
     visible: screenName != ""
   }

@@ -47,7 +47,7 @@ Item {
     id: bg
     x: -32
     height: 69
-    source: SkinBank.LOBBY_IMG_DIR + "profile"
+    source: SkinBank.lobbyImgDir + "profile"
     fillMode: Image.PreserveAspectFit
   }
 

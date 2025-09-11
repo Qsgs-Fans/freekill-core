@@ -16,7 +16,7 @@ Image {
     property string value: "unknown"
 
     id: assumptionBox
-    source: SkinBank.ROLE_DIR + value
+    source: SkinBank.roleDir + value
     visible: root.value == "unknown" && optionPopupBox.visible == false
 
     W.TapHandler {
@@ -33,7 +33,7 @@ Image {
       model: options
 
       Image {
-        source: SkinBank.ROLE_DIR + modelData
+        source: SkinBank.roleDir + modelData
 
         W.TapHandler {
           onTapped: {

@@ -51,7 +51,7 @@ BasicItem {
   Image {
     id: chosen
     visible: false
-    source: SkinBank.CARD_DIR + "chosen"
+    source: SkinBank.cardDir + "chosen"
     anchors.horizontalCenter: parent.horizontalCenter
     y: 90
     scale: 1.25
