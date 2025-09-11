@@ -550,7 +550,7 @@ end
 
 function GetCompNum()
   local c = ClientInstance
-  local mode = Fk.game_modes[c.settings.gameMode]
+  local mode = Fk.game_modes[c.settings.gameMode] or Fk.game_modes["aaa_role_mode"]
   local min, max = mode.minComp, mode.maxComp
   local capacity = c.capacity
   if min < 0 then min = capacity + min end
@@ -605,8 +605,9 @@ end
 
 function CheckSurrenderAvailable()
   local curMode = ClientInstance.settings.gameMode
+  local mode = Fk.game_modes[curMode] or Fk.game_modes["aaa_role_mode"]
   local playedTime = os.time() - ClientInstance.gameStartTime
-  return Fk.game_modes[curMode]:surrenderFunc(playedTime)
+  return mode:surrenderFunc(playedTime)
 end
 
 function FindMosts()          -- 从所有的玩家结算数据中找出最佳/差玩家

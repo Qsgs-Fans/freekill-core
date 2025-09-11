@@ -227,8 +227,7 @@ end
 
 --- 准备房间牌堆
 function CardManager:prepareDrawPile(new_draw_pile)
-  local gamemode = Fk.game_modes[self.settings.gameMode]
-  assert(gamemode)
+  local gamemode = Fk.game_modes[self.settings.gameMode] or Fk.game_modes["aaa_role_mode"]
 
   local draw_pile, void_pile = gamemode:buildDrawPile()
 

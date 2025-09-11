@@ -2785,6 +2785,7 @@ end
 -- TODO: 重构request机制，不然这个还得手动拿client_reply
 ---@param players ServerPlayer[] @ 需要参与这个框的角色
 ---@param params AskToMiniGameParams @ 各种变量
+---@return Request
 function Room:askToMiniGame(players, params)
   local command = "MiniGame"
   local game = Fk.mini_games[params.game_type]
@@ -2807,6 +2808,8 @@ function Room:askToMiniGame(players, params)
   for _, p in ipairs(players) do
     p.mini_game_data = nil
   end
+
+  return req
 end
 
 ---@class AskToCustomDialogParams

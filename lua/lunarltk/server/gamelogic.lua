@@ -18,6 +18,24 @@ function GameLogic:initialize(room)
     { "lord", "loyalist", "rebel", "rebel", "rebel", "renegade" },
     { "lord", "loyalist", "loyalist", "rebel", "rebel", "rebel", "renegade" },
     { "lord", "loyalist", "loyalist", "rebel", "rebel", "rebel", "rebel", "renegade" },
+
+    -- 意义何在
+    {
+      "lord", "loyalist", "loyalist", "loyalist",
+      "rebel", "rebel", "rebel", "rebel", "renegade"
+    },
+    {
+      "lord", "loyalist", "loyalist", "loyalist",
+      "rebel", "rebel", "rebel", "rebel", "rebel", "renegade"
+    },
+    {
+      "lord", "loyalist", "loyalist", "loyalist", "loyalist",
+      "rebel", "rebel", "rebel", "rebel", "rebel", "renegade"
+    },
+    {
+      "lord", "loyalist", "loyalist", "loyalist", "loyalist",
+      "rebel", "rebel", "rebel", "rebel", "rebel", "rebel", "renegade"
+    },
   }
 end
 
