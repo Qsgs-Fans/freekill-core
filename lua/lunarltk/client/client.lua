@@ -770,6 +770,7 @@ function Client:setSkillBranchUseHistory(data)
   local id, skill_name, branch, time, scope =
                                     data[1], data[2], data[3], data[4], data[5]
   local player = self:getPlayerById(id)
+  if not player then return end
   player:setSkillBranchUseHistory(skill_name, branch, time, scope)
 
   -- 真的有分支会改变状态吗……？

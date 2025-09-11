@@ -3686,7 +3686,7 @@ function Room:clearHistory (scope)
   for _, p in ipairs(self.players) do
     p:setCardUseHistory("", 0, scope)
     p:setSkillUseHistory("", 0, scope)
-    p:setSkillBranchUseHistory("", nil, 0, scope)
+    p:setSkillBranchUseHistory("", "", 0, scope)
     for name, _ in pairs(p.mark) do
       if name:find(suffix, 1, true) then
         self:setPlayerMark(p, name, 0)
