@@ -586,28 +586,6 @@ W.PageBase {
     anchors.fill: parent
   }
 
-  W.PopupLoader {
-    id: overviewDialog
-    width: Config.winWidth * 0.75
-    height: Config.winHeight * 0.75
-    anchors.centerIn: parent
-    background: Rectangle {
-      color: "#EEEEEEEE"
-      radius: 5
-      border.color: "#A6967A"
-      border.width: 1
-    }
-    Loader {
-      id: overviewLoader
-      property string overviewType: "GeneralPool"
-      anchors.centerIn: parent
-      width: parent.width / Config.winScale
-      height: parent.height / Config.winScale
-      scale: Config.winScale
-      source: "../Common/" + overviewType + "Overview.qml"
-    }
-  }
-
   GlowText {
     anchors.centerIn: dashboard
     visible: Logic.getPhoto(Self.id).rest > 0 && !Config.observing

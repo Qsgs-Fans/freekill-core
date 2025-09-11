@@ -157,7 +157,7 @@ Item {
     anchors.rightMargin: 20
     anchors.top: parent.top
     anchors.topMargin: parent.height * 0.1
-    spacing: 16
+    spacing: 8
     width: parent.width - shadowRect.width * shadowRect.scale - 40 - 40
     height: shadowRect.height * shadowRect.scale
 
@@ -183,45 +183,6 @@ Item {
       }
     }
 
-    /*
-     Menu {
-       title: Lua.tr("Overview")
-       icon.source: Cpp.path + "/image/button/tileicon/rule_summary"
-       icon.width: 24
-       icon.height: 24
-       icon.color: palette.windowText
-       MenuItem {
-         id: generalButton
-         text: Lua.tr("Generals Overview")
-         icon.source: Cpp.path + "/image/button/tileicon/general_overview"
-         onClicked: {
-           overviewLoader.overviewType = "Generals";
-           overviewDialog.open();
-           overviewLoader.item.loadPackages();
-         }
-       }
-       MenuItem {
-         id: cardslButton
-         text: Lua.tr("Cards Overview")
-         icon.source: Cpp.path + "/image/button/tileicon/card_overview"
-         onClicked: {
-           overviewLoader.overviewType = "Cards";
-           overviewDialog.open();
-           overviewLoader.item.loadPackages();
-         }
-       }
-       MenuItem {
-         id: modesButton
-         text: Lua.tr("Modes Overview")
-         icon.source: Cpp.path + "/image/misc/paper"
-         onClicked: {
-           overviewLoader.overviewType = "Modes";
-           overviewDialog.open();
-         }
-       }
-     }
-     */
-
     W.ButtonContent {
       id: banSchemaButton
       text: "信息"
@@ -242,6 +203,9 @@ Item {
       font.bold: true
       Layout.fillWidth: true
       onClicked: {
+        if (Lua.evaluate('not ClientInstance.gameStarted')) {
+          return;
+        }
         if (Lua.evaluate('Self.dead and (Self.rest <= 0)')) {
           return;
         }
@@ -255,6 +219,45 @@ Item {
           .join('<br>');
         }
         surrenderDialog.open();
+      }
+    }
+
+
+    W.ButtonContent {
+      id: generalButton
+      text: Lua.tr("Generals Overview")
+      icon.source: "http://175.178.66.93/symbolic/mimetypes/inode-directory-symbolic.svg"
+      font.bold: true
+      Layout.fillWidth: true
+      onClicked: {
+        overviewLoader.overviewType = "Generals";
+        overviewDialog.open();
+        overviewLoader.item.loadPackages();
+      }
+    }
+
+    W.ButtonContent {
+      id: cardslButton
+      text: Lua.tr("Cards Overview")
+      icon.source: "http://175.178.66.93/symbolic/mimetypes/inode-directory-symbolic.svg"
+      font.bold: true
+      Layout.fillWidth: true
+      onClicked: {
+        overviewLoader.overviewType = "Cards";
+        overviewDialog.open();
+        overviewLoader.item.loadPackages();
+      }
+    }
+
+    W.ButtonContent {
+      id: modesButton
+      text: Lua.tr("Modes Overview")
+      icon.source: "http://175.178.66.93/symbolic/categories/applications-games-symbolic.svg"
+      font.bold: true
+      Layout.fillWidth: true
+      onClicked: {
+        overviewLoader.overviewType = "Modes";
+        overviewDialog.open();
       }
     }
 
@@ -316,6 +319,28 @@ Item {
           surrenderDialog.close();
         }
       }
+    }
+  }
+
+  W.PopupLoader {
+    id: overviewDialog
+    width: Config.winWidth * 0.8
+    height: Config.winHeight * 0.9
+    anchors.centerIn: parent
+    background: Rectangle {
+      color: "#EEEEEEEE"
+      radius: 5
+      border.color: "#A6967A"
+      border.width: 1
+    }
+    Loader {
+      id: overviewLoader
+      property string overviewType: "GeneralPool"
+      anchors.centerIn: parent
+      width: parent.width / Config.winScale
+      height: parent.height / Config.winScale
+      scale: Config.winScale
+      source: "../Common/" + overviewType + "Overview.qml"
     }
   }
 

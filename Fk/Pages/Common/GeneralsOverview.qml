@@ -11,7 +11,6 @@ import Fk.Widgets as W
 
 W.PageBase {
   id: root
-  objectName: "GeneralsOverview"
   property alias generals: gridView.model
 
   property bool loaded: false
@@ -175,7 +174,7 @@ W.PageBase {
         text: Lua.tr("Filter")
         font.pixelSize: 20
         onClicked: {
-          lobby_dialog.sourceComponent = Qt.createComponent("../Pages/GeneralFilter.qml");
+          lobby_dialog.sourceComponent = Qt.createComponent("GeneralFilter.qml");
           lobby_drawer.open();
         }
         onPressAndHold: {
@@ -214,7 +213,7 @@ W.PageBase {
           return Lua.tr("BanGeneral");
         }
         enabled: root.stat !== 1
-        // visible: mainStack.currentItem.objectName === "GeneralsOverview"
+        visible: root.parent instanceof StackView
         onClicked: {
           if (root.stat === 0) {
             root.stat = 2;
@@ -232,7 +231,7 @@ W.PageBase {
           return Lua.tr("BanPackage");
         }
         enabled: root.stat !== 2
-        // visible: mainStack.currentItem.objectName === "GeneralsOverview"
+        visible: root.parent instanceof StackView
         onClicked: {
           if (root.stat === 0) {
             root.stat = 1;
@@ -245,7 +244,7 @@ W.PageBase {
       ToolButton {
         text: Lua.tr("Quit")
         font.pixelSize: 20
-        // visible: mainStack.currentItem.objectName === "GeneralsOverview"
+        visible: root.parent instanceof StackView
         onClicked: {
           App.quitPage();
           Config.saveConf();
@@ -274,6 +273,7 @@ W.PageBase {
           doBanGeneral(modelData);
         } else {
           generalDetailLoader.item.general = modelData;
+          generalDetailLoader.item.canSetAvatar = root.parent instanceof StackView;
           generalDetail.open();
         }
       }

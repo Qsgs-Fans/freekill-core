@@ -10,7 +10,6 @@ import Fk.Components.LunarLTK
 
 W.PageBase {
   id: root
-  objectName: "CardsOverview"
 
   property bool loaded: false
 
@@ -344,7 +343,7 @@ W.PageBase {
   Button {
     text: Lua.tr("Quit")
     anchors.right: parent.right
-    visible: mainStack.currentItem.objectName === "CardsOverview"
+    visible: root.parent instanceof StackView
     onClicked: {
       App.quitPage();
     }

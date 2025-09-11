@@ -10,6 +10,7 @@ Item {
   id: root
 
   property string general: "caocao"
+  property bool canSetAvatar
   property bool isFavor: {
     const g = root.general;
     const fav = Config.favoriteGenerals;
@@ -252,7 +253,7 @@ Item {
 
     W.ButtonContent {
       text: Lua.tr("Set as Avatar")
-      // visible: mainStack.currentItem.objectName === "GeneralsOverview"
+      visible: root.canSetAvatar
       enabled: detailGeneralCard.name !== "" && !opTimer.running
       && Self.avatar !== detailGeneralCard.name
       onClicked: {

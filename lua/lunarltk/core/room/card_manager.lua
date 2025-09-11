@@ -364,7 +364,9 @@ function CardManager:deserialize(o)
   for _, id in ipairs(o.processing_area) do self:setCardArea(id, Card.Processing, nil) end
   for _, id in ipairs(o.void) do self:setCardArea(id, Card.Void, nil) end
 
-  for _, data in ipairs(o.printed_cards) do self:printCard(table.unpack(data)) end
+  for _, data in ipairs(o.printed_cards) do
+    self:printCard(table.unpack(data))
+  end
 
   for cid, marks in pairs(o.card_marks and cbor.decode(o.card_marks) or Util.DummyTable) do
     for k, v in pairs(marks) do

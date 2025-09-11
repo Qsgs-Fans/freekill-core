@@ -51,7 +51,7 @@ function Client:initialize(_client)
   self:addCallback("RemoveVirtualEquip", self.removeVirtualEquip)
   self:addCallback("ChangeSelf", self.changeSelf)
   self:addCallback("UpdateQuestSkillUI", self.updateQuestSkillUI)
-  self:addCallback("PrintCard", self.printCard)
+  self:addCallback("PrintCard", self.handlePrintCard)
   self:addCallback("AddBuddy", self.addBuddy)
   self:addCallback("RmBuddy", self.rmBuddy)
   self:addCallback("PrepareDrawPile", self.prepareDrawPile)
@@ -804,7 +804,7 @@ function Client:updateQuestSkillUI(data)
   updateLimitSkill(playerId, Fk.skills[skillName])
 end
 
-function Client:printCard(data)
+function Client:handlePrintCard(data)
   local n, s, num = table.unpack(data)
   AbstractRoom.printCard(self, n, s, num)
 end
