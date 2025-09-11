@@ -104,6 +104,12 @@ function SkillSkeleton:initialize(spec)
 
   --Notify智慧，当不存在main_skill时，用于创建main_skill。看上去毫无用处
   fk.readCommonSpecToSkill(self, spec)
+
+  if self.max_use_time[Player.HistoryGame] == nil then
+    if table.contains(self.tags, Skill.Limited) or table.contains(self.tags, Skill.Wake) then
+      self.max_use_time[Player.HistoryGame] = 1
+    end
+  end
 end
 
 function SkillSkeleton:addEffect(key, data, attribute)
