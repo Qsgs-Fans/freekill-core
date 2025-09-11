@@ -193,7 +193,7 @@ W.PageBase {
 
     TablePile {
       id: tablePile
-      width: parent.width * 0.6
+      width: parent.width * 0.7
       height: 150
       x: parent.width * 0.2
       y: parent.height * 0.6 + 10

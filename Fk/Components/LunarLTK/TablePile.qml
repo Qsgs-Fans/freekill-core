@@ -13,7 +13,8 @@ Item {
   CardArea {
     id: area
     anchors.horizontalCenter: parent.horizontalCenter
-    width: length * 93 * 0.8
+    // width: length * 93 * 0.8
+    width: root.width
   }
 
   InvisibleCardArea {

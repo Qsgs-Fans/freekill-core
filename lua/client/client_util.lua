@@ -1218,10 +1218,9 @@ function RefreshStatusSkills()
     })
   end
   -- 刷自己的手牌
-  for _, cid in ipairs(Self:getCardIds("h")) do
-    self:notifyUI("UpdateHandcard", cid)
-  end
   Self:filterHandcards()
+  self:notifyUI("UpdateHandcard")
+
   -- 刷技能状态
   self:notifyUI("UpdateSkill", nil)
 end

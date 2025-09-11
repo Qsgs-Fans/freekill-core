@@ -333,7 +333,10 @@ function ClientBase:chat(data)
   else
     data.general = p.general
   end
-  if data.general == nil or data.general == "" then
+  if data.general == nil then
+    data.general = ""
+  end
+  if data.general == "" and self:getPlayerById(p.player:getId()) ~= nil then
     data.general = p.player:getAvatar()
   end
   data.userName = p.player:getScreenName()

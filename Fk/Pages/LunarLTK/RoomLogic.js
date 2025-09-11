@@ -675,25 +675,15 @@ callbacks["PropertyUpdate"] = (sender, data) => {
   }
 }
 
-callbacks["UpdateHandcard"] = (sender, j) => {
-  const id = parseInt(j);
+callbacks["UpdateHandcard"] = (sender) => {
   const sortable = Lua.call("CanSortHandcards", Self.id);
-  let card;
 
   roomScene.dashboard.handcardArea.cards.forEach((v) => {
-    if (v.cid === id) {
-      card = v;
-      return;
-    }
+    const id = v.cid;
+    v.setData(Lua.call("GetCardData", id));
+    v.known = Lua.call("CardVisibility", id);
+    v.draggable = sortable;
   });
-
-  if (!card) {
-    return;
-  }
-
-  card.setData(Lua.call("GetCardData", id));
-  card.known = Lua.call("CardVisibility", id);
-  card.draggable = sortable;
 }
 
 callbacks["UpdateCard"] = (sender, j) => {

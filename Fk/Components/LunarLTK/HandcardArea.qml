@@ -41,7 +41,7 @@ Item {
     card.clicked.connect(adjustCards);
     card.doubleClicked.connect(doubleClickCard);
     card.released.connect(updateCardReleased);
-    card.xChanged.connect(updateCardDragging);
+    card.startDrag.connect(updateCardDragging);
   }
 
   function remove(outputs) {
@@ -55,14 +55,13 @@ Item {
       card.selectedChanged.disconnect(adjustCards);
       card.doubleClicked.disconnect(doubleClickCard);
       card.released.disconnect(updateCardReleased);
-      card.xChanged.disconnect(updateCardDragging);
+      card.startDrag.disconnect(updateCardDragging);
       card.prohibitReason = "";
     }
     return result;
   }
 
-  function updateCardPosition(animated)
-  {
+  function updateCardPosition(animated) {
     cardArea.updateCardPosition(false);
 
     cards.forEach(card => {
@@ -81,19 +80,16 @@ Item {
     }
   }
 
-  function updateCardDragging() {
-    let _card, c;
-    let index;
-    for (index = 0; index < cards.length; index++) {
-      c = cards[index];
-      if (c.dragging) {
-        _card = c;
-        break;
-      }
-    }
+  function updateCardDragging(_card) {
     if (!_card) return;
     _card.goBackAnim.stop();
     _card.opacity = 0.8
+  }
+
+  function updateCardReleased(_card) {
+    let i;
+    let c;
+    let index;
 
     let card;
     movepos = null;
@@ -109,11 +105,8 @@ Item {
     if (movepos == null) { // 最右
       movepos = cards.length;
     }
-  }
 
-  function updateCardReleased(_card) {
-    let i;
-    if (movepos != null && sortable) {
+    if (sortable && movepos != null) {
       const handcardnum = Lua.call("GetPlayerHandcards", Self.id).length; // 不计入expand_pile
       if (movepos >= handcardnum) movepos = handcardnum - 1;
       i = cards.indexOf(_card);
@@ -166,11 +159,11 @@ Item {
         if (card.cid === cdata.id) {
           card.selectable = cdata.enabled;
           card.selected = cdata.selected;
-          updateCardPosition(true);
           break;
         }
       }
     });
+    updateCardPosition(true);
     for (let i = 0; i < cards.length; i++) {
       const card = cards[i];
       if (!card.selectable) {

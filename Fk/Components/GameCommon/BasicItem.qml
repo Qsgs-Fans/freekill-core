@@ -30,6 +30,7 @@ Item {
   signal clicked(var card)
   signal rightClicked()
   signal doubleClicked(var card)
+  signal startDrag(var card)
   signal released(var card)
   signal moveFinished()
   signal hoverChanged(bool hovered)
@@ -63,10 +64,12 @@ Item {
     yAxis.enabled: true
 
     onGrabChanged: (transtition, point) => {
-      if (transtition !== PointerDevice.UngrabExclusive) return;
-      parent.released(root);
-      if (parent.autoBack)
-        goBackAnimation.start();
+      if (transtition === PointerDevice.GrabExclusive) {
+        parent.startDrag(root);
+      } else if (transtition === PointerDevice.UngrabExclusive) {
+        parent.released(root);
+        if (parent.autoBack) goBackAnimation.start();
+      }
     }
   }
 

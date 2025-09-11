@@ -21,7 +21,7 @@ Rectangle {
       avatar = "__observer";
     }
     chatLogBox.append({
-      avatar: data.general || avatar || "unknown",
+      avatar: avatar || data.general || "unknown",
       general: general,
       msg: data.msg,
       userName: data.userName,
