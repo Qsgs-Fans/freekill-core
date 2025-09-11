@@ -127,7 +127,7 @@ W.PageBase {
     height: roomScene.height - 80
 
     columns: 5
-    rowSpacing: -120
+    rowSpacing: -60
     columnSpacing: -20
 
     Repeater {

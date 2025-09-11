@@ -90,13 +90,16 @@ Item {
     _card.goBackAnim.stop();
     _card.opacity = 0.8
 
-    draggingCard = _card;
-    draggingClickedPhoto = null;
-    _card.xChanged.connect(dragMovement);
-    _card.yChanged.connect(dragMovement);
+    if (Config.enableSuperDrag) {
+      draggingCard = _card;
+      draggingClickedPhoto = null;
+      _card.xChanged.connect(dragMovement);
+      _card.yChanged.connect(dragMovement);
+    }
   }
 
   function dragMovement() {
+    if (!Config.enableSuperDrag) return;
     const card = draggingCard;
     if (!card) return;
     const x = card.x + card.dragCenter.x;
@@ -135,7 +138,7 @@ Item {
     let c;
     let index;
 
-    const inDragUse = (_card === draggingCard);
+    const inDragUse = (Config.enableSuperDrag && _card === draggingCard);
     draggingCard = null;
     draggingClickedPhoto = null;
     _card.xChanged.disconnect(dragMovement);

@@ -24,6 +24,9 @@ W.PreferencePage {
       onCheckedChanged: Config.rotateTableCard = checked;
     }
 
+  }
+
+  W.PreferenceGroup {
     W.SwitchRow {
       title: Lua.tr("Auto select the only target")
       subTitle: Lua.tr("help: Auto select the only target")
@@ -48,10 +51,10 @@ W.PreferencePage {
     }
 
     W.SwitchRow {
-      title: "关闭拖动出牌提示文本"
-      subTitle: "那个文本是提示你操作方法的，已了解的话请关闭"
-      checked: Config.disableDragUseHint
-      onCheckedChanged: Config.disableDragUseHint = checked;
+      title: "启用拖动出牌"
+      subTitle: "将牌拖出手牌区使用，拖入目标即可选择目标或取消选择目标"
+      checked: Config.enableSuperDrag
+      onCheckedChanged: Config.enableSuperDrag = checked;
     }
   }
 

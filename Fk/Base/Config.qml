@@ -55,7 +55,7 @@ QtObject {
   property bool enableFreeAssign
   property bool enableDeputy
 
-  property bool disableDragUseHint
+  property bool enableSuperDrag
 
   property bool firstRun: true
 
@@ -175,7 +175,7 @@ QtObject {
     preferredLuckTime = conf.preferredLuckTime ?? 0;
     enableFreeAssign = conf.enableFreeAssign ?? false;
     enableDeputy = conf.enableDeputy ?? false;
-    disableDragUseHint = conf.disableDragUseHint ?? false;
+    enableSuperDrag = conf.enableSuperDrag ?? false;
     firstRun = conf.firstRun ?? true;
     // disabledGenerals = conf.disabledGenerals ?? [];
     // disableGeneralSchemes = conf.disableGeneralSchemes ?? [ disabledGenerals ];
@@ -226,7 +226,7 @@ QtObject {
     conf.preferredLuckTime = preferredLuckTime;
     conf.enableFreeAssign = enableFreeAssign;
     conf.enableDeputy = enableDeputy;
-    conf.disableDragUseHint = disableDragUseHint;
+    conf.enableSuperDrag = enableSuperDrag;
     conf.firstRun = firstRun;
     // conf.disabledGenerals = disabledGenerals;
     // conf.disableGeneralSchemes = disableGeneralSchemes;
