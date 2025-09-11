@@ -426,7 +426,6 @@ W.PageBase {
         gameTime = cp:getTotalGameTime(),
       }
     end)`);
-    console.log(JSON.stringify(datalist));
 
     resetPhotos();
     for (const d of datalist) {

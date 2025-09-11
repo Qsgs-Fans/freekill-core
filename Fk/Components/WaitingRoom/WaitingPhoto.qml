@@ -46,15 +46,29 @@ PhotoBase {
       color: (totalGame > 0 && runGame / totalGame > 0.2) ? "red" : "white"
       style: Text.Outline
       text: {
-        if (totalGame === 0) {
-          return Lua.tr("Newbie");
+        const totalTime = Lua.call("GetPlayerGameData", root.playerid)[3];
+        let timeStr
+        const h = (totalTime / 3600).toFixed(2);
+        const m = Math.floor(totalTime / 60);
+        if (m < 100) {
+          timeStr = `${m} min`;
+        } else {
+          timeStr = `${h} h`;
         }
-        const winRate = (winGame / totalGame) * 100;
-        const runRate = (runGame / totalGame) * 100;
-        return Lua.tr("Win=%1\nRun=%2\nTotal=%3")
-          .arg(winRate.toFixed(2))
-          .arg(runRate.toFixed(2))
-          .arg(totalGame);
+
+        let ret = `时长：${timeStr}\n`
+
+        if (totalGame === 0) {
+          ret += Lua.tr("Newbie");
+        } else {
+          const winRate = (winGame / totalGame) * 100;
+          const runRate = (runGame / totalGame) * 100;
+          ret += Lua.tr("Win=%1\nRun=%2\nTotal=%3")
+            .arg(winRate.toFixed(2))
+            .arg(runRate.toFixed(2))
+            .arg(totalGame);
+        }
+        return ret
       }
     }
   }

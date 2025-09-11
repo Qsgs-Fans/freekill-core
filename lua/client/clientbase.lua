@@ -120,6 +120,7 @@ function ClientBase:setup(data)
   self_player:setScreenName(name)
   self_player:setAvatar(avatar)
   Self = self.clientplayer_klass:new(self_player)
+  self.players = { Self }
   if msec then
     self.client:setupServerLag(msec)
   end
@@ -154,7 +155,9 @@ function ClientBase:enterRoom(_data)
   -- FIXME: 应该在C++中修改，这种改法错大发了
   -- FIXME: C++中加入房间时需要把Self也纳入players列表
   local sp = Self.player
-  self.client:addPlayer(sp:getId(), sp:getScreenName(), sp:getAvatar())
+  local new_sp = self.client:addPlayer(sp:getId(), sp:getScreenName(), sp:getAvatar())
+  new_sp:addTotalGameTime(sp:getTotalGameTime())
+  Self.player = new_sp
   self.players = {Self}
   self.alive_players = {Self}
 
