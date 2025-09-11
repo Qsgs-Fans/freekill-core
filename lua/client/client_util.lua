@@ -1217,6 +1217,10 @@ function RefreshStatusSkills()
       p.id, "role_shown", not not RoleVisibility(p.id)
     })
   end
+
+  -- 刷牌堆数
+  self:notifyUI("UpdateDrawPile", #self.draw_pile)
+
   -- 刷自己的手牌
   Self:filterHandcards()
   self:notifyUI("UpdateHandcard")

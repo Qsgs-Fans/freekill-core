@@ -182,7 +182,6 @@ function GameLogic:prepareDrawPile()
   local room = self.room
   room:prepareDrawPile()
   room:doBroadcastNotify("PrepareDrawPile", room.draw_pile)
-  room:doBroadcastNotify("UpdateDrawPile", #room.draw_pile)
 end
 
 function GameLogic:attachSkillToPlayers()

@@ -3130,7 +3130,6 @@ function Room:shuffleDrawPile()
   AbstractRoom.shuffleDrawPile(self)
 
   self:doBroadcastNotify("ShuffleDrawPile", self.draw_pile)
-  self:doBroadcastNotify("UpdateDrawPile", #self.draw_pile)
 
   self.logic:trigger(fk.AfterDrawPileShuffle, nil, {})
 end
@@ -3138,7 +3137,6 @@ end
 -- 强制同步牌堆（用于在不因任何移动事件且不因洗牌导致的牌堆变动）
 function Room:syncDrawPile()
   self:doBroadcastNotify("SyncDrawPile", self.draw_pile)
-  self:doBroadcastNotify("UpdateDrawPile", #self.draw_pile)
 end
 
 --- 结束一局游戏。
@@ -3729,9 +3727,6 @@ end
 function Room:changeCardArea (cards, area, areaCards)
   local ret = AbstractRoom.changeCardArea(self, cards, area, areaCards)
   self:doBroadcastNotify("ChangeCardArea", {cards, area, areaCards or ret})
-  if area == Card.DrawPile then
-    self:doBroadcastNotify("UpdateDrawPile", #self.draw_pile)
-  end
 end
 
 

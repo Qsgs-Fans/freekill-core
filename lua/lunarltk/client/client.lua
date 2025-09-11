@@ -850,6 +850,5 @@ end
 function Client:sendDataToUI(data)
   ClientBase.sendDataToUI(self)
 
-  self:notifyUI("UpdateDrawPile", #self.draw_pile)
   self:notifyUI("UpdateRoundNum", data.round_count)
 end

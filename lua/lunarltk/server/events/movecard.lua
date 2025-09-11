@@ -125,9 +125,6 @@ function MoveCards:main()
       for _, info in ipairs(data.moveInfo) do
         local realFromArea = room:getCardArea(info.cardId)
         room:applyMoveInfo(data, info)
-        if data.toArea == Card.DrawPile or realFromArea == Card.DrawPile then
-          room:doBroadcastNotify("UpdateDrawPile", #room.draw_pile)
-        end
 
         local beforeCard = Fk:getCardById(info.cardId) --[[@as EquipCard]]
         if data.from and data.from:getVirtualEquip(info.cardId) then
