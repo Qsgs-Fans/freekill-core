@@ -703,6 +703,8 @@ Item {
   function resetRoomPage() {
     Lua.call("ResetClientLua");
     gameLoader.sourceComponent = Qt.createComponent("Fk.Pages.Common", "WaitingRoom");
+    log.clear();
+    chat.clear();
     Mediator.notify(this, Command.BackToRoom);
   }
 

@@ -30,6 +30,10 @@ Rectangle {
     })
   }
 
+  function clear() {
+    chatLogBox.clear();
+  }
+
   function loadGeneralSkillAudios(general) {
     if (general === "") return;
     const sks = Lua.call("GetGeneralDetail", general).skill;
@@ -148,8 +152,6 @@ Rectangle {
       }
 
       W.TapHandler {
-        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.NoButton
-        gesturePolicy: TapHandler.WithinBounds
         onTapped: chatLogBox.currentIndex = index;
       }
     }

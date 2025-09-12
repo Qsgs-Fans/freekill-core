@@ -462,7 +462,6 @@ W.PageBase {
 
     const data = Lua.evaluate(`Fk:getBoardGame(ClientInstance.settings.gameMode).page`);
     App.changeRoomPage(data);
-    // App.enterNewPage("Fk.Pages.Common", "RoomPage", { gameComponent: c });
   }
 
   Component.onCompleted: {

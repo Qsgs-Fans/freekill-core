@@ -22,23 +22,28 @@ ListView {
   }
 
   model: ListModel { id: logModel }
-  delegate: TextEdit {
-    id: textEdit
-
-    text: logText
+  delegate: Rectangle {
     width: root.width
-    clip: true
-    readOnly: true
-    selectByKeyboard: true
-    selectByMouse: false
-    wrapMode: TextEdit.WrapAnywhere
-    textFormat: TextEdit.RichText
-    font.pixelSize: 16
+    height: childrenRect.height
+    color: "transparent"
 
     W.TapHandler {
-      // acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.NoButton
-      // gesturePolicy: TapHandler.WithinBounds
-      onTapped: root.currentIndex = index;
+      onTapped: {
+        root.currentIndex = index;
+      }
+    }
+
+    TextEdit {
+      z: -1 // 挡住我taphandler了
+      text: logText
+      width: parent.width
+      clip: true
+      readOnly: true
+      selectByKeyboard: true
+      selectByMouse: false
+      wrapMode: TextEdit.WrapAnywhere
+      textFormat: TextEdit.RichText
+      font.pixelSize: 16
     }
   }
 
