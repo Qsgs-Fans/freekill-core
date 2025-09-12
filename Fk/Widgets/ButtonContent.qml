@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Qt5Compat.GraphicalEffects
 
 AbstractButton {
   id: root
@@ -17,7 +18,12 @@ AbstractButton {
       visible: source.toString() !== ""
       Layout.preferredWidth: 24
       Layout.preferredHeight: 24
+      fillMode: Image.PreserveAspectFit
       sourceSize: Qt.size(240, 240)
+      layer.enabled: !root.enabled
+      layer.effect: ColorOverlay {
+        color: "#CC808082"
+      }
     }
     Text {
       text: root.text

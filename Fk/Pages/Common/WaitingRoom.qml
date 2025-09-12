@@ -152,35 +152,74 @@ W.PageBase {
         onClicked: {
           if (photoMenu.visible){
             photoMenu.close();
-          } else if (model.id !== -1 && model.id !== Self.id) {
+          } else if (model.id !== -1) {
             photoMenu.open();
           }
         }
 
+        onRightClicked: clicked(this);
+
         Menu {
           id: photoMenu
-          y: parent.height - 12
+          y: 64
           width: parent.width * 0.8
 
-          MenuItem {
-            id: kickButton
-            text: Lua.tr("Kick From Room")
-            enabled: {
-              if (!roomScene.isOwner) return false;
-              if (model.id === Self.id) return false;
-              if (model.id < -1) {
-                const { minComp, curComp } = Lua.call("GetCompNum");
-                return curComp > minComp;
-              }
-              return true;
-            }
+          onAboutToShow: {
+            flowerButton.enabled = true;
+            eggButton.enabled = true;
+            wineButton.enabled = Math.random() < 0.3;
+            shoeButton.enabled = Math.random() < 0.3;
+          }
+
+          W.ButtonContent {
+            id: flowerButton
+            text: Lua.tr("Give Flower")
+            icon.source: SkinBank.pixAnimDir + "/flower/egg3"
             onClicked: {
-              // 傻逼qml喜欢加1.0
-              // FIXME 留下image
-              Cpp.notifyServer("KickPlayer", Math.floor(model.id));
+              enabled = false;
+              roomScene.givePresent("Flower", model.id);
+              photoMenu.close();
             }
           }
-          MenuItem {
+
+          W.ButtonContent {
+            id: eggButton
+            text: Lua.tr("Give Egg")
+            icon.source: SkinBank.pixAnimDir + "/egg/egg"
+            onClicked: {
+              enabled = false;
+              if (Math.random() < 0.03) {
+                roomScene.givePresent("GiantEgg", model.id);
+              } else {
+                roomScene.givePresent("Egg", model.id);
+              }
+              photoMenu.close();
+            }
+          }
+
+          W.ButtonContent {
+            id: wineButton
+            text: Lua.tr("Give Wine")
+            icon.source: SkinBank.pixAnimDir + "/wine/shoe"
+            onClicked: {
+              enabled = false;
+              roomScene.givePresent("Wine", model.id);
+              photoMenu.close();
+            }
+          }
+
+          W.ButtonContent {
+            id: shoeButton
+            text: Lua.tr("Give Shoe")
+            icon.source: SkinBank.pixAnimDir + "/shoe/shoe"
+            onClicked: {
+              enabled = false;
+              roomScene.givePresent("Shoe", model.id);
+              photoMenu.close();
+            }
+          }
+
+          W.ButtonContent {
             id: blockButton
             text: {
               const name = model.screenName;
@@ -198,6 +237,26 @@ W.PageBase {
                 Config.blockedUsers.splice(idx, 1);
               }
               Config.blockedUsers = Config.blockedUsers;
+            }
+          }
+
+          W.ButtonContent {
+            id: kickButton
+            text: Lua.tr("Kick From Room")
+            enabled: {
+              if (!roomScene.isOwner) return false;
+              if (model.id === Self.id) return false;
+              if (model.id < -1) {
+                const { minComp, curComp } = Lua.call("GetCompNum");
+                return curComp > minComp;
+              }
+              return true;
+            }
+            onClicked: {
+              // 傻逼qml喜欢加1.0
+              // FIXME 留下image
+              Cpp.notifyServer("KickPlayer", Math.floor(model.id));
+              photoMenu.close();
             }
           }
         }
@@ -263,6 +322,18 @@ W.PageBase {
       }
     }
   }
+
+  // TODO 扬了这玩意
+  function givePresent(tp, pid) {
+    ClientInstance.notifyServer(
+      "Chat",
+      {
+        type: 2,
+        msg: "$@" + tp + ":" + pid
+      }
+    );
+  }
+
 
   function getPhotoModel(id) {
     for (let i = 0; i < playerNum; i++) {
