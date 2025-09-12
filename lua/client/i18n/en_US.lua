@@ -170,6 +170,7 @@ Fk:loadTranslationTable({
   -- ["Cancel"] = "取消",
   -- ["End"] = "结束",
   -- ["Quit"] = "退出",
+
   ["BanGeneral"] = "Ban",
   ["ResumeGeneral"] = "Unban",
   -- ["Enable"] = "启用",
@@ -177,6 +178,7 @@ Fk:loadTranslationTable({
   ["BanPackage"] = "Ban packages",
   ["$BanPkgHelp"] = "Banning packages",
   ["$BanCharaHelp"] = "Banning characters",
+  ["$TotalGenerals"] = "Total: %1 character(s)",
   -- ["Companions"] = "珠联璧合",
   -- ["Skill Name"] = "技能名称",
   -- ["Skill Description"] = "技能描述",

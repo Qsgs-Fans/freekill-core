@@ -48,6 +48,8 @@ Fk:loadTranslationTable {
   ["help: Double click to use card or skill"] = "双击牌或头像以使用或打出牌或技能",
   ["Do not use nullification to own one-target trick"] = "不无懈自己的单目标锦囊",
   ["help: Do not use nullification to own one-target trick"] = "不对自己使用的单目标锦囊询问使用【无懈可击】",
+  ["Enable Super Drag"] = "启用拖动出牌",
+  ["help: Enable Super Drag"] = "将牌拖出手牌区使用，拖入目标即可选择目标或取消选择目标",
 
   ["Ban General Settings"] = "禁将",
   ["Set as Avatar"] = "设为头像",
@@ -266,6 +268,9 @@ FreeKill使用的是libgit2的C API，与此同时使用Git完成拓展包的下
   ["End"] = "结束",
   -- ["Quit"] = "退出",
   ["All"] = "全部",
+  ["Info"] = "信息",
+  ["Save"] = "保存",
+  ["Undo"] = "撤销",
 
   ["BanGeneral"] = "禁将",
   ["ResumeGeneral"] = "解禁",
@@ -274,6 +279,7 @@ FreeKill使用的是libgit2的C API，与此同时使用Git完成拓展包的下
   ["BanPackage"] = "禁拓展包",
   ["$BanPkgHelp"] = "正在禁用拓展包",
   ["$BanCharaHelp"] = "正在禁用武将",
+  ["$TotalGenerals"] = "共%1个武将",
   ["Companions"] = "珠联璧合",
   ["Skill Name"] = "技能名称",
   ["Skill Description"] = "技能描述",
@@ -309,6 +315,7 @@ FreeKill使用的是libgit2的C API，与此同时使用Git完成拓展包的下
   ["Same General Convert"] = "替换武将",
   ["Fight"] = "出战",
   ["Show General Detail"] = "查看技能",
+  ["Click The Game Scene to back"] = "点击游戏画面可退出菜单，继续操作",
 
   ["#PlayCard"] = "出牌阶段，请使用一张牌",
   ["#UseSkill"] = "请使用技能〖%arg〗",

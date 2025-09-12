@@ -62,7 +62,7 @@ Item {
 
     Text {
       anchors.centerIn: parent
-      text: "点击游戏画面可退出菜单，继续操作"
+      text: Lua.tr("Click The Game Scene to back")
       font.pixelSize: 16
     }
   }
@@ -185,7 +185,7 @@ Item {
 
     W.ButtonContent {
       id: banSchemaButton
-      text: "信息"
+      text: Lua.tr("Info")
       icon.source: "http://175.178.66.93/symbolic/mimetypes/x-office-document-symbolic.svg"
       font.bold: true
       Layout.fillWidth: true

@@ -51,8 +51,8 @@ W.PreferencePage {
     }
 
     W.SwitchRow {
-      title: "启用拖动出牌"
-      subTitle: "将牌拖出手牌区使用，拖入目标即可选择目标或取消选择目标"
+      title: Lua.tr("Enable Super Drag")
+      subTitle: Lua.tr("help: Enable Super Drag")
       checked: Config.enableSuperDrag
       onCheckedChanged: Config.enableSuperDrag = checked;
     }
