@@ -524,7 +524,6 @@ function ResetClientLua()
   local _data = self.enter_room_data
 
   self = client_klass:new(cpp_client) -- clear old client data
-  ClientInstance = self
   self.players = table.map(cpp_players, function(p)
     local cp = self:createPlayer(p[1])
     cp.ready = p[2]
@@ -540,8 +539,9 @@ function ResetClientLua()
   self.settings = data[3]
 
   -- FIXME 怎么混入三国杀要素了，非常坏
-  self.disabled_packs = data[3].disabledPack
-  self.disabled_generals = data[3].disabledGenerals
+  self.disabled_packs = ClientInstance.disabled_packs
+  self.disabled_generals = ClientInstance.disabled_generals
+  ClientInstance = self
 end
 
 function GetRoomConfig()
