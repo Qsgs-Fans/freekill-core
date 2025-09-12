@@ -4,7 +4,3 @@ import Fk.Base auto
 
 # 这是个Qt Bug *.mjs文件必须在根目录（至少得在根目录的qmldir下） 挺sb的
 Command 1.0 Base/command.mjs
-singleton Cpp 1.0 Base/CppUtil.qml
-singleton Lua 1.0 Base/LuaUtil.qml
-singleton SkinBank 1.0 Base/SkinBank.qml
-singleton Util 1.0 Base/Util.qml

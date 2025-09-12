@@ -153,7 +153,7 @@ function Player:__toqml()
       state = "candidate",
       screenName = self.player:getScreenName(),
       kingdom = self.kingdom,
-      seatNumber = self.seat,
+      seatNumber = self.seat == 0 and 1 or self.seat,
       selectable = true,
     },
   }

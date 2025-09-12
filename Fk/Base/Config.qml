@@ -2,7 +2,6 @@
 
 pragma Singleton
 import QtQuick
-import Fk
 
 QtObject {
   // TODO 全局变量堆一下 后面想办法

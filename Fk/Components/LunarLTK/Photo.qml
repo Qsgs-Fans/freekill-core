@@ -312,7 +312,9 @@ PhotoBase {
     ]
     font.family: Config.li2Name
     font.pixelSize: 32
-    text: seatChr[seatNumber - 1]
+    text: {
+      return seatChr[seatNumber - 1];
+    }
 
     glow.color: "brown"
     glow.spread: 0.2

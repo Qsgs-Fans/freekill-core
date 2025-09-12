@@ -2,7 +2,6 @@
 
 pragma Singleton
 import QtQuick
-import Fk
 
 QtObject {
   readonly property string version: typeof FkVersion !== 'undefined' ? FkVersion : 'qml-test';

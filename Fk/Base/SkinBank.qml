@@ -2,7 +2,6 @@
 
 pragma Singleton
 import QtQuick
-import Fk
 
 // TODO 这排var都得不能让外部直接调用了 改成基于函数调用
 // SkinBank.getSystemPic(photoDir, path)之类的

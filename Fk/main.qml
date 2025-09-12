@@ -29,6 +29,9 @@ Window {
       if (Cpp.os != "Android") {
         root.width = Config.winWidth;
         root.height = Config.winHeight;
+      } else {
+        Config.winWidth = root.width;
+        Config.winHeight = root.height;
       }
     }
   }

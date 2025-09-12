@@ -2,7 +2,6 @@
 
 pragma Singleton
 import QtQuick
-import Fk
 
 QtObject {
   // mock
