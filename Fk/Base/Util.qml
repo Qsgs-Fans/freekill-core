@@ -18,7 +18,14 @@ QtObject {
   }
 
   function getPlayerStr(playerid) {
-    const photo = getPhoto(playerid);
+    const photo = Lua.evaluate(`(function(id)
+      local p = ClientInstance:getPlayerById(id)
+      return {
+        general = p.general,
+        deputyGeneral = p.deputyGeneral,
+        seatNumber = p.seat,
+      }
+    end)(${playerid})`)
     if (photo.general === "anjiang" && (photo.deputyGeneral === "anjiang" || !photo.deputyGeneral)) {
       let ret = Lua.tr("seat#" + photo.seatNumber);
       if (playerid == Self.id) {
