@@ -562,19 +562,6 @@ callbacks["DestroyTableCardByEvent"] = (sender, data) => {
   }
 }
 
-function changeHp(id, delta, losthp) {
-  const photo = getPhoto(id);
-  if (!photo) {
-    return null;
-  }
-  if (delta < 0) {
-    if (!losthp) {
-      setEmotion(id, "damage")
-      photo.tremble()
-    }
-  }
-}
-
 function doIndicate(from, tos) {
   const component = Qt.createComponent("../../Components/LunarLTK/IndicatorLine.qml");
   if (component.status !== Component.Ready)

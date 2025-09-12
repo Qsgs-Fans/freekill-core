@@ -13,7 +13,7 @@ Item {
   CardArea {
     id: area
     anchors.horizontalCenter: parent.horizontalCenter
-    width: Math.min(root.width, length * 93 * 0.8)
+    width: Math.min(root.width, length * 93 * 0.8 + 1)
   }
 
   InvisibleCardArea {
@@ -120,6 +120,5 @@ Item {
 
   function updateCardPosition(animated) {
     area.updateCardPosition(animated);
-    invisibleArea.updateCardPosition(animated);
   }
 }
