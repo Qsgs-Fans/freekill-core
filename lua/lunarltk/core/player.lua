@@ -773,10 +773,6 @@ end
 ---@param scope? integer @ 查询历史范围，若你填了num则必须填具体时机
 function Player:setSkillUseHistory(skill_name, num, scope)
   skill_name = skill_name or ""
-  local _, _, ismatch = string.find(skill_name, "#([^%s]+)_main_skill")
-  if ismatch then
-    skill_name = ismatch
-  end
 
   if num == nil and scope == nil then
     if skill_name ~= "" then
@@ -802,9 +798,9 @@ function Player:setSkillUseHistory(skill_name, num, scope)
   self.skillUsedHistory[skill_name][scope] = num
 end
 
---- 设定玩家使用特定技能分支的历史次数。
+--- 设定玩家使用特定技能（skill skeleton）分支的历史次数。
 --- `num`和`scope`均不写则为清空特定区域的历史次数
----@param skill_name? string @ 技能名，不写（或写空字符串）则默认改变**所有技能**之所有分支的历史次数
+---@param skill_name? string @ 技能（skill skeleton）名，不写（或写空字符串）则默认改变**所有技能**之所有分支的历史次数
 ---@param branch? string @ 技能分支名，不写（或写空字符串）则默认改变某技能**所有分支**的历史次数
 ---@param num? integer @ 次数 默认0
 ---@param scope? integer @ 查询历史范围，若你填了num则必须填具体时机
@@ -855,19 +851,20 @@ end
 ---@param scope? integer @ 清空的历史范围，不填则全部清空
 function Player:clearSkillHistory(skill_name, scope)
   local skill = Fk.skills[skill_name]
-  local skel = skill:getSkeleton()
-  if skel.name == skill_name then
-    if scope then
-      for _, effect in ipairs(skel.effect_names) do
-        self:setSkillUseHistory(effect, 0, scope)
-      end
-    else
-      for _, effect in ipairs(skel.effect_names) do
-        self:setSkillUseHistory(effect)
+
+  if skill then
+    local skel = skill:getSkeleton()
+    if skel.name == skill_name then
+      if scope then
+        for _, effect in ipairs(skel.effect_names) do
+          self:setSkillUseHistory(effect, 0, scope)
+        end
+      else
+        for _, effect in ipairs(skel.effect_names) do
+          self:setSkillUseHistory(effect)
+        end
       end
     end
-    self:setSkillBranchUseHistory(skill_name)
-    return
   end
 
   if scope then
@@ -916,7 +913,12 @@ function Player:usedEffectTimes(skill_name, scope)
     return 0
   end
   scope = scope or Player.HistoryTurn
-  local skel = Fk.skills[skill_name]:getSkeleton()
+  local skill = Fk.skills[skill_name]
+  if not skill then
+    return self.skillUsedHistory[skill_name][scope]
+  end
+
+  local skel = skill:getSkeleton()
   if skel then
     if skel.name ~= skill_name then
       return self.skillUsedHistory[skill_name][scope]
