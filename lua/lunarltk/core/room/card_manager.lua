@@ -168,7 +168,7 @@ function CardManager:showCards(cards, from)
     card = cards,
   }
 
-  --[[
+  --[[ -- 原版
 
   self:doBroadcastNotify("ShowCard", {
     from = src,
@@ -179,24 +179,14 @@ function CardManager:showCards(cards, from)
     from = src,
   })
   
-  ]]
-
-  local UICards = table.map(cards, function(cid)
-    local c = Fk:getCardById(cid, true)
-    c = Fk:cloneCard(c.name, c.suit, c.number)
-    --FIXME:filterCard应当如何体现？
-    return c
-  end)
+  --]]
 
   local n = 0
   if self.logic:getCurrentEvent().event == GameEvent.SkillEffect then
     n = self.logic:getCurrentEvent().id
   end
 
-  self:showVirtualCard(UICards, from, {
-    type = "##ShowCard",
-    from = src,
-  }, n)
+  self:doBroadcastNotify("ShowCard", { cards, src, n })
 
   self.logic:trigger(fk.CardShown, from, { cardIds = cards })
 end

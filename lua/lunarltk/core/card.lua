@@ -181,6 +181,7 @@ local CBOR_CARD_KEY_SUBCARDS = 6
 local CBOR_CARD_KEY_SKILL_NAMES = 7
 local CBOR_CARD_KEY_EXTRA_DATA = 8
 local CBOR_CARD_KEY_VIRT_ID = 9
+local CBOR_CARD_KEY_MARK = 10
 
 function Card:__tocbor()
   if self.id ~= 0 then
@@ -199,6 +200,7 @@ function Card:__tocbor()
           next(self.extra_data) ~= nil and self.extra_data or nil)
         or nil,
         [CBOR_CARD_KEY_VIRT_ID] = self.virt_id or 0,
+        [CBOR_CARD_KEY_MARK] = next(self.mark) ~= nil and self.mark or nil,
       }
     ))
   end
@@ -251,6 +253,7 @@ cbor.tagged_decoders[CBOR_TAG_VIRTUAL_CARD] = function(v)
 
   card.extra_data = v[CBOR_CARD_KEY_EXTRA_DATA]
   card.virt_id = v[CBOR_CARD_KEY_VIRT_ID] or 0
+  card.mark = v[CBOR_CARD_KEY_MARK] or {}
 
   return card
 end

@@ -511,6 +511,7 @@ end
 
 function Client:showCard(data)
   -- local from = data.from
+  --[[
   local cards = data.cards
   local merged = {
     {
@@ -526,6 +527,23 @@ function Client:showCard(data)
   vdata.merged = merged
   vdata.event_id = 0
   self:notifyUI("MoveCards", vdata)
+  --]]
+  local cards, src, event_id = table.unpack(data)
+  local fakeCards = table.map(cards, function(cid)
+    local c = Fk:getCardById(cid, true)
+    local fake = Fk:cloneCard(c.name, c.suit, c.number)
+    for name, v in pairs(self.card_marks[cid] or Util.DummyTable) do
+      if name:find("-public", 1, true) then
+        fake:setMark(name, v)
+      end
+    end
+    return fake
+  end)
+  local msg = {
+    type = "##ShowCard",
+    from = src,
+  }
+  self:showVirtualCard({ fakeCards, src, msg, event_id })
 end
 
 
