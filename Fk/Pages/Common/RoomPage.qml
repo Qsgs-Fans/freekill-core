@@ -385,6 +385,7 @@ Item {
     id: gameLoader
     width: parent.width
     height: parent.height
+    clip: true
 
     Behavior on x { NumberAnimation { duration: 150 } }
     Behavior on y { NumberAnimation { duration: 150 } }
