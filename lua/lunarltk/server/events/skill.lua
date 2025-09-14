@@ -269,6 +269,10 @@ function SkillEventWrappers:handleAddLoseSkills(player, skill_names, source_skil
     end
   end
 
+  for _, p in ipairs(self.alive_players) do
+    p:filterHandcards()
+  end
+
   if #triggers > 0 then
     no_trigger = no_trigger == nil and false or no_trigger
     for i = 1, #triggers do
