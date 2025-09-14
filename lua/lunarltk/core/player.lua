@@ -416,7 +416,7 @@ end
 
 --- 检索玩家装备区是否存在对应类型的装备列表。
 ---@param cardSubtype? CardSubtype @ 卡牌子类，不填则返回所有装备
----@return integer[] @ 返回卡牌ID或空表
+---@return integer[] @ 返回卡牌或空表
 function Player:getEquipments(cardSubtype)
   local cardIds = {}
   for _, cardId in ipairs(self.player_cards[Player.Equip]) do
@@ -426,6 +426,35 @@ function Player:getEquipments(cardSubtype)
   end
 
   return cardIds
+end
+
+--- 检索玩家装备区是否存在对应类型的装备列表。
+---@param cardSubtype? CardSubtype @ 卡牌子类，不填则返回所有装备
+---@return Card[] @ 返回卡牌ID或空表
+function Player:getEquipCards(cardSubtype)
+  local cards = {}
+  local card
+  for _, cardId in ipairs(self.player_cards[Player.Equip]) do
+    card = self:getVirtualEquip(cardId) or Fk:getCardById(cardId)
+    if cardSubtype == nil or card.sub_type == cardSubtype then
+      table.insert(cards, card)
+    end
+  end
+  return cards
+end
+
+--- 检索玩家判定区是否存在对应的延时锦囊列表。
+---@param name? string @ 延时锦囊卡名，不填则返回所有延时锦囊
+---@return Card[] @ 返回卡牌或空表
+function Player:getDelayedTrickCards(name)
+  local cards = {}
+  for _, cardId in ipairs(self.player_cards[Player.Judge]) do
+    local card = self:getVirtualEquip(cardId) or Fk:getCardById(cardId)
+    if name == nil or card.trueName == name then
+      table.insert(cards, card)
+    end
+  end
+  return cards
 end
 
 --- 获取玩家手牌上限。
