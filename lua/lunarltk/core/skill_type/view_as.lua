@@ -6,6 +6,7 @@
 ---@field public handly_pile boolean? @ 能否选择“如手牌般使用或打出”的牌
 ---@field public mute_card boolean? @ 是否不播放卡牌特效和语音
 ---@field public click_count? boolean @ 是否在点击按钮瞬间就计数并播放特效和语音
+---@field public include_equip? boolean @ 选牌时是否展开装备区
 local ViewAsSkill = UsableSkill:subclass("ViewAsSkill")
 
 function ViewAsSkill:initialize(name, frequency)

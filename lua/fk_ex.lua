@@ -78,6 +78,7 @@ function fk.readUsableSpecToSkill(skill, spec)
   skill.late_refresh = not not spec.late_refresh
   skill.click_count = not not spec.click_count
   skill.history_branch = spec.history_branch
+  skill.include_equip = spec.include_equip
 end
 
 function fk.readStatusSpecToSkill(skill, spec)
@@ -120,6 +121,7 @@ end
 ---@field public target_tip? fun(self: ActiveSkill, player: Player, to_select: Player, selected: Player[], selected_cards: integer[], card?: Card, selectable: boolean, extra_data: any): string|TargetTipDataSpec? @ 显示在目标武将牌脸上的提示
 ---@field public handly_pile? boolean @ 是否能够选择“如手牌使用或打出”的牌
 ---@field public click_count? boolean @ 是否在点击按钮瞬间就计数并播放特效和语音
+---@field public include_equip? boolean @ 选牌时是否展开装备区
 
 ---@class CardSkillSpec: UsableSkillSpec
 ---@field public mod_target_filter? fun(self: ActiveSkill, player: Player, to_select: Player, selected: Player[], card: Card, extra_data: any): any @ 判定目标是否合法（例如不能杀自己，火攻无手牌目标）
@@ -157,6 +159,7 @@ end
 ---@field public mute_card? boolean @ 是否不播放卡牌特效和语音。一个牌名的默认不播放，其他默认播放
 ---@field public click_count? boolean @ 是否在点击按钮瞬间就计数并播放特效和语音
 ---@field public enabled_at_nullification? fun(self: ViewAsSkill, player: Player, data: CardEffectData): boolean? @ 判断一张牌是否能被此技能转化无懈来响应
+---@field public include_equip? boolean @ 选牌时是否展开装备区
 
 ---@class DistanceSpec: StatusSkillSpec
 ---@field public correct_func? fun(self: DistanceSkill, from: Player, to: Player): integer?

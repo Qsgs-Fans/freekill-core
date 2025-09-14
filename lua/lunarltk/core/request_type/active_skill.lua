@@ -215,13 +215,19 @@ function ReqActiveSkill:expandPiles()
   local player = self.player
   if not skill then return end
 
+  local expand_equip = skill.include_equip
   -- 展开自己装备区
   -- 特殊：equips至少有一张能亮着的情况下才展开 且无视是否存在skill.expand_pile
-  for _, id in ipairs(player:getCardIds("e")) do
-    if self:cardValidity(id) then
-      self:expandPile("_equip")
-      break
+  if not expand_equip then
+    for _, id in ipairs(player:getCardIds("e")) do
+      if self:cardValidity(id) then
+        expand_equip = true
+        break
+      end
     end
+  end
+  if expand_equip then
+    self:expandPile("_equip")
   end
 
   -- 如果可以调用如手牌般使用的牌，也展开
