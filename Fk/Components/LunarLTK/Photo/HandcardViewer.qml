@@ -31,7 +31,7 @@ Rectangle {
           break;
         }
         if (!Lua.call("CardVisibility", cid)) continue;
-        const data = Lua.call("GetCardData", cid);
+        const data = Lua.call("GetCardData", cid, true);
         let a = Lua.tr(data.name);
         /* if (a.length === 1) {
            a = "&nbsp;&nbsp;" + a;

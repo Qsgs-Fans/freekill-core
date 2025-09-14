@@ -268,7 +268,7 @@ Flickable {
         const t = Lua.call("GetCardData", cid);
         if (Lua.call("CardVisibility", cid)) {
           skillDesc.append("------------------------------------")
-          const v = Lua.call("GetVirtualEquip", id, cid);
+          const v = Lua.call("GetVirtualEquipData", id, cid);
           if (v) {
             skillDesc.append(
               "<b>" + "(" + Lua.tr(t.name) + Lua.tr("log_" + t.suit) + Lua.tr(t.number.toString()) + ")" 

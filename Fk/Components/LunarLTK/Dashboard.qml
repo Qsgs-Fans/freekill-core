@@ -135,7 +135,7 @@ RowLayout {
   function updateHandcards() {
     Lua.call("FilterMyHandcards");
     handcardAreaItem.cards.forEach(v => {
-      v.setData(Lua.call("GetCardData", v.cid));
+      v.setData(Lua.call("GetCardData", v.cid, true));
     });
   }
 
@@ -191,7 +191,7 @@ RowLayout {
         card.footnoteVisible = true;
         card.markVisible = false;
         card.footnote = Lua.tr(dat.ui_data.footnote);
-        const vcard = Lua.call("GetVirtualEquip", 0, dat.data.id);
+        const vcard = Lua.call("GetVirtualEquipData", 0, dat.data.id);
         if (vcard) {
           card.virt_name = vcard.name;
         }

@@ -159,7 +159,10 @@ QtObject {
 
 
   function getEquipIcon(cid, icon) {
-    const data = Lua.call("GetCardData", cid);
+    let data = Lua.call("GetVirtualEquipData", 0, cid);
+    if (!data)
+      data = Lua.call("GetCardData", cid, true);
+
     const extension = data.extension;
     const name = icon || data.name;
     let ret = searchPkgResourceWithExtension(extension, "/image/card/equipIcon/", name);

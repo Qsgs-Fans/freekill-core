@@ -669,7 +669,7 @@ callbacks["UpdateHandcard"] = (sender) => {
   roomScene.dashboard.handcardArea.cards.forEach((v) => {
     const id = v.cid;
     if (Lua.evaluate(`ClientInstance:getCardArea(${id}) == Card.PlayerHand and ClientInstance:getCardOwner(${id}) == Self`)) {
-      v.setData(Lua.call("GetCardData", id));
+      v.setData(Lua.call("GetCardData", id, true));
       v.known = Lua.call("CardVisibility", id);
       v.draggable = sortable;
     }
@@ -679,6 +679,7 @@ callbacks["UpdateHandcard"] = (sender) => {
 callbacks["UpdateCard"] = (sender, j) => {
   const id = parseInt(j);
   let card;
+  let filterCard = false;
   roomScene.tableCards.forEach((v) => {
     if (v.cid === id) {
       card = v;
@@ -690,6 +691,7 @@ callbacks["UpdateCard"] = (sender, j) => {
     roomScene.dashboard.handcardArea.cards.forEach((v) => {
       if (v.cid === id) {
         card = v;
+        filterCard = true;
         return;
       }
     });
@@ -699,7 +701,7 @@ callbacks["UpdateCard"] = (sender, j) => {
     return;
   }
 
-  card.setData(Lua.call("GetCardData", id));
+  card.setData(Lua.call("GetCardData", id, filterCard));
 }
 
 callbacks["UpdateSkill"] = (sender, j) => {
@@ -1019,7 +1021,14 @@ callbacks["AskForCardChosen"] = (sender, data) => {
     const arr = [];
     const ids = d[1];
 
-    ids.forEach(id => arr.push(Lua.call("GetCardData", id, true)));
+    ids.forEach(id => {
+      let v = Lua.call("GetCardData", id);
+      const vcard = Lua.call("GetVirtualEquipData", data._id, id);
+      if (vcard) {
+        v.virt_name = vcard.name;
+      }
+      arr.push(v);
+    });
     box.addCustomCards(d[0], arr);
   }
 
@@ -1099,8 +1108,12 @@ callbacks["AskForMoveCardInBoard"] = (sender, data) => {
 
   const boxCards = [];
   cards.forEach(id => {
-    // const cardPos = cardsPosition[cards.findIndex(cid => cid === id)];
-    const d = Lua.call("GetCardData", id, true);
+    const cardPos = cardsPosition[cards.findIndex(cid => cid === id)];
+    let d = Lua.call("GetCardData", id);
+    const vcard = Lua.call("GetVirtualEquipData", playerIds[cardPos], id);
+    if (vcard) {
+      d.virt_name = vcard.name;
+    }
     boxCards.push(d);
   });
 

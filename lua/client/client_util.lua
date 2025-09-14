@@ -76,9 +76,9 @@ local cardSubtypeStrings = {
 }
 
 ---@param id integer
----@param virtualCard? boolean @ 是否获取虚拟装备/延时锦囊信息
-function GetCardData(id, virtualCard)
-  local card = Fk:getCardById(id)
+---@param filterCard? boolean @ 是否获取经过锁视的牌？
+function GetCardData(id, filterCard)
+  local card = Fk:getCardById(id, not filterCard)
   if card == nil then
     return {
       cid = id,
@@ -105,20 +105,10 @@ function GetCardData(id, virtualCard)
     subtype = cardSubtypeStrings[card.sub_type],
     multiple_targets = card.multiple_targets,
   }
-  if card.skillName ~= "" then
+  if filterCard and card.skillName ~= "" then
     local orig = Fk:getCardById(id, true)
     ret.name = orig.name
     ret.virt_name = card.name
-  end
-  if virtualCard then
-    for _, p in ipairs(ClientInstance.players) do
-      local vcard = p:getVirtualEquip(id)
-      if vcard then
-        ret.virt_name = vcard.name
-        ret.subtype = cardSubtypeStrings[vcard.sub_type]
-        break
-      end
-    end
   end
   return ret
 end
@@ -453,7 +443,7 @@ end
 --- 获取某牌的虚拟装备/延时锦囊信息
 ---@param playerid integer @ 拥有此牌的角色id，找不到时会在全场找此牌拥有者
 ---@param cid integer @ 牌的id
-function GetVirtualEquip(playerid, cid)
+function GetVirtualEquipData(playerid, cid)
   local c, player
   player = ClientInstance:getPlayerById(playerid)
   if not player then
@@ -469,8 +459,10 @@ function GetVirtualEquip(playerid, cid)
   return {
     name = c.name,
     cid = c.subcards[1],
+    extension = c.package.extensionName,
     suit = c:getSuitString(),
     number = c.number,
+    type = c.type,
     subtype = c:getSubtypeString(),
   }
 end
