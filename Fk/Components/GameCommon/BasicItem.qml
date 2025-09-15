@@ -134,7 +134,18 @@ Item {
     if (dragging) {
       console.warn(this, "goBack when dragging", new Error().stack)
     }
-    if (animated) {
+
+    let useAnim = animated;
+    if (origX === x && origY === y && origOpacity === opacity) {
+      useAnim = false;
+    } else if (origOpacity === opacity) {
+      const dx = Math.abs(x - origX);
+      const dy = Math.abs(y - origY);
+      if (dx + dy <= 1) {
+        useAnim = false;
+      }
+    }
+    if (useAnim) {
       moveAborted = true;
       goBackAnimation.stop();
       moveAborted = false;
@@ -143,6 +154,10 @@ Item {
       x = origX;
       y = origY;
       opacity = origOpacity;
+
+      if (animated) {
+        moveFinished();
+      }
     }
   }
 

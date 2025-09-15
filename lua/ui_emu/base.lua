@@ -131,7 +131,7 @@ function Scene:update(elemType, id, newData)
   local item = self.items[elemType][id]
   if not item then return end
   local changed = item:setData(newData)
-  changed = true
+  -- changed = true
   local changeData = self.parent.change
   if changed and changeData then
     changeData[elemType] = changeData[elemType] or {}
