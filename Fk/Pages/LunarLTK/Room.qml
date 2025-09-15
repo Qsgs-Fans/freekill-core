@@ -877,8 +877,10 @@ W.PageBase {
     playerNum = Config.roomCapacity;
     bgm.play();
 
+    const luaSelfIdx = Lua.evaluate('table.indexOf(ClientInstance.players, Self)') - 1;
+
     for (let i = 0; i < playerNum; i++) {
-      const state = Lua.evaluate(`ClientInstance.players[${i + 1}]:__toqml().prop`);
+      const state = Lua.evaluate(`ClientInstance.players[${(luaSelfIdx + i) % playerNum + 1}]:__toqml().prop`);
       const modelData = {
         id: i ? -1 : Self.id,
         index: i,   // For animating seat swap

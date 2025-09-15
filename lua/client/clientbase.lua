@@ -194,6 +194,8 @@ function ClientBase:startGame(data)
   self.gameStarted = true
   self.gameStartTime = os.time()
 
+  local players = {}
+
   self:notifyUI("StartGame", data)
 end
 
