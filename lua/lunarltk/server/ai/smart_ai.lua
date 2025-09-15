@@ -382,10 +382,10 @@ function SmartAI:handleAskForSkillInvoke(data)
 end
 
 function SmartAI:handleAskForChoice(data)
-  local choices, skillName, prompt, detailed, allChoices = table.unpack(data)
+  local choices, allChoices, skillName, prompt = table.unpack(data)
   local ai = fk.ai_skills[skillName]
   if ai then
-    local ret = ai:thinkForChoice(self, choices, prompt, detailed, allChoices)
+    local ret = ai:thinkForChoice(self, choices, prompt, allChoices)
     return ret
   else
     return choices[1]
