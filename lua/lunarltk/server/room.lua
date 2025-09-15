@@ -1206,6 +1206,7 @@ function Room:askToChooseKingdom(players)
     local req = Request:new(specialKingdomPlayers, "AskForChoice")
     req.focus_text = "AskForKingdom"
     req.receive_decode = false
+    req.focus_players = self.alive_players
     for _, p in ipairs(specialKingdomPlayers) do
       local allKingdoms = {}
       local curGeneral = Fk.generals[p.general]

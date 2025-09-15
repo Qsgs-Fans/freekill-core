@@ -215,6 +215,7 @@ function ReqActiveSkill:expandPiles()
   local player = self.player
   if not skill then return end
 
+  -- TODO: 为了缔盟的无奈之法，应该多次判定是否展开
   local expand_equip = skill.include_equip
   -- 展开自己装备区
   -- 特殊：equips至少有一张能亮着的情况下才展开 且无视是否存在skill.expand_pile
