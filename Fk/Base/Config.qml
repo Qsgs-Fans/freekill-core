@@ -194,6 +194,8 @@ QtObject {
   }
 
   function saveConf() {
+    conf.winX = winX;
+    conf.winY = winY;
     conf.winWidth = winWidth;
     conf.winHeight = winHeight;
     conf.lastLoginServer = lastLoginServer;

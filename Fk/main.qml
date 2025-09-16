@@ -13,6 +13,8 @@ Window {
 
   title: qsTr("FreeKill") + " v" + Cpp.version
 
+  onXChanged: Config.winX = x;
+  onYChanged: Config.winY = y;
   onWidthChanged: Config.winWidth = width;
   onHeightChanged: Config.winHeight = height;
 
