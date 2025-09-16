@@ -823,6 +823,11 @@ function Player:setSkillUseHistory(skill_name, num, scope)
     return
   end
 
+  if Fk.skill_skels[skill_name] then
+    local main_name = string.format("#%s_main_skill", skill_name)
+    self.skillUsedHistory[main_name] = self.skillUsedHistory[main_name] or {0, 0, 0, 0}
+    self.skillUsedHistory[main_name][scope] = num
+  end
   self.skillUsedHistory[skill_name] = self.skillUsedHistory[skill_name] or {0, 0, 0, 0}
   self.skillUsedHistory[skill_name][scope] = num
 end
