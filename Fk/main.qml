@@ -27,6 +27,8 @@ Window {
     onScaleChanged: Config.winScale = scale;
     onConfLoaded: {
       if (Cpp.os != "Android") {
+        root.x = Config.winX;
+        root.y = Config.winY;
         root.width = Config.winWidth;
         root.height = Config.winHeight;
       } else {
