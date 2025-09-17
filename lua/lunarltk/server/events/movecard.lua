@@ -471,7 +471,7 @@ function MoveEventWrappers:throwCard(card_ids, skillName, who, thrower)
     from = who,
     toArea = Card.DiscardPile,
     moveReason = fk.ReasonDiscard,
-    proposer = thrower.id,
+    proposer = thrower,
     skillName = skillName
   })
 end
@@ -494,7 +494,7 @@ function MoveEventWrappers:recastCard(card_ids, who, skillName, moveMark)
     toArea = Card.DiscardPile,
     skillName = skillName,
     moveReason = fk.ReasonRecast,
-    proposer = who.id,
+    proposer = who,
   })
   self:sendFootnote(card_ids, {
     type = "##RecastCard",
@@ -507,6 +507,7 @@ function MoveEventWrappers:recastCard(card_ids, who, skillName, moveMark)
     card = card_ids,
     arg = skillName,
   }
+  if who.dead then return {} end
   return self:drawCards(who, #card_ids, skillName, "top", moveMark)
 end
 
