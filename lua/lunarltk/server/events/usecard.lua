@@ -654,6 +654,12 @@ function UseCardEventWrappers:doCardUseEffect(useCardData)
         moveReason = fk.ReasonUse,
       }
       if Fk:getCardById(realCardIds[1], true).name ~= useCardData.card.name then
+        -- 当锁定视为某个装备牌时，这里强行套虚拟卡，以适配智慧
+        if not useCardData.card:isVirtual() then
+          local vcard = Fk:cloneCard(useCardData.card.name)
+          vcard:addSubcard(realCardIds[1])
+          useCardData.card = vcard
+        end
         move.virtualEquip = useCardData.card
       end
 

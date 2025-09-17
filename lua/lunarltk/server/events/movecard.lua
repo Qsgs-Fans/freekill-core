@@ -161,6 +161,13 @@ function MoveCards:main()
           end
         end
 
+        -- FIXME: 随便擦了几下 等设计师亲手鉴定
+        local realCurrentCard = Fk:getCardById(info.cardId, true)
+        if currentCard.type == Card.TypeEquip and realCurrentCard.type ~= Card.TypeEquip and not data.virtualEquip then
+          data.virtualEquip = Fk:cloneCard(currentCard.name)
+          data.virtualEquip:addSubcard(currentCard.id)
+        end
+
         if data.virtualEquip and data.virtualEquip:getEffectiveId() == info.cardId then
           currentCard = data.virtualEquip
           ---@cast currentCard -nil

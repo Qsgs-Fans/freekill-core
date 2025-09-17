@@ -652,8 +652,8 @@ Fk:loadTranslationTable {
 
   ["$InstallEquip"] = "%from 装备了 %card",
   ["$UninstallEquip"] = "%from 卸载了 %card",
-  ["$InstallVirtualEquip"] = "%from 装备了 %arg(转化自 %card)",
-  ["$UninstallVirtualEquip"] = "%from 卸载了 %arg(转化自 %card)",
+  ["$InstallVirtualEquip"] = "%from 装备了 %arg (转化自 %card)",
+  ["$UninstallVirtualEquip"] = "%from 卸载了 %arg (转化自 %card)",
 
   ["$LightningMove"] = "%card 从 %from 转移到了 %to",
   ["$PasteCard"] = "%from 给 %to 贴了张 %card",
