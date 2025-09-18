@@ -541,7 +541,7 @@ function Client:showCard(data)
   vdata.event_id = 0
   self:notifyUI("MoveCards", vdata)
   --]]
-  local cards, src, event_id = table.unpack(data)
+  local cards, src, event_id = data[1], data[2], data[3]
   local fakeCards = table.map(cards, function(cid)
     local c = Fk:getCardById(cid, true)
     local fake = Fk:cloneCard(c.name, c.suit, c.number)
@@ -556,6 +556,7 @@ function Client:showCard(data)
     type = "##ShowCard",
     from = src,
   }
+  src = src or 0
   self:showVirtualCard({ fakeCards, src, msg, event_id })
 end
 

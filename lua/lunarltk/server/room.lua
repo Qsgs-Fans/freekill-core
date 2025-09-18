@@ -3740,4 +3740,62 @@ function Room:setPlayerPile(player, pile, ids)
   self:doBroadcastNotify("SetPlayerPile", { player.id, pile, ids })
 end
 
+--- 展示一堆牌（注意，这样子是不会过锁视技的）
+---@param cards integer|integer[]|Card|Card[] @ 要展示的牌
+---@param from? ServerPlayer
+function Room:showCards(cards, from)
+  cards = Card:getIdList(cards)
+  local src
+  if from then src = from.id end
+  self:sendLog{
+    type = "#ShowCard",
+    from = src,
+    card = cards,
+  }
+
+  --[[ -- 原版
+
+  self:doBroadcastNotify("ShowCard", {
+    from = src,
+    cards = cards,
+  })
+  self:sendFootnote(cards, {
+    type = "##ShowCard",
+    from = src,
+  })
+  
+  --]]
+
+  local n = 0
+  if self.logic:getCurrentEvent().event == GameEvent.SkillEffect then
+    n = self.logic:getCurrentEvent().id
+  end
+
+  self:doBroadcastNotify("ShowCard", { cards, src, n })
+
+  self.logic:trigger(fk.CardShown, from, { cardIds = cards })
+end
+
+--- 将虚拟牌展示到桌面（仅动画）
+---@param card Card | Card[] @ 需要展示的牌
+---@param player? ServerPlayer @ 牌来自谁的手牌区
+---@param footnote? LogMessage @ 脚注
+---@param event_id? integer @ 当前事件的ID（用于清理UI处理区的卡）
+function Room:showVirtualCard(card, player, footnote, event_id)
+  self:doBroadcastNotify("ShowVirtualCard", { card, player and player.id, footnote, event_id or 0 })
+end
+
+--- 将桌面上的虚拟牌在移出（仅动画）
+---@param ids integer | integer[]
+function Room:destroyTableCard(ids)
+  self:doBroadcastNotify("DestroyTableCard", type(ids) == "table" and ids or { ids })
+end
+
+--- 将桌面上的在该事件之后进入的卡牌移出（仅动画）
+---@param id integer
+function Room:destroyTableCardByEvent(id)
+  self:doBroadcastNotify("DestroyTableCardByEvent", id)
+end
+
+
 return Room
