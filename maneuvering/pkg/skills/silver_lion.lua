@@ -15,13 +15,12 @@ silverLionSkill:addEffect(fk.DetermineDamageInflicted, {
 silverLionSkill:addEffect(fk.AfterCardsMove, {
   can_trigger = function(self, event, target, player, data)
     if player.dead or not player:isWounded() or not Fk.skills[silverLionSkill.name]:isEffectable(player) then return end
-    if data.extra_data and data.extra_data.silver_lion_equips then
-      for _, move in ipairs(data) do
-        if move.from == player then
-          for _, info in ipairs(move.moveInfo) do
-            if table.contains(data.extra_data.silver_lion_equips, info.cardId) then
-              return true
-            end
+    for _, move in ipairs(data) do
+      if move.from == player then
+        for _, info in ipairs(move.moveInfo) do
+          local card = info.virtualEquip or Fk:getCardById(info.cardId)
+          if info.fromArea == Card.PlayerEquip and card.name == silverLionSkill.attached_equip then
+            return Fk.skills[silverLionSkill.name]:isEffectable(player)
           end
         end
       end
@@ -35,32 +34,6 @@ silverLionSkill:addEffect(fk.AfterCardsMove, {
       recoverBy = player,
       skillName = silverLionSkill.name,
     }
-  end,
-})
-
--- TODO:幽默虚拟装备，信息在移动前就移除了
-silverLionSkill:addEffect(fk.BeforeCardsMove, {
-  can_refresh = function(self, event, target, player, data)
-    return player == player.room.players[1]
-  end,
-  on_refresh = function(self, event, target, player, data)
-    local ids = {}
-    for _, move in ipairs(data) do
-      if move.from and not move.from.dead then
-        for _, info in ipairs(move.moveInfo) do
-          if info.fromArea == Card.PlayerEquip then
-            local c = move.from:getVirtualEquip(info.cardId) or Fk:getCardById(info.cardId) ---@type EquipCard
-            if table.contains(c:getEquipSkills(move.from), Fk.skills[silverLionSkill.name]) then
-              table.insert(ids, info.cardId)
-            end
-          end
-        end
-      end
-    end
-    if #ids > 0 then
-      data.extra_data = data.extra_data or {}
-      data.extra_data.silver_lion_equips = ids
-    end
   end,
 })
 
