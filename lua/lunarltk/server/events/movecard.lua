@@ -130,7 +130,9 @@ function MoveCards:main()
         if data.from and data.from:getVirtualEquip(info.cardId) then
           beforeCard = data.from:getVirtualEquip(info.cardId)
           data.from:removeVirtualEquip(info.cardId)
-          info.virtualEquip = beforeCard
+          if not info.virtualEquip then
+            info.virtualEquip = beforeCard
+          end
         end
         if realFromArea == Player.Equip and data.from then
           table.insert(uninstalls, {beforeCard, data.from})
