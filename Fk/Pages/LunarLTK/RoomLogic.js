@@ -196,8 +196,8 @@ function moveCards(data) {
     const move = moves[i];
     const from = getAreaItem(move.fromArea, move.from);
     const to = getAreaItem(move.toArea, move.to);
-    if (!from || !to || (from === to && from !== tablePile) || (from === tablePile && move.toArea === Card.DiscardPile))
-      continue;
+    //if (!from || !to || (from === to && from !== tablePile) || (from === tablePile && move.toArea === Card.DiscardPile))
+    //  continue;
     const items = from.remove(move.ids, move.fromSpecialName, data);
     items.forEach((item) => item.known = !!data[item.cid.toString()]); // updata card visible. must be before move animation
     if (to === tablePile) {
