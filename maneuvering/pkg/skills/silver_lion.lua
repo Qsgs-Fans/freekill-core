@@ -18,9 +18,9 @@ silverLionSkill:addEffect(fk.AfterCardsMove, {
     for _, move in ipairs(data) do
       if move.from == player then
         for _, info in ipairs(move.moveInfo) do
-          local card = info.virtualEquip or Fk:getCardById(info.cardId)
+          local card = info.beforeCard
           if info.fromArea == Card.PlayerEquip and card.name == silverLionSkill.attached_equip then
-            return Fk.skills[silverLionSkill.name]:isEffectable(player)
+            return true
           end
         end
       end

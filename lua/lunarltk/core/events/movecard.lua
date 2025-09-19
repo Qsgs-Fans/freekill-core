@@ -19,9 +19,10 @@
 
 --- MoveInfo 一张牌的来源信息
 ---@class MoveInfo
----@field public cardId integer
----@field public fromArea CardArea
----@field public fromSpecialName? string
+---@field public cardId integer @ 移动牌的id
+---@field public fromArea CardArea @ 牌的来源区域
+---@field public beforeCard Card @ 牌移动前的卡牌信息
+---@field public fromSpecialName? string @ 牌来自的私人牌堆名
 ---@field public virtualEquip? Card @ 若终点区域为装备/判定区，将这些牌变为指定的装备/判定牌
 
 --- MoveCardsData 移动牌的数据

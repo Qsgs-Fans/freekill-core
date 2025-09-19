@@ -126,16 +126,11 @@ function MoveCards:main()
         local realFromArea = room:getCardArea(info.cardId)
         room:applyMoveInfo(data, info)
 
-        local beforeCard = Fk:getCardById(info.cardId) --[[@as EquipCard]]
         if data.from and data.from:getVirtualEquip(info.cardId) then
-          beforeCard = data.from:getVirtualEquip(info.cardId)
           data.from:removeVirtualEquip(info.cardId)
-          if not info.virtualEquip then
-            info.virtualEquip = beforeCard
-          end
         end
-        if realFromArea == Player.Equip and data.from then
-          table.insert(uninstalls, {beforeCard, data.from})
+        if realFromArea == Player.Equip and data.from and info.beforeCard.type == Card.TypeEquip then
+          table.insert(uninstalls, {info.beforeCard, data.from})
         end
 
         Fk:filterCard(info.cardId, data.to)
@@ -237,6 +232,23 @@ end
 ---@param ... CardsMoveInfo
 ---@return MoveCardsData[]
 local function moveInfoTranslate(room, ...)
+  -- 获取移动前此牌在原区域内的卡牌信息
+  local markBeforeCard = function (id)
+    local card = Fk:getCardById(id)
+    local owner = room:getCardOwner(id)
+    if owner then
+      card = owner:getVirtualEquip(id) or card
+    end
+    local c = Fk:cloneCard(card.name, card.suit, card.number)
+    local markTable = card:isVirtual() and card.mark or room.card_marks[card.id]
+    if markTable then
+      for k, v in pairs(markTable) do
+        c.mark[k] = v
+      end
+    end
+    return c
+  end
+
   ---@type MoveCardsData[]
   local ret = {}
   for _, cardsMoveInfo in ipairs{ ... } do
@@ -244,21 +256,43 @@ local function moveInfoTranslate(room, ...)
     if #cardsMoveInfo.ids == 0 then goto continue1 end
     infoCheck(cardsMoveInfo)
 
-    -- 若移动到被废除的装备栏，则修改为置入弃牌堆
-    local infos = {} ---@type MoveInfo[]
-    local abortMoveInfos = {} ---@type MoveInfo[]
+    local infos = {} ---@type MoveInfo[] -- 正常移动数据
+    local abortMoveInfos = {} ---@type MoveInfo[] -- 因废除被修改的移动数据
+
     for _, id in ipairs(cardsMoveInfo.ids) do
+      -- 从来源判断，为虚拟装备信息赋值
+      local info = { ---@type MoveInfo
+        beforeCard = markBeforeCard(id),
+        cardId = id,
+        fromArea = room:getCardArea(id),
+        fromSpecialName = cardsMoveInfo.from and cardsMoveInfo.from:getPileNameOfId(id),
+      }
+      local vequip -- 移动到目标区域时，将转化为的虚拟装备
+
+      if cardsMoveInfo.virtualEquip then
+        vequip = cardsMoveInfo.virtualEquip
+      -- 虚拟装备/延时锦囊在装备区/判定区内移动时，保留虚拟数据
+      elseif (cardsMoveInfo.toArea == Card.PlayerJudge or cardsMoveInfo.toArea == Card.PlayerEquip)
+        and cardsMoveInfo.toArea == room:getCardArea(id)
+        and cardsMoveInfo.to
+        and cardsMoveInfo.from and cardsMoveInfo.from:getVirtualEquip(id) then
+        vequip = cardsMoveInfo.from:getVirtualEquip(id)
+      -- 受锁视影响视为装备牌的情况，加上牌的锁视信息
+      elseif Fk:getCardById(id, true).name ~= info.beforeCard.name then
+        local c = info.beforeCard
+        vequip = Fk:cloneCard(c.name, c.suit, c.number)
+        vequip:addSubcard(id)
+      end
+      info.virtualEquip = vequip
+
+      -- 若移动到被废除的装备栏，则修改为置入弃牌堆
       local toAbortDrop = false
       if cardsMoveInfo.toArea == Card.PlayerEquip and cardsMoveInfo.to then
         local moveToPlayer = cardsMoveInfo.to
         ---@cast moveToPlayer -nil 防止判空波浪线
         local card = cardsMoveInfo.virtualEquip or Fk:getCardById(id)
         if card.type == Card.TypeEquip and #moveToPlayer:getAvailableEquipSlots(card.sub_type) == 0 then
-          table.insert(abortMoveInfos, {
-            cardId = id,
-            fromArea = room:getCardArea(id),
-            fromSpecialName = cardsMoveInfo.from and cardsMoveInfo.from:getPileNameOfId(id),
-          })
+          table.insert(abortMoveInfos, info)
           toAbortDrop = true
         end
       end
@@ -267,24 +301,7 @@ local function moveInfoTranslate(room, ...)
         goto continue2
       end
 
-      local vequip
-
-      if cardsMoveInfo.virtualEquip then
-        vequip = cardsMoveInfo.virtualEquip
-      elseif (cardsMoveInfo.toArea == Card.PlayerJudge or cardsMoveInfo.toArea == Card.PlayerEquip)
-        and cardsMoveInfo.toArea == room:getCardArea(id)
-        and cardsMoveInfo.to
-        and cardsMoveInfo.from and cardsMoveInfo.from:getVirtualEquip(id) then
-        -- 虚拟装备/延时锦囊在装备区/判定区内移动时，保留虚拟数据
-        vequip = cardsMoveInfo.from:getVirtualEquip(id)
-      end
-
-      table.insert(infos, {
-        cardId = id,
-        fromArea = room:getCardArea(id),
-        fromSpecialName = cardsMoveInfo.from and cardsMoveInfo.from:getPileNameOfId(id),
-        virtualEquip = vequip,
-      })
+      table.insert(infos, info)
 
       ::continue2::
     end
