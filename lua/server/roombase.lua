@@ -80,9 +80,11 @@ function ServerRoomBase:resume(reason)
   end
 
   ::GAME_OVER::
-  self:gameOver("")
-  -- coroutine.close(main_co)
-  -- self.main_co = nil
+  if not self.game_finished then
+    self:gameOver("")
+    -- coroutine.close(main_co)
+    -- self.main_co = nil
+  end
   return true
 end
 
