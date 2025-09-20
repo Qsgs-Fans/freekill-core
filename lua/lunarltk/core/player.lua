@@ -151,6 +151,7 @@ function Player:__toqml()
       deputyGeneral = self.deputyGeneral,
       role = self.role,
       state = "candidate",
+      avatar = self.player:getAvatar(),
       screenName = self.player:getScreenName(),
       kingdom = self.kingdom,
       seatNumber = self.seat == 0 and 1 or self.seat,
