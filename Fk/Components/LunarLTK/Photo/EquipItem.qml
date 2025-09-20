@@ -6,6 +6,10 @@ import Fk.Components.Common
 import Fk.Components.LunarLTK
 
 Item {
+  ListModel {
+    id: equips
+  }
+
   property int cid: 0
   property string name: ""
   property string suit: ""
@@ -122,6 +126,10 @@ Item {
     suit = "";
     number = 0;
     text = "";
+    icon = "";
+    if (sealed) {
+      text = '  ' + Lua.tr(subtype + "_sealed");
+    }
   }
 
   function setCard(card)
@@ -130,20 +138,53 @@ Item {
     name = card.name;
     suit = card.suit;
     number = card.number;
+    text = card.text;
+    icon = card.icon;
+  }
+
+  function addCard(card) {
+    let iconName = "";
+    let displayText = "";
     if (card.subtype === "defensive_ride") {
-      text = "+1";
-      icon = "horse";
+      displayText = "+1";
+      iconName = "horse";
     } else if (card.subtype === "offensive_ride") {
-      text = "-1"
-      icon = "horse";
+      displayText = "-1"
+      iconName = "horse";
     } else {
-      text = Lua.tr(name);
-      if (card.virt_name) {
-        name = card.virt_name;
-        icon = card.virt_name;
-      } else {
-        icon = name;
+      displayText = Lua.tr(card.name);
+      iconName = card.name;
+    }
+    let newModel = {
+      name: card.name,
+      cid: card.cid,
+      suit: card.suit,
+      number: card.number,
+      text: displayText,
+      icon: iconName,
+    }
+    setCard(newModel);
+    equips.append(newModel);
+  }
+
+  function removeCard(cid) {
+    let find = false;
+    for (let i = 0; i < equips.count; i++) {
+      if (equips.get(i).cid === cid) {
+        equips.remove(i);
+        find = true;
+        break;
       }
+    }
+    if (!find) {
+      return;
+    }
+    if (equips.count === 0) {
+      reset();
+      hide();
+    } else {
+      const card = equips.get(0);
+      setCard(card);
     }
   }
 

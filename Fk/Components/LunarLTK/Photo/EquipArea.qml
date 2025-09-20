@@ -114,7 +114,7 @@ Item {
         card = vcard || card;
         item = items[subtypes.indexOf(card.subtype)];
         if (item) {
-          item.setCard(card);
+          item.addCard(card);
           item.show();
         }
       }
@@ -124,7 +124,7 @@ Item {
       card = vcard || card;
       item = items[subtypes.indexOf(card.subtype)];
       if (item) {
-        item.setCard(card);
+        item.addCard(card);
         item.show();
       }
     }
@@ -137,10 +137,7 @@ Item {
       const card = result[i];
       for (let j = 0; j < items.length; j++) {
         const item = items[j];
-        if (item.cid === card.cid) {
-          item.reset();
-          item.hide();
-        }
+        item.removeCard(card.cid);
       }
     }
 
