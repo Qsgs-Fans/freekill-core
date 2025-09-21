@@ -118,14 +118,6 @@ function ViewAsSkill:feasible(player, targets, selected_cards, card)
   return false
 end
 
---- 发动技能前确定cost_data的函数
----@param player ServerPlayer @ 使用者
----@param skillData SkillUseData @ 技能使用数据
----@return table|CostData @ cost_data，其中的from/cards/tos会同步到skillData上。
-function ViewAsSkill:onCost(player, skillData)
-  return {}
-end
-
 --- 发动技能时实际执行的函数
 -- 警告：建议别改
 ---@param room Room @ 服务端房间

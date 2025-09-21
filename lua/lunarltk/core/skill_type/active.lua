@@ -197,14 +197,6 @@ function ActiveSkill:prompt(player, selected_cards, selected_targets, extra_data
 
 ------- }
 
---- 发动技能前确定cost_data的函数
----@param player ServerPlayer @ 使用者
----@param skillData SkillUseData @ 技能使用数据
----@return table|CostData @ cost_data，其中的from/cards/tos会同步到skillData上。
-function ActiveSkill:onCost(player, skillData)
-  return {}
-end
-
 --- 发动技能时实际执行的函数
 ---@param room Room @ 服务端房间
 ---@param cardUseEvent SkillUseData @ 技能使用数据

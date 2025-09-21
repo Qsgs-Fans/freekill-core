@@ -655,7 +655,6 @@ function Room:askToUseActiveSkill(player, params)
   params.cancelable = (params.cancelable == nil) and true or params.cancelable
   params.no_indicate = (params.no_indicate == nil) and true or params.no_indicate
   params.extra_data = params.extra_data or Util.DummyTable
-  params.skip = params.skip or params.extra_data.skipUse
   ---@diagnostic disable-next-line assign-type-mismatch
   local skill = Fk.skills[params.skill_name] ---@type ActiveSkill | ViewAsSkill
   if not (skill and (skill:isInstanceOf(ActiveSkill) or skill:isInstanceOf(ViewAsSkill))) then
@@ -692,18 +691,21 @@ function Room:askToUseActiveSkill(player, params)
     skill.interaction.data = interaction
   end
 
-  if skill:isInstanceOf(ActiveSkill) and not params.skip then
-    ---@cast skill ActiveSkill
-    skill:onUse(self, SkillUseData:new {
-      from = player,
-      cards = selected_cards,
-      tos = table.map(targets, Util.Id2PlayerMapper),
-    })
+  local use_spec = {
+    from = player,
+    cards = selected_cards,
+    tos = table.map(targets, Util.Id2PlayerMapper),
+    interaction = interaction
+  }
+  local use_data = skill:handleCostData(player, use_spec, params.extra_data)
+
+  if not params.skip then
+    skill:onUse(self, use_data)
   end
 
   return true, {
-    cards = selected_cards,
-    targets = table.map(targets, Util.Id2PlayerMapper),
+    cards = use_data.cards,
+    targets = use_data.tos,
     interaction = interaction
   }
 end
@@ -1970,6 +1972,7 @@ end
 function Room:handleUseCardReply(player, data, params)
   local card = data.card
   local targets = data.targets or {}
+  local extra_data = (params or {}).extra_data or Util.DummyTable
   if type(card) == "table" then
     local card_data = card
     local skill = Fk.skills[card_data.skill]
@@ -1984,29 +1987,7 @@ function Room:handleUseCardReply(player, data, params)
         tos = table.map(targets, Util.Id2PlayerMapper),
         interaction_data = data.interaction_data,
       }
-      local use_data = SkillUseData:new(use_spec)
-      use_data.cost_data = skill:onCost(player, use_spec)
-      if use_data.cost_data.from then
-        use_data.from = use_data.cost_data.from
-      end
-      if use_data.cost_data.cards then
-        use_data.cards = use_data.cost_data.cards
-      end
-      if use_data.cost_data.tos then
-        use_data.tos = use_data.cost_data.tos
-      end
-      if use_data.cost_data.interaction_data then
-        use_data.interaction_data = use_data.cost_data.interaction_data
-      end
-      if not use_data.cost_data.history_branch then
-        local branch = skill.history_branch
-        if type(branch) == "function" then
-          branch = skill:history_branch(player, use_data)
-        end
-        if type(branch) == "string" then
-          use_data.cost_data.history_branch = branch
-        end
-      end
+      local use_data = skill:handleCostData(player, use_spec, extra_data)
 
       self:useSkill(player, skill, function()
         skill:onUse(self, use_data)
@@ -2024,29 +2005,7 @@ function Room:handleUseCardReply(player, data, params)
         tos = table.map(targets, Util.Id2PlayerMapper),
         interaction_data = data.interaction_data,
       }
-      local use_data = SkillUseData:new(use_spec)
-      use_data.cost_data = skill:onCost(player, use_spec)
-      if use_data.cost_data.from then
-        use_data.from = use_data.cost_data.from
-      end
-      if use_data.cost_data.cards then
-        use_data.cards = use_data.cost_data.cards
-      end
-      if use_data.cost_data.tos then
-        use_data.tos = use_data.cost_data.tos
-      end
-      if use_data.cost_data.interaction_data then
-        use_data.interaction_data = use_data.cost_data.interaction_data
-      end
-      if not use_data.cost_data.history_branch then
-        local branch = skill.history_branch
-        if type(branch) == "function" then
-          branch = skill:history_branch(player, use_data)
-        end
-        if type(branch) == "string" then
-          use_data.cost_data.history_branch = branch
-        end
-      end
+      local use_data = skill:handleCostData(player, use_spec, extra_data)
 
       self:useSkill(player, skill, function()
         useResult = skill:onUse(self, use_data, c, params) or ""
@@ -2067,11 +2026,13 @@ function Room:handleUseCardReply(player, data, params)
       local skill = Fk.skills[data.special_skill]
       assert(skill:isInstanceOf(ActiveSkill))
       ---@cast skill ActiveSkill
-      skill:onUse(self, SkillUseData:new {
+      local use_spec = {
         from = player,
         cards = { card },
         tos = table.map(targets, Util.Id2PlayerMapper),
-      })
+      }
+      local use_data = skill:handleCostData(player, use_spec, extra_data)
+      skill:onUse(self, use_data)
       return nil
     end
     local use = {}
