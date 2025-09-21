@@ -152,7 +152,7 @@ function ReqActiveSkill:setupInteraction()
     skill.interaction.data = interaction.default or interaction.default_choice or nil -- FIXME
     -- 假设只有1个interaction （其实目前就是这样）
     local i = Interaction:new(self.scene, "1", interaction)
-    i.skill_name = self.skill_name
+    i.skill_name = interaction.skill_name or self.skill_name
     self.scene:addItem(i)
   end
 end
