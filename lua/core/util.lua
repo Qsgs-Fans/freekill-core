@@ -317,6 +317,25 @@ function table.map(self, func)
   return ret
 end
 
+--- 归约一个表的所有内容到一个变量
+---@generic T, T2
+---@param self T[] @ 要被归约的表
+---@param init T2 @ 初始值
+---@param func fun(result: T2, element: T, last_element: T?): T2 @ 循环调用函数
+---@return T2
+function table.reduce(self, init, func)
+  if #self == 0 then return init end
+  if #self == 1 then return func(init, self[1]) end
+
+  local ret = init
+  local last_element
+  for _, v in ipairs(self) do
+    ret = func(ret, v, last_element)
+    last_element = v
+  end
+  return ret
+end
+
 ---@generic T
 ---@param self T[]
 ---@return T[]
