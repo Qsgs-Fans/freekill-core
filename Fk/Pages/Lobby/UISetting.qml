@@ -29,13 +29,14 @@ W.PreferencePage {
       W.ComboRow {
         id: selfCombo
         title: Lua.tr(modelData)
+        textRole: "translation"
         property list<string> uipaks: currentRepeater.getUIPackagesByBoardGame(modelData)
         visible: uipaks.length > 1 
         model: ListModel {
           id: boardgameListModel
           Component.onCompleted: {
             for (let i = 0; i < uipaks.length; i++) {
-              boardgameListModel.append( {name: uipaks[i]} )
+              boardgameListModel.append( {name: uipaks[i], translation: Lua.tr(uipaks[i])} )
             }
             if (uipaks.length > 1) {
               boardGameUI.visibleBoardgames.push(modelData)

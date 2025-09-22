@@ -131,7 +131,7 @@ function Engine:getDescription(name, lang, player)
 end
 
 local UIPackage = require "core.ui_package"
----@param uipak table
+---@param uipak UIPackageSpec
 function Engine:addUIPackage(uipak)
   self.ui_packages[uipak.name] = UIPackage:new(uipak)
 end
