@@ -11,7 +11,17 @@ import Fk.Widgets as W
 W.PreferencePage {
   groupWidth: width * 0.8
 
+  Text {
+    text: Lua.tr("No available UI package")
+    font.bold: true
+    color: '#979797'
+    font.pixelSize: 30
+    visible: boardGameUI.visibleBoardgames.length === 0
+  }
+
   W.PreferenceGroup {
+    id: boardGameUI
+    property list<string> visibleBoardgames: []
     Repeater {
       id: currentRepeater
       model: getBoardGames()
@@ -26,6 +36,9 @@ W.PreferencePage {
           Component.onCompleted: {
             for (let i = 0; i < uipaks.length; i++) {
               boardgameListModel.append( {name: uipaks[i]} )
+            }
+            if (uipaks.length > 1) {
+              boardGameUI.visibleBoardgames.push(modelData)
             }
           }
         }
