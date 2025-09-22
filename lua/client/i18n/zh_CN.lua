@@ -24,6 +24,11 @@ Fk:loadTranslationTable {
   ["Game BGM"] = "游戏BGM",
   ["Poster Girl"] = "看板娘",
 
+  ["UI settings"] = "UI设置",
+  ["lunarltk"] = "新月杀",
+  ["default"] = "默认",
+  ["UI packages select"] = "设置UI",
+
   ["Audio Settings"] = "音频",
   ["Audio and Message"] = "音频和消息",
   ["BGM Volume"] = "BGM音量",

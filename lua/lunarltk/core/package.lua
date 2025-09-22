@@ -25,6 +25,7 @@ local Package = basePackage:subclass("Package")
 Package.GeneralPack = 1
 Package.CardPack = 2
 Package.SpecialPack = 3
+Package.UIPack = 4
 
 --- 拓展包的构造函数。
 ---@param name string @ 包的名字

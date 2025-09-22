@@ -531,7 +531,14 @@ W.PageBase {
     kickOwnerTimer.stop();
     Backend.playSound("./audio/system/gamestart");
 
-    const data = Lua.evaluate(`Fk:getBoardGame(ClientInstance.settings.gameMode).page`);
+    let data ;
+    const boardgame = Lua.evaluate(`Fk:getBoardGame(ClientInstance.settings.gameMode).name`);
+    const ui_config = Config.enabledUIPackages[boardgame];
+    if (ui_config !== undefined && ui_config !== "default" && Lua.evaluate(`not not Fk:getUIPackage("${ui_config}")`)) {
+      data = Lua.evaluate(`Fk.ui_packages.${ui_config}.page`)
+    } else {
+      data = Lua.evaluate(`Fk:getBoardGame(ClientInstance.settings.gameMode).page`)
+    }
     App.changeRoomPage(data);
   }
 

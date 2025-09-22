@@ -17,3 +17,4 @@ UserInfo 1.0 UserInfo.qml
 BGSetting 1.0 BGSetting.qml
 AudioSetting 1.0 AudioSetting.qml
 ControlSetting 1.0 ControlSetting.qml
+UISetting 1.0 UISetting.qml
