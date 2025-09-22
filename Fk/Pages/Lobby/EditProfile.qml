@@ -20,6 +20,7 @@ Item {
       ListElement { name: "BG Settings" }
       ListElement { name: "Audio Settings" }
       ListElement { name: "Control Settings" }
+      ListElement { name: "UI settings" }
     }
   }
 
@@ -34,5 +35,6 @@ Item {
     BGSetting {}
     AudioSetting {}
     ControlSetting {}
+    UISetting {}
   }
 }

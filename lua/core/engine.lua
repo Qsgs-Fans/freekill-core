@@ -6,6 +6,7 @@
 ---@field public related_skills table<string, Skill[]> @ 所有技能的关联技能
 ---@field public global_trigger TriggerSkill[] @ 所有的全局触发技
 ---@field public global_status_skill table<class, Skill[]> @ 所有的全局状态技
+---@field public ui_packages table<string, UIPackage> @ UI
 local Engine = class("Base.Engine")
 
 function Engine:initialize()
@@ -16,6 +17,7 @@ function Engine:initialize()
   self.related_skills = {} -- skillName --> relatedSkill[]
   self.global_trigger = {}
   self.global_status_skill = {}
+  self.ui_packages = {}
 end
 
 ---@deprecated
@@ -126,6 +128,30 @@ function Engine:getDescription(name, lang, player)
   end
 
   return Fk:translate(":" .. name, lang)
+end
+
+local UIPackage = require "core.ui_package"
+---@param uipak table
+function Engine:addUIPackage(uipak)
+  self.ui_packages[uipak.name] = UIPackage:new(uipak)
+end
+
+function Engine:listUIPackages()
+  local arr = {}
+  for k, v in pairs(self.ui_packages) do
+    if arr[v.boardgame] then
+      table.insert(arr[v.boardgame], k)
+    else
+      arr[v.boardgame] = {k}
+    end
+  end
+  return arr
+end
+
+---@param name string @ UIPack名字
+---@return UIPackage
+function Engine:getUIPackage(name)
+  return self.ui_packages[name]
 end
 
 
