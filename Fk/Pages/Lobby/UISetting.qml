@@ -22,6 +22,7 @@ W.PreferencePage {
   W.PreferenceGroup {
     id: boardGameUI
     property list<string> visibleBoardgames: []
+    title: "游戏UI设置"
     Repeater {
       id: currentRepeater
       model: getBoardGames()
