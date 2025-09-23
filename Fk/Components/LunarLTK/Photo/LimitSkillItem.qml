@@ -5,7 +5,7 @@ import Fk
 
 Item {
   id: root
-  height: 20
+  height: 15
   property string skillname: "zhiheng"
   property string skilltype: "limit" // limit, wake, ...
   property int usedtimes: -1 // -1 will not be shown
@@ -14,14 +14,14 @@ Item {
   Image {
     id: bg
     source: SkinBank.limitSkillDir + skilltype
-    height: 47 * 0.6
-    width: 87 * 0.6
+    height: 47 * 0.45
+    width: 87 * 0.45
   }
 
   Text {
     anchors.centerIn: bg
     color: "#F0E5DA"
-    font.pixelSize: 20
+    font.pixelSize: 15
     font.family: Config.li2Name
     style: Text.Outline
     styleColor: "#3D2D1C"

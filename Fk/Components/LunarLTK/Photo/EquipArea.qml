@@ -15,8 +15,8 @@ import Fk.Components.LunarLTK
 Item {
   id: root
 
-  height: 70
-  width: 138
+  height: 53
+  width: 103
   property int itemHeight: {
     if (treasureItem.name === "" && !treasureItem.sealed)
       return height / 3;

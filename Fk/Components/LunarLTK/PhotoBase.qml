@@ -10,9 +10,8 @@ import Fk.Components.LunarLTK.Photo
 
 Game.BasicItem {
   id: root
-  width: 175
-  height: 233
-  scale: 0.75
+  width: 131
+  height: 174
 
   property int playerid: 0
   property string avatar: ""
@@ -32,20 +31,22 @@ Game.BasicItem {
   Image {
     id: back
     source: SkinBank.getPhotoBack(root.kingdom)
+    scale: 0.75
+    anchors.centerIn: parent
   }
 
   Text {
     id: generalName
     x: 5
-    y: 28
+    y: 21
     font.family: Config.libianName
-    font.pixelSize: 22
+    font.pixelSize: 16
     opacity: 0.9
     horizontalAlignment: Text.AlignHCenter
-    lineHeight: 18
+    lineHeight: 14
     lineHeightMode: Text.FixedHeight
     color: "white"
-    width: 24
+    width: 18
     wrapMode: Text.WrapAnywhere
     text: Lua.tr(root.general)
   }
@@ -98,21 +99,23 @@ Game.BasicItem {
       id: deputySplit
       source: SkinBank.photoDir + "deputy-split"
       opacity: deputyGeneral ? 1 : 0
+      scale: 0.75
+      anchors.centerIn: parent
     }
 
     Text {
       id: deputyGeneralName
       anchors.left: generalImage.right
-      anchors.leftMargin: -14
-      y: 23
+      anchors.leftMargin: -10
+      y: 21
       font.family: Config.libianName
-      font.pixelSize: 22
+      font.pixelSize: 16
       opacity: 0.9
       horizontalAlignment: Text.AlignHCenter
-      lineHeight: 18
+      lineHeight: 14
       lineHeightMode: Text.FixedHeight
       color: "white"
-      width: 24
+      width: 18
       wrapMode: Text.WrapAnywhere
       text: Lua.tr(root.deputyGeneral)
       style: Text.Outline
@@ -121,11 +124,11 @@ Game.BasicItem {
 
   Rectangle {
     id: photoMask
-    x: 31
-    y: 5
-    width: 138
-    height: 222
-    radius: 8
+    x: 31 * 0.75
+    y: 5 * 0.75
+    width: 103
+    height: 166
+    radius: 6
     visible: false
   }
 
@@ -159,7 +162,7 @@ Game.BasicItem {
     anchors.topMargin: 2
     width: parent.width
 
-    font.pixelSize: 16
+    font.pixelSize: 12
     text: {
       let ret = screenName;
       if (Config.blockedUsers?.includes(screenName))
@@ -168,7 +171,7 @@ Game.BasicItem {
     }
     elide: root.playerid === Self.id ? Text.ElideNone : Text.ElideMiddle
     horizontalAlignment: Qt.AlignHCenter
-    glow.radius: 8
+    glow.radius: 6
   }
 
   Game.ChatBubble {

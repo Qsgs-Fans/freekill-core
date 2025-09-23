@@ -7,7 +7,7 @@ import Fk
 Image {
   source: SkinBank.magatamaDir + "0" + (Config.heg ? '-heg' : '')
   state: "3"
-  height: 19; fillMode: Image.PreserveAspectFit
+  height: 14; fillMode: Image.PreserveAspectFit
 
   states: [
     State {
@@ -57,6 +57,6 @@ Image {
   Image {
     id: main
     anchors.centerIn: parent
-    height: 19; fillMode: Image.PreserveAspectFit
+    height: 14; fillMode: Image.PreserveAspectFit
   }
 }

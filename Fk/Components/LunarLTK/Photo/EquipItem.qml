@@ -40,6 +40,8 @@ Item {
         return SkinBank.equipIconDir + "sealed";
       return icon ? SkinBank.getEquipIcon(cid, icon) : "";
     }
+
+    scale: 0.75
   }
 
   Image {
@@ -47,7 +49,7 @@ Item {
     anchors.right: parent.right
     source: (suit && !sealed) ? SkinBank.cardSuitDir + suit : ""
     width: implicitWidth / implicitHeight * height
-    height: 16
+    height: 12
   }
 
   GlowText {
@@ -56,7 +58,7 @@ Item {
     text: Util.convertNumber(number)
     color: "white"
     font.family: Config.libianName
-    font.pixelSize: 16
+    font.pixelSize: 12
     glow.color: "black"
     glow.spread: 0.75
     glow.radius: 2
@@ -69,7 +71,7 @@ Item {
     id: textItem
     font.family: Config.libianName
     color: sealed ? "black" : "white"
-    font.pixelSize: 18
+    font.pixelSize: 12
     anchors.left: iconItem.right
     anchors.leftMargin: -8
     verticalAlignment: Text.AlignVCenter

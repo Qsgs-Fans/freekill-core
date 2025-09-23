@@ -19,29 +19,31 @@ PhotoBase {
   Image {
     anchors.bottom: winRateRect.top
     anchors.right: parent.right
-    anchors.bottomMargin: -8
+    anchors.bottomMargin: -6
     anchors.rightMargin: 4
     source: SkinBank.photoDir +
             (isOwner ? "owner" : (ready ? "ready" : "notready"))
     visible: screenName != ""
+    transformOrigin: Item.BottomRight
+    scale: 0.75
   }
 
   Rectangle {
     id: winRateRect
-    width: 163; x: 6
+    width: 122; x: 4
     anchors.bottom: parent.bottom
-    anchors.bottomMargin: 6
-    height: childrenRect.height + 8
+    anchors.bottomMargin: 4
+    height: childrenRect.height + 6
     color: "#CC3C3229"
-    radius: 8
+    radius: 6
     border.color: "white"
     border.width: 1
     visible: screenName != "" && !roomScene.isStarted
 
     Text {
-      y: 4
+      y: 3
       anchors.horizontalCenter: parent.horizontalCenter
-      font.pixelSize: 20
+      font.pixelSize: 15
       font.family: Config.libianName
       color: (totalGame > 0 && runGame / totalGame > 0.2) ? "red" : "white"
       style: Text.Outline

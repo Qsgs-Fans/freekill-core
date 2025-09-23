@@ -621,9 +621,8 @@ W.PageBase {
   PhotoElement.MarkArea {
     id: banner
     x: 12; y: 12
-    width: (roomScene.width - 175 * 0.75 * 7) / 4 + 175 - 16
+    width: ((roomScene.width - 175 * 0.75 * 7) / 4 + 175 - 16) * 0.75
     transformOrigin: Item.TopLeft
-    scale: 0.75
     bgColor: "#BB838AEA"
   }
 

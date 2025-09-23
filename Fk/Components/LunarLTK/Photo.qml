@@ -52,7 +52,7 @@ PhotoBase {
     source: SkinBank.pixAnimDir + "playing"
     anchors.centerIn: parent
     loop: true
-    scale: 1.1
+    scale: 0.825
     visible: root.playing
     running: visible
   }
@@ -62,7 +62,7 @@ PhotoBase {
     source: SkinBank.pixAnimDir + "selected"
     anchors.centerIn: parent
     loop: true
-    scale: 1.1
+    scale: 0.825
     visible: root.state === "candidate" && root.selected
     running: visible
   }
@@ -74,24 +74,22 @@ PhotoBase {
     loop: true
     visible: root.state === "candidate" && root.selectable
     running: visible
+    scale: 0.75
   }
 
   HpBar {
     id: hp
-    x: 8
+    x: 6
     value: root.hp
     maxValue: root.maxHp
     shieldNum: root.shield
     anchors.bottom: parent.bottom
-    anchors.bottomMargin: 36
+    anchors.bottomMargin: 27
   }
 
   Rectangle {
-    x: 31
-    y: 5
-    width: 138
-    height: 222
-    radius: 8
+    anchors.fill: root.photoMask
+    radius: 6
 
     // visible: root.drank > 0
     color: "red"
@@ -102,14 +100,14 @@ PhotoBase {
   ColumnLayout {
     id: restRect
     anchors.centerIn: photoMask
-    anchors.leftMargin: 20
+    anchors.leftMargin: 15
     visible: root.rest > 0
 
     GlowText {
       Layout.alignment: Qt.AlignCenter
       text: Lua.tr("resting...")
       font.family: Config.libianName
-      font.pixelSize: 40
+      font.pixelSize: 30
       font.bold: true
       color: "#FEF7D6"
       glow.color: "#845422"
@@ -121,7 +119,7 @@ PhotoBase {
       visible: root.rest > 0 && root.rest < 999
       text: root.rest
       font.family: Config.libianName
-      font.pixelSize: 34
+      font.pixelSize: 25
       font.bold: true
       color: "#DBCC69"
       glow.color: "#2E200F"
@@ -133,7 +131,7 @@ PhotoBase {
       visible: root.rest > 0 && root.rest < 999
       text: Lua.tr("rest round num")
       font.family: Config.libianName
-      font.pixelSize: 28
+      font.pixelSize: 21
       color: "#F0E5D6"
       glow.color: "#2E200F"
       glow.spread: 0.6
@@ -143,34 +141,40 @@ PhotoBase {
   Image {
     visible: equipAreaItem.length > 0
     source: SkinBank.photoDir + "equipbg"
-    x: 31
-    y: 121
+    x: 23
+    y: 91
+    scale: 0.75
+    transformOrigin: Item.TopLeft
   }
 
   Image {
     source: root.status != "normal" ? SkinBank.statusDir + root.status : ""
-    x: -6
+    x: -5
+    scale: 0.75
+    transformOrigin: Item.TopLeft
   }
 
   Image {
     id: turnedOver
     visible: !root.faceup
     source: SkinBank.photoDir + "faceturned" + (Config.heg ? '-heg' : '')
-    x: 29; y: 5
+    x: 22; y: 4
+    scale: 0.75
+    transformOrigin: Item.TopLeft
   }
 
   EquipArea {
     id: equipAreaItem
 
-    x: 31
-    y: 157
+    x: 23
+    y: 118
   }
 
   Item {
     id: specialAreaItem
 
-    x: 31
-    y: 139
+    x: 23
+    y: 104
 
     InvisibleCardArea {
       id: specialContainer
@@ -206,7 +210,7 @@ PhotoBase {
     id: markAreaItem
 
     anchors.bottom: equipAreaItem.top
-    x: 31
+    x: 23
   }
 
   Image {
@@ -214,7 +218,8 @@ PhotoBase {
     visible: root.chained
     source: SkinBank.photoDir + "chain"
     anchors.horizontalCenter: parent.horizontalCenter
-    y: 72
+    scale: 0.75
+    y: 54
   }
 
   Image {
@@ -229,6 +234,7 @@ PhotoBase {
       return SkinBank.deathDir + "saveme";
     }
     anchors.centerIn: photoMask
+    scale: 0.75
   }
 
   Image {
@@ -236,7 +242,7 @@ PhotoBase {
     source: SkinBank.stateDir + root.netstate
     x: photoMask.x
     y: photoMask.y
-    scale: 0.9
+    scale: 0.9 * 0.75
     transformOrigin: Item.TopLeft
   }
 
@@ -244,8 +250,10 @@ PhotoBase {
     id: handcardNum
     source: SkinBank.photoDir + "handcard"
     anchors.bottom: parent.bottom
-    anchors.bottomMargin: -6
-    x: -6
+    anchors.bottomMargin: -5
+    x: -5
+    width: 40
+    height: 30
 
     Text {
       text: {
@@ -259,7 +267,7 @@ PhotoBase {
         }
       }
       font.family: Config.libianName
-      font.pixelSize: (root.maxCard === root.hp || root.hp < 0 ) ? 32 : 27
+      font.pixelSize: (root.maxCard === root.hp || root.hp < 0 ) ? 24 : 20
       //font.weight: 30
       color: "white"
       anchors.horizontalCenter: parent.horizontalCenter
@@ -291,13 +299,15 @@ PhotoBase {
     anchors.top: parent.top
     anchors.right: parent.right
     anchors.topMargin: role.height + 2
-    anchors.rightMargin: 30
+    anchors.rightMargin: 22
   }
 
   Image {
     visible: root.state === "candidate" && !selectable && !selected
     source: SkinBank.photoDir + "disable"
-    x: 31; y: -21
+    x: 23; y: -16
+    scale: 0.75
+    transformOrigin: Item.TopLeft
   }
 
   GlowText {
@@ -305,20 +315,20 @@ PhotoBase {
     visible: !progressBar.visible
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.bottom: parent.bottom
-    anchors.bottomMargin: -32
+    anchors.bottomMargin: -24
     property var seatChr: [
       "一", "二", "三", "四", "五", "六",
       "七", "八", "九", "十", "十一", "十二",
     ]
     font.family: Config.li2Name
-    font.pixelSize: 32
+    font.pixelSize: 24
     text: {
       return seatChr[seatNumber - 1];
     }
 
     glow.color: "brown"
     glow.spread: 0.2
-    glow.radius: 8
+    glow.radius: 6
     //glow.samples: 12
   }
 
@@ -328,7 +338,7 @@ PhotoBase {
     PropertyAnimation {
       target: root
       property: "x"
-      to: root.x - 20
+      to: root.x - 15
       easing.type: Easing.InQuad
       duration: 100
     }
@@ -374,6 +384,8 @@ PhotoBase {
     anchors.topMargin: 1
     source: SkinBank.photoDir + "control/tip"
     visible: progressTip.text != ""
+    scale: 0.75
+    transformOrigin: Item.TopLeft
     Text {
       id: progressTip
       font.family: Config.libianName
@@ -393,7 +405,7 @@ PhotoBase {
 
       Item {
         // Layout.alignment: Qt.AlignHCenter
-        width: modelData.type === "normal" ? 40 : 24
+        width: modelData.type === "normal" ? 30 : 18
 
         GlowText {
           anchors.centerIn: parent
@@ -402,13 +414,13 @@ PhotoBase {
           font.family: Config.li2Name
           color: "#FEFE84"
           font.pixelSize: {
-            if (text.length <= 3) return 36;
-            else return 28;
+            if (text.length <= 3) return 27;
+            else return 21;
           }
           //font.bold: true
           glow.color: "black"
           glow.spread: 0.3
-          glow.radius: 5
+          glow.radius: 4
           lineHeight: 0.85
           horizontalAlignment: Text.AlignHCenter
           wrapMode: Text.WrapAnywhere
@@ -419,14 +431,14 @@ PhotoBase {
           anchors.centerIn: parent
           visible: modelData.type === "warning"
           font.family: Config.libianName
-          font.pixelSize: 24
+          font.pixelSize: 18
           opacity: 0.9
           horizontalAlignment: Text.AlignHCenter
-          lineHeight: 24
+          lineHeight: 18
           lineHeightMode: Text.FixedHeight
           //color: "#EAC28A"
           color: "snow"
-          width: 24
+          width: 18
           wrapMode: Text.WrapAnywhere
           style: Text.Outline
           //styleColor: "#83231F"
@@ -468,8 +480,8 @@ PhotoBase {
 
   Rectangle {
     color: "white"
-    height: 20
-    width: 20
+    height: 15
+    width: 15
     visible: distance != -1
     Text {
       text: distance

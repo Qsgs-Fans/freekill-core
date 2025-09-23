@@ -18,8 +18,8 @@ RowLayout {
     model: markList
 
     Item {
-      width: 28
-      height: 28
+      width: 21
+      height: 21
       Image {
         anchors.fill: parent
         fillMode: Image.PreserveAspectCrop

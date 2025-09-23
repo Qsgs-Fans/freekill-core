@@ -12,6 +12,7 @@ Item {
   PixmapAnimation {
     id: typeAnim
     anchors.centerIn: parent
+    scale: 0.75
     source: SkinBank.pixAnimDir + "skillInvoke/" + skill_type
     keepAtStop: true
   }
@@ -23,6 +24,7 @@ Item {
     text: skill_name
     font.pixelSize: Math.max(24, 48 - (text.length - 2) * 6)
     font.family: Config.li2Name
+    scale: 0.75
     style: Text.Outline
     color: "white"
     opacity: 0

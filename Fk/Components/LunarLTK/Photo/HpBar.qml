@@ -61,13 +61,13 @@ Column {
         return root.colors[idx];
       }
       font.family: Config.libianName
-      font.pixelSize: 22
+      font.pixelSize: 16
       font.bold: true
       horizontalAlignment: Text.AlignHCenter
 
       glow.color: "#3E3F47"
       glow.spread: 0.8
-      glow.radius: 8
+      glow.radius: 6
       //glow.samples: 12
     }
 

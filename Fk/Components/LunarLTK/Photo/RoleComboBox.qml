@@ -11,6 +11,8 @@ Image {
   id: root
   source: visible ? SkinBank.getRolePic(value) : ""
   visible: value != "hidden"
+  width: 32
+  height: 35
 
   Image {
     property string value: "unknown"
@@ -18,6 +20,8 @@ Image {
     id: assumptionBox
     source: SkinBank.roleDir + value
     visible: root.value == "unknown" && optionPopupBox.visible == false
+    width: 32
+    height: 35
 
     W.TapHandler {
       onTapped: optionPopupBox.visible = true;
@@ -34,6 +38,8 @@ Image {
 
       Image {
         source: SkinBank.roleDir + modelData
+        width: 32
+        height: 35
 
         W.TapHandler {
           onTapped: {

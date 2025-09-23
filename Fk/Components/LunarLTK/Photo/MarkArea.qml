@@ -7,8 +7,9 @@ import Fk.Widgets as W
 
 Item {
   id: root
-  width: 138
+  width: 103
   property var bgColor: "#3C3229"
+  readonly property int rowHeight: 16
 
   ListModel {
     id: markList
@@ -34,7 +35,7 @@ Item {
     model: markList
     Item {
       width: childrenRect.width
-      height: 22
+      height: 16
       Text {
         // @$ @& 直接在名字里显示个数，牌堆是updatePileInfo控制标记值
         text: {
@@ -46,7 +47,7 @@ Item {
           return `${name} ${value}`;
         }
         font.family: Config.libianName
-        font.pixelSize: 22
+        font.pixelSize: 16
         font.letterSpacing: -0.6
         color: "white"
         style: Text.Outline
@@ -191,19 +192,19 @@ Item {
         if (w < width / 2) {
           x += width / 2;
         } else {
-          x = 0; y += 22;
+          x = 0; y += rowHeight;
         }
       } else {
         if (w < width / 2) {
           item.x = x; item.y = y;
-          x = 0; y += 22;
+          x = 0; y += rowHeight;
         } else {
-          item.x = 0; item.y = y + 22;
-          x = 0; y += 44;
+          item.x = 0; item.y = y + rowHeight;
+          x = 0; y += rowHeight * 2;
         }
       }
 
-      height = x ? y + 22 : y;
+      height = x ? y + rowHeight : y;
     });
 
     if (i === 0) height = 0;

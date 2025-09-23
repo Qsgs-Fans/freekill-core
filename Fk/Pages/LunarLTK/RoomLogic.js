@@ -23,17 +23,17 @@ function arrangeManyPhotos() {
    * +----------------+
    */
 
-  const photoBaseWidth = 175;
+  const photoBaseWidth = 175 * 0.75;
   const photoMaxWidth = 175 * 0.75;
   // const verticalSpacing = 32;
   const verticalSpacing = roomArea.height * 0.08;
   // Padding is negative, because photos are scaled.
-  const roomAreaPadding = -16;
+  const roomAreaPadding = 16;
 
   let horizontalSpacing = 8;
   let photoWidth = (roomArea.width - horizontalSpacing * playerNum)
                  / (playerNum - 1);
-  let photoScale = 0.75;
+  let photoScale = 1;
   if (photoWidth > photoMaxWidth) {
     photoWidth = photoMaxWidth;
     horizontalSpacing = (roomArea.width - photoWidth * (playerNum - 1))
@@ -48,7 +48,7 @@ function arrangeManyPhotos() {
   let regions = [
     {
       x: startX + padding * (playerNum - 2),
-      y: roomScene.height - 220,
+      y: roomScene.height - 192,
       scale: photoScale
     },
   ];
@@ -94,8 +94,8 @@ function arrangePhotos() {
 
   const photoWidth = 175 * 0.75;
   // Padding is negative, because photos are scaled.
-  const roomAreaPadding = -16;
-  const verticalPadding = -175 / 8;
+  const roomAreaPadding = 16;
+  const verticalPadding = 0;
   const verticalSpacing = roomArea.height * 0.08;
   const horizontalSpacing = (roomArea.width - photoWidth * 7) / 8;
 
@@ -103,7 +103,7 @@ function arrangePhotos() {
   const startX = verticalPadding + horizontalSpacing;
   const padding = photoWidth + horizontalSpacing;
   const regions = [
-    { x: startX + padding * 6, y: roomScene.height - 220 },
+    { x: startX + padding * 6, y: roomScene.height - 192 },
     { x: startX + padding * 6, y: roomAreaPadding + verticalSpacing * 3 },
     { x: startX + padding * 5, y: roomAreaPadding + verticalSpacing },
     { x: startX + padding * 4, y: roomAreaPadding },
@@ -452,8 +452,10 @@ function setEmotion(id, emotion, isCardId) {
     }
   }
 
-  const animation = component.createObject(photo,
-                    { source: (OS === "Win" ? "file:///" : "") + path });
+  const animation = component.createObject(photo, {
+    source: (OS === "Win" ? "file:///" : "") + path,
+    scale: 0.75,
+  });
   animation.anchors.centerIn = photo;
   if (isCardId) {
     animation.started.connect(() => photo.busy = true);
