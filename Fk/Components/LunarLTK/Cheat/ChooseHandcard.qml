@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 
 import Fk
+import Fk.Components.LunarLTK
 
 ColumnLayout {
   id: root

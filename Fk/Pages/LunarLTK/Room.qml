@@ -223,7 +223,7 @@ W.PageBase {
           }
           return false;
         }
-        onClicked: roomScene.startCheat("../../Components/LunarLTK/ChooseHandcard.qml");
+        onClicked: roomScene.startCheat("ChooseHandcard");
       }
       MetroButton {
         id: revertSelectionBtn

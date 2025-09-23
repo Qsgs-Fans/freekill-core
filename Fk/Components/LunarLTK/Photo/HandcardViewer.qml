@@ -72,7 +72,7 @@ Rectangle {
        params.ids = data;
 
        // Just for using room's right drawer
-       roomScene.startCheat("../../Components/LunarLTK/ViewPile.qml", params);
+       roomScene.startCheat("ViewPile", params);
      }
    }
  }
