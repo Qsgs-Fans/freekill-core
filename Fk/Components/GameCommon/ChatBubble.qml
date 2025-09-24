@@ -18,7 +18,7 @@ Rectangle {
     text: parent.text
     wrapMode: Text.WrapAnywhere
     font.family: Config.libianName
-    font.pixelSize: 20
+    font.pixelSize: 15
   }
 
   SequentialAnimation {

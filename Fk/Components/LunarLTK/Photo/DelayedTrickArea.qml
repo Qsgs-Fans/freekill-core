@@ -12,7 +12,7 @@ Item {
     visible: sealed
     x: -6; y: 8; z: 9
     source: SkinBank.delayedTrickDir + "sealed"
-    height: 28
+    height: 21
     fillMode: Image.PreserveAspectFit
   }
 
@@ -34,8 +34,8 @@ Item {
       model: cards
 
       Item {
-        height: 55 * 0.8
-        width: 47 * 0.8
+        height: 55 * 0.6
+        width: 47 * 0.6
         Image {
           anchors.fill: parent
           source: SkinBank.getDelayedTrickPicture(name)
