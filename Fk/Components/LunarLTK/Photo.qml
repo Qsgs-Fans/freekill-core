@@ -490,10 +490,12 @@ PhotoBase {
   }
 
   HandcardViewer {
-    x: -44
-    y: 128
+    anchors.right: parent.left
+    anchors.bottom: parent.bottom
     playerid: root.playerid
     handcards: root.handcards
+    scale: 0.75
+    transformOrigin: Item.BottomRight
 
     visible: {
       if (root.playerid === Self.id) return false;
