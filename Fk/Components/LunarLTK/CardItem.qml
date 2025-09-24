@@ -18,8 +18,8 @@ import Fk.Components.GameCommon as Game
 
 Game.PokerCard {
   id: root
-  width: 93
-  height: 130
+  width: 93 * cardScale
+  height: 130 * cardScale
 
   property string name: "slash"
   property string extension: ""
@@ -60,11 +60,11 @@ Game.PokerCard {
     id: virt_rect
     visible: known && root.virt_name !== "" && root.virt_name !== root.name
     width: parent.width
-    height: 20
-    y: 40
+    height: 20 * root.cardScale
+    y: 40 * root.cardScale
     color: "snow"
     opacity: 0.8
-    radius: 4
+    radius: 4 * root.cardScale
     border.color: "black"
     border.width: 1
   }
@@ -72,7 +72,7 @@ Game.PokerCard {
   Text {
     visible: virt_rect.visible
     anchors.centerIn: virt_rect
-    font.pixelSize: 16
+    font.pixelSize: Math.floor(16 * root.cardScale)
     font.family: Config.libianName
     font.letterSpacing: -0.6
     text: Lua.tr(root.virt_name)
@@ -82,14 +82,14 @@ Game.PokerCard {
     id: cardMarkDelegate
     Item {
       visible : markVisible || modelData.k.includes("-public")
-      width: root.width / 2
-      height: 16
+      width: root.width / 2 * root.cardScale
+      height: 16 * root.cardScale
       Rectangle {
         id: mark_rect
         width: mark_text.width + 12
-        height: 16
+        height: 16 * root.cardScale
         // color: "#A50330"
-        radius: 4
+        radius: 4 * root.cardScale
         // border.color: "snow"
         // border.width: 1
         gradient: Gradient {
@@ -101,7 +101,7 @@ Game.PokerCard {
       Text {
         id: mark_text
         x: 2
-        font.pixelSize: 16
+        font.pixelSize: Math.floor(16 * root.cardScale)
         font.family: Config.libianName
         font.letterSpacing: -0.6
         text: {
@@ -120,9 +120,9 @@ Game.PokerCard {
 
   GridLayout {
     width: root.width
-    y: 60
+    y: 60 * root.cardScale
     columns: 2
-    rowSpacing: 1
+    rowSpacing: root.cardScale
     columnSpacing: 0
     visible: known
     Repeater {
@@ -136,13 +136,13 @@ Game.PokerCard {
     visible: !root.selectable && root.known
     anchors.centerIn: parent
     font.family: Config.libianName
-    font.pixelSize: 18
+    font.pixelSize: Math.floor(18 * root.cardScale)
     opacity: 0.9
     horizontalAlignment: Text.AlignHCenter
-    lineHeight: 18
+    lineHeight: 18 * root.cardScale
     lineHeightMode: Text.FixedHeight
     color: "snow"
-    width: 20
+    width: 20 * root.cardScale
     wrapMode: Text.WrapAnywhere
     style: Text.Outline
     styleColor: "red"
