@@ -2,9 +2,10 @@
 --- JudgeData 判定的数据
 ---@class JudgeDataSpec
 ---@field public who ServerPlayer @ 判定者
----@field public pattern string @ 判定成功的条件
+---@field public pattern string|table<string, any> @ 判定成功的条件，若为表，则为该次判定的所有可能判定及对应数据
 ---@field public reason string @ 判定原因，技能名
----@field public card? Card? @ 当前判定牌
+---@field public card? Card @ 当前判定牌
+---@field public results? table @ 判定结果，为nil则说明判定被终止
 ---@field public skipDrop? boolean @ 是否不进入弃牌堆
 
 --- 判定的数据
@@ -40,8 +41,25 @@ fk.FinishJudge = JudgeEvent:subclass("fk.FinishJudge")
 
 -- 判定成功
 function JudgeData:matchPattern()
-  if self.card then
-    return self.card:matchPattern(self.pattern)
+  if self.results then
+    return table.contains(self.results, "good")
   end
   return false
+end
+
+-- 转化判定条件为表格形式
+function JudgeData:initializePattern()
+  if type(self.pattern) == "string" then
+    local pattern_str = self.pattern
+    self.pattern = {
+      [pattern_str] = "good",
+      ["else"] = "bad",
+    }
+  end
+end
+
+-- 转化判定条件为表格形式
+function JudgeData:addPattern(pattern, result)
+  self:initializePattern()
+  self.pattern[pattern] = result
 end

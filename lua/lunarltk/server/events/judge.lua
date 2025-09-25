@@ -25,6 +25,7 @@ function Judge:main()
   local room = self.room
   local logic = room.logic
   local who = data.who
+  data.results = {}
 
   logic:trigger(fk.StartJudge, who, data)
   if not data.card then
@@ -73,7 +74,31 @@ function Judge:main()
     })
 
     room:delay(400);
-    room:setCardEmotion(cid, data.card:matchPattern(data.pattern) and "judgegood" or "judgebad")
+    local results = data.results
+    -- 对现有的string做分歧处理
+    if not next(results) then
+      if type(data.pattern) == "table" then
+        for pattern, result in pairs(data.pattern) do
+          if data.card:matchPattern(pattern) then
+            table.insertIfNeed(results, result)
+          end
+        end
+        if not next(results) then
+          table.insertIfNeed(results, data.pattern["else"])
+        end
+      else
+        if data.card:matchPattern(data.pattern) then
+          table.insertIfNeed(results, "good")
+        else
+          table.insertIfNeed(results, "bad")
+        end
+      end
+    end
+    if table.contains(results, "good") then
+      room:setCardEmotion(cid, "judgegood")
+    elseif table.contains(results, "bad") then
+      room:setCardEmotion(cid, "judgebad")
+    end
     room:delay(900);
   end
 
