@@ -58,8 +58,24 @@ function JudgeData:initializePattern()
   end
 end
 
--- 转化判定条件为表格形式
+-- 添加一条判定分支
 function JudgeData:addPattern(pattern, result)
   self:initializePattern()
   self.pattern[pattern] = result
+end
+
+-- 反转判定——good变bad，bad变good，其余不变
+function JudgeData:reversePattern()
+  self:initializePattern()
+  local tmp = {}
+  for pattern, result in pairs(self.pattern) do
+    if result == "good" then
+      tmp[pattern] = "bad"
+    elseif result == "bad" then
+      tmp[pattern] = "good"
+    else
+      tmp[pattern] = result
+    end
+  end
+  self.pattern = tmp
 end
