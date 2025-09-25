@@ -227,6 +227,31 @@ local _ServerPlayer_emitKick = function(self)
   callRpc("ServerPlayer_emitKick", { self.connId })
 end
 
+-- 存档相关
+local _ServerPlayer_saveState = function(self, jsonData)
+  callRpc("ServerPlayer_saveState", { self.connId, tostring(jsonData) })
+end
+
+local _ServerPlayer_getSaveState = function(self)
+  local ret, err = callRpc("ServerPlayer_getSaveState", { self.connId })
+  if err ~= nil then
+    return nil
+  end
+  return ret
+end
+
+local _ServerPlayer_saveGlobalState = function(self, jsonData)
+  callRpc("ServerPlayer_saveGlobalState", { self.connId, tostring(jsonData) })
+end
+
+local _ServerPlayer_getGlobalSaveState = function(self)
+  local ret, err = callRpc("ServerPlayer_getGlobalSaveState", { self.connId })
+  if err ~= nil then
+    return ""
+  end
+  return ret
+end
+
 ---@type metatable
 local _ServerPlayer_MT = {
   __index = setmetatable({
@@ -239,6 +264,11 @@ local _ServerPlayer_MT = {
 
     setDied = _ServerPlayer_setDied,
     emitKick = _ServerPlayer_emitKick,
+
+    saveState = _ServerPlayer_saveState,
+    getSaveState = _ServerPlayer_getSaveState,
+    saveGlobalState = _ServerPlayer_saveGlobalState,
+    getGlobalSaveState = _ServerPlayer_getGlobalSaveState,
   }, _Player_MT),
 }
 
