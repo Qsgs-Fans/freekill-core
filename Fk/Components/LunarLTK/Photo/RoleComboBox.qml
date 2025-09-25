@@ -18,7 +18,7 @@ Image {
     property string value: "unknown"
 
     id: assumptionBox
-    source: SkinBank.roleDir + value
+    source: SkinBank.getRolePic(value)
     visible: root.value == "unknown" && optionPopupBox.visible == false
     width: 32
     height: 35
@@ -37,7 +37,7 @@ Image {
       model: options
 
       Image {
-        source: SkinBank.roleDir + modelData
+        source: SkinBank.getRolePic(modelData)
         width: 32
         height: 35
 
