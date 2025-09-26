@@ -240,14 +240,14 @@ local _ServerPlayer_getSaveState = function(self)
   return ret
 end
 
-local _ServerPlayer_saveGlobalState = function(self, jsonData)
-  callRpc("ServerPlayer_saveGlobalState", { self.connId, tostring(jsonData) })
+local _ServerPlayer_saveGlobalState = function(self, key, jsonData)
+  callRpc("ServerPlayer_saveGlobalState", { self.connId, tostring(key), tostring(jsonData) })
 end
 
-local _ServerPlayer_getGlobalSaveState = function(self)
-  local ret, err = callRpc("ServerPlayer_getGlobalSaveState", { self.connId })
+local _ServerPlayer_getGlobalSaveState = function(self, key)
+  local ret, err = callRpc("ServerPlayer_getGlobalSaveState", { self.connId, tostring(key) })
   if err ~= nil then
-    return ""
+    return nil
   end
   return ret
 end

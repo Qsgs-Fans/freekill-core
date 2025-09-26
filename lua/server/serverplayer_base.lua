@@ -101,7 +101,7 @@ function ServerPlayerBase:saveState(data)
 end
 
 --- 获取当前游戏模式的玩家存档
----@return table 不存在返回空表
+---@return table @ 不存在返回空表
 function ServerPlayerBase:getSaveState()
   if not self._splayer then return {} end
   if type(self._splayer.getSaveState) ~= "function" then
@@ -119,30 +119,32 @@ function ServerPlayerBase:getSaveState()
 end
 
 --- 全局存档
+---@param key string 存档名
 ---@param data table
-function ServerPlayerBase:saveGlobalState(data)
+function ServerPlayerBase:saveGlobalState(key, data)
   if not self._splayer then return nil end
   if type(self._splayer.saveGlobalState) ~= "function" then
-    fk.qWarning("self._splayer.saveGlobalState doesn't exist, Please ensure that the server version is freekill-asio 0.0.5+")
+    fk.qWarning("self._splayer.saveGlobalState doesn't exist, Please ensure that the server version is freekill-asio 0.0.6+")
     return nil
   end
   local ok, jsonData = pcall(json.encode, data)
   if ok then
-    self._splayer:saveGlobalState(jsonData)
+    self._splayer:saveGlobalState(key, jsonData)
   else
     fk.qWarning("Failed to encode global save data: " .. jsonData)
   end
 end
 
 --- 获取全局存档
----@return table 不存在返回空表
-function ServerPlayerBase:getGlobalSaveState()
+---@param key string 存档名
+---@return table @ 不存在返回空表
+function ServerPlayerBase:getGlobalSaveState(key)
   if not self._splayer then return {} end
   if type(self._splayer.getGlobalSaveState) ~= "function" then
-    fk.qWarning("self._splayer.getGlobalSaveState doesn't exist, Please ensure that the server version is freekill-asio 0.0.5+")
+    fk.qWarning("self._splayer.getGlobalSaveState doesn't exist, Please ensure that the server version is freekill-asio 0.0.6+")
     return {}
   end
-  local data = self._splayer:getGlobalSaveState()
+  local data = self._splayer:getGlobalSaveState(key)
   local ok, result = pcall(json.decode, data or "{}")
   if ok then
     return result
