@@ -793,6 +793,18 @@ W.PageBase {
           skillInteraction.item.extra_data = data;
           skillInteraction.item?.clicked();
           break;
+        case "checkbox":
+          skillInteraction.sourceComponent =
+            Qt.createComponent("Fk.Components.LunarLTK.SkillInteraction", "SkillCheckBox");
+          skillInteraction.item.skill = skill_name;
+          skillInteraction.item.choices = data.choices;
+          skillInteraction.item.detailed = data.detailed;
+          skillInteraction.item.all_choices = data.all_choices;
+          skillInteraction.item.min_num = data.min_num;
+          skillInteraction.item.max_num = data.max_num;
+          skillInteraction.item.cancelable = data.cancelable;
+          skillInteraction.item.clicked();
+          break;
         default:
           skillInteraction.sourceComponent = undefined;
           break;

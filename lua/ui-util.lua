@@ -54,4 +54,13 @@ UI.CardNameBox = function(spec)
   return spec
 end
 
+UI.CheckBox = function(spec)
+  spec.choices = type(spec.choices) == "table" and spec.choices or Util.DummyTable
+  spec.all_choices = type(spec.all_choices) == "table" and spec.all_choices or spec.choices
+  spec.detailed = spec.detailed or false
+  spec.cancelable = spec.cancelable or false
+  spec.type = "checkbox"
+  return spec
+end
+
 return UI
