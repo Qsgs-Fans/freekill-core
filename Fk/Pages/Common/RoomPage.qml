@@ -658,9 +658,9 @@ Item {
       return;
 
     msg = msg.replace(/\{emoji([0-9]+)\}/g,
-      `<img src="${Cpp.path}/image/emoji/$1.png" height="24" width="24" />`);
+      `<img src="${Cpp.path}/image/emoji/$1.png" height="16" width="16" />`);
     raw.msg = raw.msg.replace(/\{emoji([0-9]+)\}/g,
-      `<img src="${Cpp.path}/image/emoji/$1.png" height="24" width="24" />`);
+      `<img src="${Cpp.path}/image/emoji/$1.png" height="16" width="16" />`);
 
     if (raw.msg.startsWith("$")) {
       if (specialChat(pid, raw, raw.msg.slice(1))) return; // 蛋花、语音

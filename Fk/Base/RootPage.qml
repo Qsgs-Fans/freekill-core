@@ -130,6 +130,10 @@ W.PageBase {
   Connections {
     target: Mediator
     function onCommandGot(sender, command, data) {
+      if (root.canHandleCommand(command)) {
+        root.handleCommand(sender, command, data);
+      }
+
       let error = true;
       for (let i = mainStack.depth; i >= 0; i--) {
         const page = mainStack.get(i, StackView.DontLoad);
@@ -139,11 +143,6 @@ W.PageBase {
           page.handleCommand(sender, command, data);
           break;
         }
-      }
-
-      if (root.canHandleCommand(command)) {
-        root.handleCommand(sender, command, data);
-        return;
       }
       if (error) console.warn("Unknown command " + command + "!");
     }
