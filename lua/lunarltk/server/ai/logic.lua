@@ -95,7 +95,7 @@ function AIGameLogic:applyMoveInfo(data, info)
   local benefit = 0
   local card_value = fk.ai_card_keep_value[Fk:getCardById(info.cardId).name] or 100
 
-  if data.from and data.moveReason ~= fk.ReasonUse then
+  if data.from then
     if info.fromArea == Player.Hand then
       benefit = -(card_value - 10)
     elseif info.fromArea == Player.Equip then
@@ -108,6 +108,11 @@ function AIGameLogic:applyMoveInfo(data, info)
 
     local from = data.from
     if from and self.ai:isEnemy(from) then benefit = -benefit end
+    if data.moveReason == fk.ReasonUse then
+      -- benefit = benefit / 10
+      -- 当没写卡牌生效的ai时，随机出牌
+      benefit = -0.5 - math.random()
+    end
     self.benefit = self.benefit + benefit
     benefit = 0
   end
@@ -165,7 +170,7 @@ local _depth = 0
 function AIGameEvent:getBenefit()
   local ret = true
   _depth = _depth + 1
-  if _depth <= 30 then
+  if _depth <= 20 then
     ret = self:exec()
   end
   _depth = _depth - 1
@@ -270,7 +275,32 @@ end
 
 local LoseHp = AIGameEvent:subclass("AIGameEvent.LoseHp")
 fk.ai_events.LoseHp = LoseHp
-LoseHp.exec = AIParser.parseEventFunc(GameEvent.LoseHp.main)
+function LoseHp:exec()
+  local data = self.data
+  local room = self.room
+  local logic = room.logic
+
+  if data.num == nil then
+    data.num = 1
+  elseif data.num < 1 then
+    return false
+  end
+
+  logic:trigger(fk.PreHpLost, data.who, data)
+  if data.num < 1 then
+    data.prevented = true
+  end
+  if data.prevented then
+    return true
+  end
+
+  if not room:changeHp(data.who, -data.num, "loseHp", data.skillName) then
+    return true
+  end
+
+  logic:trigger(fk.HpLost, data.who, data)
+  return true
+end
 
 ---@param player ServerPlayer
 ---@param num integer
@@ -500,7 +530,55 @@ AIGameLogic.doCardUseEffect = GameEventWrappers.doCardUseEffect
 
 local CardEffect = AIGameEvent:subclass("AIGameEvent.CardEffect")
 fk.ai_events.CardEffect = CardEffect
-CardEffect.exec = AIParser.parseEventFunc(GameEvent.CardEffect.main)
+function CardEffect:exec()
+  local cardEffectData = self.data
+  local room = self.room
+  local logic = room.logic
+
+  if cardEffectData.card.skill:aboutToEffect(room, cardEffectData) then
+    return true
+  end
+  for _, event in ipairs({ fk.PreCardEffect, fk.BeforeCardEffect, fk.CardEffecting }) do
+    local function effectCancellOutCheck(effect)
+      if effect.isCancellOut then
+        logic:trigger(fk.CardEffectCancelledOut, effect.from, effect)
+        if effect.isCancellOut then
+          return true
+        end
+      end
+
+      if
+        not effect.toCard and
+        (
+          not (effect.to and effect.to:isAlive())
+          or #room:deadPlayerFilter(effect.tos) == 0
+        )
+      then
+        return true
+      end
+
+      if effect:isNullified() then
+        return true
+      end
+    end
+
+    if effectCancellOutCheck(cardEffectData) then
+      return true
+    end
+
+    if event == fk.PreCardEffect then
+      logic:trigger(event, cardEffectData.from, cardEffectData)
+    else
+      logic:trigger(event, cardEffectData.to, cardEffectData)
+    end
+
+    if effectCancellOutCheck(cardEffectData) then
+      return true
+    end
+
+    room:handleCardEffect(event, cardEffectData)
+  end
+end
 
 function AIGameLogic:doCardEffect(CardEffectData)
   return not CardEffect:new(self, CardEffectData):getBenefit()

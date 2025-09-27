@@ -15,7 +15,6 @@ fk.ai_card_keep_value = {}
 ---@field public enemies ServerPlayer[] @ 敌人
 local SmartAI = TrustAI:subclass("SmartAI")
 
-AIParser = require 'lunarltk.server.ai.parser'
 local require_skill = require "lunarltk.server.ai.skill"
 SkillAI, TriggerSkillAI = require_skill[1], require_skill[2]
 local AIUtil = require 'lunarltk.server.ai.util'
@@ -143,7 +142,7 @@ SmartAI:setSkillAI("__card_skill", {
         tos = targets,
         card = ai:getSelectedCard(),
       })
-      verbose(1, "目前状况下，对[%s]的预测收益为%d", table.concat(table.map(targets, function(p)return tostring(p)end), "+"), logic.benefit)
+      verbose(1, "目前状况下，对[%s]的预测收益为%g", table.concat(table.map(targets, function(p)return tostring(p)end), "+"), logic.benefit)
       return logic.benefit
     end
     local best_targets, best_val = nil, -100000
@@ -169,7 +168,7 @@ SmartAI:setSkillAI("__card_skill", {
     for _, cid in ipairs(cards) do
       ai:selectCard(cid, true)
       local ret, val = self:chooseTargets(ai)
-      verbose(1, "就目前选择的这张牌，考虑[%s]，收益为%d", table.concat(table.map(ret, function(p)return tostring(p)end), "+"), val)
+      verbose(1, "就目前选择的这张牌，考虑[%s]，收益为%g", table.concat(table.map(ret, function(p)return tostring(p)end), "+"), val)
       val = val or -100000
       if best_val < val then
         best_ret, best_val = ret, val
@@ -228,7 +227,7 @@ SmartAI:setSkillAI("vs_skill", {
         tos = targets,
         card = card,
       }
-      verbose(1, "目前状况下，对[%s]的预测收益为%d", table.concat(table.map(targets, function(p)return tostring(p)end), "+"), logic.benefit)
+      verbose(1, "目前状况下，对[%s]的预测收益为%g", table.concat(table.map(targets, function(p)return tostring(p)end), "+"), logic.benefit)
       return logic.benefit
     end
     local best_targets, best_val = nil, -100000
@@ -248,7 +247,7 @@ SmartAI:setSkillAI("vs_skill", {
     end
     for cards in self:searchCardSelections(ai) do
       local targets, val = self:chooseTargets(ai)
-      verbose(1, "就目前选择的这张牌，考虑[%s]，收益为%d", table.concat(table.map(targets, function(p) return tostring(p)end), "+"), val)
+      verbose(1, "就目前选择的这张牌，考虑[%s]，收益为%g", table.concat(table.map(targets, function(p) return tostring(p)end), "+"), val)
       val = val or -100000
       if val > best_val then
         best_cards, best_targets, best_val = cards, targets, val
@@ -328,9 +327,9 @@ function SmartAI:handlePlayCard()
   local cancel_val = math.min(90 * (self.player:getMaxCards() - self.player:getHandcardNum()), -1)
 
   local best_ret, best_val = "", cancel_val
-  verbose(1, "目前的决策：直接取消(收益%d)", best_val)
+  verbose(1, "目前的决策：直接取消(收益%g)", best_val)
   for _, ai, val in fk.sorted_pairs(skill_ai_list, value_func) do
-    verbose(1, "[*] 考虑 %s (预估收益%d)", ai.skill.name, val)
+    verbose(1, "[*] 考虑 %s (预估收益%g)", ai.skill.name, val)
     if val < cancel_val then
       verbose(1, "由于预估收益小于取消的收益，不再思考")
       break
@@ -341,7 +340,7 @@ function SmartAI:handlePlayCard()
     real_val = real_val or -100000
     -- if ret and ret ~= "" then return ret end
     if best_val < real_val then
-      verbose(1, "将决策%s换成更好的%s (收益%d => %d)", json.encode(best_ret), json.encode(ret), best_val, real_val)
+      verbose(1, "将决策%s换成更好的%s (收益%g => %g)", json.encode(best_ret), json.encode(ret), best_val, real_val)
       best_ret, best_val = ret, real_val
     end
     self:unSelectAll()
@@ -455,14 +454,14 @@ function SmartAI:handleAskForUseCard(data)
 
   local best_ret, best_val = "", -100000
   for _, ai, val in fk.sorted_pairs(skill_ai_list, value_func) do
-    verbose(1, "[*] 考虑 %s (预估收益%d)", ai.skill.name, val)
+    verbose(1, "[*] 考虑 %s (预估收益%g)", ai.skill.name, val)
     self:selectSkill(ai.skill.name, true)
     local ret, real_val = ai:think(self)
     verbose(1, "%s: 思考结果是%s, 收益是%s", ai.skill.name, json.encode(ret), json.encode(real_val))
     real_val = real_val or -100000
     -- if ret and ret ~= "" then return ret end
     if best_val < real_val then
-      verbose(1, "将决策%s换成更好的%s (收益%d => %d)", json.encode(best_ret), json.encode(ret), best_val, real_val)
+      verbose(1, "将决策%s换成更好的%s (收益%g => %g)", json.encode(best_ret), json.encode(ret), best_val, real_val)
       best_ret, best_val = ret, real_val
     end
     self:unSelectAll()

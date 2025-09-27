@@ -16,7 +16,9 @@ skill:addEffect(fk.PreCardEffect, {
 
 skill:addAI({
   correct_func = function(self, logic, event, target, player, data)
-    return self.skill:triggerable(event, target, player, data)
+    if self.skill:triggerable(event, target, player, data) then
+      data.nullified = true
+    end
   end,
 }, nil, nil, true)
 
