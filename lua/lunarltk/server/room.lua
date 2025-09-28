@@ -997,6 +997,8 @@ end
 --- 询问玩家选择X张牌和Y名角色。
 ---
 --- 返回两个值，第一个是选择目标列表，第二个是选择的牌id列表，第三个是否按了确定
+--- 
+--- 默认可取消
 ---@param player ServerPlayer @ 要询问的玩家
 ---@param params AskToChooseCardsAndPlayersParams @ 各种变量
 ---@return ServerPlayer[], integer[], boolean @ 第一个是选择目标列表，第二个是选择的牌id列表，第三个是否按了确定

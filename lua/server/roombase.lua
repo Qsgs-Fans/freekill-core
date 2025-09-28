@@ -443,7 +443,7 @@ end
 --
 -- ```@@xxx```: mark with invisible extra data
 --
--- ```@$xxx```: mark with card_name[] data
+-- ```@$xxx```: mark with card_name[] or card_integer[] data
 --
 -- ```@&xxx```: mark with general_name[] data
 --
