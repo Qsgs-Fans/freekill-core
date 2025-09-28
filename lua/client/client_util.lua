@@ -224,6 +224,33 @@ local translateInfo = function(text)
   return ret == text and Fk:translate("Official") or ret
 end
 
+---封装 string.find 并默认自动转义特殊字符（按字面匹配）
+---@param str string|number 目标字符串（待查找的文本）
+---@param pattern string|number 查找模式（可能包含特殊字符）
+---@param start_pos? integer 起始查找位置，默认为 1（字符串第一个字符位置）
+---@param plain? boolean
+---@param auto_escape? boolean
+---@return integer|nil start
+---@return integer|nil end
+---@return any|nil ... captured
+local function find_with_escape(str, pattern, start_pos, plain, auto_escape)
+  -- 处理可选参数的默认值
+  start_pos = start_pos or 1         -- 默认为从第一个字符开始查找
+  plain = plain or false             -- 默认为模式匹配（非纯文本）
+  auto_escape = auto_escape ~= false -- 默认为自动转义（除非显式传 false）
+
+  -- 仅在需要模式匹配（plain=false）且开启自动转义时，处理特殊字符
+  if auto_escape and not plain then
+    local special_chars = "([%.%+%-%*%?%[%^%$%(%)%%])"    -- 需转义的特殊字符列表
+    pattern = string.gsub(pattern, special_chars, "%%%1") -- 转义处理
+  end
+
+  -- 调用原生 string.find，保持功能一致
+  return string.find(str, pattern, start_pos, plain)
+end
+
+
+
 ---@param general General
 ---@param filter any
 ---@return boolean
@@ -243,8 +270,8 @@ local function filterGeneral(general, filter)
   local illustrator = filter.illustrator ---@type string
   local audioText = filter.audioText ---@type string
   return not (
-    (name ~= "" and not string.find(Fk:translate(general.name), name)) or
-    (title ~= "" and not string.find(translateInfo("#" .. general.name), title)) or
+    (name ~= "" and not find_with_escape(Fk:translate(general.name), name)) or
+    (title ~= "" and not find_with_escape(translateInfo("#" .. general.name), title)) or
     (#kingdoms > 0 and not table.contains(kingdoms, Fk:translate(general.kingdom)) and
       not table.contains(kingdoms, Fk:translate(general.subkingdom))) or
     (#maxHps > 0 and not table.contains(maxHps, tostring(general.maxHp))) or
@@ -252,15 +279,15 @@ local function filterGeneral(general, filter)
     (#genders > 0 and not table.contains(genders, genderMapper[general.gender])) or
     (skillName ~= "" and not table.find(general:getSkillNameList(true), function(s)
       return
-          not not string.find(Fk:translate(s), skillName)
+          not not find_with_escape(Fk:translate(s), skillName)
     end)) or
     (skillDesc ~= "" and not table.find(general:getSkillNameList(true), function(s)
       return
-          not not string.find(Fk:getDescription(s), skillDesc)
+          not not find_with_escape(Fk:getDescription(s), skillDesc)
     end)) or
-    (designer ~= "" and not string.find(translateInfo("designer:" .. general.name), designer)) or
-    (voiceActor ~= "" and not string.find(translateInfo("cv:" .. general.name), voiceActor)) or
-    (illustrator ~= "" and not string.find(translateInfo("illustrator:" .. general.name), illustrator)) or
+    (designer ~= "" and not find_with_escape(translateInfo("designer:" .. general.name), designer)) or
+    (voiceActor ~= "" and not find_with_escape(translateInfo("cv:" .. general.name), voiceActor)) or
+    (illustrator ~= "" and not find_with_escape(translateInfo("illustrator:" .. general.name), illustrator)) or
     (audioText ~= "" and not findAudioText(general, audioText))
   )
 end
