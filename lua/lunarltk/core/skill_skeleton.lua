@@ -237,6 +237,7 @@ end
 --- audio_index?: integer|table,
 --- trigger_times?: T,
 --- priority? : number,
+--- times?: integer|(fun(self: TriggerSkill, player: ServerPlayer): integer?),
 --- max_phase_use_time?: integer|(fun(self: TriggerSkill, player: ServerPlayer): integer?),
 --- max_turn_use_time?: integer|(fun(self: TriggerSkill, player: ServerPlayer): integer?),
 --- max_round_use_time?: integer|(fun(self: TriggerSkill, player: ServerPlayer): integer?),

@@ -97,7 +97,7 @@ end
 ---@field public history_branch? string|fun(self: UsableSkill, player: ServerPlayer, data: SkillUseData):string? @ 裁定本技能发动时（on_cost->on_use）将技能历史额外添加到某处分支下（内部有独立的时段细分），无法约束本技能是否可用
 ---@field public expand_pile? string | integer[] | fun(self: UsableSkill, player: ServerPlayer): integer[]|string? @ 额外牌堆，牌堆名称或卡牌id表
 ---@field public derived_piles? string | string[] @ 与某效果联系起来的私人牌堆名，失去该效果时将之置入弃牌堆(@deprecated)
----@field public times? integer | fun(self: UsableSkill, player: Player): integer @ 显示在主动技按钮上的发动次数数字
+---@field public times? integer | fun(self: UsableSkill, player: Player): integer @ 显示在技能按钮上的发动次数数字，负数不显示
 ---@field public min_target_num? integer
 ---@field public max_target_num? integer
 ---@field public target_num? integer

@@ -15,7 +15,7 @@
 ---@field public related_skills Skill[] @ 和本技能相关的其他技能，有时候一个技能实际上是通过好几个技能拼接而实现的。
 ---@field public attached_equip string @ 属于什么装备的技能？
 ---@field public relate_to_place string| "m" | "d" @ 主将技("m")/副将技("d")
----@field public times integer @ 技能剩余次数，负数不显示，正数显示
+---@field public times integer @ 技能剩余次数，负数不显示
 ---@field public attached_skill_name string @ 给其他角色添加技能的名称
 ---@field public main_skill Skill @ 仅用作添加技能和提示信息
 ---@field public is_delay_effect boolean @ 是否是延时效果
