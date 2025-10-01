@@ -20,14 +20,14 @@ Item {
   width: textItem.implicitWidth
   height: textItem.implicitHeight
 
-  Text {
-    id: textItem
-    anchors.fill: parent
-  }
-
   Glow {
     id: glowItem
     source: textItem
     anchors.fill: textItem
+  }
+
+  Text {
+    id: textItem
+    anchors.fill: parent
   }
 }
