@@ -199,7 +199,10 @@ function ReqActiveSkill:retractPile(pile)
 
   local scene = self.scene
   for _, id in ipairs(ids) do
-    scene:removeItem("CardItem", id, { reason = "retract" })
+    scene:removeItem("CardItem", id, {
+      reason = "retract",
+      footnote = pile == "_equip" and "$Equip" or pile -- FIXME: 有的pile使用extra_footnote，当然装备区不影响
+    })
   end
 end
 
