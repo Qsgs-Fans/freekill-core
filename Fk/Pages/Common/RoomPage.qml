@@ -391,7 +391,13 @@ Item {
     Behavior on y { NumberAnimation { duration: 150 } }
     Behavior on scale { NumberAnimation { duration: 150 } }
 
-    Image {
+    // Image {
+    //   source: Config.roomBg
+    //   anchors.fill: parent
+    //   fillMode: Image.PreserveAspectCrop
+    // }
+
+    RoomMeadiaBg {
       source: Config.roomBg
       anchors.fill: parent
       fillMode: Image.PreserveAspectCrop

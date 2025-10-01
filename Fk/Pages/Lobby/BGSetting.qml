@@ -41,7 +41,7 @@ ColumnLayout {
     Button {
       text: "..."
       onClicked: {
-        fdialog.nameFilters = ["Image Files (*.jpg *.png)"];
+        fdialog.nameFilters = ["媒体文件 (*.png *.jpg *.jpeg *.gif *.mp4"];
         fdialog.configKey = "roomBg";
         fdialog.open();
       }
