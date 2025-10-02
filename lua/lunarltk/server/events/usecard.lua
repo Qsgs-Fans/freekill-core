@@ -695,8 +695,11 @@ function UseCardEventWrappers:doCardUseEffect(useCardData)
           toArea = Card.PlayerJudge,
           moveReason = fk.ReasonUse,
         }
-        if useCardData.card:isVirtual() then
-          move.virtualEquip = useCardData.card
+        if useCardData.card:isVirtual() or Fk:getCardById(realCardIds[1], true).name ~= useCardData.card.name then
+          local vcard = Fk:cloneCard(useCardData.card.name, useCardData.card.suit, useCardData.card.number)
+          vcard:addSubcard(realCardIds[1])
+          vcard.skillNames = useCardData.card.skillNames
+          move.virtualEquip = vcard
         end
 
         self:moveCards(move)
