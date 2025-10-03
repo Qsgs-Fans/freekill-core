@@ -72,6 +72,7 @@ fk.ReasonUse = 9
 fk.ReasonResponse = 10
 fk.ReasonJudge = 11
 fk.ReasonRecast = 12
+fk.ReasonPindian = 13
 
 --- 内置动画类型，理论上你可以自定义一个自己的动画类型（big会播放一段限定技动画）
 ---@alias AnimationType "special" | "drawcard" | "control" | "offensive" | "support" | "defensive" | "negative" | "masochism" | "switch" | "big"

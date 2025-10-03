@@ -87,6 +87,41 @@ Util.getSuitFromString = function(symbol)
   end
 end
 
+--- 令移动原因字符串化
+---@param item CardMoveReason @ 移动方式枚举
+---@return string @ 移动方式字符串
+---@diagnostic disable-next-line
+function Util.moveReasonMapper(item) end
+
+--- 将字符串转为移动原因枚举
+---@param item string @ 移动方式字符串
+---@return CardMoveReason? @ 移动方式枚举
+---@diagnostic disable-next-line
+Util.moveReasonMapper = function(item)
+  local moveMapper = {
+    ["reason_justmove"] = fk.ReasonJustMove,
+    ["reason_draw"] = fk.ReasonDraw,
+    ["reason_discard"] = fk.ReasonDiscard,
+    ["reason_give"] = fk.ReasonGive,
+    ["reason_put"] = fk.ReasonPut,
+    ["reason_put_in_discard"] = fk.ReasonPutIntoDiscardPile,
+    ["reason_use"] = fk.ReasonUse,
+    ["reason_response"] = fk.ReasonResponse,
+    ["reason_judge"] = fk.ReasonJudge,
+    ["reason_recast"] = fk.ReasonRecast,
+    ["reason_pindian"] = fk.ReasonPindian,
+  }
+  if type(item) == "string" then
+    return moveMapper[item] or fk.ReasonJustMove
+  else
+    for k, v in pairs(moveMapper) do
+      ---@diagnostic disable-next-line
+      if v == item then return k end
+    end
+  end
+end
+
+---@diagnostic disable-next-line: lowercase-global
 function printf(fmt, ...)
   print(string.format(fmt, ...))
 end
@@ -175,7 +210,7 @@ end
 -- for card preset
 
 --- 指定目标卡牌的targetFilter
----@param skill ActiveSkill @ 使用牌的CardSkill
+---@param skill CardSkill @ 使用牌的CardSkill
 ---@param to_select Player @ 目标
 ---@param selected Player[] @ 已选目标
 ---@param selected_cards integer[] @ 牌的子表
