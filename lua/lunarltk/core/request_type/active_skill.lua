@@ -162,8 +162,9 @@ end
 ---@param pile string @ 牌堆名，用于标识
 ---@param extra_ids? integer[] @ 额外的牌id数组
 ---@param extra_footnote? string @ 卡牌底注
+---@return integer[] @ 展开的牌id数组
 function ReqActiveSkill:expandPile(pile, extra_ids, extra_footnote)
-  if self.expanded_piles[pile] ~= nil then return end
+  if self.expanded_piles[pile] ~= nil then return {} end
   local ids, footnote
   local player = self.player
 
@@ -190,6 +191,7 @@ function ReqActiveSkill:expandPile(pile, extra_ids, extra_footnote)
       footnote = footnote,
     })
   end
+  return ids
 end
 
 function ReqActiveSkill:retractPile(pile)
@@ -234,6 +236,9 @@ function ReqActiveSkill:expandPiles()
     self:expandPile("_equip")
   end
 
+  -- 记录已展开的牌，防止重复展开
+  local cardsExpanded = player:getCardIds("he") -- 禁止展开自己手牌、装备区
+
   -- 如果可以调用如手牌般使用的牌，也展开
   if skill.handly_pile then
     for pile in pairs(player.special_cards) do
@@ -242,7 +247,6 @@ function ReqActiveSkill:expandPiles()
       end
     end
 
-    local cardsExpanded = {}
     local filterSkills = Fk:currentRoom().status_skills[FilterSkill] or Util.DummyTable ---@type FilterSkill[]
     for _, filter in ipairs(filterSkills) do
       local ids = filter:handlyCardsFilter(player)
@@ -257,20 +261,15 @@ function ReqActiveSkill:expandPiles()
   end
 
   -- 展开该技能本身的额外牌堆
-  if not skill.expand_pile then return end
   local pile = skill.expand_pile
   if type(pile) == "function" then
-    pile = pile(skill, player)
+    local ids = pile(skill, player)
+    ids = table.filter(ids, function(id) return not table.contains(cardsExpanded, id) end)
+    self:expandPile("_extra", ids, self.extra_data and self.extra_data.skillName)
+  elseif type(pile) == "string" then
+    self:expandPile(pile, player:getPile(pile), self.extra_data and self.extra_data.skillName)
   end
 
-  local ids = pile
-  if type(pile) == "string" then
-    ids = player:getPile(pile)
-  else -- if type(pile) == "table" then
-    pile = "_extra"
-  end
-
-  self:expandPile(pile, ids, self.extra_data and self.extra_data.skillName)
 end
 
 --- 判断确认键是否可用
