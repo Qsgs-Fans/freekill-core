@@ -268,6 +268,9 @@ function ReqActiveSkill:expandPiles()
     self:expandPile("_extra", ids, self.extra_data and self.extra_data.skillName)
   elseif type(pile) == "string" then
     self:expandPile(pile, player:getPile(pile), self.extra_data and self.extra_data.skillName)
+  elseif type(pile) == "table" then
+    local ids = table.filter(pile, function(id) return not table.contains(cardsExpanded, id) end)
+    self:expandPile("_extra", ids, self.extra_data and self.extra_data.skillName)
   end
 
 end
