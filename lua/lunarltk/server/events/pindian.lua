@@ -65,7 +65,7 @@ function Pindian:main()
         ids = { cid },
         from = room:getCardOwner(cid),
         toArea = Card.Processing,
-        moveReason = fk.ReasonPut,
+        moveReason = fk.ReasonPindian,
         skillName = pindianData.reason,
         moveVisible = true,
       })
@@ -86,7 +86,7 @@ function Pindian:main()
           ids = { cid },
           from = room:getCardOwner(cid),
           toArea = Card.Processing,
-          moveReason = fk.ReasonPut,
+          moveReason = fk.ReasonPindian,
           skillName = pindianData.reason,
           moveVisible = true,
         })
@@ -136,7 +136,7 @@ function Pindian:main()
           ids = { card:getEffectiveId() },
           from = to,
           toArea = Card.Processing,
-          moveReason = fk.ReasonPut,
+          moveReason = fk.ReasonPindian,
           skillName = pindianData.reason,
           moveVisible = true,
         })
@@ -240,7 +240,7 @@ function Pindian:clear()
     room:moveCards({
       ids = toThrow,
       toArea = Card.DiscardPile,
-      moveReason = fk.ReasonPutIntoDiscardPile,
+      moveReason = fk.ReasonPindian,
     })
   end
   if not self.interrupted then return end

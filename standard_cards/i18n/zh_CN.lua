@@ -56,6 +56,20 @@ Fk:loadTranslationTable{
   ["method_draw"] = "摸",
   ["method_discard"] = "弃置",
 
+  ["reason_justmove"] = "移动",
+  ["reason_draw"] = "摸牌",
+  ["reason_discard"] = "弃置",
+  ["reason_give"] = "交出",
+  ["reason_put"] = "置入",
+  ["reason_put_in_discard"] = "置入弃牌堆",
+  ["reason_prey"] = "获得",
+  ["reason_exchange"] = "交换",
+  ["reason_use"] = "使用",
+  ["reason_response"] = "打出",
+  ["reason_judge"] = "判定",
+  ["reason_recast"] = "重铸",
+  ["reason_pindian"] = "拼点",
+
   --numberic(need gsub)
   ["drawX"] = "摸{num}张牌",
   ["discardX"] = "弃{num}张牌",
