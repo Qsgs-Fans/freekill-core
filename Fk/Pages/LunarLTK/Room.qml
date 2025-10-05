@@ -228,7 +228,7 @@ W.PageBase {
       MetroButton {
         id: trustBtn
         text: Lua.tr("Trust")
-        textFont.pixelSize: 28 
+        textFont.pixelSize: 28
         enabled: true;
         onClicked: {
           Cpp.notifyServer("Trust", "");
@@ -245,9 +245,6 @@ W.PageBase {
           Lua.call("RevertSelection");
         }
       }
-      // MetroButton {
-      //   text: Lua.tr("Trust")
-      // }
       MetroButton {
         id: sortBtn
         text: Lua.tr("Sort Cards")

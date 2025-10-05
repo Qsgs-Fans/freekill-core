@@ -92,7 +92,7 @@ function ServerRoomBase:checkNoHuman(chkOnly)
   if #self.players == 0 then return end
   for _, p in ipairs(self.players) do
     local state = p.serverplayer:getState()
-    if state== fk.Player_Online or state == fk.Player_Trust then
+    if state == fk.Player_Online or state == fk.Player_Trust then
       return
     end
   end
