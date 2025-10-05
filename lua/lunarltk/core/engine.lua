@@ -32,6 +32,7 @@ local baseEngine = require "core.engine"
 ---@field public mini_games table<string, MiniGameSpec> @ 自定义多人交互表
 ---@field public target_tips table<string, TargetTipSpec> @ 选择目标提示对应表
 ---@field public choose_general_rule table<string, ChooseGeneralSpec> @ 选将框操作方法表
+---@field public skin_packages table<string, string[]> @ Skins
 local Engine = baseEngine:subclass("Engine")
 Engine:include(modManager)
 
@@ -83,6 +84,7 @@ function Engine:initialize()
   self.mini_games = {}
   self.target_tips = {}
   self.choose_general_rule = {}
+  self.skin_packages = {}
 
   self:loadPackages()
 
@@ -622,6 +624,10 @@ function Engine:filterCard(id, player)
   if not modity then
     self.filtered_cards[id] = nil
   end
+end
+
+function Engine:getSkinsByGeneral(general)
+  return self.skin_packages[general] or {}
 end
 
 return Engine

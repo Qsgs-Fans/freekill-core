@@ -48,6 +48,7 @@ QtObject {
   property list<string> favoriteGenerals: []
   property list<string> enabledResourcePacks: []
   property var enabledUIPackages
+  property var enabledSkins
 
   property int preferredTimeout
   property int preferredChooseGeneralTimeout
@@ -193,6 +194,7 @@ QtObject {
     blockedUsers = conf.blockedUsers ?? [];
     enabledResourcePacks = conf.enabledResourcePacks ?? [];
     enabledUIPackages = conf.enabledUIPackages ?? {};
+    enabledSkins = conf.enabledSkins ?? {};
   }
 
   function saveConf() {
@@ -242,6 +244,7 @@ QtObject {
     conf.blockedUsers = blockedUsers;
     conf.enabledResourcePacks = enabledResourcePacks;
     conf.enabledUIPackages = enabledUIPackages;
+    conf.enabledSkins = enabledSkins;
 
     Cpp.saveConf(JSON.stringify(conf, undefined, 2));
   }

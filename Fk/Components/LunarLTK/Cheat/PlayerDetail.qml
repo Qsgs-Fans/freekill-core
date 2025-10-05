@@ -119,6 +119,31 @@ Flickable {
 
       /*
       MetroButton {
+        text: Lua.tr("Change Skin")
+        visible: pid === Self.id && !root.isObserving
+        enabled: !(extra_data?.photo.changeSkinTimer.running)
+        onClicked: {
+          const photo = extra_data?.photo
+          if (photo) {
+            roomScene.startCheat("SkinsDetail", {
+              skins: getSkinsByName(photo.general),
+              deputy_skins: getSkinsByName(photo.deputyGeneral),
+              orig_general: photo.general,
+              orig_deputy: photo.deputyGeneral,
+            });
+          }
+        }
+        function getSkinsByName(general) {
+          let arr = Lua.evaluate(`(function()
+            return Fk:getSkinsByGeneral("${general}") or {}
+          end)()`);
+          return arr
+        }
+      }
+      */
+
+      /*
+      MetroButton {
         text: Lua.tr("Kick From Room")
         visible: !roomScene.isStarted && roomScene.isOwner
         enabled: {

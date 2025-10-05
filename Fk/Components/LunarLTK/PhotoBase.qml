@@ -4,6 +4,7 @@ import Qt5Compat.GraphicalEffects
 import Fk
 import Fk.Components.Common
 import Fk.Components.GameCommon as Game
+import Fk.Widgets as W
 import Fk.Components.LunarLTK.Photo
 
 // 这个是简化版Photo，用于神鲁肃之类的选人框
@@ -20,6 +21,10 @@ Game.BasicItem {
   property string deputyGeneral: ""
   property string kingdom: "qun"
   property int seatNumber: 1
+  property alias skinSource: skin.source
+  property alias deputySkinSource: deputySkin.source
+  property alias changeSkinTimer: cooldownTimer
+  property bool enableChangeSkin: false
 
   property bool dead: false
   property bool surrendered: false
@@ -75,6 +80,18 @@ Game.BasicItem {
           return SkinBank.getGeneralPicture(general)
         }
       }
+
+      onSourceChanged: {
+        root.skinSource = root.getConfigSkin(root.general);
+      }
+    }
+
+    SkinArea {
+      id: skin
+      width: deputyGeneral ? parent.width / 2 : parent.width
+      Behavior on width { NumberAnimation { duration: 100 } }
+      height: parent.height
+      hasDeputy: !!deputyGeneral
     }
 
     Image {
@@ -93,6 +110,18 @@ Game.BasicItem {
           return "";
         }
       }
+
+      onSourceChanged: {
+        root.deputySkinSource = root.getConfigSkin(root.deputyGeneral);
+      }
+    }
+
+    SkinArea {
+      id: deputySkin
+      anchors.left: generalImage.right
+      width: parent.width / 2
+      height: parent.height
+      hasDeputy: !!deputyGeneral
     }
 
     Image {
@@ -180,9 +209,68 @@ Game.BasicItem {
     z: 9
   }
 
+  Image {
+    id: skinIcon
+    width: 22
+    height: 22
+    anchors.right: parent.right
+    anchors.top: parent.top
+    anchors.rightMargin: 10
+    anchors.topMargin: 100
+    source: "https://images.icon-icons.com/1526/PNG/512/dress_106586.png"
+    visible: false
+
+    W.TapHandler {
+      onTapped: {
+        roomScene.startCheat("SkinsDetail", {
+          skins: root.getSkinsByName(root.general),
+          deputy_skins: root.getSkinsByName(root.deputyGeneral),
+          orig_general: root.general,
+          orig_deputy: root.deputyGeneral,
+        });
+      }
+    }
+
+    HoverHandler {
+      cursorShape: Qt.PointingHandCursor
+    }
+
+    Timer {
+      id: cooldownTimer
+      interval: 5000
+      running: false
+    }
+  }
+
+  HoverHandler {
+    id: hover
+    onHoveredChanged: {
+      if (hovered && root.enableChangeSkin && !Config.observing && !cooldownTimer.running && (root.getSkinsByName(root.general).length > 0 || root.getSkinsByName(root.deputyGeneral).length > 0)) {
+        skinIcon.visible = true;
+      } else {
+        skinIcon.visible = false;
+      }
+    }
+  }
+
   function chat(msg) {
     chat.text = msg;
     chat.visible = true;
     chat.show();
+  }
+
+  function getSkinsByName(general) {
+    let arr = Lua.evaluate(`(function()
+      return Fk:getSkinsByGeneral("${general}") or {}
+    end)()`);
+    return arr
+  }
+
+  function getConfigSkin(general) {
+    const enabledSkins = Config.enabledSkins ?? {}
+    if (enabledSkins[general] !== undefined) {
+      return enabledSkins[general]
+    }
+    return ""
   }
 }

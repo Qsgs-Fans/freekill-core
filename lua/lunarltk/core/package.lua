@@ -18,6 +18,7 @@ local basePackage = require "core.package"
 ---@field public skill_skels SkillSkeleton[]
 ---@field public card_skels CardSkeleton[]
 ---@field public card_specs [string, integer, integer, table][]
+---@field public skin_specs table<string, string[]>
 local Package = basePackage:subclass("Package")
 
 ---@alias PackageType integer
@@ -26,6 +27,7 @@ Package.GeneralPack = 1
 Package.CardPack = 2
 Package.SpecialPack = 3
 Package.UIPack = 4
+Package.SkinPack = 5
 
 --- 拓展包的构造函数。
 ---@param name string @ 包的名字
@@ -43,6 +45,7 @@ function Package:initialize(name, _type)
   self.skill_skels = {}
   self.card_skels = {}
   self.card_specs = {}
+  self.skin_specs = {}
 end
 
 --- 获得这个包涉及的所有技能。
@@ -164,6 +167,29 @@ function Package:install(engine)
   end
   engine:addSkills(self:getSkills())
   engine:addGameModes(self.game_modes)
+
+  for g, skins in pairs(self.skin_specs) do
+    engine.skin_packages[g] = skins
+  end
+end
+
+---@param skinPak SkinPackageSpec
+function Package:addSkinPackage(skinPak)
+  local pkg_path = "packages/" .. self.extensionName .. skinPak.path .. "/"
+  for _, arr in ipairs(skinPak.content) do
+    for _, g in ipairs(arr.enabled_generals) do
+      if g ~= "" then
+        local path_map = table.map(arr.skins, function(s)
+          return pkg_path .. s
+        end)
+        if self.skin_specs[g] then
+          table.insertTable(self.skin_specs[g], path_map)
+        else
+          self.skin_specs[g] = path_map
+        end
+      end
+    end
+  end
 end
 
 return Package

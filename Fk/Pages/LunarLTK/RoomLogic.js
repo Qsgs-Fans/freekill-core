@@ -1528,6 +1528,21 @@ callbacks["UpdateRoundNum"] = (sender, j) => {
   roomScene.miscStatus.roundNum = data;
 }
 
+callbacks["ChangeSkin"] = (sender, data) => {
+  const photo = getPhoto(Number(data[0]));
+  const path = data[2];
+  const deputypath = data[3];
+  if (path) {
+    Config.enabledSkins[photo.general] = path === "-" ? "" : path;
+    photo.skinSource = path === "-" ? "" : path;
+  }
+  if (deputypath) {
+    Config.enabledSkins[photo.deputyGeneral] = deputypath === "-" ? "" : deputypath;
+    photo.deputySkinSource = deputypath === "-" ? "" : deputypath;
+  }
+  photo.changeSkinTimer.start()
+}
+
 // 神貂蝉
 callbacks["ChangeSelf"] = (sender, j) => {
   // move new selfPhoto to dashboard

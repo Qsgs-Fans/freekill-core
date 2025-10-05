@@ -78,6 +78,7 @@ function Room:initialize(_room)
 
   self:addCallback("prelight", self.handlePrelight)
   self:addCallback("updatemini", self.handleUpdateMini)
+  self:addCallback("changeskin", self.handleChangeSkin)
 end
 
 function Room:handlePrelight(id, data)
@@ -99,6 +100,9 @@ function Room:handleUpdateMini(id, reqlist)
   game.update_func(player, dat)
 end
 
+function Room:handleChangeSkin(id, data)
+  self:doBroadcastNotify("ChangeSkin", data)
+end
 
 -- 构造武将牌堆。同名武将只留下一张
 function Room:makeGeneralPile()

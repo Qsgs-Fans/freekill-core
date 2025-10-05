@@ -60,6 +60,7 @@ function Client:initialize(_client)
   self:addCallback("ChangeCardArea", self.handleChangeCardArea)
   self:addCallback("SetPlayerPile", self.setPlayerPile)
   self:addCallback("ShowVirtualCard", self.showVirtualCard)
+  self:addCallback("ChangeSkin", self.changeSkin)
 
   self.disabled_packs = {}
   self.disabled_generals = {}
@@ -879,6 +880,10 @@ function Client:showVirtualCard(data)
     card = {card}
   end
   self:notifyUI("ShowVirtualCard", { card, playerid, msg, event_id })
+end
+
+function Client:changeSkin(data)
+  self:notifyUI("ChangeSkin", data)
 end
 
 function Client:sendDataToUI(data)

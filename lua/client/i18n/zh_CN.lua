@@ -123,6 +123,7 @@ Fk:loadTranslationTable {
   ["Give Shoe"] = "拖鞋",
   ["Block Chatter"] = "屏蔽发言",
   ["Unblock Chatter"] = "解除屏蔽",
+  ["Change Skin"] = "换肤",
   ["<Blocked> "] = '<font color="red">[已屏蔽]</font> ',
   ["Kick From Room"] = "踢出房间",
   ["Newbie"] = "新手保护ing",

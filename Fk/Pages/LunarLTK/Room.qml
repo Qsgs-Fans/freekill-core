@@ -177,7 +177,10 @@ W.PageBase {
         }
 
         Component.onCompleted: {
-          if (index === 0) dashboard.self = this;
+          if (index === 0) {
+            dashboard.self = this;
+            enableChangeSkin = true;
+          }
         }
       }
     }
@@ -702,6 +705,10 @@ W.PageBase {
     cheatLoader.open();
   }
 
+  function closeCheat() {
+    cheatLoader.close();
+  }
+
   function setPrompt(text, iscur) {
     promptText = text;
     if (iscur) currentPrompt = text;
@@ -895,6 +902,7 @@ W.PageBase {
     addCallback(Command.UpdateRequestUI, Logic.callbacks["UpdateRequestUI"]);
     addCallback(Command.GetPlayerHandcards, Logic.callbacks["GetPlayerHandcards"]);
     addCallback(Command.ReplyToServer, Logic.callbacks["ReplyToServer"]);
+    addCallback(Command.ChangeSkin, Logic.callbacks["ChangeSkin"]);
 
     playerNum = Config.roomCapacity;
     bgm.play();
