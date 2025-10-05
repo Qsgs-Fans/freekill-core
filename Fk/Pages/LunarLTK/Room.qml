@@ -799,6 +799,7 @@ W.PageBase {
           skillInteraction.item.skill = skill_name;
           skillInteraction.item.from = data.from;
           skillInteraction.item.to = data.to;
+          skillInteraction.item.value = data.default;
           skillInteraction.item?.clicked();
           break;
         case "custom":
