@@ -186,7 +186,7 @@ function Request:_checkReply(player, use_ai)
     end
   else
     room:checkNoHuman()
-    if use_ai then
+    if use_ai then --使用人机或托管则ai接管
       player.ai.command = self.command
       -- FIXME: 后面进行SmartAI的时候准备爆破此处
       player.ai.data = self.data[player.id]

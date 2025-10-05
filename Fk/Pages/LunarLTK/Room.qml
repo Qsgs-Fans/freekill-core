@@ -226,6 +226,16 @@ W.PageBase {
         onClicked: roomScene.startCheat("ChooseHandcard");
       }
       MetroButton {
+        id: trustBtn
+        text: Lua.tr("Trust")
+        textFont.pixelSize: 28 
+        enabled: true;
+        onClicked: {
+          Cpp.notifyServer("Trust", "");
+          trustBtn.enabled = false;
+        }
+      }
+      MetroButton {
         id: revertSelectionBtn
         text: Lua.tr("Revert Selection")
         textFont.pixelSize: 28
@@ -660,7 +670,8 @@ W.PageBase {
       Lua.call("RefreshStatusSkills");
       // FIXME 本来可以用客户端notifyUI(AddObserver)刷旁观列表的
       // FIXME 但是由于重启智慧所以还是加入一秒0.2刷得了
-
+      // 刷托管按钮
+      trustBtn.enabled = true;
       // 刷大家的明置手牌提示框
       for (let i = 0; i < photos.count; i++)
         photos.itemAt(i).handcardsChanged();
@@ -823,6 +834,9 @@ W.PageBase {
       state = "leave";
     }
     model.netstate = state;
+    if (state === "trust" && id === Self.id) {
+      roomScene.state = "notactive";
+    }
   }
 
   Component.onCompleted: {

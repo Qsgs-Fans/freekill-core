@@ -481,7 +481,9 @@ Item {
               if (observing) {
                 ret = '*旁观* ' + ret;
               }
-              if (netState == 3) {
+              if (netState == 2) {
+                ret = '<font color="blue">*托管*</font> ' + ret;
+              } else if (netState == 3) {
                 ret = '<font color="red">*逃跑*</font> ' + ret;
               } else if (netState == 5) {
                 ret = '<font color="blue">*人机*</font> ' + ret;

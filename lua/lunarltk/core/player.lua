@@ -1756,7 +1756,6 @@ function Player:canSortHandcards()
   return true
 end
 
-
 --- 能否获得某技能（用于游戏开始时或变更武将时，主动技、势力技、主副将技等特殊限制技能的判断）
 ---@param skill Skill|string @ 待获取的技能
 ---@param relate_to_place? "m" | "d" @ 此技能属于主将或副将，不填则不做判断
