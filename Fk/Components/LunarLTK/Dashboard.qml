@@ -76,33 +76,6 @@ RowLayout {
     handcardAreaItem.unselectAll(expectId);
   }
 
-  function revertSelection() {
-    if (pending_skill !== "") {
-      let to_select_cards = handcardAreaItem.cards.filter(cd => {
-        if (pendings.indexOf(cd.cid) === -1) {
-          return true;
-        } else {
-          cd.selected = !cd.selected;
-          cd.clicked();
-        }
-      });
-
-      to_select_cards.forEach(cd => {
-        if (cd.selectable) {
-          cd.selected = !cd.selected;
-          cd.clicked();
-        }
-      });
-    }
-  }
-
-  function deactivateSkillButton() {
-    for (let i = 0; i < skillButtons.count; i++) {
-      let item = skillButtons.itemAt(i);
-      item.pressed = false;
-    }
-  }
-
   function addSkill(skill_name, prelight) {
     skillPanel.addSkill(skill_name, prelight);
   }
