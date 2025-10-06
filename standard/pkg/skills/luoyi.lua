@@ -31,7 +31,7 @@ luoyi:addTest(function(room, me)
     room:handleAddLoseSkills(me, luoyi.name)
   end)
   local slash = Fk:getCardById(1)
-  FkTest.setNextReplies(me, { "1", json.encode {
+  FkTest.setNextReplies(me, { "1", {
     card = 1,
     targets = { comp2.id }
   } })
