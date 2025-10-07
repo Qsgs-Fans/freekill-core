@@ -411,6 +411,10 @@ end
 
 function CardEffect:clear()
   local cardEffectData = self.data
+  if cardEffectData.isCancellOut then
+    local room = self.room
+    room:setCardEmotion(cid, "judgebad")
+  end
   self.room.logic:trigger(fk.CardEffectFinished, cardEffectData.to, cardEffectData)
 end
 

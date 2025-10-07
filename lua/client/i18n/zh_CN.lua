@@ -733,6 +733,8 @@ Fk:loadTranslationTable {
   -- damage, heal and lose HP
   ["#Damage"] = "%to 对 %from 造成了 %arg 点 %arg2 伤害",
   ["#DamageWithNoFrom"] = "%from 受到了 %arg 点 %arg2 伤害",
+  ["#PreventDamage"] = "由于 %arg，%to 即将对 %from 造成的 %arg2 伤害被防止了",
+  ["#PreventDamageWithNoFrom"] = "由于 %arg，%from 即将受到的 %arg2 伤害被防止了",
   ["#GameEventDamage"] = "伤害事件：%to 对 %from 造成 %arg 点 %arg2 伤害",
   ["#GameEventDamageNoFrom"] = "伤害事件：%from 受到 %arg 点 %arg2 伤害",
   ["#LoseHP"] = "%from 失去了 %arg 点体力",
@@ -758,6 +760,7 @@ Fk:loadTranslationTable {
   ["#RoomOutdated"] = "服务器更新完毕！该房间已过期，将无法再次游玩",
   ["#Choice"] = "%from 选择 %arg",
   ["#WatchCard"] = "%from 观看了牌 %card",
+  ["$ShuffleDrawPile"] = "已重新洗牌，牌堆现有 %arg 张牌",
 }
 
 -- card footnote
