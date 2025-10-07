@@ -1533,11 +1533,15 @@ callbacks["ChangeSkin"] = (sender, data) => {
   const path = data[2];
   const deputypath = data[3];
   if (path) {
-    Config.enabledSkins[photo.general] = path === "-" ? "" : path;
+    if (Number(data[0]) === Self.id) {
+      Config.enabledSkins[photo.general] = path === "-" ? "" : path;
+    }
     photo.skinSource = path === "-" ? "" : path;
   }
   if (deputypath) {
-    Config.enabledSkins[photo.deputyGeneral] = deputypath === "-" ? "" : deputypath;
+    if (Number(data[0]) === Self.id) {
+      Config.enabledSkins[photo.deputyGeneral] = deputypath === "-" ? "" : deputypath;
+    }
     photo.deputySkinSource = deputypath === "-" ? "" : deputypath;
   }
   photo.changeSkinTimer.start()
