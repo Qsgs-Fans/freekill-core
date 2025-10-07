@@ -35,10 +35,16 @@
 ---@field public type string @ log主体
 ---@field public from? integer @ 要替换%from的玩家的id
 ---@field public to? integer[] @ 要替换%to的玩家id列表
----@field public card? integer[] @ 要替换%card的卡牌id列表
+---@field public card? integer[]|Card[] @ 要替换%card的卡牌id列表或卡牌列表
 ---@field public arg? any @ 要替换%arg的内容
 ---@field public arg2? any @ 要替换%arg2的内容
 ---@field public arg3? any @ 要替换%arg3的内容
+---@field public arg4? any @ 要替换%arg4的内容
+---@field public arg5? any @ 要替换%arg5的内容
+---@field public arg6? any @ 要替换%arg6的内容
+---@field public arg7? any @ 要替换%arg7的内容
+---@field public arg8? any @ 要替换%arg8的内容
+---@field public arg9? any @ 要替换%arg9的内容
 ---@field public toast? boolean @ 是否顺手把消息发送一条相同的toast
 
 --- SkillUseStruct 使用技能的数据

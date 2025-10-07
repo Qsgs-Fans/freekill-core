@@ -695,6 +695,7 @@ Fk:loadTranslationTable {
   ["#UseCardToCard"] = "%from 使用了牌 %card，目标是 %arg",
   ["#ResponsePlayCard"] = "%from 打出了牌 %card",
 
+  -- deprecated...
   ["#UseVCard"] = "%from 将 %card 当 %arg 使用",
   ["#UseVCardToTargets"] = "%from 将 %card 当 %arg 使用，目标是 %to",
   ["#UseVCardToCard"] = "%from 将 %card 当 %arg2 使用，目标是 %arg",
@@ -703,8 +704,8 @@ Fk:loadTranslationTable {
   ["#UseV0CardToTargets"] = "%from 使用了 %arg，目标是 %to",
   ["#UseV0CardToCard"] = "%from 使用了 %arg2，目标是 %arg",
   ["#ResponsePlayV0Card"] = "%from 打出了 %arg",
-
   ["#FilterCard"] = "由于 %arg 的效果，与 %from 相关的 %arg2 被视为了 %arg3",
+
   ["#AddTargetsBySkill"] = "用于 %arg 的效果，%from 使用的 %arg2 增加了目标 %to",
   ["#RemoveTargetsBySkill"] = "用于 %arg 的效果，%from 使用的 %arg2 减少了目标 %to",
 

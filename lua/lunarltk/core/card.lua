@@ -250,6 +250,9 @@ cbor.tagged_decoders[CBOR_TAG_VIRTUAL_CARD] = function(v)
   card.color = v[CBOR_CARD_KEY_COLOR] or Card.NoColor
   card.subcards = v[CBOR_CARD_KEY_SUBCARDS] or {}
   card.skillNames = v[CBOR_CARD_KEY_SKILL_NAMES] or {}
+  if #card.skillNames > 0 then
+    card._skillName = card.skillNames[#card.skillNames]
+  end
 
   card.extra_data = v[CBOR_CARD_KEY_EXTRA_DATA]
   card.virt_id = v[CBOR_CARD_KEY_VIRT_ID] or 0
@@ -642,6 +645,12 @@ end
 -- for sendLog
 --- 获取卡牌的文字信息并准备作为log发送。
 function Card:toLogString()
+  local startBrace = '<font color="#0598BC"><b>[</b></font>'
+  local endBrace = '<font color="#0598BC"><b>]</b></font>'
+  local startBrace2 = '<font color="#0598BC"><b>{</b></font>'
+  local endBrace2 = '<font color="#0598BC"><b>}</b></font>'
+
+  -- 牌名与花色/颜色小尾巴
   local ret = string.format('<font color="#0598BC"><b>%s</b></font>', Fk:translate(self.name) .. "[")
   if self:isVirtual() and #self.subcards ~= 1 then
     ret = ret .. Fk:translate(self:getColorString())
@@ -651,7 +660,27 @@ function Card:toLogString()
       ret = ret .. string.format('<font color="%s"><b>%s</b></font>', self.color == Card.Red and "#CC3131" or "black", getNumberStr(self.number))
     end
   end
-  ret = ret .. '<font color="#0598BC"><b>]</b></font>'
+  ret = ret .. endBrace
+
+  -- 子卡小尾巴
+  if #self.subcards > 0 then
+    ret = ret .. startBrace2 .. table.concat(table.map(self.subcards, function(cid)
+      return Fk:getCardById(cid):toLogString()
+    end), ", ") .. endBrace2
+  end
+
+  -- 技能名小尾巴
+  if self.skillName ~= "" then
+    ret = ret .. startBrace .. '<b>' .. Fk:translate(self.skillName) .. '</b>'
+
+    -- 锁视小尾巴
+    if not self:isVirtual() then
+      ret = ret .. '・' .. Fk:getCardById(self.id, true):toLogString()
+    end
+
+    ret = ret .. endBrace
+  end
+
   return ret
 end
 

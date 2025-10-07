@@ -494,14 +494,17 @@ function ClientBase:parseMsg(msg, nocolor)
     return arg
   end
 
-  local arg = parseArg(data.arg)
-  local arg2 = parseArg(data.arg2)
-  local arg3 = parseArg(data.arg3)
-
   local log = Fk:translate(data.type)
-  log = string.gsub(log, "%%arg2", arg2)
-  log = string.gsub(log, "%%arg3", arg3)
-  log = string.gsub(log, "%%arg", arg)
+
+  for i = 2, 9 do
+    local v = data["arg" .. i]
+    if v == nil then break end
+    local arg = parseArg(v)
+    log = log:gsub("%%arg" .. i, arg)
+  end
+  local arg = parseArg(data.arg)
+  log = log:gsub("%%arg", arg)
+
   return log
 end
 

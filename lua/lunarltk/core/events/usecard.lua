@@ -394,7 +394,7 @@ function AimData:addTarget(player, sub, setDone)
     type = "#TargetAdded",
     from = self.from.id,
     to = table.map(player, Util.IdMapper),
-    arg = self.card:toLogString(),
+    arg = self.card,
   }
 end
 
@@ -436,7 +436,7 @@ function AimData:cancelTarget(target)
     type = "#TargetCancelled",
     from = self.from.id,
     to = actural,
-    arg = self.card:toLogString(),
+    arg = self.card,
   }
 end
 
@@ -463,7 +463,7 @@ function AimData:cancelCurrentTarget()
     type = "#TargetCancelled",
     from = self.from.id,
     to = { self.to.id },
-    arg = self.card:toLogString(),
+    arg = self.card,
   }
   return true
 end

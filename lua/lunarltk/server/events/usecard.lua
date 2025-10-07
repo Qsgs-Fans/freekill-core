@@ -82,40 +82,18 @@ local sendCardEmotionAndLog = function(room, useCardData, muteEmotion)
     })
   end
 
-  local useCardIds = card:isVirtual() and card.subcards or { card.id }
-  local isVirtual = card:isVirtual() or card.name ~= Fk:getCardById(card.id, true).name
   if useCardData.tos and #useCardData.tos > 0 and not useCardData.noIndicate then
     local to = {}
     for _, p in ipairs(useCardData.tos) do
       table.insert(to, p.id)
     end
 
-    -- 使用转化牌或锁视牌
-    if isVirtual then
-      if #useCardIds == 0 then
-        room:sendLog{
-          type = "#UseV0CardToTargets",
-          from = from.id,
-          to = to,
-          arg = card:toLogString(),
-        }
-      else
-        room:sendLog{
-          type = "#UseVCardToTargets",
-          from = from.id,
-          to = to,
-          card = useCardIds,
-          arg = card:toLogString(),
-        }
-      end
-    else
-      room:sendLog{
-        type = "#UseCardToTargets",
-        from = from.id,
-        to = to,
-        card = useCardIds
-      }
-    end
+    room:sendLog{
+      type = "#UseCardToTargets",
+      from = from.id,
+      to = to,
+      card = { card }
+    }
 
     -- 声明子目标
     for _, p in ipairs(useCardData.tos) do
@@ -125,61 +103,24 @@ local sendCardEmotionAndLog = function(room, useCardData, muteEmotion)
           type = "#CardUseCollaborator",
           from = p.id,
           to = table.map(subt, Util.IdMapper),
-          arg = card.name,
+          arg = card,
         }
       end
     end
     -- 因响应而使用牌
   elseif useCardData.toCard then
-    if isVirtual then
-      if #useCardIds == 0 then
-        room:sendLog{
-          type = "#UseV0CardToCard",
-          from = from.id,
-          arg = useCardData.toCard.name,
-          arg2 = card:toLogString(),
-        }
-      else
-        room:sendLog{
-          type = "#UseVCardToCard",
-          from = from.id,
-          card = useCardIds,
-          arg = useCardData.toCard.name,
-          arg2 = card:toLogString(),
-        }
-      end
-    else
-      room:sendLog{
-        type = "#UseCardToCard",
-        from = from.id,
-        card = useCardIds,
-        arg = useCardData.toCard.name,
-      }
-    end
-    -- 其他一般的使用牌
+    room:sendLog{
+      type = "#UseCardToCard",
+      from = from.id,
+      card = { card },
+      arg = useCardData.toCard,
+    }
   else
-    if isVirtual then
-      if #useCardIds == 0 then
-        room:sendLog{
-          type = "#UseV0Card",
-          from = from.id,
-          arg = card:toLogString(),
-        }
-      else
-        room:sendLog{
-          type = "#UseVCard",
-          from = from.id,
-          card = useCardIds,
-          arg = card:toLogString(),
-        }
-      end
-    else
-      room:sendLog{
-        type = "#UseCard",
-        from = from.id,
-        card = useCardIds,
-      }
-    end
+    room:sendLog{
+      type = "#UseCard",
+      from = from.id,
+      card = { card },
+    }
   end
 end
 
@@ -369,28 +310,11 @@ function RespondCard:main()
     room:playCardEmotionAndSound(from, card)
   end
 
-  if isVirtual then
-    if #cardIds == 0 then
-      room:sendLog{
-        type = "#ResponsePlayV0Card",
-        from = from.id,
-        arg = card:toLogString(),
-      }
-    else
-      room:sendLog{
-        type = "#ResponsePlayVCard",
-        from = from.id,
-        card = cardIds,
-        arg = card:toLogString(),
-      }
-    end
-  else
-    room:sendLog{
-      type = "#ResponsePlayCard",
-      from = from.id,
-      card = cardIds,
-    }
-  end
+  room:sendLog{
+    type = "#ResponsePlayCard",
+    from = from.id,
+    card = { card },
+  }
 
   room:moveCardTo(card, Card.Processing, nil, fk.ReasonResponse)
   local footnote = {

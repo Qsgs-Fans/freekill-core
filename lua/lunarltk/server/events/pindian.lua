@@ -152,13 +152,13 @@ function Pindian:main()
   room:sendLog{
     type = "#ShowPindianCard",
     from = from.id,
-    arg = pindianData.fromCard:toLogString(),
+    arg = pindianData.fromCard,
   }
   for _, to in ipairs(pindianData.tos) do
     room:sendLog{
       type = "#ShowPindianCard",
       from = to.id,
-      arg = pindianData.results[to].toCard:toLogString(),
+      arg = pindianData.results[to].toCard,
     }
   end
 
