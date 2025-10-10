@@ -38,7 +38,7 @@ fk.CardRespondFinished = RespondCardEvent:subclass("fk.CardRespondFinished")
 ---@field public unoffsetableList? ServerPlayer[] @ 这些角色不可抵消此牌
 ---@field public additionalDamage? integer @ 额外伤害值（如酒之于杀）
 ---@field public additionalRecover? integer @ 额外回复值
----@field public extra_data? any @ 额外数据（如目标过滤等）
+---@field public extra_data? UseExtraData | table @ 额外数据（如目标过滤等）
 ---@field public cardsResponded? Card[] @ 响应此牌的牌
 ---@field public prohibitedCardNames? string[] @ 这些牌名的牌不可响应此牌
 ---@field public damageDealt? table<ServerPlayer, number> @ 此牌造成的伤害
@@ -285,7 +285,7 @@ fk.CardUseFinished = UseCardEvent:subclass("fk.CardUseFinished")
 ---@field public nullified? boolean @ 是否对此目标无效
 ---@field public cancelled? boolean @ 是否已被取消
 ---@field public fixedResponseTimesList? table<ServerPlayer, integer> @ 某角色响应此事件需要的牌张数（如杀响应决斗），键为角色，值为响应张数
----@field public extraData? UseExtraData | any @ 额外数据
+---@field public extra_data? UseExtraData | table @ 额外数据
 
 --- 使用牌的数据
 ---@class AimData: AimDataSpec, TriggerData
@@ -599,7 +599,7 @@ fk.TargetConfirmed = AimEvent:subclass("fk.TargetConfirmed")
 ---@field public responseToEvent? CardEffectData @ 响应事件目标
 ---@field public additionalDamage? integer @ 额外伤害值（如酒之于杀）
 ---@field public additionalRecover? integer @ 额外回复值
----@field public extra_data? any @ 额外数据（如目标过滤等）
+---@field public extra_data? UseExtraData | table @ 额外数据（如目标过滤等）
 ---@field public cardsResponded? Card[] @ 响应此牌的牌
 ---@field public disresponsive? boolean @ 是否不可响应
 ---@field public unoffsetable? boolean @ 是否不可抵消
