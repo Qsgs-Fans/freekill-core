@@ -277,14 +277,16 @@ local function filterGeneral(general, filter)
     (#maxHps > 0 and not table.contains(maxHps, tostring(general.maxHp))) or
     (#hps > 0 and not table.contains(hps, tostring(general.hp))) or
     (#genders > 0 and not table.contains(genders, genderMapper[general.gender])) or
-    (skillName ~= "" and not table.find(general:getSkillNameList(true), function(s)
-      return
-          not not find_with_escape(Fk:translate(s), skillName)
-    end)) or
-    (skillDesc ~= "" and not table.find(general:getSkillNameList(true), function(s)
-      return
-          not not find_with_escape(Fk:getDescription(s), skillDesc)
-    end)) or
+    (skillName ~= "" and not (table.find(general:getSkillNameList(true), function(s)
+      return not not find_with_escape(Fk:translate(s), skillName)
+    end) or table.find(general.related_other_skills, function(s)
+      return not not find_with_escape(Fk:translate(s), skillName)
+    end))) or
+    (skillDesc ~= "" and not (table.find(general:getSkillNameList(true), function(s)
+      return not not find_with_escape(Fk:getDescription(s), skillDesc)
+    end) or table.find(general.related_other_skills, function(s)
+      return not not find_with_escape(Fk:getDescription(s), skillDesc)
+    end))) or
     (designer ~= "" and not find_with_escape(translateInfo("designer:" .. general.name), designer)) or
     (voiceActor ~= "" and not find_with_escape(translateInfo("cv:" .. general.name), voiceActor)) or
     (illustrator ~= "" and not find_with_escape(translateInfo("illustrator:" .. general.name), illustrator)) or
