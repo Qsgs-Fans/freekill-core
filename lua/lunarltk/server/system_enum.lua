@@ -8,6 +8,7 @@
 ---@field public include_targets? integer[] @ 必须选其中一个目标？
 ---@field public exclusive_targets? integer[] @ 只能选择这些目标？
 ---@field public fix_targets? integer[] @ 将固定目标修改为这些目标（例如对他人使用桃）
+---@field public fix_user? integer @ 修改使用者（盼睇）
 ---@field public bypass_distances? boolean @ 无距离限制？
 ---@field public bypass_times? boolean @ 无次数限制？
 ---@field public not_passive? boolean @ 禁止使用被动牌（用于模拟出牌阶段空闲时使用）
