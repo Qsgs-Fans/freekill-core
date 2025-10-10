@@ -68,13 +68,13 @@ function Room:initialize(_room)
   self.extra_turn_list = {}
   self.general_pile = {}
 
-  self.disabled_packs = self.settings.disabledPack
-  if not Fk.game_modes[self.settings.gameMode] then
+  self.disabled_packs = self:getSettings('disabledPack')
+  if not Fk.game_modes[self:getSettings('gameMode')] then
     self.settings.gameMode = "aaa_role_mode"
   end
 
-  table.insertTable(self.disabled_packs, Fk.game_mode_disabled[self.settings.gameMode])
-  self.disabled_generals = self.settings.disabledGenerals
+  table.insertTable(self.disabled_packs, Fk.game_mode_disabled[self:getSettings('gameMode')])
+  self.disabled_generals = self:getSettings('disabledGenerals')
 
   self:addCallback("prelight", self.handlePrelight)
   self:addCallback("updatemini", self.handleUpdateMini)
@@ -1186,7 +1186,7 @@ function Room:askToChooseGeneral(player, params)
   local defaultChoice = rule.default_choice(generals, extra_data)
 
   local req = Request:new(player, command)
-  req.timeout = self.settings.generalTimeout
+  req.timeout = self:getSettings('generalTimeout')
   local data = {
     generals,
     n,
@@ -3123,7 +3123,7 @@ function Room:gameOver(winner)
   if self:shouldUpdateWinRate() then
     local record = self:getBanner("InitialGeneral")
     for _, p in ipairs(self.players) do
-      local mode = self.settings.gameMode
+      local mode = self:getSettings('gameMode')
       local result
 
       if p.id > 0 then

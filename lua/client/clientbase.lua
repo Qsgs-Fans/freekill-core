@@ -99,7 +99,7 @@ function ClientBase:stopRecording(jsonData)
   self.record[2] = table.concat({
     self.record[2],
     Self.player:getScreenName():gsub("%.", "%%2e"),
-    self.settings.gameMode,
+    self:getSettings('gameMode'),
     Self.general or "",
     Self.role or "unknown",
     jsonData,
@@ -529,7 +529,7 @@ function ClientBase:gameOver(jsonData)
       else
         result = 2
       end
-      self.client:saveGameData(self.settings.gameMode, Self.general or "",
+      self.client:saveGameData(self:getSettings('gameMode'), Self.general or "",
         Self.deputyGeneral or "", Self.role or "", result, self.record[2],
         cbor.encode(self:serialize()), cbor.encode(self.record))
     end

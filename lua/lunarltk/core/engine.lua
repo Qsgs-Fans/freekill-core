@@ -85,7 +85,9 @@ function Engine:initialize()
   self.target_tips = {}
   self.choose_general_rule = {}
   self.skin_packages = {}
+end
 
+function Engine:load()
   self:loadPackages()
 
   -- 唉，杀批的Engine又搞特殊了

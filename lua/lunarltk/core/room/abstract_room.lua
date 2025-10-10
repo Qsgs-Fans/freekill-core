@@ -136,7 +136,7 @@ end
 ---@param mode string @ 需要判定的模式类型
 ---@return boolean
 function AbstractRoom:isGameMode(mode)
-  return table.contains(Fk.main_mode_list[mode] or {}, self.settings.gameMode)
+  return table.contains(Fk.main_mode_list[mode] or {}, self:getSettings('gameMode'))
 end
 
 return AbstractRoom

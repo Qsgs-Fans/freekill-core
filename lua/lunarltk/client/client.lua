@@ -933,3 +933,5 @@ function Client:sendDataToUI(data)
 
   self:notifyUI("UpdateRoundNum", data.round_count)
 end
+
+return Client

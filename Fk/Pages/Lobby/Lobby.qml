@@ -319,7 +319,7 @@ W.PageBase {
     Config.roomCapacity = data[0];
     Config.roomTimeout = data[1] - 1;
     const roomSettings = data[2];
-    Config.enableFreeAssign = roomSettings.enableFreeAssign;
+    // Config.enableFreeAssign = roomSettings.enableFreeAssign;
     Config.heg = roomSettings.gameMode.includes('heg_mode');
     App.enterNewPage("Fk.Pages.Common", "RoomPage", {
       gameComponent: Qt.createComponent("Fk.Pages.Common", "WaitingRoom"),
@@ -333,6 +333,7 @@ W.PageBase {
 
     addCallback(Command.EnterRoom, handleEnterRoom);
 
+    Db.tryInitModeSettings();
     App.showToast(Lua.tr("$WelcomeToLobby"));
   }
 }

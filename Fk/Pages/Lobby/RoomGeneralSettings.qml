@@ -48,17 +48,6 @@ Item {
         }
       }
       W.SpinRow {
-        id: generalNum
-        title: Lua.tr("Select generals num")
-        from: 3
-        to: 18
-        value: Config.preferredGeneralNum
-
-        onValueChanged: {
-          Config.preferredGeneralNum = value;
-        }
-      }
-      W.SpinRow {
         title: Lua.tr("Operation timeout")
         from: 10
         to: 60
@@ -69,80 +58,9 @@ Item {
           Config.preferredTimeout = value;
         }
       }
-      W.SpinRow {
-        title: Lua.tr("Choose General timeout")
-        from: 10
-        to: 60
-        editable: true
-        value: Config.preferredChooseGeneralTimeout
-
-        onValueChanged: {
-          Config.preferredChooseGeneralTimeout = value;
-        }
-      }
-      W.SpinRow {
-        title: Lua.tr("Luck Card Times")
-        subTitle: Lua.tr("help: Luck Card Times")
-        from: 0
-        to: 8
-        value: Config.preferredLuckTime
-
-        onValueChanged: {
-          Config.preferredLuckTime = value;
-        }
-      }
     }
-
-    W.PreferenceGroup {
-      title: Lua.tr("Game Rule")
-      W.ComboRow {
-        id: gameModeCombo
-        title: Lua.tr("Game Mode")
-        textRole: "name"
-        model: ListModel {
-          id: gameModeList
-        }
-
-        onCurrentValueChanged: {
-          const data = currentValue;
-          playerNum.from = data.minPlayer;
-          playerNum.to = data.maxPlayer;
-
-          Config.preferedMode = data.orig_name;
-        }
-      }
-
-      W.SwitchRow {
-        id: freeAssignCheck
-        // checked: Debugging ? true : false
-        checked: Config.enableFreeAssign
-        onCheckedChanged: Config.enableFreeAssign = checked;
-        title: Lua.tr("Enable free assign")
-        subTitle: Lua.tr("help: Enable free assign")
-      }
-
-      W.SwitchRow {
-        id: deputyCheck
-        // checked: Debugging ? true : false
-        checked: Config.enableDeputy
-        onCheckedChanged: Config.enableDeputy = checked;
-        title: Lua.tr("Enable deputy general")
-        subTitle: Lua.tr("help: Enable deputy general")
-      }
-    }
-
 
     Component.onCompleted: {
-      const mode_data = Lua.call("GetGameModes");
-      let i = 0;
-      for (let d of mode_data) {
-        gameModeList.append(d);
-        if (d.orig_name === Config.preferedMode) {
-          gameModeCombo.setCurrentIndex(i);
-        }
-        i += 1;
-      }
-
       playerNum.value = Config.preferedPlayerNum;
 
       for (let k in Config.curScheme.banPkg) {
@@ -205,20 +123,23 @@ Item {
             }
           });
 
+          const gameMode = Config.preferedMode;
+          const boardgameName = Lua.evaluate(`Fk:getBoardGame('${gameMode}').name`);
+          const boardgameConf = Db.getModeSettings(boardgameName);
+          const gameModeConf = Db.getModeSettings(boardgameName + ":" + gameMode);
+
           ClientInstance.notifyServer(
             "CreateRoom",
             [
               roomName.text, playerNum.value,
               Config.preferredTimeout, {
-                enableFreeAssign: freeAssignCheck.checked,
-                enableDeputy: deputyCheck.checked,
-                gameMode: Config.preferedMode,
-                disabledPack: disabledPack,
-                generalNum: Config.preferredGeneralNum,
-                generalTimeout: Config.preferredChooseGeneralTimeout,
-                luckTime: Config.preferredLuckTime,
+                gameMode,
                 password: roomPassword.text,
-                disabledGenerals,
+                _game: boardgameConf,
+                _mode: gameModeConf,
+                // FIXME 暂且拿他俩没办法
+                disabledPack: boardgameName === "lunarltk" ? disabledPack : [],
+                disabledGenerals: boardgameName === "lunarltk" ? disabledGenerals : [],
               }
             ]
           );
@@ -234,5 +155,17 @@ Item {
         }
       }
     }
+  }
+
+  function refreshGameMode(gameMode) {
+    const data = Lua.fn(`function(mode)
+      local m = Fk.game_modes[mode]
+      return {
+        minPlayer = m.minPlayer,
+        maxPlayer = m.maxPlayer,
+      }
+    end`)(gameMode);
+    playerNum.from = data.minPlayer;
+    playerNum.to = data.maxPlayer;
   }
 }

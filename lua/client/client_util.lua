@@ -569,7 +569,7 @@ end
 
 function GetCompNum()
   local c = ClientInstance
-  local mode = Fk.game_modes[c.settings.gameMode] or Fk.game_modes["aaa_role_mode"]
+  local mode = Fk.game_modes[c:getSettings('gameMode')] or Fk.game_modes["aaa_role_mode"]
   local min, max = mode.minComp, mode.maxComp
   local capacity = c.capacity
   if min < 0 then min = capacity + min end
@@ -623,7 +623,7 @@ function SetReplayingShowCards(o)
 end
 
 function CheckSurrenderAvailable()
-  local curMode = ClientInstance.settings.gameMode
+  local curMode = ClientInstance:getSettings('gameMode')
   local mode = Fk.game_modes[curMode] or Fk.game_modes["aaa_role_mode"]
   local playedTime = os.time() - ClientInstance.gameStartTime
   return mode:surrenderFunc(playedTime)
@@ -1320,6 +1320,20 @@ function ToQml(v)
   end
 
   return defaultQml
+end
+
+local W = require "ui_emu.preferences"
+
+function GetUIDataOfSettings(mode, settings, isBoardGame)
+  local ui_settings
+  if isBoardGame then
+    ui_settings = Fk:getBoardGame(mode).ui_settings
+  else
+    ui_settings = Fk.game_modes[mode].ui_settings
+  end
+
+  if not ui_settings then return {} end
+  return W.toQmlData(ui_settings, settings)
 end
 
 dofile "lua/client/i18n/init.lua"

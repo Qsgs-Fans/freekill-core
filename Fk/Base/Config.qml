@@ -25,7 +25,6 @@ QtObject {
   // property list<string> disabledPack: []
   property string preferedMode
   property int preferedPlayerNum
-  property int preferredGeneralNum
   property var preferredFilter
   property string ladyImg
   property real bgmVolume
@@ -51,10 +50,6 @@ QtObject {
   property var enabledSkins
 
   property int preferredTimeout
-  property int preferredChooseGeneralTimeout
-  property int preferredLuckTime
-  property bool enableFreeAssign
-  property bool enableDeputy
 
   property bool enableSuperDrag
 
@@ -151,7 +146,6 @@ QtObject {
     // disabledPack = conf.disabledPack ?? [ "test_p_0" ];
     preferedMode = conf.preferedMode ?? "aaa_role_mode";
     preferedPlayerNum = conf.preferedPlayerNum ?? 2;
-    preferredGeneralNum = conf.preferredGeneralNum ?? 3;
     preferredFilter = conf.preferredFilter ?? {
       name: "", // 房间名
       id: "", // 房间ID
@@ -172,10 +166,6 @@ QtObject {
     doubleClickUse = conf.doubleClickUse ?? false;
     noSelfNullification = conf.noSelfNullification ?? false;
     preferredTimeout = conf.preferredTimeout ?? 15;
-    preferredChooseGeneralTimeout = conf.preferredChooseGeneralTimeout ?? 20;
-    preferredLuckTime = conf.preferredLuckTime ?? 0;
-    enableFreeAssign = conf.enableFreeAssign ?? false;
-    enableDeputy = conf.enableDeputy ?? false;
     enableSuperDrag = conf.enableSuperDrag ?? false;
     firstRun = conf.firstRun ?? true;
     // disabledGenerals = conf.disabledGenerals ?? [];
@@ -214,7 +204,6 @@ QtObject {
     conf.preferedPlayerNum = preferedPlayerNum;
     conf.preferredFilter = preferredFilter;
     conf.ladyImg = ladyImg;
-    conf.preferredGeneralNum = preferredGeneralNum;
     conf.effectVolume = Cpp.volume();
     conf.bgmVolume = bgmVolume;
     conf.disableMsgAudio = disableMsgAudio;
@@ -227,10 +216,6 @@ QtObject {
     conf.doubleClickUse = doubleClickUse;
     conf.noSelfNullification = noSelfNullification;
     conf.preferredTimeout = preferredTimeout;
-    conf.preferredChooseGeneralTimeout = preferredChooseGeneralTimeout;
-    conf.preferredLuckTime = preferredLuckTime;
-    conf.enableFreeAssign = enableFreeAssign;
-    conf.enableDeputy = enableDeputy;
     conf.enableSuperDrag = enableSuperDrag;
     conf.firstRun = firstRun;
     // conf.disabledGenerals = disabledGenerals;
