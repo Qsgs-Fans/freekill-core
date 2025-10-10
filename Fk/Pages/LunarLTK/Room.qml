@@ -231,6 +231,8 @@ W.PageBase {
       MetroButton {
         id: trustBtn
         text: Lua.tr("Trust")
+        enabled: !Config.observing && !Config.replaying
+        visible: !Config.observing && !Config.replaying
         textFont.pixelSize: 28
         enabled: true;
         onClicked: {

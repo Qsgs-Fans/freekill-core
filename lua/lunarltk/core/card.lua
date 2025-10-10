@@ -678,7 +678,7 @@ function Card:toLogString()
       if self == Fk.cards[self.id] then
         -- 某人给真卡贴技能名来污染全局来了 我们就不继续小尾巴了
         fk.qWarning("Detected skillName=" .. self.skillName ..
-          "on real card " .. self.id .. ".\n" .. debug.traceback())
+          " on real card " .. self.id)
       else
         ret = ret .. '・' .. Fk:getCardById(self.id, true):toLogString()
       end
