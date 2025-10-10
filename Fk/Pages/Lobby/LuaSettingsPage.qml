@@ -79,6 +79,7 @@ Item {
 
   function loadSettingsUI(data) {
     const newChildren = [];
+    const newConf = Object.keys(root.config).length === 0;
 
     for (const dat of data) {
       newChildren.push(buildComponent(dat, prefPage.layout));
@@ -88,6 +89,10 @@ Item {
       v.destroy();
     }
     dynamicChildObject = newChildren;
+
+    if (newConf) {
+      Db.saveModeSettings(root.configName, root.config);
+    }
   }
 
   // TODO 暂且懒得整动态刷新了
