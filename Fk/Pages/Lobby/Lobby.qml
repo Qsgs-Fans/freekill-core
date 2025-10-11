@@ -322,7 +322,7 @@ W.PageBase {
     // Config.enableFreeAssign = roomSettings.enableFreeAssign;
     Config.heg = roomSettings.gameMode.includes('heg_mode');
     let displayName = roomSettings.roomName;
-    if (roomSettings.roomId) {
+    if (roomSettings.roomId !== undefined) {
       displayName += "[{id}]".replace("{id}", roomSettings.roomId);
     }
     Config.headerName = Lua.tr("Current room: %1").arg(displayName);

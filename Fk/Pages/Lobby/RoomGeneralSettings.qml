@@ -135,13 +135,6 @@ Item {
               Config.preferredTimeout, {
                 gameMode,
                 roomName: roomName.text,
-                enableFreeAssign: freeAssignCheck.checked,
-                enableDeputy: deputyCheck.checked,
-                gameMode: Config.preferedMode,
-                disabledPack: disabledPack,
-                generalNum: Config.preferredGeneralNum,
-                generalTimeout: Config.preferredChooseGeneralTimeout,
-                luckTime: Config.preferredLuckTime,
                 password: roomPassword.text,
                 _game: boardgameConf,
                 _mode: gameModeConf,
