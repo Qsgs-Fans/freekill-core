@@ -321,6 +321,11 @@ W.PageBase {
     const roomSettings = data[2];
     // Config.enableFreeAssign = roomSettings.enableFreeAssign;
     Config.heg = roomSettings.gameMode.includes('heg_mode');
+    let displayName = roomSettings.roomName;
+    if (roomSettings.roomId) {
+      displayName += "[{id}]".replace("{id}", roomSettings.roomId);
+    }
+    Config.headerName = Lua.tr("Current room: %1").arg(displayName);
     App.enterNewPage("Fk.Pages.Common", "RoomPage", {
       gameComponent: Qt.createComponent("Fk.Pages.Common", "WaitingRoom"),
     });

@@ -305,6 +305,7 @@ FreeKill使用的是libgit2的C API，与此同时使用Git完成拓展包的下
   ["Copy Audio Text"] = "复制语音文本",
 
   ["$WelcomeToLobby"] = "欢迎进入新月杀游戏大厅！",
+  ["Current room: %1"] = "当前房间：%1",
   ["GameMode"] = "游戏模式：",
   ["LuckCardNum"] = "手气卡次数：",
   ["ResponseTime"] = "出手时间：",
