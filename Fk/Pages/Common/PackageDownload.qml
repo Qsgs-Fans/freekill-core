@@ -68,9 +68,11 @@ W.PageBase {
   function setDownloadError(sender, msg) {
     const item = packageRepeater.itemAt(root.currentPackageIndex);
     item.hasError = true;
-    [item.errorMsg, item.errorHandler] = fastRepair(msg);
-    item.subTitle = "<font color='red'>✗</font> " + item.errorMsg + "<br>" + msg;
-    root.hasHandlerModel.push(root.currentPackageIndex);
+    item.subTitle = "<font color='red'>✗</font> " + msg;
+    if (item.myName !== "freekill-core") {
+      [item.errorMsg, item.errorHandler] = fastRepair(msg);
+      root.hasHandlerModel.push(root.currentPackageIndex);
+    }
   }
 
   function showTransferProgress(sender, data) {
@@ -122,6 +124,9 @@ W.PageBase {
               ret += "（无变化）"; //(Nothing to do)
             } else {
               ret += `${old} -> ${now}`;
+            }
+            if (errorMsg !== "") {
+              ret += ` <font color='red'>(错误: ${errorMsg})</font>`;
             }
             return ret;
           }
