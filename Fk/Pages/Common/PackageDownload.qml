@@ -71,7 +71,9 @@ W.PageBase {
     item.subTitle = "<font color='red'>✗</font> " + msg;
     if (item.myName !== "freekill-core") {
       [item.errorMsg, item.errorHandler] = fastRepair(msg);
-      root.hasHandlerModel.push(root.currentPackageIndex);
+      if (item.errorHandler !== null) {
+        root.hasHandlerModel.push(root.currentPackageIndex);
+      }
     }
   }
 
