@@ -2132,7 +2132,7 @@ end
 ---@class askToUseVirtualCardParams: AskToSkillInvokeParams
 ---@field name string|string[] @ 可以选择的虚拟卡名，可以多个
 ---@field subcards? integer[] @ 虚拟牌的子牌，默认空
----@field card_filter? { cards: integer[]?, n: integer|integer[]?, pattern: string? } @选牌规则，优先级低于```subcards```，可选参数：```n```（牌数，填数字表示此只能此数量，填{a, b}表示至少为a至多为b）```pattern```（选牌规则）```cards```（可选牌的范围）
+---@field card_filter? { cards: integer[]?, n: integer|integer[]?, pattern: string?, fake_subcards: boolean? } @选牌规则，优先级低于```subcards```，可选参数：```n```（牌数，填数字表示此只能此数量，填{a, b}表示至少为a至多为b）```pattern```（选牌规则）```cards```（可选牌的范围）```fake_subcards```（是否不计为实际子卡）
 ---@field prompt? string @ 询问提示信息。默认为：请视为使用xx
 ---@field extra_data? UseExtraData|table @ 额外信息，因技能而异了
 ---@field cancelable? boolean @ 是否可以取消。默认可以取消
@@ -2193,7 +2193,11 @@ function Room:askToUseVirtualCard(player, params)
         if #cards < params.card_filter.n[1] then
           return nil
         end
-        card:addSubcards(table.random(cards, params.card_filter.n[1]))
+        if params.card_filter.fake_subcards then
+          card:addFakeSubcards(table.random(cards, params.card_filter.n[1]))
+        else
+          card:addSubcards(table.random(cards, params.card_filter.n[1]))
+        end
       end
       card.skillName = skillName
       if #card:getDefaultTarget(player, extra_data) > 0 then
@@ -2221,7 +2225,11 @@ function Room:askToUseVirtualCard(player, params)
     if #subcards > 0 then
       card:addSubcards(subcards)
     elseif #dat.cards > 0 then
-      card:addSubcards(dat.cards)
+      if params.card_filter.fake_subcards then
+        card:addFakeSubcards(dat.cards)
+      else
+        card:addSubcards(dat.cards)
+      end
     end
     card.skillName = skillName
     tos = #dat.targets > 0 and dat.targets or card:getDefaultTarget(player, extra_data)
@@ -2238,7 +2246,11 @@ function Room:askToUseVirtualCard(player, params)
         if #cards < params.card_filter.n[1] then
           return nil
         end
-        card:addSubcards(table.random(cards, params.card_filter.n[1]))
+        if params.card_filter.fake_subcards then
+          card:addFakeSubcards(table.random(cards, params.card_filter.n[1]))
+        else
+          card:addSubcards(table.random(cards, params.card_filter.n[1]))
+        end
       end
       card.skillName = skillName
       tos = card:getDefaultTarget(player, extra_data)
