@@ -13,7 +13,7 @@ W.PageBase {
   function setPackages(summary) {
     const localSummary = JSON.parse(Pacman.getPackSummary());
     packageModel.clear();
-    hasHandlerModel.clear();
+    hasHandlerModel = [];
     for (let data of summary) {
       data.oldHash = localSummary.find(d => d.name === data.name)?.hash ?? "(nil)";
       packageModel.append(data);
@@ -43,6 +43,9 @@ W.PageBase {
       }
     }
 
+    if (hasHandlerModel.length > 0) {
+      repairButton.visible = true;
+    }
     backButton.visible = true;
   }
 
@@ -67,7 +70,7 @@ W.PageBase {
     item.hasError = true;
     [item.errorMsg, item.errorHandler] = fastRepair(msg);
     item.subTitle = "<font color='red'>✗</font> " + item.errorMsg + "<br>" + msg;
-    root.hasHandlerModel.append(root.currentPackageIndex);
+    root.hasHandlerModel.push(root.currentPackageIndex);
   }
 
   function showTransferProgress(sender, data) {
@@ -109,7 +112,7 @@ W.PageBase {
           property string myName: name
           property bool hasError: false
           property string errorMsg: ""
-          property var errorHandler
+          property var errorHandler: null
 
           title: {
             const old = oldHash === "(nil)" ? oldHash : oldHash.substring(0, 8);
@@ -137,9 +140,8 @@ W.PageBase {
             anchors.verticalCenter: parent.verticalCenter
             text: "修复"
             visible: parent.errorHandler !== null
-            onClicked: {
-              const it = packageRepeater.itemAt(i);
-              parent.errorHandler(it.myName, index);
+            onClicked: {;
+              parent.errorHandler(parent.myName, index);
               root.hasHandlerModel.remove(index);
             }
           }
@@ -198,9 +200,9 @@ W.PageBase {
       x: 8
 
       onClicked: {
-        for (idx of root.hasHandlerModel) {
+        for (let idx of root.hasHandlerModel) {
           const it = packageRepeater.itemAt(idx);
-          parent.errorHandler(it.myName, idx);
+          it.errorHandler(it.myName, idx);
         }
         App.quitPage();
       }
