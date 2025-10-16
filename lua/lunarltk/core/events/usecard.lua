@@ -188,9 +188,10 @@ end
 
 --- 判断使用事件是否是在使用手牌
 ---@param player ServerPlayer @ 要判断的使用者
+---@param realUseEvent? GameEvent.UseCard @ 指定使用事件，用于记录器判断
 ---@return boolean
-function UseCardData:isUsingHandcard(player)
-  local useEvent = player.room.logic:getCurrentEvent()
+function UseCardData:isUsingHandcard(player, realUseEvent)
+  local useEvent = realUseEvent or player.room.logic:getCurrentEvent()
   local cards = Card:getIdList(self.card)
   if #cards == 0 then return false end
   local moveEvents = useEvent:searchEvents(GameEvent.MoveCards, 1, function(e)
@@ -212,9 +213,10 @@ end
 
 --- 判断打出事件是否是在打出手牌
 ---@param player ServerPlayer @ 要判断的使用者
+---@param realRespondEvent? GameEvent.RespondCard @ 指定使用事件，用于记录器判断
 ---@return boolean
-function RespondCardData:isUsingHandcard(player)
-  local useEvent = player.room.logic:getCurrentEvent()
+function RespondCardData:isUsingHandcard(player, realRespondEvent)
+  local useEvent = realRespondEvent or player.room.logic:getCurrentEvent()
   local cards = Card:getIdList(self.card)
   if #cards == 0 then return false end
   local moveEvents = useEvent:searchEvents(GameEvent.MoveCards, 1, function(e)
