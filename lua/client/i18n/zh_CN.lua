@@ -26,6 +26,7 @@ Fk:loadTranslationTable {
 
   ["UI settings"] = "UI设置",
   ["No available UI package"] = "无可用UI",
+  ["Game UI settings"] = "游戏UI设置",
   ["lunarltk"] = "新月杀",
   ["default"] = "默认",
   ["UI packages select"] = "设置UI",
