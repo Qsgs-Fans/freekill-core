@@ -294,7 +294,7 @@ end
 ---@field public logic? fun(): GameLogic @ 逻辑（通过function完成，通常用来初始化、分配身份及座次）
 ---@field public whitelist? string[] | fun(self: GameMode, pkg: Package): boolean? @ 白名单
 ---@field public blacklist? string[] | fun(self: GameMode, pkg: Package): boolean? @ 黑名单
----@field public config_template? GameModeConfigEntry[] 游戏模式的配置页面，如此一个数组
+---@field public ui_settings? any @ ui规则
 ---@field public main_mode? string @ 主模式名（用于判断此模式是否为某模式的衍生）
 ---@field public winner_getter? fun(self: GameMode, victim: ServerPlayer): string @ 在死亡流程中用于判断是否结束游戏，并输出胜利者身份
 ---@field public surrender_func? fun(self: GameMode, playedTime: number): table
@@ -320,6 +320,7 @@ function fk.CreateGameMode(spec)
   ret.main_mode = spec.main_mode or spec.name
   Fk.main_mode_list[ret.main_mode] = Fk.main_mode_list[ret.main_mode] or {}
   table.insert(Fk.main_mode_list[ret.main_mode], ret.name)
+  ret.ui_settings = spec.ui_settings
 
   if spec.winner_getter then
     assert(type(spec.winner_getter) == "function")
