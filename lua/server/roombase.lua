@@ -504,4 +504,43 @@ function ServerRoomBase:serialize(player)
   return o
 end
 
+function ServerRoomBase:getSessionId()
+  if type(self.room.getSessionId) ~= "function" then
+    fk.qWarning("Room::getSessionId doesn't exist, please use freekill-asio 0.0.8+")
+    return 0
+  end
+
+  return self.room:getSessionId()
+end
+
+function ServerRoomBase:getSessionData()
+  if type(self.room.getSessionData) ~= "function" then
+    fk.qWarning("Room::getSessionData doesn't exist, please use freekill-asio 0.0.8+")
+    return {}
+  end
+
+  local data = self.room:getSessionData()
+  local ok, result = pcall(json.decode, data or "{}")
+  if ok then
+    return result
+  else
+    fk.qWarning("Failed to decode save data: " .. data)
+    return {}
+  end
+end
+
+function ServerRoomBase:setSessionData(data)
+  if type(self.room.setSessionData) ~= "function" then
+    fk.qWarning("Room::setSessionData doesn't exist, please use freekill-asio 0.0.8+")
+    return 0
+  end
+
+  local ok, jsonData = pcall(json.encode, data)
+  if ok then
+    self.room:setSessionData(jsonData)
+  else
+    fk.qWarning("Failed to encode global save data: " .. data)
+  end
+end
+
 return ServerRoomBase

@@ -348,6 +348,18 @@ local _Room_decreaseRefCount = function(self)
   callRpc("Room_decreaseRefCount", { self.id })
 end
 
+local _Room_getSessionId = function(self)
+  return callRpc("Room_getSessionId", { self.id })
+end
+
+local _Room_getSessionData = function(self)
+  return callRpc("Room_getSessionData", { self.id })
+end
+
+local _Room_setSessionData = function(self, jsonData)
+  callRpc("Room_setSessionData", { self.id, tostring(jsonData) })
+end
+
 ---@type metatable
 local _Room_MT = {
   __index = {
@@ -368,6 +380,10 @@ local _Room_MT = {
     -- 虽然C++ Room变成NULL无关紧要了，但我们希望先保存数据库再销毁房间，所以做了
     increaseRefCount = _Room_increaseRefCount,
     decreaseRefCount = _Room_decreaseRefCount,
+
+    getSessionId = _Room_getSessionId,
+    getSessionData = _Room_getSessionData,
+    setSessionData = _Room_setSessionData,
 
     settings = function(t) return t._settings end,
   }
