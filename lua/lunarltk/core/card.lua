@@ -772,15 +772,18 @@ function Card:getAvailableTargets (player, extra_data)
   -- 选定目标的优先逻辑：额外的锁定目标(求桃锁定濒死角色)>牌本身的锁定目标(南蛮无中装备)>所有角色
   local avail = (self:getFixedTargets(player, extra_data) or room.alive_players)
   local tos = table.simpleClone(avail)
-  -- 过滤额外的目标限制
+  --[[
+  -- 过滤额外的目标限制，不需要了，下面会判
   for _, limit in ipairs({"exclusive_targets", "must_targets", "include_targets"}) do
     if type(extra_data[limit]) == "table" and #extra_data[limit] > 0 then
       tos = table.filter(tos, function(p) return table.contains(extra_data[limit], p.id) end)
     end
   end
+  --]]
   if #tos == 0 then return {} end
   tos = table.filter(tos, function(p)
-    return not player:isProhibited(p, self) and self.skill:modTargetFilter(player, p, {}, self, extra_data)
+    return not player:isProhibited(p, self) and
+    Util.CardTargetFilter(self.skill, player, p, {}, self.subcards, self, extra_data)
   end)
   local n = self.skill:getMinTargetNum(player)
   if n > 1 then

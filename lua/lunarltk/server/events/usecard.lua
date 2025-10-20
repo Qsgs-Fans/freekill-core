@@ -155,13 +155,8 @@ function UseCard:main()
   if #useCardData.tos == 0 then
     local fix_targets = useCardData.card:getFixedTargets(useCardData.from, useCardData.extra_data)
     if fix_targets then
-      if useCardData.card.skill then
-        for _, p in ipairs(fix_targets) do
-          if useCardData.card.skill:modTargetFilter(useCardData.from, p, {}, useCardData.card, useCardData.extra_data)
-            and not useCardData.from:isProhibited(p, useCardData.card) then
-            useCardData:addTarget(p)
-          end
-        end
+      for _, p in ipairs(useCardData.card:getAvailableTargets(useCardData.from, useCardData.extra_data)) do
+        useCardData:addTarget(p)
       end
     end
   end
