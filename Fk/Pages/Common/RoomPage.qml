@@ -717,6 +717,14 @@ Item {
     Mediator.notify(this, Command.BackToRoom);
   }
 
+  function continueGame() {
+    Lua.call("ResetClientLua");
+    gameLoader.sourceComponent = Qt.createComponent("Fk.Pages.Common", "WaitingRoom");
+    log.clear();
+    chat.clear();
+    Mediator.notify(this, Command.RestartGame);
+  }
+
   function tryQuitRoom() {
     if (Config.replaying) {
       App.quitPage();
@@ -748,6 +756,7 @@ Item {
     overlay.addCallback(Command.ReplyToServer, replyToServer);
     overlay.addCallback(Command.ChangeRoomPage, changeRoomPage);
     overlay.addCallback(Command.ResetRoomPage, resetRoomPage);
+    overlay.addCallback(Command.ContinueGame, continueGame);
 
     overlay.addCallback(Command.IWantToQuitRoom, tryQuitRoom);
     overlay.addCallback(Command.IWantToSaveRecord, trySaveRecord);

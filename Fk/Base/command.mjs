@@ -39,11 +39,14 @@ export const PackageTransferProgress = "PackageTransferProgress";
 // RoomPage 房间基底页
 export const ChangeRoomPage = "ChangeRoomPage";
 export const ResetRoomPage = "ResetRoomPage";
+export const ContinueGame = "ContinueGame";
 export const BackToRoom = "BackToRoom";
+export const RestartGame = "RestartGame";
 export const IWantToQuitRoom = "IWantToQuitRoom";
 export const IWantToSaveRecord = "IWantToSaveRecord";
 export const IWantToBookmarkRecord = "IWantToBookmarkRecord";
 export const IWantToChat = "IWantToChat";
+
 
 // Misc
 export const Chat = "Chat";
