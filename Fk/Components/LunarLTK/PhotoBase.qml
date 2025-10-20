@@ -82,7 +82,7 @@ Game.BasicItem {
       }
 
       onSourceChanged: {
-        if (playerid === Self.id) {
+        if (playerid === roomScene.dashboardId) {
           const changed_source = root.getConfigSkin(root.general);
           if (changed_source !== "") {
             Cpp.notifyServer("PushRequest", "changeskin," + changed_source)
@@ -117,7 +117,7 @@ Game.BasicItem {
       }
 
       onSourceChanged: {
-        if (playerid === Self.id) {
+        if (playerid === roomScene.dashboardId) {
           const changed_source = root.getConfigSkin(root.deputyGeneral);
           if (changed_source !== "") {
             Cpp.notifyServer("PushRequest", "changeskin,," + changed_source)

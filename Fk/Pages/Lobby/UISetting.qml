@@ -64,7 +64,7 @@ W.PreferencePage {
 
       function getBoardGames() {
         return Lua.evaluate(`(function()
-          local names = {"lunarltk"}
+          local names = {}
           for k, v in pairs(Fk.boardgames) do
             table.insertIfNeed(names, k)
           end

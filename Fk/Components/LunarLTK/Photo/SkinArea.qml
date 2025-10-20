@@ -1,4 +1,5 @@
 import QtQuick
+import QtMultimedia
 import QtQuick.Layouts
 import QtQuick.Controls
 
@@ -19,6 +20,8 @@ Item {
     sourceComponent: {
       if (root.source.endsWith(".gif")) {
         return animated;
+      } else if (root.source.endsWith(".mp4")) {
+        return videoImg;
       } else {
         return staticImg;
       }
@@ -41,6 +44,19 @@ Item {
       fillMode: Image.PreserveAspectCrop
       source: root.source
       playing: true
+    }
+  }
+
+  Component {
+    id: videoImg
+    Video {
+      anchors.fill: parent
+      source: root.source
+      loops: MediaPlayer.Infinite
+      fillMode: Image.PreserveAspectCrop
+      muted: true
+
+      Component.onCompleted: play()
     }
   }
 }

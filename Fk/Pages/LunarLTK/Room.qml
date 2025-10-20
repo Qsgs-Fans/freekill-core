@@ -16,6 +16,7 @@ W.PageBase {
   id: roomScene
 
   property int playerNum: 0
+  property int dashboardId: 0
 
   property alias popupBox: popupBox
   property alias manualBox: manualBox
@@ -911,6 +912,7 @@ W.PageBase {
 
     const luaSelfIdx = Lua.evaluate('table.indexOf(ClientInstance.players, Self)') - 1;
 
+    dashboardId = Self.id;
     for (let i = 0; i < playerNum; i++) {
       const state = Lua.evaluate(`ClientInstance.players[${(luaSelfIdx + i) % playerNum + 1}]:__toqml().prop`);
       const modelData = {

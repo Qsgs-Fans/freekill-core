@@ -12,6 +12,7 @@
 ---@field public bypass_distances? boolean @ 无距离限制？
 ---@field public bypass_times? boolean @ 无次数限制？
 ---@field public not_passive? boolean @ 禁止使用被动牌（用于模拟出牌阶段空闲时使用）
+---@field public extra_effect? table<integer, function> @ 特殊的卡牌效果
 ---@field public playing? boolean @ (AI专用) 出牌阶段？
 
 --- AskForCardUse 询问使用卡牌的数据
