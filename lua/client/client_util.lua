@@ -146,9 +146,10 @@ function GetAllProperties()
       table.insertIfNeed(hps, g.hp)
     end
   end
+  local enabledStates = { Fk:translate("Enable"), Fk:translate("Disabled") }
   table.sort(maxHps)
   table.sort(hps)
-  return { kingdoms = kingdoms, maxHps = maxHps, hps = hps }
+  return { kingdoms = kingdoms, maxHps = maxHps, hps = hps, enabledStates = enabledStates }
 end
 
 function GetGenerals(pack_name)
@@ -269,6 +270,7 @@ local function filterGeneral(general, filter)
   local voiceActor = filter.voiceActor ---@type string
   local illustrator = filter.illustrator ---@type string
   local audioText = filter.audioText ---@type string
+  local enabledStates = filter.enabledStates ---@type string[]
   return not (
     (name ~= "" and not find_with_escape(Fk:translate(general.name), name)) or
     (title ~= "" and not find_with_escape(translateInfo("#" .. general.name), title)) or
@@ -291,6 +293,7 @@ local function filterGeneral(general, filter)
     (voiceActor ~= "" and not find_with_escape(translateInfo("cv:" .. general.name), voiceActor)) or
     (illustrator ~= "" and not find_with_escape(translateInfo("illustrator:" .. general.name), illustrator)) or
     (audioText ~= "" and not findAudioText(general, audioText))
+    or (#enabledStates > 0 and not table.contains(enabledStates, Fk:canUseGeneral(general.name) and Fk:translate("Enable") or Fk:translate("Disabled")))
   )
 end
 
