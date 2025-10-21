@@ -307,7 +307,9 @@ end
 
 function ServerPlayer:throwAllMarks()
   for name, _ in pairs(self.mark) do
-    self.room:setPlayerMark(self, name, 0)
+    if not name:find("-noclear", 1, true) then
+      self.room:setPlayerMark(self, name, 0)
+    end
   end
 end
 

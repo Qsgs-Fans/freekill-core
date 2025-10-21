@@ -3514,12 +3514,10 @@ function Room:removeTableMark(sth, mark, value)
   return true
 end
 
----@alias TempMarkSuffix "-round" | "-turn" | "-phase"
-
 --- 无效化技能
 ---@param player ServerPlayer @ 技能被无效的角色
 ---@param skill_name string @ 被无效的技能
----@param temp? TempMarkSuffix|"" @ 作用范围，``-round`` ``-turn`` ``-phase``或不填
+---@param temp? TempMarkSuffix|"" @ 作用范围或其他后缀
 ---@param source_skill? string @ 控制失效与否的技能。（保证不会与其他控制技能互相干扰）
 function Room:invalidateSkill(player, skill_name, temp, source_skill)
   temp = temp or ""
@@ -3530,10 +3528,10 @@ function Room:invalidateSkill(player, skill_name, temp, source_skill)
   self:setPlayerMark(player, MarkEnum.InvalidSkills .. temp, record)
 end
 
---- 有效化技能
+--- 移除技能的无效化状态
 ---@param player ServerPlayer @ 技能被有效的角色
 ---@param skill_name string @ 被有效的技能
----@param temp? TempMarkSuffix|"" @ 作用范围，``-round`` ``-turn`` ``-phase``或不填
+---@param temp? TempMarkSuffix|"" @ 作用范围或其他后缀
 ---@param source_skill? string @ 控制生效与否的技能。（保证不会与其他控制技能互相干扰）
 function Room:validateSkill(player, skill_name, temp, source_skill)
   temp = temp or ""
