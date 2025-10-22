@@ -492,7 +492,6 @@ FreeKill使用的是libgit2的C API，与此同时使用Git完成拓展包的下
   ["Impasse Strike"] = "绝境逆袭",
 
   ["Back To Room"] = "回到房间",
-  ["Continue Game"] = "继续游戏",
   ["Back To Lobby"] = "返回大厅",
   ["Save Replay"] = "保存录像",
 
