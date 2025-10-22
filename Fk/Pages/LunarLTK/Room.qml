@@ -811,6 +811,13 @@ W.PageBase {
           skillInteraction.item.extra_data = data;
           skillInteraction.item?.clicked();
           break;
+        case "cardname":
+          skillInteraction.sourceComponent =
+            Qt.createComponent("Fk.Components.LunarLTK.SkillInteraction", "SkillCardName");
+          skillInteraction.item.skill = skill_name;
+          skillInteraction.item.extra_data = data;
+          skillInteraction.item?.clicked();
+          break;
         case "checkbox":
           skillInteraction.sourceComponent =
             Qt.createComponent("Fk.Components.LunarLTK.SkillInteraction", "SkillCheckBox");
