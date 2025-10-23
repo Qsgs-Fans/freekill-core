@@ -160,6 +160,10 @@ function encoder.float(num)
   if num ~= num then -- NaN shortcut
     return "\251\127\255\255\255\255\255\255\255";
   end
+  -- 本项目特化 禁止传入.0
+  if num == m_floor(num) then
+    return encoder.integer(num)
+  end
   local sign = (num > 0 or 1 / num > 0) and 0 or 1;
   num = m_abs(num)
   if num == m_huge then
