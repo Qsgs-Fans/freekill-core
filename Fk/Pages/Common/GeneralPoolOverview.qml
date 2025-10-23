@@ -8,7 +8,7 @@ import Fk
 import Fk.Components.Common
 import Fk.Widgets as W
 
-Item {
+W.PageBase {
   id: root
   objectName: "GeneralPoolOverview"
   property int generalCount: 0

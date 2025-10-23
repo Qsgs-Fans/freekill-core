@@ -160,4 +160,9 @@ W.EntryRow = function(spec)
   return convertSpec(spec)
 end
 
+---@class W.PageButtonSpec
+---@field name string
+---@field iconUrl string
+---@field qml QmlComponent
+
 return W

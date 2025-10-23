@@ -195,18 +195,18 @@ W.PageBase {
     }
 
     Item { Layout.fillWidth: true }
-    Button {
-      text: Lua.tr("Generals Overview")
-      onClicked: {
-        App.enterNewPage("Fk.Pages.Common", "GeneralsOverview");
-      }
-    }
-    Button {
-      text: Lua.tr("Cards Overview")
-      onClicked: {
-        App.enterNewPage("Fk.Pages.Common", "CardsOverview");
-      }
-    }
+    // Button {
+    //   text: Lua.tr("Generals Overview")
+    //   onClicked: {
+    //     App.enterNewPage("Fk.Pages.Common", "GeneralsOverview");
+    //   }
+    // }
+    // Button {
+    //   text: Lua.tr("Cards Overview")
+    //   onClicked: {
+    //     App.enterNewPage("Fk.Pages.Common", "CardsOverview");
+    //   }
+    // }
     Button {
       text: Lua.tr("Modes Overview")
       onClicked: {
@@ -223,6 +223,99 @@ W.PageBase {
       text: Lua.tr("About")
       onClicked: {
         App.enterNewPage("Fk.Pages.Common", "About");
+      }
+    }
+    Button {
+      text: "更多..."
+      onClicked: {
+        morePagesDrawer.open();
+      }
+    }
+  }
+
+  Drawer {
+    id: morePagesDrawer
+    width: 0.6 * Config.winWidth
+    height: Config.winHeight
+    edge: Qt.RightEdge
+
+    dim: false
+
+    background: Rectangle {
+      color: "#DDF1F1F2"
+      gradient: Gradient {
+        orientation: Gradient.Horizontal
+        GradientStop { position: 0.0; color: "transparent" }
+        GradientStop { position: 0.2; color: "#DDF1F1F2" }
+      }
+    }
+
+    Item {
+      // 经典Popup要套壳个Item 烂QML
+      width: parent.width / Config.winScale
+      height: parent.height / Config.winScale
+      scale: Config.winScale
+      anchors.centerIn: parent
+
+      ListView {
+        id: morePagesListView
+        height: parent.height
+        width: parent.width * 0.8 - 40 - 40
+        anchors.right: parent.right
+        anchors.rightMargin: 40
+
+        spacing: 16
+
+        model: ListModel {
+          id: morePagesModel
+        }
+
+        delegate: ColumnLayout {
+          width: morePagesListView.width
+
+          Text {
+            text: Lua.tr(pkname)
+            font.pixelSize: 18
+            // font.bold: true
+            textFormat: Text.RichText
+            wrapMode: Text.WrapAnywhere
+            Layout.alignment: Qt.AlignTop
+          }
+
+          Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 2
+            color: "black"
+          }
+
+          Item {
+            Layout.preferredHeight: 4
+          }
+
+          GridLayout {
+            Layout.alignment: Qt.AlignRight
+            Layout.preferredWidth: parent.width - 40
+            columns: 3
+            Repeater {
+              model: pages
+              delegate: W.ButtonContent {
+                text: Lua.tr(name)
+                font.bold: true
+                icon.source: iconUrl
+                Layout.fillWidth: true
+
+                onClicked: {
+                  morePagesDrawer.close();
+                  if (qml.uri && qml.name) {
+                    App.enterNewPage(qml.uri, qml.name);
+                  } else {
+                    App.enterNewPage(Cpp.path + "/" + qml.url);
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -337,6 +430,26 @@ W.PageBase {
     addCallback(Command.UpdatePlayerNum, updatePlayerNum);
 
     addCallback(Command.EnterRoom, handleEnterRoom);
+
+    const customPagesSpecs = Lua.fn(`function()
+      local pkgs = table.map(table.filter(Fk.package_names, function(name)
+        return Fk.packages[name].customPages ~= nil
+      end), function(name)
+        return {
+          name = name,
+          pages = Fk.packages[name].customPages
+        }
+      end)
+
+      return pkgs
+    end`)();
+
+    for (const v of customPagesSpecs) {
+      morePagesModel.append({
+        pkname: v.name,
+        pages: v.pages,
+      });
+    }
 
     Db.tryInitModeSettings();
     App.showToast(Lua.tr("$WelcomeToLobby"));

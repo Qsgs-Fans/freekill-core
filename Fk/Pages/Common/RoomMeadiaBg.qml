@@ -11,7 +11,7 @@ Item {
   Image {
     id: imageItem
     anchors.fill: parent
-    visible: mediaViewer.source.match(/\.(jpe?g|png)$/i)
+    visible: mediaViewer.source.toString().match(/\.(jpe?g|png)$/i)
     source: mediaViewer.source
     fillMode: mediaViewer.fillMode
   }
@@ -19,7 +19,7 @@ Item {
   AnimatedImage {
     id: gifItem
     anchors.fill: parent
-    visible: mediaViewer.source.match(/\.gif$/i)
+    visible: mediaViewer.source.toString().match(/\.gif$/i)
     source: mediaViewer.source
     fillMode: mediaViewer.fillMode
     playing: true
@@ -28,7 +28,7 @@ Item {
   Video {
     id: videoItem
     anchors.fill: parent
-    visible: mediaViewer.source.match(/\.(mp4|avi|mov|mkv)$/i)
+    visible: mediaViewer.source.toString().match(/\.(mp4|avi|mov|mkv)$/i)
     source: mediaViewer.source
     loops: MediaPlayer.Infinite
     fillMode: mediaViewer.fillMode
