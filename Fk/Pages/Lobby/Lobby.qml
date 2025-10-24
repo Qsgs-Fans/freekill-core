@@ -279,13 +279,18 @@ W.PageBase {
             // font.bold: true
             textFormat: Text.RichText
             wrapMode: Text.WrapAnywhere
-            Layout.alignment: Qt.AlignTop
+            Layout.fillWidth: true
           }
 
           Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 2
             color: "black"
+            gradient: Gradient {
+              orientation: Gradient.Horizontal
+              GradientStop { position: 0.4; color: "black" }
+              GradientStop { position: 0.6; color: "transparent" }
+            }
           }
 
           Item {

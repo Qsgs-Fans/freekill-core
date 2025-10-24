@@ -501,15 +501,18 @@ end
 
 function GetGameModes()
   local ret = {}
-  for k, v in pairs(Fk.game_modes) do
-    table.insert(ret, {
-      name = Fk:translate(v.name),
-      orig_name = v.name,
-      minPlayer = v.minPlayer,
-      maxPlayer = v.maxPlayer,
-    })
+  for _, name in ipairs(Fk.package_names) do
+    local pk = Fk.packages[name]
+    for _, v in ipairs(pk.game_modes) do
+      table.insert(ret, {
+        name = Fk:translate(v.name),
+        orig_name = v.name,
+        minPlayer = v.minPlayer,
+        maxPlayer = v.maxPlayer,
+      })
+    end
   end
-  table.sort(ret, function(a, b) return a.name > b.name end)
+  -- table.sort(ret, function(a, b) return a.name > b.name end)
   return ret
 end
 
