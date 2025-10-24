@@ -6,6 +6,7 @@ import QtQuick.Dialogs
 
 import Fk
 import Fk.Components.Common
+import Fk.Components.GameCommon
 import Fk.Widgets as W
 import Fk.Pages.Lobby as L
 
@@ -397,7 +398,7 @@ Item {
     //   fillMode: Image.PreserveAspectCrop
     // }
 
-    RoomMeadiaBg {
+    MediaArea {
       source: Config.roomBg
       anchors.fill: parent
       fillMode: Image.PreserveAspectCrop
