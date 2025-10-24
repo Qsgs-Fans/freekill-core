@@ -78,7 +78,7 @@ Flickable {
               packs.push(orig_name);
             }
             Lua.call("UpdatePackageEnable", orig_name, checked);
-            Config.curSchemeChanged();
+            Config.curScheme = Config.curScheme;
           }
         }
       }

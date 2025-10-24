@@ -60,7 +60,7 @@ Item {
             Config.curScheme.banPkg = {};
             Config.curScheme.normalPkg = {};
             Config.curScheme.banCardPkg = [];
-            Config.curSchemeChanged();
+            Config.curScheme = Config.curScheme;
           }
         }
 
