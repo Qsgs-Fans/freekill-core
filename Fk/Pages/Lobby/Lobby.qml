@@ -220,12 +220,6 @@ W.PageBase {
       }
     }
     Button {
-      text: Lua.tr("About")
-      onClicked: {
-        App.enterNewPage("Fk.Pages.Common", "About");
-      }
-    }
-    Button {
       text: "更多..."
       onClicked: {
         morePagesDrawer.open();
@@ -271,6 +265,7 @@ W.PageBase {
         }
 
         delegate: ColumnLayout {
+          id: morePagesItem
           width: morePagesListView.width
 
           Text {
@@ -297,17 +292,18 @@ W.PageBase {
             Layout.preferredHeight: 4
           }
 
-          GridLayout {
-            Layout.alignment: Qt.AlignRight
-            Layout.preferredWidth: parent.width - 40
+          Grid {
+            rowSpacing: 4
+            columnSpacing: 4
             columns: 3
+
             Repeater {
               model: pages
               delegate: W.ButtonContent {
                 text: Lua.tr(name)
                 font.bold: true
                 icon.source: iconUrl
-                Layout.fillWidth: true
+                width: morePagesItem.width / 3 - 4
 
                 onClicked: {
                   morePagesDrawer.close();
@@ -459,6 +455,29 @@ W.PageBase {
 
       return pkgs
     end`)();
+
+    customPagesSpecs.unshift({
+      name: "default",
+      pages: [
+        {
+          name: "Settings",
+          iconUrl: "http://175.178.66.93/symbolic/categories/applications-system-symbolic.svg",
+          popup: true,
+          qml: {
+            uri: "Fk.Pages.Lobby",
+            name: "EditProfile",
+          }
+        },
+        {
+          name: "About",
+          iconUrl: "http://175.178.66.93/symbolic/actions/help-about-symbolic.svg",
+          qml: {
+            uri: "Fk.Pages.Common",
+            name: "About",
+          }
+        },
+      ],
+    })
 
     for (const v of customPagesSpecs) {
       morePagesModel.append({
