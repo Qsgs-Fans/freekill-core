@@ -197,17 +197,19 @@ function Card:__tocbor()
         [CBOR_CARD_KEY_SUBCARDS] = #self.subcards > 0 and self.subcards or nil,
         [CBOR_CARD_KEY_SKILL_NAMES] = #self.skillNames > 0 and self.skillNames or nil,
         [CBOR_CARD_KEY_EXTRA_DATA] = self.extra_data and (
-          next(self.extra_data) ~= nil and self.extra_data or nil)
-        or nil,
+              next(self.extra_data) ~= nil and self.extra_data or nil)
+            or nil,
         [CBOR_CARD_KEY_VIRT_ID] = self.virt_id or 0,
         [CBOR_CARD_KEY_MARK] = next(self.mark) ~= nil and self.mark or nil,
       }
     ))
   end
 end
+
 function Card:__touistring()
   return self:toLogString()
 end
+
 function Card:__toqml()
   local mark = {}
   for k, v in pairs(self.mark) do
@@ -237,6 +239,7 @@ function Card:__toqml()
     },
   }
 end
+
 cbor.tagged_decoders[CBOR_TAG_REAL_CARD] = function(v)
   return Fk:getCardById(v)
 end
@@ -279,9 +282,19 @@ function Card:clone(suit, number)
   return newCard
 end
 
---- 检测是否为虚拟卡牌，如果其ID为0，则为虚拟卡牌。
+--- 检测是否为虚拟或转化卡牌，如果其ID为0，则为虚拟卡牌。
 function Card:isVirtual()
   return self.id == 0
+end
+
+--- 检测是否为虚拟卡牌，如果其子卡数量为0，则为虚拟卡牌。
+function Card:isRuleVirtual()
+  return self.id == 0 and #self.subcards == 0
+end
+
+--- 检测是否为转化卡牌，如果其子卡数量不为0，则为转化卡牌。
+function Card:isConverted()
+  return self.id == 0 and #self.subcards > 0
 end
 
 --- 获取卡牌的ID。
@@ -572,15 +585,15 @@ end
 function Card:hasMark(mark, suffixes)
   if suffixes == nil then suffixes = MarkEnum.CardTempMarkSuffix end
   for m, _ in pairs(self.mark) do
-    if m == mark then return {self.mark[m], m} end
+    if m == mark then return { self.mark[m], m } end
     if m:startsWith(mark .. "-") then
       local parts = m:split("-")
       if #parts > 1 then
         table.remove(parts, 1) -- 去掉标记名称主体，只留下后缀
-        if table.every(parts, function (s)
-          return table.contains(suffixes, "-" .. s)
-        end) then
-          return {self.mark[m], m}
+        if table.every(parts, function(s)
+              return table.contains(suffixes, "-" .. s)
+            end) then
+          return { self.mark[m], m }
         end
       end
     end
@@ -657,7 +670,9 @@ function Card:toLogString()
   else
     ret = ret .. Fk:translate("log_" .. self:getSuitString())
     if self.number > 0 then
-      ret = ret .. string.format('<font color="%s"><b>%s</b></font>', self.color == Card.Red and "#CC3131" or "black", getNumberStr(self.number))
+      ret = ret ..
+          string.format('<font color="%s"><b>%s</b></font>', self.color == Card.Red and "#CC3131" or "black",
+            getNumberStr(self.number))
     end
   end
   ret = ret .. endBrace
@@ -700,13 +715,13 @@ end
 function Card.static:getIdList(c)
   if c == nil then return {} end
   if type(c) == "number" then
-    return {c}
+    return { c }
   end
   if c.class and c:isInstanceOf(Card) then
     if c:isVirtual() then
       return table.clone(c.subcards)
     else
-      return {c.id}
+      return { c.id }
     end
   end
 
@@ -726,7 +741,6 @@ function Card:getTableMark(mark)
   return type(ret) == "table" and ret or {}
 end
 
-
 --- 获得使用此牌的固定目标，仅有不能自由选择目标的牌会有固定目标。即桃、无中、装备、AOE等
 ---@param player Player @ 使用者
 ---@param extra_data? UseExtraData @ 额外数据
@@ -734,7 +748,7 @@ end
 function Card:getFixedTargets(player, extra_data)
   local ret = extra_data and extra_data.fix_targets
   if ret then return table.map(ret, Util.Id2PlayerMapper) end
-  local status_skills = Fk:currentRoom().status_skills[TargetModSkill] or Util.DummyTable---@type TargetModSkill[]
+  local status_skills = Fk:currentRoom().status_skills[TargetModSkill] or Util.DummyTable ---@type TargetModSkill[]
   for _, skill in ipairs(status_skills) do
     local targetIds = skill:getFixedTargets(player, self.skill, self, extra_data)
     if targetIds then
@@ -748,16 +762,15 @@ function Card:getFixedTargets(player, extra_data)
   if self.skill:getMinTargetNum(player) == 0 and not self.is_passive then
     -- 此处仅作为默认值，若与默认选择规则不一致（如火烧连营）请修改cardSkill的fix_targets参数
     if self.multiple_targets then
-      return table.filter(Fk:currentRoom().alive_players, function (p)
+      return table.filter(Fk:currentRoom().alive_players, function(p)
         return self.skill:modTargetFilter(player, p, {}, self)
       end)
     else
-      return {player}
+      return { player }
     end
   end
   return nil
 end
-
 
 --- 获得使用一张牌的所有合法目标角色表。用于判断一张必须使用的牌能否使用
 ---
@@ -765,7 +778,7 @@ end
 ---@param player Player @ 使用者
 ---@param extra_data? UseExtraData|table
 ---@return Player[] @ 返回目标角色表
-function Card:getAvailableTargets (player, extra_data)
+function Card:getAvailableTargets(player, extra_data)
   if not player:canUse(self, extra_data) or player:prohibitUse(self) then return {} end
   extra_data = extra_data or Util.DummyTable
   local room = Fk:currentRoom()
@@ -783,15 +796,15 @@ function Card:getAvailableTargets (player, extra_data)
   if #tos == 0 then return {} end
   tos = table.filter(tos, function(p)
     return not player:isProhibited(p, self) and
-    Util.CardTargetFilter(self.skill, player, p, {}, self.subcards, self, extra_data)
+        Util.CardTargetFilter(self.skill, player, p, {}, self.subcards, self, extra_data)
   end)
   local n = self.skill:getMinTargetNum(player)
   if n > 1 then
     if n == 2 then
       for i = #tos, 1, -1 do
-        if not table.find(room.alive_players, function (p)
-          return p ~= tos[i] and self.skill:targetFilter(player, p, {tos[i]}, {}, self, extra_data)
-        end) then
+        if not table.find(room.alive_players, function(p)
+              return p ~= tos[i] and self.skill:targetFilter(player, p, { tos[i] }, {}, self, extra_data)
+            end) then
           table.remove(tos, i)
         end
       end
@@ -807,7 +820,6 @@ function Card:getAvailableTargets (player, extra_data)
   return tos
 end
 
-
 -- 获得使用一张牌的一个可能的指定方式。
 ---
 ---用于判断一张必须使用的牌能否使用，或给一张必须使用的牌添加默认目标。
@@ -816,7 +828,7 @@ end
 ---@param player Player @ 使用者
 ---@param extra_data? UseExtraData|table
 ---@return Player[] @ 目标角色表。返回空表表示无合法目标
-function Card:getDefaultTarget (player, extra_data)
+function Card:getDefaultTarget(player, extra_data)
   extra_data = extra_data or Util.DummyTable
   local tos = self:getAvailableTargets(player, extra_data)
   if #tos == 0 then return {} end
@@ -826,8 +838,8 @@ function Card:getDefaultTarget (player, extra_data)
   elseif n == 2 then
     for i = #tos, 1, -1 do
       for _, p in ipairs(Fk:currentRoom().alive_players) do
-        if p ~= tos[i] and self.skill:targetFilter(player, p, {tos[i]}, {}, self, extra_data) then
-          return {tos[i], p}
+        if p ~= tos[i] and self.skill:targetFilter(player, p, { tos[i] }, {}, self, extra_data) then
+          return { tos[i], p }
         end
       end
     end
@@ -848,7 +860,7 @@ function Card:setVSPattern(skillName, player, pattern)
   if pattern then
     self:setMark("Global_VS_Pattern", pattern)
   else
-    local skill = Fk.skills[skillName]---@type ViewAsSkill
+    local skill = Fk.skills[skillName] ---@type ViewAsSkill
     if skill:isInstanceOf(ViewAsSkill) then
       local vs = player and skill:filterPattern(player, self.name, self.subcards) or nil
       if vs and vs.subcards then
@@ -859,7 +871,7 @@ function Card:setVSPattern(skillName, player, pattern)
       local matchers = {}
       for _, m in ipairs(exp.matchers) do
         if (m.name == nil or table.contains(m.name, self.name)) and
-          (m.trueName == nil or table.contains(m.trueName, self.trueName)) then
+            (m.trueName == nil or table.contains(m.trueName, self.trueName)) then
           --因为牌名信息已确认，直接指定之即可
           --FIXME: 未考虑neg（似乎暂时用不到？）
           m.name = { self.name }
@@ -868,8 +880,8 @@ function Card:setVSPattern(skillName, player, pattern)
           if vs then
             local single_exp = Exppattern:Parse(vs.pattern)
             local e_suits, e_colors, e_numbers = {}, {}, {}
-            local suit_strings = {"spade", "club", "heart", "diamond", "nosuit"}
-            local color_strings = {"black", "red", "nocolor"}
+            local suit_strings = { "spade", "club", "heart", "diamond", "nosuit" }
+            local color_strings = { "black", "red", "nocolor" }
 
             for i = math.max(vs.min_num, #self.subcards), vs.max_num, 1 do
               if i == 0 then
