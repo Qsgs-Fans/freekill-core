@@ -149,7 +149,7 @@ GraphicsBox {
       _s.damage = s.damage.toString();
       _s.damaged = s.damaged.toString();
       _s.kill = s.kill.toString();
-      _s.scname = s.scname; // client拿不到
+      _s.scnameChanged(); // client拿不到
       _s.win = victoryResult(winner, _s.role, true);
       _s.role = Lua.tr(_s.role);
       _s.general = Lua.tr(_s.general);
