@@ -37,6 +37,7 @@ extension.customPages = {
   {
     name = "Ban List",
     iconUrl = "http://175.178.66.93/symbolic/mimetypes/x-office-document-symbolic.svg",
+    popup = true,
     qml = {
       uri = "Fk.Pages.Common",
       name = "GeneralPoolOverview",

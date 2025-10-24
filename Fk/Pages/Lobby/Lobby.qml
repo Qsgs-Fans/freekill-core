@@ -311,10 +311,21 @@ W.PageBase {
 
                 onClicked: {
                   morePagesDrawer.close();
-                  if (qml.uri && qml.name) {
-                    App.enterNewPage(qml.uri, qml.name);
+                  if (!popup) {
+                    if (qml.uri && qml.name) {
+                      App.enterNewPage(qml.uri, qml.name);
+                    } else {
+                      App.enterNewPage(Cpp.path + "/" + qml.url);
+                    }
                   } else {
-                    App.enterNewPage(Cpp.path + "/" + qml.url);
+                    let comp;
+                    if (qml.uri && qml.name) {
+                      comp = Qt.createComponent(qml.uri, qml.name);
+                    } else {
+                      comp = Qt.createComponent(Cpp.path + "/" + qml.url);
+                    }
+                    lobby_drawer.sourceComponent = comp;
+                    lobby_drawer.open();
                   }
                 }
               }

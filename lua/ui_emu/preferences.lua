@@ -163,6 +163,7 @@ end
 ---@class W.PageButtonSpec
 ---@field name string
 ---@field iconUrl string
+---@field popup boolean?
 ---@field qml QmlComponent
 
 return W
