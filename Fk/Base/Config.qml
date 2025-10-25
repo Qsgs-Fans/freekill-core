@@ -16,6 +16,7 @@ QtObject {
   property real winScale
   property var conf: ({})
   property string lastLoginServer
+  property list<string> preferredButtons: []
   //property var savedPassword: ({})
   property var favoriteServers: []
   property string lobbyBg
@@ -129,6 +130,7 @@ QtObject {
     winWidth = conf.winWidth || 960;
     winHeight = conf.winHeight || 540;
     lastLoginServer = conf.lastLoginServer ?? "127.0.0.1";
+    preferredButtons = conf.preferredButtons ?? ["Generals Overview", "Cards Overview", "Modes Overview", "Replay"];
     //savedPassword = conf.savedPassword ?? {};
     favoriteServers = conf.favoriteServers ?? [];
     lobbyBg = conf.lobbyBg ?? Cpp.path + "/image/background";
@@ -194,6 +196,7 @@ QtObject {
     conf.winWidth = winWidth;
     conf.winHeight = winHeight;
     conf.lastLoginServer = lastLoginServer;
+    conf.preferredButtons = preferredButtons;
     //conf.savedPassword = savedPassword;
     conf.favoriteServers = favoriteServers;
     conf.lobbyBg = lobbyBg;

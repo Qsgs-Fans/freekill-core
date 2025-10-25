@@ -195,18 +195,33 @@ W.PageBase {
     }
 
     Item { Layout.fillWidth: true }
-    // Button {
-    //   text: Lua.tr("Generals Overview")
-    //   onClicked: {
-    //     App.enterNewPage("Fk.Pages.Common", "GeneralsOverview");
-    //   }
-    // }
-    // Button {
-    //   text: Lua.tr("Cards Overview")
-    //   onClicked: {
-    //     App.enterNewPage("Fk.Pages.Common", "CardsOverview");
-    //   }
-    // }
+
+    Repeater {
+      model: ListModel{
+        id: preferredButtonsModel
+      }
+      delegate: W.ButtonContent {
+        text: Lua.tr(name)
+        font.bold: true
+        icon.source: iconUrl
+
+        onClicked: root.handleClickButton(model)
+      }
+    }
+
+    /*
+    Button {
+      text: Lua.tr("Generals Overview")
+      onClicked: {
+        App.enterNewPage("Fk.Pages.Common", "GeneralsOverview");
+      }
+    }
+    Button {
+      text: Lua.tr("Cards Overview")
+      onClicked: {
+        App.enterNewPage("Fk.Pages.Common", "CardsOverview");
+      }
+    }
     Button {
       text: Lua.tr("Modes Overview")
       onClicked: {
@@ -219,8 +234,11 @@ W.PageBase {
         App.enterNewPage("Fk.Pages.Replay", "Replay");
       }
     }
-    Button {
+    */
+    W.ButtonContent {
       text: "更多..."
+      font.bold: true
+      icon.source: "http://175.178.66.93/symbolic/categories/emoji-symbols-symbolic.svg"
       onClicked: {
         morePagesDrawer.open();
       }
@@ -246,86 +264,123 @@ W.PageBase {
 
     Item {
       // 经典Popup要套壳个Item 烂QML
+      id: moreManager
+      property bool isManageMode: false
+
       width: parent.width / Config.winScale
       height: parent.height / Config.winScale
       scale: Config.winScale
       anchors.centerIn: parent
 
-      ListView {
-        id: morePagesListView
-        height: parent.height
-        width: parent.width * 0.8 - 40 - 40
+      ColumnLayout {
+        height: parent.height - 20
+        width: parent.width * 0.8 - 80//- 40 - 40
         anchors.right: parent.right
         anchors.rightMargin: 40
 
-        spacing: 16
+        ListView {
+          id: morePagesListView
+          Layout.fillWidth: true
+          Layout.fillHeight: true
+          clip: true
 
-        model: ListModel {
-          id: morePagesModel
-        }
+          spacing: 16
 
-        delegate: ColumnLayout {
-          id: morePagesItem
-          width: morePagesListView.width
-
-          Text {
-            text: Lua.tr(pkname)
-            font.pixelSize: 18
-            // font.bold: true
-            textFormat: Text.RichText
-            wrapMode: Text.WrapAnywhere
-            Layout.fillWidth: true
+          model: ListModel {
+            id: morePagesModel
           }
 
-          Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 2
-            color: "black"
-            gradient: Gradient {
-              orientation: Gradient.Horizontal
-              GradientStop { position: 0.4; color: "black" }
-              GradientStop { position: 0.6; color: "transparent" }
+          delegate: ColumnLayout {
+            id: morePagesItem
+            width: morePagesListView.width
+
+            Text {
+              text: Lua.tr(pkname)
+              font.pixelSize: 18
+              // font.bold: true
+              textFormat: Text.RichText
+              wrapMode: Text.WrapAnywhere
+              Layout.fillWidth: true
             }
-          }
 
-          Item {
-            Layout.preferredHeight: 4
-          }
+            Rectangle {
+              Layout.fillWidth: true
+              Layout.preferredHeight: 2
+              color: "black"
+              gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0.4; color: "black" }
+                GradientStop { position: 0.6; color: "transparent" }
+              }
+            }
 
-          Grid {
-            rowSpacing: 4
-            columnSpacing: 4
-            columns: 3
+            Item {
+              Layout.preferredHeight: 4
+            }
 
-            Repeater {
-              model: pages
-              delegate: W.ButtonContent {
-                text: Lua.tr(name)
-                font.bold: true
-                icon.source: iconUrl
-                width: morePagesItem.width / 3 - 4
+            Grid {
+              rowSpacing: 4
+              columnSpacing: 4
+              columns: 3
 
-                onClicked: {
-                  morePagesDrawer.close();
-                  if (!popup) {
-                    if (qml.uri && qml.name) {
-                      App.enterNewPage(qml.uri, qml.name);
+              Repeater {
+                model: pages
+                delegate: W.ButtonContent {
+                  text: Lua.tr(name)
+                  font.bold: true
+                  icon.source: iconUrl
+                  width: morePagesItem.width / 3 - 4
+
+                  onClicked: {
+                    if (moreManager.isManageMode) {
+                      const idx = Config.preferredButtons.indexOf(name);
+                      if (idx !== -1) {
+                        Config.preferredButtons.splice(idx, 1);
+                      } else {
+                        Config.preferredButtons.unshift(name);
+                      }
+                      Config.saveConf();
+                      root.rearrangePreferred();
                     } else {
-                      App.enterNewPage(Cpp.path + "/" + qml.url);
+                      morePagesDrawer.close();
+                      root.handleClickButton(model);
                     }
-                  } else {
-                    let comp;
-                    if (qml.uri && qml.name) {
-                      comp = Qt.createComponent(qml.uri, qml.name);
-                    } else {
-                      comp = Qt.createComponent(Cpp.path + "/" + qml.url);
-                    }
-                    lobby_drawer.sourceComponent = comp;
-                    lobby_drawer.open();
+                  }
+
+                  Binding on backgroundColor {
+                    value: "gold";
+                    when: moreManager.isManageMode && Config.preferredButtons.indexOf(name) !== -1;
+                    restoreMode: Binding.RestoreValue
                   }
                 }
               }
             }
+          }
+        }
+
+        Rectangle {
+          Layout.fillWidth: true
+          Layout.preferredHeight: 2
+          color: "black"
+          gradient: Gradient {
+            orientation: Gradient.Horizontal
+            GradientStop { position: 0.4; color: "transparent" }
+            GradientStop { position: 0.6; color: "black" }
+          }
+        }
+
+        Item {
+          Layout.preferredHeight: 4
+        }
+
+        W.ButtonContent {
+          Layout.alignment: Qt.AlignRight
+          Layout.preferredWidth: parent.width / 3 - 4
+          text: moreManager.isManageMode ? "完成修改" : "添加到下方"
+          font.bold: true
+          icon.source: "http://175.178.66.93/symbolic/places/user-bookmarks-symbolic.svg"
+          onClicked: {
+            moreManager.isManageMode = !moreManager.isManageMode;
           }
         }
       }
@@ -437,6 +492,44 @@ W.PageBase {
     App.setBusy(false);
   }
 
+  function handleClickButton(data) {
+    const { popup, qml } = data;
+    if (!popup) {
+      if (qml.uri && qml.name) {
+        App.enterNewPage(qml.uri, qml.name);
+      } else {
+        App.enterNewPage(Cpp.path + "/" + qml.url);
+      }
+    } else {
+      let comp;
+      if (qml.uri && qml.name) {
+        comp = Qt.createComponent(qml.uri, qml.name);
+      } else {
+        comp = Qt.createComponent(Cpp.path + "/" + qml.url);
+      }
+      lobby_drawer.sourceComponent = comp;
+      lobby_drawer.open();
+    }
+  }
+
+  function rearrangePreferred(){
+    const preferredOrder = [];
+    preferredButtonsModel.clear();
+    for (let i = 0; i < morePagesModel.count; i++) {
+      const v = morePagesModel.get(i);
+      for (let j = 0; j < v.pages.count; j++) {
+        const vp = v.pages.get(j);
+        const vi = Config.preferredButtons.indexOf(vp.name)
+        if (vi !== -1) {
+          preferredOrder[vi] = vp;
+        }
+      }
+    }
+    for (const vp of preferredOrder) {
+      preferredButtonsModel.append(vp);
+    }
+  }
+
   Component.onCompleted: {
     addCallback(Command.UpdateRoomList, updateRoomList);
     addCallback(Command.UpdatePlayerNum, updatePlayerNum);
@@ -459,6 +552,24 @@ W.PageBase {
     customPagesSpecs.unshift({
       name: "default",
       pages: [
+        {
+          name: "Modes Overview",
+          iconUrl: "http://175.178.66.93/symbolic/categories/applications-games-symbolic.svg",
+          popup: true,
+          qml: {
+            uri: "Fk.Pages.Common",
+            name: "ModesOverview",
+          }
+        },
+        {
+          name: "Replay",
+          iconUrl: "http://175.178.66.93/symbolic/categories/emoji-recent-symbolic.svg",
+          popup: true,
+          qml: {
+            uri: "Fk.Pages.Replay",
+            name: "Replay",
+          }
+        },
         {
           name: "Settings",
           iconUrl: "http://175.178.66.93/symbolic/categories/applications-system-symbolic.svg",
@@ -485,6 +596,23 @@ W.PageBase {
         pages: v.pages,
       });
     }
+    // const preferredOrder = [];
+    // for (const v of customPagesSpecs) {
+    //   morePagesModel.append({
+    //     pkname: v.name,
+    //     pages: v.pages,
+    //   });
+    //   for (const vp of v.pages) {
+    //     const vi = Config.preferredButtons.indexOf(vp.name)
+    //     if (vi !== -1) {
+    //       preferredOrder[vi] = vp;
+    //     }
+    //   }
+    // }
+    // for (const vp of preferredOrder) {
+    //   preferredButtonsModel.append(vp);
+    // }
+    rearrangePreferred();
 
     Db.tryInitModeSettings();
     App.showToast(Lua.tr("$WelcomeToLobby"));
