@@ -338,6 +338,9 @@ W.PageBase {
                         Config.preferredButtons.splice(idx, 1);
                       } else {
                         Config.preferredButtons.unshift(name);
+                        if (Config.preferredButtons.length > 5) {
+                          Config.preferredButtons.pop();
+                        }
                       }
                       Config.saveConf();
                       root.rearrangePreferred();
