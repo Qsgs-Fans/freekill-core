@@ -555,7 +555,6 @@ W.PageBase {
         {
           name: "Modes Overview",
           iconUrl: "http://175.178.66.93/symbolic/categories/applications-games-symbolic.svg",
-          popup: true,
           qml: {
             uri: "Fk.Pages.Common",
             name: "ModesOverview",
@@ -564,7 +563,6 @@ W.PageBase {
         {
           name: "Replay",
           iconUrl: "http://175.178.66.93/symbolic/categories/emoji-recent-symbolic.svg",
-          popup: true,
           qml: {
             uri: "Fk.Pages.Replay",
             name: "Replay",
