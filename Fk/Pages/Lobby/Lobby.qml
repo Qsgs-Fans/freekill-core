@@ -177,7 +177,7 @@ W.PageBase {
     width: parent.width
 
     Rectangle {
-      Layout.fillHeight: true
+      Layout.preferredHeight: 54
       Layout.preferredWidth: childrenRect.width + 72
 
       gradient: Gradient {
@@ -197,45 +197,23 @@ W.PageBase {
     Item { Layout.fillWidth: true }
 
     Repeater {
-      model: ListModel{
+      Layout.alignment: Qt.AlignVCenter
+      model: ListModel {
         id: preferredButtonsModel
       }
       delegate: W.ButtonContent {
         text: Lua.tr(name)
         font.bold: true
         icon.source: iconUrl
+        plainButton: false
 
         onClicked: root.handleClickButton(model)
       }
     }
 
-    /*
-    Button {
-      text: Lua.tr("Generals Overview")
-      onClicked: {
-        App.enterNewPage("Fk.Pages.Common", "GeneralsOverview");
-      }
-    }
-    Button {
-      text: Lua.tr("Cards Overview")
-      onClicked: {
-        App.enterNewPage("Fk.Pages.Common", "CardsOverview");
-      }
-    }
-    Button {
-      text: Lua.tr("Modes Overview")
-      onClicked: {
-        App.enterNewPage("Fk.Pages.Common", "ModesOverview");
-      }
-    }
-    Button {
-      text: Lua.tr("Replay")
-      onClicked: {
-        App.enterNewPage("Fk.Pages.Replay", "Replay");
-      }
-    }
-    */
     W.ButtonContent {
+      Layout.alignment: Qt.AlignVCenter
+      plainButton: false
       text: "更多..."
       font.bold: true
       icon.source: "http://175.178.66.93/symbolic/categories/emoji-symbols-symbolic.svg"
@@ -243,6 +221,8 @@ W.PageBase {
         morePagesDrawer.open();
       }
     }
+
+    Item { Layout.preferredWidth: 2 }
   }
 
   Drawer {
@@ -319,9 +299,10 @@ W.PageBase {
             }
 
             Grid {
-              rowSpacing: 4
-              columnSpacing: 4
+              rowSpacing: 8
+              columnSpacing: 8
               columns: 3
+              Layout.leftMargin: 2
 
               Repeater {
                 model: pages
@@ -329,7 +310,8 @@ W.PageBase {
                   text: Lua.tr(name)
                   font.bold: true
                   icon.source: iconUrl
-                  width: morePagesItem.width / 3 - 4
+                  width: morePagesItem.width / 3 - 8
+                  plainButton: false
 
                   onClicked: {
                     if (moreManager.isManageMode) {
@@ -350,11 +332,15 @@ W.PageBase {
                     }
                   }
 
-                  Binding on backgroundColor {
-                    value: "gold";
-                    when: moreManager.isManageMode && Config.preferredButtons.indexOf(name) !== -1;
-                    restoreMode: Binding.RestoreValue
+                  backgroundColor: {
+                    if (moreManager.isManageMode && Config.preferredButtons.includes(name)) {
+                      return "gold";
+                    }
+                    return "#E6E6E7";
                   }
+
+                  Behavior on backgroundColor {
+                    ColorAnimation { duration: 200 } }
                 }
               }
             }
@@ -382,6 +368,7 @@ W.PageBase {
           text: moreManager.isManageMode ? "完成修改" : "添加到下方"
           font.bold: true
           icon.source: "http://175.178.66.93/symbolic/places/user-bookmarks-symbolic.svg"
+          plainButton: false
           onClicked: {
             moreManager.isManageMode = !moreManager.isManageMode;
           }
