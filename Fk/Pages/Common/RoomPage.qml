@@ -235,7 +235,7 @@ Item {
       id: generalButton
       plainButton: false
       text: Lua.tr("Generals Overview")
-      icon.source: "http://175.178.66.93/symbolic/mimetypes/inode-directory-symbolic.svg"
+      icon.source: "http://175.178.66.93/symbolic/lunarltk/jiang.png"
       font.bold: true
       Layout.fillWidth: true
       onClicked: {
@@ -249,7 +249,7 @@ Item {
       id: cardslButton
       plainButton: false
       text: Lua.tr("Cards Overview")
-      icon.source: "http://175.178.66.93/symbolic/mimetypes/inode-directory-symbolic.svg"
+      icon.source: "http://175.178.66.93/symbolic/lunarltk/cards.svg"
       font.bold: true
       Layout.fillWidth: true
       onClicked: {

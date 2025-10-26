@@ -20,7 +20,7 @@ extension:loadSkillSkels(require(prefix .. "standard.aux_skills_dir"))
 extension.customPages = {
   {
     name = "Generals Overview",
-    iconUrl = "http://175.178.66.93/symbolic/mimetypes/inode-directory-symbolic.svg",
+    iconUrl = "http://175.178.66.93/symbolic/lunarltk/jiang.png",
     qml = {
       uri = "Fk.Pages.Common",
       name = "GeneralsOverview",
@@ -28,7 +28,7 @@ extension.customPages = {
   },
   {
     name = "Cards Overview",
-    iconUrl = "http://175.178.66.93/symbolic/mimetypes/inode-directory-symbolic.svg",
+    iconUrl = "http://175.178.66.93/symbolic/lunarltk/cards.svg",
     qml = {
       uri = "Fk.Pages.Common",
       name = "CardsOverview",
