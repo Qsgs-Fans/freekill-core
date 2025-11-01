@@ -106,9 +106,9 @@ end
 ---@param player ServerPlayer @ 使用者
 ---@param skillData SkillUseData @ 技能使用数据
 ---@param extra_data? UseExtraData|table @ 额外数据
----@return table|CostData @ cost_data，其中的from/cards/tos会同步到skillData上。
+---@return CostData|table? @ cost_data，默认为空表，其中的from/cards/tos/extra_data会同步到skillData上。
 function UsableSkill:onCost(player, skillData, extra_data)
-  return {}
+  return nil
 end
 
 -- 处理技能的发动信息（仅限服务端）
@@ -118,7 +118,7 @@ end
 ---@return SkillUseData @ 技能发动数据
 function UsableSkill:handleCostData(player, use_spec, extra_data)
   local use_data = SkillUseData:new(use_spec)
-  use_data.cost_data = self:onCost(player, use_spec, extra_data)
+  use_data.cost_data = self:onCost(player, use_spec, extra_data) or {}
   if use_data.cost_data.from then
     use_data.from = use_data.cost_data.from
   end
@@ -139,6 +139,9 @@ function UsableSkill:handleCostData(player, use_spec, extra_data)
     if type(branch) == "string" then
       use_data.cost_data.history_branch = branch
     end
+  end
+  if use_data.cost_data.extra_data then
+    use_data.extra_data = use_data.cost_data.extra_data
   end
   return use_data
 end
