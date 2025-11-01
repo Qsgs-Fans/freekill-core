@@ -189,13 +189,8 @@ W.PageBase {
 
       onClicked: {
         if (root.needRestart) {
-          if (Backend.clearComponentCache) {
-            App.quitPage();
-            Backend.clearComponentCache();
-          } else {
-            Config.saveConf();
-            Qt.quit();
-          }
+          Config.saveConf();
+          Qt.quit();
         } else {
           App.quitPage();
         }
