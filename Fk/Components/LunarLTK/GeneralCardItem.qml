@@ -78,8 +78,26 @@ Game.BasicCard {
         width: childrenRect.width
         height: childrenRect.height
         Image {
+          id: mainMagatama
           source: SkinBank.getGeneralCardDir(root.kingdom) + root.kingdom + "-magatama"
+          visible: !root.subkingdom
         }
+        LinearGradient {
+          id: mainMagatamaMask
+          visible: false
+          anchors.fill: mainMagatama
+          gradient: Gradient {
+            GradientStop { position: 0.2; color: "white" }
+            GradientStop { position: 0.8; color: "transparent" }
+          }
+        }
+        OpacityMask {
+          anchors.fill: mainMagatama
+          source: mainMagatama
+          maskSource: mainMagatamaMask
+          visible: !!root.subkingdom
+        }
+
         Image {
           id: subkingdomMagatama
           visible: false
@@ -91,8 +109,8 @@ Game.BasicCard {
           visible: false
           anchors.fill: subkingdomMagatama
           gradient: Gradient {
-            GradientStop { position: 0.35; color: "transparent" }
-            GradientStop { position: 0.50; color: "white" }
+            GradientStop { position: 0.2; color: "transparent" }
+            GradientStop { position: 0.8; color: "white" }
           }
         }
         OpacityMask {
