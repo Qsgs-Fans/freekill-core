@@ -15,7 +15,7 @@ W.PageBase {
 
   property bool isAllReady: false
   property bool canAddRobot: false
-
+  property bool canChangeRoom: false
   property bool isOwner: false
   property bool isFull: false
   property bool isReady: false
@@ -129,6 +129,14 @@ W.PageBase {
 
   ListModel {
     id: photoModel
+  }
+
+  W.PopupLoader {
+    id: room_drawer
+    padding: 0
+    width: Config.winWidth * 0.80
+    height: Config.winHeight * 0.95
+    anchors.centerIn: parent
   }
 
   GridLayout {
@@ -282,6 +290,19 @@ W.PageBase {
     anchors.right: parent.right
     anchors.bottom: parent.bottom
     anchors.margins: 40
+
+    W.ButtonContent{
+      visible: isOwner && canChangeRoom
+      text: Lua.tr("Change Room Config")
+      onClicked: {
+        room_drawer.sourceComponent =
+          Qt.createComponent("../Lobby/CreateRoom.qml");
+        room_drawer.item.isChangeRoom = true;
+        room_drawer.open();
+        Config.observing = false;
+        Config.replaying = false;
+      }
+    }
 
     W.ButtonContent {
       text: Lua.tr("Chat")
@@ -569,7 +590,7 @@ W.PageBase {
 
     App.showToast(Lua.tr("$EnterRoom"));
     playerNum = Config.roomCapacity;
-
+    canChangeRoom = Config.serverEnableChangeRoom;
     resetPhotos();
   }
 }

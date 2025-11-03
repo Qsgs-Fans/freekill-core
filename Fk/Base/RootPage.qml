@@ -209,10 +209,11 @@ W.PageBase {
   }
 
   function setServerSettings(sender, data) {
-    const [ motd, hiddenPacks, enableBots ] = data;
+    const [ motd, hiddenPacks, enableBots, enableChangeRoom ] = data;
     Config.serverMotd = motd;
     Config.serverHiddenPacks = hiddenPacks;
     Config.serverEnableBot = enableBots;
+    Config.serverEnableChangeRoom = enableChangeRoom;
   }
 
   function setBusy(sender, data) {

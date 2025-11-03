@@ -10,7 +10,7 @@ import Fk.Widgets as W
 Item {
   id: root
   anchors.fill: parent
-
+  property bool isChangeRoom: false
   signal finish()
 
   W.SideBarSwitcher {
@@ -128,9 +128,9 @@ Item {
           const boardgameConf = Db.getModeSettings(boardgameName);
           const gameModeConf = Db.getModeSettings(boardgameName + ":" + gameMode);
 
-          ClientInstance.notifyServer(
-            "CreateRoom",
-            [
+          if (root.isChangeRoom) {
+            App.quitPage();
+            ClientInstance.notifyServer("ChangeRoom",  [
               roomGeneralSettings.roomName, roomGeneralSettings.playerNum,
               Config.preferredTimeout, {
                 gameMode,
@@ -142,8 +142,24 @@ Item {
                 disabledPack: boardgameName === "lunarltk" ? disabledPack : [],
                 disabledGenerals: boardgameName === "lunarltk" ? disabledGenerals : [],
               }
-            ]
-          );
+            ]);
+            App.setBusy(false);
+
+          } else {
+            ClientInstance.notifyServer("CreateRoom",[
+              roomGeneralSettings.roomName, roomGeneralSettings.playerNum,
+              Config.preferredTimeout, {
+                gameMode,
+                roomName: roomGeneralSettings.roomName,
+                password: roomGeneralSettings.roomPassword,
+                _game: boardgameConf,
+                _mode: gameModeConf,
+                // FIXME 暂且拿他俩没办法
+                disabledPack: boardgameName === "lunarltk" ? disabledPack : [],
+                disabledGenerals: boardgameName === "lunarltk" ? disabledGenerals : [],
+              }
+              ]);
+          }
         }
       }
 

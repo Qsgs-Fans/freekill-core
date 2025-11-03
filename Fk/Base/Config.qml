@@ -68,6 +68,7 @@ QtObject {
   property string serverMotd: ""
   property list<string> serverHiddenPacks: []
   property bool serverEnableBot: true
+  property bool serverEnableChangeRoom: false
   property string headerName: ""
   property int roomCapacity: 0
   property int roomTimeout: 0
