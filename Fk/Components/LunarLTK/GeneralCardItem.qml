@@ -198,29 +198,16 @@ Game.BasicCard {
   Text {
     width: 20
     height: 80
-    x: 2
-    y: lineCount > 6 ? 30 : 34
+    x: 3
+    y: lineCount > 4 ? 30 : 34
     text: name !== "" ? Lua.tr(name) : "nil"
-    visible: Lua.tr(name).replace(/<\/?[^>]+(>|$)/g, "").length <= 6 && detailed && known
+    visible: detailed && known
     color: "white"
-    font.family: Config.libianName
+    font.family: "LiSu"
     font.pixelSize: 18
-    lineHeight: Math.max(1.4 - lineCount / 8, 0.6)
+    lineHeight: Math.max(1.4 - lineCount / 8, 0.8)
     style: Text.Outline
     wrapMode: Text.WrapAnywhere
-  }
-
-  Text {
-    x: 0
-    y: 12
-    rotation: 90
-    transformOrigin: Item.BottomLeft
-    text: Lua.tr(name)
-    visible: Lua.tr(name).replace(/<\/?[^>]+(>|$)/g, "").length > 6 && detailed && known
-    color: "white"
-    font.family: Config.libianName
-    font.pixelSize: 18
-    style: Text.Outline
   }
 
   Rectangle {
