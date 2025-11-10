@@ -87,7 +87,7 @@ W.PageBase {
         font.pixelSize: 16
         width: parent.width
         wrapMode: TextEdit.WordWrap
-        Component.onCompleted: {
+        function refresh() {
           const data = Lua.call("GetRoomConfig");
           let cardpack = Lua.call("GetAllCardPack");
           cardpack = cardpack.filter(p => !data.disabledPack.includes(p));
@@ -123,6 +123,8 @@ W.PageBase {
 
           text = retText;
         }
+
+        Component.onCompleted: refresh();
       }
     }
   }
@@ -341,7 +343,7 @@ W.PageBase {
       W.ButtonContent {
         text: Lua.tr("Add Robot")
         visible: isOwner && !isFull
-        enabled: Config.serverEnableBot && canAddRobot
+        enabled: Config.serverFeatures.includes("AddRobot") && canAddRobot
         onClicked: {
           Cpp.notifyServer("AddRobot", "");
         }
@@ -391,7 +393,7 @@ W.PageBase {
   }
 
   function checkCanAddRobot() {
-    if (Config.serverEnableBot) {
+    if (Config.serverFeatures.includes("AddRobot")) {
       const num = Lua.call("GetCompNum");
       canAddRobot = num.maxComp > num.curComp;
     }
@@ -559,6 +561,8 @@ W.PageBase {
       model.win = d.win;
       model.run = d.run;
     }
+
+    checkAllReady();
   }
 
   function startGame() {
@@ -577,6 +581,34 @@ W.PageBase {
     App.changeRoomPage(data);
   }
 
+  function changeRoomConfig(_, data) {
+    App.setBusy(false);
+
+    Config.roomCapacity = data[0];
+    Config.roomTimeout = data[1] - 1;
+    const roomSettings = data[2];
+    Config.heg = roomSettings.gameMode.includes('heg_mode');
+
+    let displayName = roomSettings.roomName;
+    if (roomSettings.roomId !== undefined) {
+      displayName += "[{id}]".replace("{id}", roomSettings.roomId);
+    }
+    Config.headerName = Lua.tr("Current room: %1").arg(displayName);
+
+    playerNum = Config.roomCapacity;
+    for (let i = 0; i < 10; i++) {
+      photoModel.get(i).sealed = i >= playerNum;
+    }
+    roominfo.refresh();
+
+    checkAllReady();
+    if (getPhoto(-1)) {
+      isFull = false;
+    } else {
+      isFull = true;
+    }
+  }
+
   Component.onCompleted: {
     addCallback(Command.UpdateGameData, updateGameData);
     addCallback(Command.RoomOwner, setRoomOwner);
@@ -588,9 +620,11 @@ W.PageBase {
     addCallback(Command.StartGame, startGame);
     addCallback(Command.BackToRoom, loadPlayerData);
 
+    addCallback(Command.ChangeRoom, changeRoomConfig);
+
     App.showToast(Lua.tr("$EnterRoom"));
     playerNum = Config.roomCapacity;
-    canChangeRoom = Config.serverEnableChangeRoom;
+    canChangeRoom = Config.serverFeatures.includes("ChangeRoom");
     resetPhotos();
   }
 }

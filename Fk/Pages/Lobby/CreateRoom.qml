@@ -128,38 +128,19 @@ Item {
           const boardgameConf = Db.getModeSettings(boardgameName);
           const gameModeConf = Db.getModeSettings(boardgameName + ":" + gameMode);
 
-          if (root.isChangeRoom) {
-            App.quitPage();
-            ClientInstance.notifyServer("ChangeRoom",  [
-              roomGeneralSettings.roomName, roomGeneralSettings.playerNum,
-              Config.preferredTimeout, {
-                gameMode,
-                roomName: roomGeneralSettings.roomName,
-                password: roomGeneralSettings.roomPassword,
-                _game: boardgameConf,
-                _mode: gameModeConf,
-                // FIXME 暂且拿他俩没办法
-                disabledPack: boardgameName === "lunarltk" ? disabledPack : [],
-                disabledGenerals: boardgameName === "lunarltk" ? disabledGenerals : [],
-              }
-            ]);
-            App.setBusy(false);
-
-          } else {
-            ClientInstance.notifyServer("CreateRoom",[
-              roomGeneralSettings.roomName, roomGeneralSettings.playerNum,
-              Config.preferredTimeout, {
-                gameMode,
-                roomName: roomGeneralSettings.roomName,
-                password: roomGeneralSettings.roomPassword,
-                _game: boardgameConf,
-                _mode: gameModeConf,
-                // FIXME 暂且拿他俩没办法
-                disabledPack: boardgameName === "lunarltk" ? disabledPack : [],
-                disabledGenerals: boardgameName === "lunarltk" ? disabledGenerals : [],
-              }
-              ]);
-          }
+          ClientInstance.notifyServer(root.isChangeRoom ? "ChangeRoom" : "CreateRoom", [
+            roomGeneralSettings.roomName, roomGeneralSettings.playerNum,
+            Config.preferredTimeout, {
+              gameMode,
+              roomName: roomGeneralSettings.roomName,
+              password: roomGeneralSettings.roomPassword,
+              _game: boardgameConf,
+              _mode: gameModeConf,
+              // FIXME 暂且拿他俩没办法
+              disabledPack: boardgameName === "lunarltk" ? disabledPack : [],
+              disabledGenerals: boardgameName === "lunarltk" ? disabledGenerals : [],
+            }
+          ]);
         }
       }
 

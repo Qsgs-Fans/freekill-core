@@ -469,8 +469,8 @@ W.PageBase {
     Config.roomCapacity = data[0];
     Config.roomTimeout = data[1] - 1;
     const roomSettings = data[2];
-    // Config.enableFreeAssign = roomSettings.enableFreeAssign;
     Config.heg = roomSettings.gameMode.includes('heg_mode');
+
     let displayName = roomSettings.roomName;
     if (roomSettings.roomId !== undefined) {
       displayName += "[{id}]".replace("{id}", roomSettings.roomId);

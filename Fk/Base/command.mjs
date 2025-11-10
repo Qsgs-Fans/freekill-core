@@ -45,6 +45,9 @@ export const IWantToSaveRecord = "IWantToSaveRecord";
 export const IWantToBookmarkRecord = "IWantToBookmarkRecord";
 export const IWantToChat = "IWantToChat";
 
+// WaitingRoom 等待房间
+export const ChangeRoom = "ChangeRoom";
+
 // Misc
 export const Chat = "Chat";
 
