@@ -214,8 +214,8 @@ W.PageBase {
     Config.serverHiddenPacks = hiddenPacks;
 
     // 历史问题：相当多版本的data[2]是布尔，表示是否允许BOT
-    if (typeof enabledFeatures === "boolean") {
-      const enableBots = enableBots;
+    if (typeof enabledFeatures !== "object") {
+      const enableBots = enabledFeatures;
       const features = [];
 
       if (enableBots) features.push("AddRobot");
@@ -223,7 +223,7 @@ W.PageBase {
 
       Config.serverFeatures = features;
 
-    } else if (typeof enabledFeatures === "object" && enabledFeatures instanceof Array) {
+    } else if (enabledFeatures instanceof Array) {
       Config.serverFeatures = enabledFeatures;
     }
   }
