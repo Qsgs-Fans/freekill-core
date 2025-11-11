@@ -203,8 +203,12 @@ function ClientBase:changeRoom(_data)
   self.recording = recording -- 重连/旁观的录像后面那段EnterRoom会触发该函数
   self.record = record
 
-  self.players = old_players
-  self.alive_players = old_players
+  local new_players = table.map(old_players, function(p)
+    return self.clientplayer_klass:new(p.player)
+  end)
+  self.players = new_players
+  self.alive_players = new_players
+  Self = self:getPlayerById(Self.id)
 
   self.enter_room_data = cbor.encode(_data);
 
