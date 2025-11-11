@@ -70,8 +70,10 @@ local callRpc = function(method, params)
       -- 和Json RPC spec不合的一集，我们可能收到预期之外的error
       -- 这可能是我io编程不达标导致的
       if packet[jsonrpc.key_id] == id then
-        -- id符合的话就爆error
-        error("RPC call error: " .. errmsg)
+        -- id符合的话就报warn然后结束本函数
+        fk.qWarning("RPC call error: " .. errmsg)
+
+        return
       else
         -- 对于这种id不合的error包扔了
         fk.qCritical("RPC call error, but id is not same: " .. errmsg)
