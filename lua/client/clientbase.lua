@@ -204,7 +204,10 @@ function ClientBase:changeRoom(_data)
   self.record = record
 
   local new_players = table.map(old_players, function(p)
-    return self.clientplayer_klass:new(p.player)
+    local pl = self.clientplayer_klass:new(p.player)
+    pl.owner = p.owner
+    pl.ready = p.ready
+    return pl
   end)
   self.players = new_players
   self.alive_players = new_players
