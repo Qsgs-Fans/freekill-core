@@ -195,6 +195,25 @@ function Player:getGeneralMaxHp()
   end
 end
 
+--- 设定某个tag的值。
+---@param tag_name string @ tag名字
+---@param value any @ 值
+function Player:setTag(tag_name, value)
+  self.tag[tag_name] = value
+end
+
+--- 获得某个tag的值。
+---@param tag_name string @ tag名字
+function Player:getTag(tag_name)
+  return self.tag[tag_name]
+end
+
+--- 删除某个tag。
+---@param tag_name string @ tag名字
+function Player:removeTag(tag_name)
+  self.tag[tag_name] = nil
+end
+
 --- 查询角色是否存在flag。
 ---@param flag string @ 一种标记
 ---@deprecated @ 用mark代替
@@ -480,8 +499,8 @@ function Player:getMaxCards()
   return math.max(baseValue, 0)
 end
 
---- 获取玩家攻击范围。
----@param excludeIds? integer[] @ 忽略的自己装备的id列表
+--- 获取角色攻击范围。
+---@param excludeIds? integer[] @ 忽略的存活角色装备的id列表 --忽略的自己装备的id列表
 ---@param excludeSkills? string[] @ 忽略的技能名列表
 ---@return integer
 function Player:getAttackRange(excludeIds, excludeSkills)
@@ -494,6 +513,29 @@ function Player:getAttackRange(excludeIds, excludeSkills)
       return weapon:AvailableAttackRange(self)
     end
   end)
+
+  local excludeTable, final = {}, nil
+  if excludeIds then
+    for _, id in ipairs(excludeIds) do
+      local Owner = Fk:currentRoom():getCardOwner(id)
+      if Owner then
+        local equip = Owner:getVirtualEquip(id) --[[@as EquipCard]] --local equip = self:getVirtualEquip(id)
+        if (equip == nil) and table.contains(Owner:getCardIds("e"), id) and (Fk:getCardById(id).type == Card.TypeEquip) then
+          equip = Fk:getCardById(id) --[[@as EquipCard]]
+        end
+        if equip and (equip.type == Card.TypeEquip) then --吴六剑来了
+          for _, skill in ipairs(equip:getEquipSkills(Owner)) do
+            excludeTable[Owner.id] = excludeTable[Owner.id] or {}
+            table.insert(excludeTable[Owner.id], skill.name) --Fk:currentRoom():invalidateSkill(SPlayer, skill.name, '', 'excludes')
+            local record = Owner:getTableMark(MarkEnum.InvalidSkills)
+            record[skill.name] = record[skill.name] or {}
+            table.insert(record[skill.name], 'excludes')
+            Owner:setMark(MarkEnum.InvalidSkills, record)
+          end
+        end
+      end
+    end
+  end
 
   local status_skills = Fk:currentRoom().status_skills[AttackRangeSkill] or Util.DummyTable ---@type AttackRangeSkill[]
   if #weapons > 0 then
@@ -511,26 +553,25 @@ function Player:getAttackRange(excludeIds, excludeSkills)
     end
   end
 
-  if excludeIds then
+  --[[if excludeIds then
     for _, id in ipairs(excludeIds) do
       local equip = self:getVirtualEquip(id) --[[@as EquipCard]]
-      if equip == nil and table.contains(self:getCardIds("e"), id) and Fk:getCardById(id).type == Card.TypeEquip then
+      --[[if equip == nil and table.contains(self:getCardIds("e"), id) and Fk:getCardById(id).type == Card.TypeEquip then
         equip = Fk:getCardById(id) --[[@as EquipCard]]
-      end
+      --[[end
       if equip and equip.type == Card.TypeEquip then
         for _, skill in ipairs(equip:getEquipSkills(self)) do
           table.insertIfNeed(excludeSkills, skill.name)
         end
       end
     end
-  end
+  end]]--
 
   local max_fixed, correct = nil, 0
   for _, skill in ipairs(status_skills) do
     if not table.contains(excludeSkills, skill.name) then
-      local final = skill:getFinal(self)
-      if final then -- 目前逻辑，发现一个终值马上返回
-        return math.max(0, final)
+      final = skill:getFinal(self)--local final = skill:getFinal(self)
+      if final then break --return math.max(0, final) --目前逻辑，发现一个终值马上返回
       end
       local f = skill:getFixed(self)
       if f ~= nil then
@@ -541,9 +582,24 @@ function Player:getAttackRange(excludeIds, excludeSkills)
     end
   end
 
+  for _, p in ipairs(Fk:currentRoom().players) do
+    if excludeTable[p.id] then
+      for _, name in ipairs(excludeTable[p.id]) do
+        local record = p:getTableMark(MarkEnum.InvalidSkills) --Fk:currentRoom():validateSkill(p, name, '', 'excludes')
+        record[name] = record[name] or {}
+        table.removeOne(record[name], 'excludes')
+        if #record[name] == 0 then record[name] = nil
+        end
+        p:setMark(MarkEnum.InvalidSkills, record)
+      end
+    end
+  end
+
+  if final then return math.max(0, final)
+  end
+
   return math.max(math.max(baseValue, (max_fixed or 0)) + correct, 0)
 end
-
 --- 获取角色是否被移除。
 ---@return boolean
 function Player:isRemoved()
@@ -557,56 +613,111 @@ function Player:isRemoved()
   end
 end
 
---- 获取玩家与其他角色的实际距离。
----
---- 通过 二者位次+距离技能之和 与 两者间固定距离 进行对比，更大的为实际距离。
+--- 获取本角色与特定角色距离效果终值与总修正值，未找到的项为0
+---@param to Player @ 特定角色
+---@param excludeIds? integer[] @ 忽略的存活角色装备的id列表，用于飞刀判定 --忽略的自己装备的id列表
+---@param excludeSkills? string[] @ 忽略的技能名列表
+---@param cardForUsing? Card @ 将会转化的牌
+---@return integer[] @ {距离效果终值（优先-1）, 距离修正值}
+function Player:distanceEffectTo(to, excludeIds, excludeSkills, cardForUsing)
+  assert(to:isInstanceOf(Player))
+  if to.id == self.id then return {0, 0}
+  elseif self:isRemoved() or to:isRemoved() then return {-1, 0}
+  end
+  excludeSkills = excludeSkills or {}
+  local excludeTable, ret, correct, status_skills = {}, 0, 0, Fk:currentRoom().status_skills[DistanceSkill] or Util.DummyTable ---@type DistanceSkill[]
+  if excludeIds then
+    for _, id in ipairs(excludeIds) do
+      local Owner = Fk:currentRoom():getCardOwner(id)
+      if Owner then
+        local equip = Owner:getVirtualEquip(id) --[[@as EquipCard]] --local equip = self:getVirtualEquip(id)
+        if (equip == nil) and table.contains(Owner:getCardIds("e"), id) and (Fk:getCardById(id).type == Card.TypeEquip) then
+          equip =Fk:getCardById(id) --[[@as EquipCard]]
+        end
+        if equip and (equip.type == Card.TypeEquip) then --吴六剑来了
+          for _, skill in ipairs(equip:getEquipSkills(Owner)) do
+            excludeTable[Owner.id] = excludeTable[Owner.id] or {}
+            table.insert(excludeTable[Owner.id], skill.name) --Fk:currentRoom():invalidateSkill(SPlayer, skill.name, '', 'excludes')
+            local record = Owner:getTableMark(MarkEnum.InvalidSkills)
+            record[skill.name] = record[skill.name] or {}
+            table.insert(record[skill.name], 'excludes')
+            Owner:setMark(MarkEnum.InvalidSkills, record) --即便这种失效导致某些角色失去特定状态类技能，后者的名称也不会从Fk:currentRoom().status_skills中被移除
+          end
+        end
+      end
+    end
+  end
+  for _, skill in ipairs(status_skills) do
+    if not table.contains(excludeSkills, skill.name) then
+      local fixed = skill:getFixed(self, to, cardForUsing)
+      ret = fixed and fixed or ret
+      if ret < 0 then break --优先考虑（仅）不计入距离的计算
+      end
+      correct = (correct + (skill:getCorrect(self, to, cardForUsing) or 0))
+    end
+  end
+  for _, p in ipairs(Fk:currentRoom().players) do
+    if excludeTable[p.id] then
+      for _, name in ipairs(excludeTable[p.id]) do
+        local record = p:getTableMark(MarkEnum.InvalidSkills) --Fk:currentRoom():validateSkill(p, name, '', 'excludes')
+        record[name] = record[name] or {}
+        table.removeOne(record[name], 'excludes')
+        if #record[name] == 0 then record[name] = nil
+        end
+        p:setMark(MarkEnum.InvalidSkills, record)
+      end
+    end
+  end
+  return{ret, correct}
+end
+
+--- 获取角色至某名角色的实际距离。优先考虑“至自己的距离始终为0”，再检测是否“不计入距离的计算”，然后搜索能决定距离终值的效果，最后将(初值+修正值)与1对比，更大的为实际距离。
+--- 原说明（通过 二者位次+距离技能之和 与 两者间固定距离 进行对比，更大的为实际距离。）不对
 ---
 --- 注意比较距离时使用```Player:compareDistance()```。
----@param other Player @ 其他玩家
+---@param other Player @ 某名角色 --其他玩家（用语随意，印发歧义）
 ---@param mode? string @ 计算模式(left/right/both)
----@param ignore_dead? boolean @ 是否忽略尸体
----@param excludeIds? integer[] @ 忽略的自己装备的id列表，用于飞刀判定
+---@param ignore_dead? boolean @ 是否忽略尸体（包括休整）
+---@param excludeIds? integer[] @ 忽略的存活角色装备的id列表，用于飞刀判定 --忽略的自己装备的id列表
 ---@param excludeSkills? string[] @ 忽略的技能名列表
 ---@param cardForUsing? Card @ 将会转化的牌
 function Player:distanceTo(other, mode, ignore_dead, excludeIds, excludeSkills, cardForUsing)
   assert(other:isInstanceOf(Player))
   mode = mode or "both"
   excludeSkills = excludeSkills or {}
-  if excludeIds then
-    for _, id in ipairs(excludeIds) do
-      local equip = self:getVirtualEquip(id) --[[@as EquipCard]]
-      if equip == nil and table.contains(self:getCardIds("e"), id) and Fk:getCardById(id).type == Card.TypeEquip then
-        equip = Fk:getCardById(id) --[[@as EquipCard]]
-      end
-      if equip and equip.type == Card.TypeEquip then
-        for _, skill in ipairs(equip:getEquipSkills(self)) do
-          table.insertIfNeed(excludeSkills, skill.name)
-        end
-      end
-    end
-  end
-  if other == self then return 0 end
+  if other.id == self.id then return 0 end --if other == self then return 0 end --方便“打通”SPlayr与Fk:getCardOwner(Card)等Player
   if not ignore_dead and other.dead then
     return -1
   end
-  if self:isRemoved() or other:isRemoved() then
-    return -1
+
+  local ret, DET = 0, self:distanceEffectTo(other, excludeIds, excludeSkills, cardForUsing)
+  if DET[1] ~= 0 then return DET[1] --至其他<…角色>的距离视为0？叉出去
   end
-  local right = 0
+
+  local right, left = 0, 0
   local temp = self
   local try_time = 10
   for _ = 0, try_time do
-    if temp == other then break end
-    if (ignore_dead or not temp.dead) and not temp:isRemoved() then
+    if temp.id == other.id then break end --if temp == other then --方便“打通”SPlayr与Fk:getCardOwner(Card)等Player
+    if (ignore_dead or not temp.dead) and (temp:distanceEffectTo(other, excludeIds, excludeSkills, cardForUsing)[1] > -1) then --and not temp:isRemoved()
       right = right + 1
     end
     temp = temp.next
   end
-  if temp ~= other then
+  if temp.id ~= other.id then --if temp ~= other then --方便“打通”SPlayr与Fk:getCardOwner(Card)等Player
     print("Distance malfunction: start and end does not match.")
   end
-  local left = #(ignore_dead and Fk:currentRoom().players or Fk:currentRoom().alive_players) - right - #table.filter(Fk:currentRoom().alive_players, function(p) return p:isRemoved() end)
-  local ret = 0
+  --local left = #(ignore_dead and Fk:currentRoom().players or Fk:currentRoom().alive_players) - right - #table.filter(Fk:currentRoom().alive_players, function(p) return p:isRemoved() end)
+  for _ = 0, try_time do
+    if temp.id == self.id then break end
+    if (ignore_dead or not temp.dead) and (temp:distanceEffectTo(self, excludeIds, excludeSkills, cardForUsing)[1] > -1) then left = (left + 1)
+    end
+    temp = temp.next
+  end
+  if temp.id ~= self.id then
+    print("Distance malfunction: start and end does not match.")
+  end
+  
   if mode == "left" then
     ret = left
   elseif mode == "right" then
@@ -615,20 +726,7 @@ function Player:distanceTo(other, mode, ignore_dead, excludeIds, excludeSkills, 
     ret = math.min(left, right)
   end
 
-  local status_skills = Fk:currentRoom().status_skills[DistanceSkill] or Util.DummyTable  ---@type DistanceSkill[]
-  for _, skill in ipairs(status_skills) do
-    if not table.contains(excludeSkills, skill.name) then
-      local fixed = skill:getFixed(self, other, cardForUsing)
-      local correct = skill:getCorrect(self, other, cardForUsing)
-      if fixed ~= nil then
-        ret = fixed
-        break
-      end
-      ret = ret + (correct or 0)
-    end
-  end
-
-  return math.max(ret, 1)
+  return math.max(ret + DET[2], 1) -- return math.max(ret, 1)
 end
 
 --- 比较距离（排除移出游戏（-1），故一般仅当<与<=时使用此函数有价值）
@@ -655,30 +753,98 @@ function Player:compareDistance(other, num, operator)
   return false
 end
 
---- 获取其他玩家是否在玩家的攻击范围内。
----@param other Player @ 其他玩家
+--- 获取角色是否为攻击范围最大的角色
+---@param excludeIds? integer[] @ 忽略的存活角色装备的id列表，用于飞刀判定
+---@param excludeSkills? string[] @ 忽略的技能名列表
+---@param ignoreRest? boolean @ 是否忽略休整（默认忽略）
+---@return boolean
+function Player:AtkRgMax(excludeIds, excludeSkills, ignoreRest)
+  if ignoreRest and (self.rest > 0) then return false
+  elseif self:getAttackRange(excludeIds, excludeSkills) > 911 then return true --攻击范围无限
+  else
+    local Ps, g, b, i = Fk:currentRoom().players, self:getAttackRange(excludeIds, excludeSkills), false, ignoreRest
+    for _, p in ipairs(Ps) do b = (b or ((p.id ~= self.id) and ((i and (p.rest > 0)) or p:isAlive()) and p:getAttackRange(excludeIds, excludeSkills) > g))
+    end
+    return not b
+  end
+end
+
+--- 获取角色是否为攻击范围最小的角色
+---@param excludeIds? integer[] @ 忽略的存活角色装备的id列表，用于飞刀判定
+---@param excludeSkills? string[] @ 忽略的技能名列表
+---@param ignoreRest? boolean @ 是否忽略休整（默认忽略）
+---@return boolean
+function Player:AtkRgMin(excludeIds, excludeSkills, ignoreRest)
+  if ignoreRest and (self.rest > 0) then return false
+  else
+    for _, p in ipairs(Fk:currentRoom().players) do
+      local s = ((p.id ~= self.id) and (p:getAttackRange(excludeIds, excludeSkills) < self:getAttackRange(excludeIds, excludeSkills)))
+      if ((ignoreRest and (p.rest > 0)) or p:isAlive()) and (p:getAttackRange(excludeIds, excludeSkills) < 911) and s then return false
+      end
+    end
+  end
+  return true
+end
+
+--- 获取角色是否攻击范围终值为全场唯一
+---@param excludeIds? integer[] @ 忽略的存活角色装备的id列表，用于飞刀判定
+---@param excludeSkills? string[] @ 忽略的技能名列表
+---@param ignoreRest? boolean @ 是否忽略休整（默认忽略）
+---@return boolean
+function Player:AtkRgUnique(excludeIds, excludeSkills, ignoreRest)
+  if ignoreRest and (self.rest > 0) then return false
+  else
+    local g, b = self:getAttackRange(excludeIds, excludeSkills), false
+    for _, p in ipairs(Fk:currentRoom().players) do
+      local s = (((p:getAttackRange(excludeIds, excludeSkills) > 911) and (g > 911)) or (p:getAttackRange(excludeIds, excludeSkills) == g))
+      b = (b or ((p.id ~= self.id) and ((ignoreRest and (p.rest > 0)) or p:isAlive()) and s))
+    end
+    return not b
+  end
+end
+
+--- 获取其他角色是否在角色的攻击范围内。
+---@param other Player @ 其他角色
 ---@param fixLimit? integer @ 卡牌距离限制增加专用
----@param excludeIds? integer[] @ 忽略的自己装备的id列表，用于飞刀判定
+---@param excludeIds? integer[] @ 忽略的存活角色装备的id列表，用于飞刀判定 --忽略的自己装备的id列表
 ---@param excludeSkills? string[] @ 忽略的技能名列表
 ---@param cardForUsing? Card @ 将会转化的牌
 ---@return boolean
 function Player:inMyAttackRange(other, fixLimit, excludeIds, excludeSkills, cardForUsing)
   assert(other:isInstanceOf(Player))
-  if self == other or (other and (other.dead or other:isRemoved())) or self:isRemoved() then
+  if (self.id == other.id) or (other and (other.dead or other:isRemoved())) or self:isRemoved() then --if self == other or --方便“打通”SPlayr与Player
     return false
   end
 
   fixLimit = fixLimit or 0
   excludeSkills = excludeSkills or {}
+  local excludeTable, Out, In = {}, false, false
   if excludeIds then
     for _, id in ipairs(excludeIds) do
-      local equip = self:getVirtualEquip(id) --[[@as EquipCard]]
-      if equip == nil and table.contains(self:getCardIds("e"), id) and Fk:getCardById(id).type == Card.TypeEquip then
+      --local equip = self:getVirtualEquip(id) --[[@as EquipCard]]
+      --[[if equip == nil and table.contains(self:getCardIds("e"), id) and Fk:getCardById(id).type == Card.TypeEquip then
         equip = Fk:getCardById(id) --[[@as EquipCard]]
-      end
+      --[[end
       if equip and equip.type == Card.TypeEquip then
         for _, skill in ipairs(equip:getEquipSkills(self)) do
           table.insertIfNeed(excludeSkills, skill.name)
+        end
+      end]]--
+      local Owner = Fk:currentRoom():getCardOwner(id)
+      if Owner then
+        local equip = Owner:getVirtualEquip(id) --[[@as EquipCard]] --local equip = self:getVirtualEquip(id)
+        if (equip == nil) and table.contains(Owner:getCardIds("e"), id) and (Fk:getCardById(id).type == Card.TypeEquip) then
+          equip = Fk:getCardById(id) --[[@as EquipCard]]
+        end
+        if equip and (equip.type == Card.TypeEquip) then --吴六剑来了
+          for _, skill in ipairs(equip:getEquipSkills(Owner)) do
+            excludeTable[Owner.id] = excludeTable[Owner.id] or {}
+            table.insert(excludeTable[Owner.id], skill.name) --Fk:currentRoom():invalidateSkill(SPlayer, skill.name, '', 'excludes')
+            local record = Owner:getTableMark(MarkEnum.InvalidSkills)
+            record[skill.name] = record[skill.name] or {}
+            table.insert(record[skill.name], 'excludes')
+            Owner:setMark(MarkEnum.InvalidSkills, record)
+          end
         end
       end
     end
@@ -686,18 +852,33 @@ function Player:inMyAttackRange(other, fixLimit, excludeIds, excludeSkills, card
 
   local status_skills = Fk:currentRoom().status_skills[AttackRangeSkill] or Util.DummyTable ---@type AttackRangeSkill[]
   for _, skill in ipairs(status_skills) do
-    if not table.contains(excludeSkills, skill.name) and skill:withoutAttackRange(self, other) then
-      return false
+    if not table.contains(excludeSkills, skill.name) and skill:withoutAttackRange(self, other) then Out = true --return false
     end
   end
   for _, skill in ipairs(status_skills) do
-    if not table.contains(excludeSkills, skill.name) and skill:withinAttackRange(self, other) then
-      return true
+    if not table.contains(excludeSkills, skill.name) and skill:withinAttackRange(self, other) then In = true --return true
     end
   end
 
+  for _, p in ipairs(Fk:currentRoom().players) do
+    if excludeTable[p.id] then
+      for _, name in ipairs(excludeTable[p.id]) do
+        local record = p:getTableMark(MarkEnum.InvalidSkills) --Fk:currentRoom():validateSkill(p, name, '', 'excludes')
+        record[name] = record[name] or {}
+        table.removeOne(record[name], 'excludes')
+        if #record[name] == 0 then record[name] = nil
+        end
+        p:setMark(MarkEnum.InvalidSkills, record)
+      end
+    end
+  end
+
+  if (self:distanceTo(other, nil, nil, excludeIds, excludeSkills, cardForUsing) < 0) or Out then return false
+  elseif In then return true
+  end
+
   local baseAttackRange = self:getAttackRange(excludeIds, excludeSkills)
-  return self:distanceTo(other, nil, nil, excludeIds, excludeSkills, cardForUsing) <= (baseAttackRange + fixLimit)
+  return (self:distanceTo(other, nil, nil, excludeIds, excludeSkills, cardForUsing) <= (baseAttackRange + fixLimit))
 end
 
 --- 获取下家。
@@ -1096,13 +1277,24 @@ end
 function Player:addSkill(skill, source_skill)
   skill = getActualSkill(skill)
 
+  local b = (self:getTag('SkillFirewallCNExclusions') and not table.contains(self:getTag('SkillFirewallCNExclusions'), Fk:translate(skill.name, "zh_CN")))
+  b = (b or (self:getTag('SkillFirewallExclusions') and not table.contains(self:getTag('SkillFirewallExclusions'), skill.name)))
+  b = (b or (self:getTag('SkillFirewallCN') and table.contains(self:getTag('SkillFirewallCN'), Fk:translate(skill.name, "zh_CN"))))
+  b = (b or (self:getTag('SkillFirewall') and table.contains(self:getTag('SkillFirewall'), skill.name)))
+  if b and skill.visible and not (skill.attached_equip or skill.name:endsWith("&")) then return {}
+  end
+  
   local toget = {table.unpack(skill.related_skills)}
   table.insert(toget, skill)
 
   local room = Fk:currentRoom()
   local ret = {}
   for _, s in ipairs(toget) do
-    if not self:hasSkill(s, true, true) then
+    local d = (self:getTag('SkillFirewallCNExclusions') and not table.contains(self:getTag('SkillFirewallCNExclusions'), Fk:translate(s.name, "zh_CN")))
+    d = (d or (self:getTag('SkillFirewallExclusions') and not table.contains(self:getTag('SkillFirewallExclusions'), s.name)))
+    d = (d or (self:getTag('SkillFirewallCN') and table.contains(self:getTag('SkillFirewallCN'), Fk:translate(s.name, "zh_CN"))))
+    d = (d or (self:getTag('SkillFirewall') and table.contains(self:getTag('SkillFirewall'), s.name)))
+    if ((s.attached_equip or s.name:endsWith("&")) or not (d and s.visible)) and not self:hasSkill(s, true, true) then
       table.insert(ret, s)
       if (s:isInstanceOf(TriggerSkill) --[[or s:isInstanceOf(LegacyTriggerSkill)]]) and RoomInstance then
         ---@cast room Room
@@ -1339,9 +1531,13 @@ function Player:isProhibitedTarget(card)
 end
 
 
---- 确认玩家是否被禁止使用特定牌。
+--- 确认角色是否被禁止使用特定牌。
 ---@param card Card @ 特定的牌
 function Player:prohibitUse(card)
+  for _, id in ipairs(table.connect(Card:getIdList(card), card.fake_subcards)) do
+    if table.contains(self:getCardIds('e'), id) and (Fk:getCardById(id):getMark('using') > 0) then return true
+    end
+  end
   local status_skills = Fk:currentRoom().status_skills[ProhibitSkill] or Util.DummyTable
   for _, skill in ipairs(status_skills) do
     if skill:prohibitUse(self, card) then
@@ -1351,9 +1547,13 @@ function Player:prohibitUse(card)
   return false
 end
 
---- 确认玩家是否被禁止打出特定牌。
+--- 确认角色是否被禁止打出特定牌。
 ---@param card Card @ 特定的牌
 function Player:prohibitResponse(card)
+  for _, id in ipairs(table.connect(Card:getIdList(card), card.fake_subcards)) do
+    if table.contains(self:getCardIds('e'), id) and (Fk:getCardById(id):getMark('using') > 0) then return true
+    end
+  end
   local status_skills = Fk:currentRoom().status_skills[ProhibitSkill] or Util.DummyTable
   for _, skill in ipairs(status_skills) do
     if skill:prohibitResponse(self, card) then
@@ -1363,11 +1563,14 @@ function Player:prohibitResponse(card)
   return false
 end
 
---- 确认玩家是否被禁止弃置特定牌。
+--- 确认角色是否被禁止弃置特定牌。
 ---@param card Card|integer @ 特定的牌
 function Player:prohibitDiscard(card)
   if type(card) == "number" then
     card = Fk:getCardById(card)
+  end
+
+  if table.contains(self:getCardIds('e'), card.id) and (card:getMark('using') > 0) then return true
   end
 
   local status_skills = Fk:currentRoom().status_skills[ProhibitSkill] or Util.DummyTable
@@ -1409,7 +1612,7 @@ end
 ---@param ignoreToKong? boolean @ 忽略对象没有手牌
 ---@return boolean
 function Player:canPindian(to, ignoreFromKong, ignoreToKong)
-  if self == to then return false end
+  if self.id == to.id then return false end --if self == to then return false end --方便“打通”SPlayr与Fk:getCardOwner(Card)等Player
 
   if self:isKongcheng() and not ignoreFromKong then
     return false
@@ -1424,6 +1627,40 @@ function Player:canPindian(to, ignoreFromKong, ignoreToKong)
     end
   end
   return true
+end
+
+--- 判断角色能否判定。
+---@param PermitRest? boolean @ 是否允许正在休整的角色判定，默认不允许
+---@return boolean
+function Player:canJudge(PermitRest)
+  if not ((self:isAlive() or (PermitRest and (self.rest > 0))) and not self:hasMark('JudgeProhibited')) then return false
+  else
+    local status_skills = Fk:currentRoom().status_skills[ProhibitSkill] or Util.DummyTable
+    for _, skill in ipairs(status_skills) do --if skill:isEffectable(self) and
+      if skill:prohibitJudge(self) then return false
+      end
+    end
+  end
+  return true
+end
+
+--- 确认角色是否被禁止获得特定的实体牌。
+---@param card Card|integer @ 特定的实体牌
+function Player:prohibitPrey(card)
+  if type(card) == "number" then
+    card = Fk:getCardById(card)
+  end
+
+  if table.contains(self:getCardIds('e'), card.id) and (card:getMark('using') > 0) then return true
+  end
+
+  local status_skills = Fk:currentRoom().status_skills[ProhibitSkill] or Util.DummyTable
+  for _, skill in ipairs(status_skills) do
+    if skill:prohibitPrey(self, card) then
+      return true
+    end
+  end
+  return not not self:hasMark('PreyProhibited')
 end
 
 --- 判断一张牌能否移动至某角色的装备区
@@ -1484,16 +1721,19 @@ function Player:getSwitchSkillState(skillName, afterUse, inWord)
   end
 end
 
---- 是否能移动特定牌至特定角色
+--- 能否将特定牌置入特定角色的装备区或判定区
 ---@param to Player @ 移动至的角色
 ---@param id integer @ 移动的牌
+---@param executor? Player|number @ 执行者（不能操作自己装备区里“正用到”的牌）或其id，若由系统执行可填99，默认为```self```
 ---@return boolean
-function Player:canMoveCardInBoardTo(to, id)
-  if self == to then
-    return false
+function Player:canMoveCardInBoardTo(to, id, executor) --Player:canMoveCardInBoardTo(to, id)
+  
+  executor = executor or self
+  local ExecutorId = (type(executor)== "number") and executor or (executor:isInstanceOf(Player) and executor.id or self.id)
+  local card = self:getVirtualEquip(id) or Fk:getCardById(id)
+  if (self.id == to.id) or ((self.id == ExecutorId) and (card:getMark('using')) > 0) then return false --if self == to then --方便“打通”SPlayr与Player
   end
 
-  local card = self:getVirtualEquip(id) or Fk:getCardById(id)
   assert(card.type == Card.TypeEquip or card.sub_type == Card.SubtypeDelayedTrick)
 
   if card.type == Card.TypeEquip then
@@ -1503,19 +1743,19 @@ function Player:canMoveCardInBoardTo(to, id)
   end
 end
 
---- 是否能移动特定区域牌至特定角色
---- @param to Player @ 移动至的角色
---- @param flag? string @ 移动的区域，`e`为装备区，`j`为判定区，`ej``nil`为装备区和判定区
---- @param excludeIds? integer[] @ 排除的牌
+--- 能否“平移”特定区域牌至特定角色
+---@param to Player @ 移动至的角色
+---@param flag? string @ 移动的区域，`e`为装备区，`j`为判定区，`ej``nil`为装备区和判定区
+---@param excludeIds? integer[] @ 排除的牌
+---@param executor? Player|number @ 执行者（不能操作自己装备区里“正用到”的牌）或其id，若由系统执行可填99，默认为```self```
 ---@return boolean
-function Player:canMoveCardsInBoardTo(to, flag, excludeIds)
-  if self == to then
+function Player:canMoveCardsInBoardTo(to, flag, excludeIds, executor)
+  if self.id == to.id then --if self == to then --方便“打通”SPlayr与Fk:getCardOwner(Card)等Player
     return false
   end
 
   assert(flag == nil or table.contains({"e", "j", "ej", "je"}, flag))
   excludeIds = type(excludeIds) == "table" and excludeIds or {}
-
   local areas = {}
   if flag == "e" then
     table.insert(areas, Player.Equip)
@@ -1526,7 +1766,7 @@ function Player:canMoveCardsInBoardTo(to, flag, excludeIds)
   end
 
   for _, cardId in ipairs(self:getCardIds(areas)) do
-    if not table.contains(excludeIds, cardId) and self:canMoveCardInBoardTo(to, cardId) then
+    if not table.contains(excludeIds, cardId) and self:canMoveCardInBoardTo(to, cardId, executor) then --and self:canMoveCardInBoardTo(to, cardId)
       return true
     end
   end
@@ -1719,7 +1959,7 @@ end
 ---@param diff boolean? @ 比较二者不同
 ---@return boolean @ 返回比较结果
 function Player:compareGenderWith(other, diff)
-  if self == other then return not diff end
+  if self.id == other.id then return not diff end --if self == other then return not diff end --方便“打通”SPlayr与Fk:getCardOwner(Card)等Player
   if self.gender == General.Agender or other.gender == General.Agender then return false end
   if self.gender == General.Bigender or other.gender == General.Bigender then return true end
   if diff then
