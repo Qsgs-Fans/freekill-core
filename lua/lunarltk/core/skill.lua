@@ -149,16 +149,30 @@ end
 
 --- 判断技能是不是对于某玩家而言失效了。
 ---
+--- 判断技能是不是对于某角色而言失效了。
+---
 --- 它影响的是hasSkill，但也可以单独拿出来判断。
----@param player Player @ 玩家
+---@param player Player @ 角色
 ---@return boolean
 function Skill:isEffectable(player)
-  if self.cardSkill or self:hasTag(Skill.Permanent) then
-    return true
+  
+  if self.cardSkill then return true --self:hasTag(Skill.Permanent)下移；注意技能各（①②③④⑤…）组分间的标签原则上可不尽相同，故不判断MainSk:hasTag(Skill.Permanent)
   end
 
-  local room = Fk:currentRoom()
-  local recheck_skills = {}
+  local Owners, MainSk, NVAE = {}, self, table.every(player.virtual_equips, function(e) return ((e.name ~= self.attached_equip) or (#e.subcards > 0)) end)
+  for _, p in ipairs(Fk:currentRoom().alive_players) do
+    for _, sk in ipairs(p:getAllSkills()) do
+      if (p.id ~= player.id) and sk.attached_skill_name and string.find(sk.attached_skill_name, self.name) then Owners[1] = Owners[1] or sk:isEffectable(p)
+      end
+    end
+  end
+  if (#Owners > 0) and not Owners[1] then return false
+  end
+  for _, sk in ipairs(player:getAllSkills()) do
+    if table.contains({table.unpack(sk.related_skills)}, self) then MainSk = sk
+    end
+  end
+  local recheck_skills, room, NDR = {}, Fk:currentRoom(), table.every(player.derivative_skills, function(tb) return not table.contains(tb, MainSk) end)
 
   local nullifySkills = room.status_skills[InvaliditySkill] or Util.DummyTable---@type InvaliditySkill[]
   for _, nullifySkill in ipairs(nullifySkills) do
@@ -166,27 +180,26 @@ function Skill:isEffectable(player)
       if not room.invalidity_rechecking then
         table.insert(recheck_skills, nullifySkill)
       end
-    elseif nullifySkill:getInvalidity(player, self) then
+    elseif nullifySkill:getInvalidity(player, MainSk) and not self:hasTag(Skill.Permanent) then --elseif nullifySkill:getInvalidity(player, self) then
       return false
     end
   end
 
   if #recheck_skills > 0 then
     room.invalidity_rechecking = true
-    local ret = table.find(recheck_skills, function(s) return s:getInvalidity(player, self) end)
+    local ret = table.find(recheck_skills, function(s) return s:getInvalidity(player, MainSk) end) --function(s) return s:getInvalidity(player, self) end
     room.invalidity_rechecking = false
-    if ret then return false end
+    if ret and not self:hasTag(Skill.Permanent) then return false end --if ret then return false end
   end
 
-  for mark, value in pairs(player.mark) do -- 耦合 MarkEnum.InvalidSkills ！
-    if mark == MarkEnum.InvalidSkills then
-      if value[self.name] then
-        return false
-      end
-    elseif mark:startsWith(MarkEnum.InvalidSkills .. "-") and value[self.name] then
+  for mark, value in pairs(player.mark) do -- 耦合 MarkEnum.InvalidSkills ！但仍不好处理其他角色技能（爱省字数）赋予的与装备技能“同名”（name相同）的（时段内）派生技
+    if (mark == MarkEnum.InvalidSkills) and value[MainSk.name] then --新月允许角色同一子类别多重虚拟装备甚至与现有“实”装备同名(却没有特殊坐骑牌子类别和特殊坐骑区)
+      if NDR and NVAE and table.find(value[MainSk.name], function(s) return (s == 'excludes') end) then return false --if value[self.name] then return false
+      elseif (NDR and NVAE) or table.find(value[MainSk.name], function(s) return (s ~= 'excludes') end) then return self:hasTag(Skill.Permanent)
+      end --'excludes'作为source_skill用于飞刀判定，故无视持恒技，但排除“同名”派生技及视为装备（涉及计数的状态类技能请这类设计者自行解决，考虑武将技能挂载StatusSkill）
+    elseif mark:startsWith(MarkEnum.InvalidSkills .. "-") and value[MainSk.name] then --and value[self.name] then
       for _, suffix in ipairs(MarkEnum.TempMarkSuffix) do
-        if mark:find(suffix, 1, true) then
-          return false
+        if mark:find(suffix, 1, true) then return self:hasTag(Skill.Permanent) --then return false
         end
       end
     end
