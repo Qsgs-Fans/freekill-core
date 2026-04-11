@@ -36,6 +36,8 @@ end
 ---@param room Room
 ---@param player ServerPlayer
 function EquipCard:onUninstall(room, player)
+  for _, id in ipairs(Card:getIdList(self)) do Fk:getCardById(id):setMark('using', 0)
+  end
   local equipSkills = self:getEquipSkills(player)
   if #equipSkills > 0 then
     --- 真正的装备技能
