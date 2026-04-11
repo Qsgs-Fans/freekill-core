@@ -32,7 +32,7 @@ end
 ---@param extra_data? UseExtraData @ 额外数据
 ---@return boolean?
 function ActiveSkill:canUse(player, card, extra_data)
-  return self:isEffectable(player) and self:withinTimesLimit(player, Player.HistoryPhase, card)
+  return ((self.is_delay_effect or self:isEffectable(player)) and self:withinTimesLimit(player, Player.HistoryPhase, card)) --self:isEffectable(player) and
 end
 
 --- 判断一张牌是否可被此技能选中
