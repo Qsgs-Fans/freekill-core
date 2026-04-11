@@ -736,17 +736,17 @@ function Room:askToDiscard(player, params)
 
   local canDiscards = table.filter(
     player:getCardIds{ Player.Hand, params.include_equip and Player.Equip or nil }, function(id)
-      local checkpoint = true
+      local checkpoint = not player:prohibitDiscard(id) --true
       local card = Fk:getCardById(id)
 
-      local status_skills = Fk:currentRoom().status_skills[ProhibitSkill] or Util.DummyTable
+      --[[local status_skills = Fk:currentRoom().status_skills[ProhibitSkill] or Util.DummyTable
       for _, skill in ipairs(status_skills) do
         if skill:prohibitDiscard(player, card) then
           return false
         end
-      end
+      end]]--
       if skillName == "phase_discard" then
-        status_skills = Fk:currentRoom().status_skills[MaxCardsSkill] or Util.DummyTable
+        local status_skills = Fk:currentRoom().status_skills[MaxCardsSkill] or Util.DummyTable
         for _, skill in ipairs(status_skills) do
           if skill:excludeFrom(player, card) then
             return false
@@ -798,10 +798,17 @@ end
 ---@field max_num integer @ 最大值
 ---@field target_tip_name? string @ 引用的选择目标提示的函数名
 
---- 询问一名玩家从targets中选择若干名玩家出来。
----@param player ServerPlayer @ 要做选择的玩家
+---@class AskToChoosePlayersParams: AskToUseActiveSkillParams
+---@field targets ServerPlayer[] @ 可以选的目标角色范围
+---@field min_num integer @ 最小值
+---@field max_num integer @ 最大值
+---@field target_tip_name? string @ 引用的选择目标提示的函数名
+---@field targetIdSets? integer[][] @ 目标角色Id组合（忽略次序）须在此范围内（谋targets）
+
+--- 询问一名角色从targets中选择若干名角色出来。
+---@param player ServerPlayer @ 要做选择的角色
 ---@param params AskToChoosePlayersParams @ 各种变量
----@return ServerPlayer[] @ 选择的玩家列表，可能为空
+---@return ServerPlayer[] @ 选择的角色列表，可能为空
 function Room:askToChoosePlayers(player, params)
   local maxNum, minNum = params.max_num, params.min_num
   if maxNum < 1 then
@@ -809,6 +816,8 @@ function Room:askToChoosePlayers(player, params)
   end
   params.cancelable = (params.cancelable == nil) and true or params.cancelable
   params.no_indicate = params.no_indicate or false
+
+  local Sets = params.targetIdSets and table.filter(params.targetIdSets, function(ids) return ((minNum <= #ids) and (maxNum >= #ids)) end)
 
   local data = {
     targets = table.map(params.targets, Util.IdMapper),
@@ -818,6 +827,7 @@ function Room:askToChoosePlayers(player, params)
     skillName = params.skill_name,
     targetTipName = params.target_tip_name,
     extra_data = params.extra_data,
+    targetIdSets = Sets, --例：选择性别不同的两名角色
   }
   local activeParams = { ---@type AskToUseActiveSkillParams
     skill_name = "choose_players_skill",
@@ -832,8 +842,8 @@ function Room:askToChoosePlayers(player, params)
   else
     if params.cancelable then
       return {}
-    else
-      return self:tableRandomPick(params.targets, minNum)
+    elseif not params.targetIdSets then return self:tableRandomPick(params.targets, minNum)
+    else return ((#Sets > 0) and self:tableRandomPick(table.random(Sets, 1)[1], function(id) return self:getPlayerById(id) end) or {})
     end
   end
 end
@@ -996,16 +1006,38 @@ end
 ---@field min_card_num integer @ 选卡牌最小值
 ---@field max_card_num integer @ 选卡牌最大值
 ---@field equal? boolean @ 是否要求牌数和目标数相等，默认否
----@field pattern? string @ 选牌规则，默认为"."
+---@field pattern? string @ 选牌规则，默认为"." --若填了则应确保expand_pile里对自己不可见的牌均可选／均不可选
 ---@field expand_pile? string|integer[] @ 可选私人牌堆名称，或额外可选牌
 ---@field will_throw? boolean @ 选卡牌须能弃置
-
---- 询问玩家选择X张牌和Y名角色。
+---@field equalColor? boolean @ true／false：选牌颜色须均相同／两两不同；nil或不填：无此项要求 --若填了则应通过pattern等确保expand_pile里对自己不可见的牌均不可选
+---@field equalSuit? boolean @ true／false：选牌花色须均相同／两两不同；nil或不填：无此项要求 --同上
+---@field equalNum? boolean @ true／false：选牌点数须均相同／两两不同；nil或不填：无此项要求 --同上
+---@field equalType? boolean @ true／false：选牌类别须均相同／两两不同；nil或不填：无此项要求 --同上
+---@field equalName? boolean @ true／false：选牌牌名及【杀】／【无懈可击】（若为）的“种”须{均相同／两两不同}；nil或不填：无此项要求 --同上
+---@field equalTrueName? boolean @ true／false：选牌牌名须均相同／两两不同；nil或不填：无此项要求 --同上
+---@field equalNameLength? boolean @ true／false：选牌牌名汉字数须均相同／两两不同；nil或不填：无此项要求 --同上
+---@field FromMeWithTargetNum? "<"|">"|"<="|">="|"=="|"~=" @ 你至目标角色的距离与目标数比较
+---@field ToMeWithTargetNum? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色至你的距离与目标数比较
+---@field AtkRgWithTargetNum? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色攻击范围与目标数比较
+---@field TargetNumWithCardNum? "<"|">"|"<="|">="|"=="|"~=" @ 目标数与选牌数比较
+---@field FromMeWithCardNum? "<"|">"|"<="|">="|"=="|"~=" @ 你至目标角色的距离与选牌数比较
+---@field ToMeWithCardNum? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色至你的距离与选牌数比较
+---@field AtkRgWithCardNum? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色攻击范围与选牌数比较
+---@field MaxHpWithCardNum? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色体力上限与选牌数比较
+---@field HpWithCardNum? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色体力与选牌数比较
+---@field LostHpWithCardNum? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色已损失的体力值与选牌数比较
+---@field AreaCardNumWithCardNum? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色区域里的牌数与选牌数比较
+---@field PossessCardNumWithCardNum? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色（拥有的）牌数与选牌数比较
+---@field HandcardNumWithCardNum? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色手牌数与选牌数比较
+---@field BlockPIdsByCIdstr? table<string, integer[]> @ 十进制CardId字符串到PlayerId数组的映射，若选择了为此Id的牌就不能选择那些PlayerId对应的目标角色
+---@field UnlockPIdsByCIdstr? table<string, integer[]> @ 十进制CardId字符串到PlayerId数组的映射，若未选择为此Id的牌就不能选择那些PlayerId对应的目标角色
+--新月似乎允许多张牌转化为装备牌或延时锦囊牌，对装备区（或其子区域）／判定区里的牌数的判断可能引发歧义，此处暂避；而角色区域里的牌数、拥有的牌数及手牌数当然都指实体牌数。
+--- 询问玩家选择X张牌和Y名角色。主要用于此刻不移动所选牌（如展示<…牌>并选择<…角色>）或备选角色相对固定的情形，为防飞刀，要移动建议多用askToChooseCardsToMoveAndPlayers
 ---
 --- 返回两个值，第一个是选择目标列表，第二个是选择的牌id列表，第三个是否按了确定
 --- 
 --- 默认可取消
----@param player ServerPlayer @ 要询问的玩家
+---@param player ServerPlayer @ 要询问的角色
 ---@param params AskToChooseCardsAndPlayersParams @ 各种变量
 ---@return ServerPlayer[], integer[], boolean @ 第一个是选择目标列表，第二个是选择的牌id列表，第三个是否按了确定
 function Room:askToChooseCardsAndPlayers(player, params)
@@ -1024,7 +1056,7 @@ function Room:askToChooseCardsAndPlayers(player, params)
   end
   local exp = Exppattern:Parse(params.pattern)
   pcards = table.filter(pcards, function(cid)
-    return exp:match(Fk:getCardById(cid)) and not (params.will_throw and player:prohibitDiscard(cid))
+    return (exp:match(Fk:getCardById(cid)) and not (params.will_throw and player:prohibitDiscard(cid)))
   end)
   if #pcards < minCardNum and not params.cancelable then return {}, {}, false end
 
@@ -1040,8 +1072,31 @@ function Room:askToChooseCardsAndPlayers(player, params)
     targetTipName = params.target_tip_name,
     extra_data = params.extra_data,
     expand_pile = params.expand_pile or (params.extra_data and params.extra_data.expand_pile),
-    will_throw = params.will_throw,
-  }
+    will_throw = params.will_throw, --注意飞刀隐患，必要时改用askToChooseCardsToMoveAndPlayers
+    targetIdSets = (params.targetIdSets and table.clone(params.targetIdSets)),
+    equalColor = params.equalColor,
+    equalSuit = params.equalSuit,
+    equalNum = params.equalNum,
+    equalType = params.equalType,
+    equalTrueName = params.equalTrueName,
+    equalName = params.equalName,
+    equalNameLength = params.equalNameLength,
+    FromMeWithTargetNum = params. FromMeWithTargetNum,
+    ToMeWithTargetNum = params.ToMeWithTargetNum,
+    AtkRgWithTargetNum = params.AtkRgWithTargetNum,
+    TargetNumWithCardNum = params.TargetNumWithCardNum,
+    FromMeWithCardNum = params.FromMeWithCardNum,
+    ToMeWithCardNum = params.ToMeWithCardNum,
+    AtkRgWithCardNum = params.AtkRgWithCardNum,
+    MaxHpWithCardNum = params.MaxHpWithCardNum,
+    HpWithCardNum = params.HpWithCardNum,
+    LostHpWithCardNum = params.LostHpWithCardNum,
+    AreaCardNumWithCardNum = params.AreaCardNumWithCardNum,
+    PossessCardNumWithCardNum = params.PossessCardNumWithCardNum,
+    HandcardNumWithCardNum = params.HandcardNumWithCardNum,
+    BlockPIdsByCIdstr = (params.BlockPIdsByCIdstr and table.clone(params.BlockPIdsByCIdstr)), --对max_num、max_card_num及min_card_num均为1的情形，此乃泛用筛选
+    UnlockPIdsByCIdstr = (params.UnlockPIdsByCIdstr and table.clone(params.UnlockPIdsByCIdstr)),
+  } --例：（空巢类强化）你可展示一张手牌并选其，或展示所有手牌并选择<…角色>。这些角色各可<…>你以此法展示的<…牌>
   local activeParams = { ---@type AskToUseActiveSkillParams
     skill_name = "ex__choose_skill",
     prompt = params.prompt or "",
@@ -1052,27 +1107,525 @@ function Room:askToChooseCardsAndPlayers(player, params)
   local success, ret = self:askToUseActiveSkill(player, activeParams)
   if ret then
     return ret.targets, ret.cards, success
-  else
-    if params.cancelable then
-      return {}, {}, false
-    else
-      return self:tableRandomPick(params.targets, minTargetNum),
-        self:tableRandomPick(pcards, minCardNum), false
+  elseif not params.cancelable then
+    local Xids, Hids = table.simpleClone(pcards), table.filter(player:getCardIds('h'), function(cid)
+      return (exp:match(Fk:getCardById(cid)) and not (params.will_throw and player:prohibitDiscard(cid))) end)
+    for _, id in ipairs(player:getCardIds('he')) do table.removeOne(Xids, id)
+    end
+    local MinEquipNum, Eids = math.max(0, minCardNum - #Xids - #Hids), table.filter(player:getCardIds('e'), function(id)
+        return table.contains(pcards, id) end)
+    local CaFilter = function(to_select, selected) --return table.random(params.targets, minTargetNum), table.random(pcards, minCardNum), false
+
+      local b, t = (#selected >= maxCardNum), Fk:getCardById(to_select)
+      for _, id in ipairs(selected) do
+        local L, c = Fk:getCardById(id):getNameLength() == Fk:getCardById(to_select):getNameLength(), Fk:getCardById(id)
+        local P, A, T, C, S, N = t.type == c.type, t.name == c.name, t.trueName == c.trueName, t.color == c.color, t.suit == c.suit, t:compareNumberWith(c)
+        b = (((params.equalColor == false) and C) or (params.equalColor and not C) or ((params.equalNum == false) and N) or (params.equalNum and not N) or b)
+        b = (((params.equalSuit == false) and S) or (params.equalSuit and not S) or ((params.equalType == false) and P) or (params.equalType and not P) or b)
+        b = (((params.equalName == false) and A) or (params.equalName and not A) or ((params.equalTrueName == false) and T) or (params.equalTrueName and not T) or b)
+        b = (((params.equalNameLength == false) and L) or (params.equalNameLength and not L) or b)
+      end
+      return not b
+    end
+    local PFilter = function(to_select, selected, s)
+
+      local f, t, o = player:distanceTo(to_select, nil, nil), to_select:distanceTo(player, nil, nil), to_select:getAttackRange()
+      local d = (((not params.FromMeWithCardNum) or fk.compareNonNegativeNum(f, #s, params.FromMeWithCardNum)) and table.contains(params.targets, to_select.id))
+      d = (d and (((not params.FromMeWithCardNum) or fk.compareNonNegativeNum(f, #s, params.FromMeWithCardNum)) and table.contains(params.targets, to_select.id)))
+      d = (d and ((not params.ToMeWithCardNum) or fk.compareNonNegativeNum(t, #s, params.ToMeWithCardNum)) and (#selected < maxTargetNum))
+      d = (d and ((not params.MaxHpWithCardNum) or fk.compareNum(to_select.maxHp, #s, params.MaxHpWithCardNum)))
+      d = (d and ((not params.HpWithCardNum) or fk.compareNum(to_select.hp, #s, params.HpWithCardNum)))
+      d = (d and ((not params.LostHpWithCardNum) or fk.compareNum(to_select:getLostHp(), #s, params.LostHpWithCardNum)))
+      d = (d and ((not params.AreaCardNumWithCardNum) or fk.compareNum(#to_select:getCardIds('hej'), #s, params.AreaCardNumWithCardNum)))
+      d = (d and ((not params.HandcardNumWithCardNum) or fk.compareNum(to_select:getHandcardNum(), #s, params.HandcardNumWithCardNum)))
+      d = (d and ((not params.AtkRgWithCardNum) or fk.compareNum(o, #s, params.AtkRgWithCardNum)) and not (params.BlockPIdsByCIdstr and table.find(s, function(id)
+          return (params.BlockPIdsByCIdstr[tostring(id)] and table.contains(params.BlockPIdsByCIdstr[tostring(id)], to_select.id)) end)))
+      return (d and (not (params.UnlockPIdsByCIdstr and table.find(Fk:getAllCardIds(), function(id)
+          return (params.UnlockPIdsByCIdstr[tostring(id)] and table.contains(params.UnlockPIdsByCIdstr[tostring(id)], to_select.id)) and not table.contains(s, id)
+        end))) and ((not params.PossessCardNumWithCardNum) or fk.compareNum(#to_select:getCardIds('he'), #s, params.PossessCardNumWithCardNum)))
+    end
+    local Feasible = function(Ps, cids)
+  
+      local r, tb = (not params.TargetNumWithCardNum) or fk.compareNum(#Ps, #cids, params.TargetNumWithCardNum), table.simpleClone(Ps)
+      r = (((not params.targetIdSets) or table.find(params.targetIdSets, function(Tb) return table.isEqual(table.map(Ps, Util.IdMapper), Tb) end)) and r)
+      for _, p in ipairs(Ps) do
+        table.removeOne(tb, p)
+        r = (r and ((not params.FromMeWithTargetNum) or fk.compareNonNegativeNum(player:distanceTo(p, nil, nil), #Ps, params.FromMeWithTargetNum)))
+        r = (r and ((not params.ToMeWithTargetNum) or fk.compareNonNegativeNum(p:distanceTo(player, nil, nil), #Ps, params.ToMeWithTargetNum)))
+        r = (r and ((not params.AtkRgWithTargetNum) or fk.compareNonNegativeNum(p:getAttackRange(), #Ps, params.AtkRgWithTargetNum)) and PFilter(p, tb, cids))
+      end
+      return ((#cids >= minCardNum) and (#Ps >= minTargetNum) and ((#Ps == #cids) or not params.equal) and r)
+    end
+    for m = 0, (2^#Eids) - 1 do
+      local ids = {}
+      for i = 0, #Eids - 1 do
+        if (m | (1 << i)) > 0 then table.insert(ids, Eids[i + 1]) --bit32.band(m, bit32.lshift(1, i)) > 0
+        end
+      end
+      local tb, r = table.simpleClone(ids), true
+      for _, to_select in ipairs(ids) do
+        table.removeOne(tb, to_select)
+        r = (r and CaFilter(to_select, tb))
+      end
+      if r and (#ids >= MinEquipNum) then
+        local admitted1, indexes1, tail1 = table.clone(ids), {}, 0
+        for j = math.max(0, minCardNum - #ids - #Hids), math.min(maxCardNum - #ids, #Xids) do
+          while (#indexes1 < j) and ((#indexes1 ~= 1) or ((indexes1[1] + j - 2) < #Xids)) do
+            local ToDrop1 = true
+            if tail1 < #Xids then
+              for x = 1 + tail1, #Xids do
+                if CaFilter(Hids[x], admitted1) then
+                  ToDrop1 = false
+                  tail1 = x
+                  table.insert(indexes1, x)
+                  table.insert(admitted1, Hids[x])
+                  break
+                end
+              end
+            end
+            if #indexes1 < 1 then break
+            elseif ToDrop1 then
+              tail1 = indexes1[#indexes1]
+              table.remove(indexes1, #indexes1)
+              table.remove(admitted1, #admitted1)
+            end
+          end
+          if #indexes1 < j then break
+          end
+          for k = math.max(0, minCardNum - #ids - j), math.min(maxCardNum - #ids - j, #Hids) do
+            local admitted2, indexes2, tail2, indexes3, tail3 = table.simpleClone(admitted1), table.simpleClone(indexes1), tail1, {}, 0
+            while (#indexes2 ~= 1) or ((indexes2[1] + j - 2) < #Xids) do
+              local ToDrop2 = (#indexes2 < j)
+              if ToDrop2 and (tail2 < #Xids) then
+                for x = 1 + tail2, #Xids do
+                  if CaFilter(Hids[x], admitted1) then
+                    ToDrop2 = false
+                    tail2 = x
+                    table.insert(indexes2, x)
+                    table.insert(admitted2, Hids[x])
+                  end
+                end
+              end
+              if #indexes2 == j then
+                while (#indexes3 ~= 1) or ((indexes3[1] + k - 2) < #Hids) do
+                  ToDrop3 = (#indexes3 < k)
+                  if ToDrop3 and (tail3 < #Hids) then
+                    for h = 1 + tail3, #Hids do
+                      if CaFilter(Hids[h], admitted2) then
+                        ToDrop3 = false
+                        tail3 = h
+                        table.insert(indexes3, h)
+                        table.insert(admitted2, Hids[h])
+                        break
+                      end
+                    end
+                  end
+                  if #indexes3 == k then
+                    for n = 0, (2^#params.targets) - 1 do
+                      local tgts = {}
+                      for l = 0, #params.targets - 1 do
+                        if (n | (1 << l)) > 0 then table.insert(tgts, params.targets[l + 1]) --bit32.band(n, bit32.lshift(1, l)) > 0
+                        end
+                      end
+                      if Feasible(tgts, admitted2) then return tgts, admitted2, false
+                      end
+                    end
+                    ToDrop3 = true
+                  end
+                  if ToDrop3 and (#indexes3 < 1) then
+                    tail3 = 0
+                    break
+                  elseif ToDrop3 then
+                    tail3 = indexes3[#indexes3]
+                    table.remove(indexes3, #indexes3)
+                    table.remove(admitted2, #admitted2)
+                  end
+                end
+                if #indexes3 < k then
+                  if tail3 > 0 then
+                    tail3 = 0
+                    table.remove(indexes3, #indexes3)
+                    table.remove(admitted2, #admitted2)
+                  end
+                  ToDrop2 = true
+                end
+              end
+              if ToDrop2 and (#indexes2 < 1) then
+                tail2 = 0
+                break
+              elseif ToDrop2 then
+                tail2 = indexes2[#indexes2]
+                table.remove(indexes2, #indexes2)
+                table.remove(admitted2, #admitted2)
+              end
+            end
+          end
+        end
+      end
     end
   end
+  return {}, {}, false
+end
+
+---@class askToChooseCardsToMoveAndPlayersParams: AskToChooseCardsAndPlayersParams
+---@field equalAtkRg? boolean @ true／false：目标角色攻击范围须均相同／两两不同；nil或不填：无此项要求
+---@field equalFromMe? boolean @ true／false：你至目标角色的距离须均可计算且{均相同／两两不同}；nil或不填：无此项要求
+---@field equalToMe? boolean @ true／false：目标角色至你的距离须均可计算且{均相同／两两不同}；nil或不填：无此项要求
+---@field IMayNmSlash boolean @ true／false：目标角色须是／不是你使用无对应的实体牌的普【杀】的合法目标；nil或不填：无此项要求
+---@field inMyAtkRg boolean @ true／false：目标角色须在／不在你的攻击范围内；nil或不填：无此项要求
+---@field MeinAtkRg boolean @ true／false：你须在／不在目标角色的攻击范围内；nil或不填：无此项要求
+---@field AtkRgMax boolean @ true／false：目标角色须是／不是攻击范围最大的角色；nil或不填：无此项要求
+---@field AtkRgMin boolean @ true／false：目标角色须是／不是攻击范围最大的角色；nil或不填：无此项要求
+---@field AtkRgUnique boolean @ false／true：除目标角色外有／没有与其攻击范围相同的角色；nil或不填：无此项要求
+---@field minAtkRg integer @ 目标角色攻击范围最小值
+---@field maxAtkRg integer @ 目标角色攻击范围最大值
+---@field minDstFromMe integer @ 你至目标角色的距离最小值
+---@field maxDstFromMe integer @ 你至目标角色的距离最大值
+---@field minDstToMe integer @ 目标角色至你的距离最小值
+---@field maxDstToMe integer @ 目标角色至你的距离最大值
+---@field ToMoveIds integer[] @ 只有Id在此范围内的牌会被移动（从而纳入飞刀判定），默认所选牌都会被移动
+---@field MaxHpWithAtkRg? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色体力上限与其攻击范围比较
+---@field HpWithAtkRg? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色体力与其攻击范围比较
+---@field LostHpWithAtkRg? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色已损失的体力值与其攻击范围比较
+---@field AreaCardNumWithAtkRg? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色区域里的牌数与其攻击范围比较
+---@field PossessCardNumWithAtkRg? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色（拥有的）牌数与其攻击范围比较
+---@field HandcardNumWithAtkRg? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色手牌数与其攻击范围比较
+---@field CardNumWithAtkRg? "<"|">"|"<="|">="|"=="|"~=" @ 选牌数与目标角色攻击范围比较
+---@field TargetNumWithAtkRg? "<"|">"|"<="|">="|"=="|"~=" @ 目标数与目标角色攻击范围比较
+---@field FromMeWithAtkRg? "<"|">"|"<="|">="|"=="|"~=" @ 你至目标角色的距离与其攻击范围比较
+---@field FromMeWithToMe "<"|">"|"<="|">="|"=="|"~=" @ 你至目标角色的距离与目标角色至你的距离比较
+---@field ToMeWithMyAtkRg? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色至你的距离与你的攻击范围比较
+---@field AtkRgWithMyAtkRg? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色攻击范围与你的攻击范围比较
+---@field MaxHpWithMyAtkRg? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色体力上限与你的攻击范围比较
+---@field HpWithMyAtkRg? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色体力与你的攻击范围比较
+---@field LostHpWithMyAtkRg? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色已损失的体力值与你的攻击范围比较
+---@field AreaCardNumWithMyAtkRg? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色区域里的牌数与你的攻击范围比较
+---@field PossessCardNumWithMyAtkRg? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色（拥有的）牌数与你的攻击范围比较
+---@field HandcardNumWithMyAtkRg? "<"|">"|"<="|">="|"=="|"~=" @ 目标角色手牌数与你的攻击范围比较
+---@field CardNumWithMyAtkRg? "<"|">"|"<="|">="|"=="|"~=" @ 选牌数与你的攻击范围比较
+---@field TargetNumWithMyAtkRg? "<"|">"|"<="|">="|"=="|"~=" @ 目标数与你的攻击范围比较
+--暂不支持手牌上限相关筛选，因现有架构允许角色不通过装备直接获得对应技能（包括〖太平要术〗等），却缺乏分辨单角色的同名技能的能力，从而不便为已有函数添可选参量excludeIds。
+--另请武将技能<于…条件下>不通过视为装备直接拥有〖吴六剑〗这类设计特别注意，别太省字数，最好直接改成“<…角色>的攻击范围<于…条件下><…>”，不然要选择目标同时动“真剑”很难实现。
+
+--- 询问玩家选择X张牌和Y名角色。
+---
+--- 返回两个值，第一个是选择目标列表，第二个是选择的牌id列表，第三个是否按了确定
+--- 
+--- 默认可取消
+---@param player ServerPlayer @ 要询问的角色
+---@param params askToChooseCardsToMoveAndPlayersParams @ 各种变量
+---@return ServerPlayer[], integer[], boolean @ 第一个是选择目标列表，第二个是选择的牌id列表，第三个是否按了确定
+function Room:askToChooseCardsToMoveAndPlayers(player, params)
+  params.targets = params.targets or self:getAlivePlayers()
+  local maxTargetNum, minTargetNum, minCardNum = params.max_num or #params.targets, params.min_num or 0, params.min_card_num or 0
+  params.cancelable = (params.cancelable == nil) and true or params.cancelable
+  params.no_indicate = params.no_indicate or false
+  params.pattern = params.pattern or "."
+  params.equal = params.equal or false
+  local expand_pile = params.expand_pile or (params.extra_data and params.extra_data.expand_pile)
+
+  local pcards = table.filter(player:getCardIds("he"), function(cid) --= player:getCardIds("he")
+      return ((Fk:getCardById(cid):getMark('using') < 1) or (params.ToMoveIds and not table.contains(params.ToMoveIds, cid))) end)
+  if type(expand_pile) == "string" then
+    table.insertTable(pcards, player:getPile(expand_pile))
+  elseif type(expand_pile) == "table" then
+    table.insertTable(pcards, expand_pile)
+  end
+  local exp = Exppattern:Parse(params.pattern)
+  pcards = table.filter(pcards, function(cid)
+    return (exp:match(Fk:getCardById(cid)) and not (params.will_throw and player:prohibitDiscard(cid)))
+  end)
+  local maxCardNum = params.max_card_num and math.min(params.max_card_num, #pcards) or #pcards --if params.max_card_num < minCardNum and not
+  if ((maxCardNum < minCardNum) or (maxTargetNum < minTargetNum)) and not params.cancelable then return {}, {}, false end
+  local data = {
+    targets = table.map(params.targets, Util.IdMapper),
+    max_t_num = maxTargetNum,
+    min_t_num = minTargetNum,
+    max_c_num = maxCardNum,
+    min_c_num = minCardNum,
+    equal = params.equal,
+    pattern = params.pattern,
+    skillName = params.skill_name,
+    targetTipName = params.target_tip_name,
+    extra_data = params.extra_data,
+    expand_pile = params.expand_pile or (params.extra_data and params.extra_data.expand_pile),
+    will_throw = params.will_throw,
+    equalAtkRg = params.equalAtkRg,
+    targetIdSets = (params.targetIdSets and table.clone(params.targetIdSets)),
+    equalColor = params.equalColor,
+    equalSuit = params.equalSuit,
+    equalNum = params.equalNum,
+    equalType = params.equalType,
+    equalTrueName = params.equalTrueName,
+    equalName = params.equalName,
+    equalNameLength = params.equalNameLength,
+    FromMeWithTargetNum = params. FromMeWithTargetNum,
+    ToMeWithTargetNum = params.ToMeWithTargetNum,
+    AtkRgWithTargetNum = params.AtkRgWithTargetNum,
+    TargetNumWithCardNum = params.TargetNumWithCardNum,
+    FromMeWithCardNum = params.FromMeWithCardNum,
+    ToMeWithCardNum = params.ToMeWithCardNum,
+    AtkRgWithCardNum = params.AtkRgWithCardNum,
+    MaxHpWithCardNum = params.MaxHpWithCardNum,
+    HpWithCardNum = params.HpWithCardNum,
+    LostHpWithCardNum = params.LostHpWithCardNum,
+    AreaCardNumWithCardNum = params.AreaCardNumWithCardNum,
+    PossessCardNumWithCardNum = params.PossessCardNumWithCardNum,
+    HandcardNumWithCardNum = params.HandcardNumWithCardNum,
+    BlockPIdsByCIdstr = (params.BlockPIdsByCIdstr and table.clone(params.BlockPIdsByCIdstr)), --双将同疾流离（〖神速②〗当然也可以用这个来写，但动牌多了就不好办）
+    UnlockPIdsByCIdstr = (params.UnlockPIdsByCIdstr and table.clone(params.UnlockPIdsByCIdstr)), --例：你可<…移动>两张牌并选择其攻击范围内的<…角色>with吴六剑
+    IMayNmSlash = params.IMayNmSlash, --神速同疾（注意〖神速②〗的发动并不要求角色未被禁止使用牌名为【杀】的牌，只是在那种情形下执行消耗后无法执行出杀效果；故不用Can）
+    inMyAtkRg = params.inMyAtkRg,
+    MeinAtkRg = params.MeinAtkRg,
+    AtkRgMax = params.AtkRgMax,
+    AtkRgMin = params.AtkRgMin,
+    AtkRgUnique = params.AtkRgUnique,
+    minAtkRg = params.minAtkRg,
+    maxAtkRg = params.maxAtkRg,
+    minDstFromMe = params.minDstFromMe,
+    maxDstFromMe = params.maxDstFromMe,
+    minDstToMe = params.minDstToMe,
+    maxDstToMe = params.maxDstToMe,
+    ToMoveIds = params.ToMoveIds, --例：{展示两张张黑色牌或弃置两张红色牌}并选择你攻击范围内的<…角色>
+    MaxHpWithAtkRg = params.MaxHpWithAtkRg,
+    HpWithAtkRg = params.HpWithAtkRg,
+    LostHpWithAtkRg = params.LostHpWithAtkRg,
+    AreaCardNumWithAtkRg = params.AreaCardNumWithAtkRg,
+    PossessCardNumWithAtkRg = params.PossessCardNumWithAtkRg,
+    HandcardNumWithAtkRg = params.HandcardNumWithAtkRg,
+    CardNumWithAtkRg = params.CardNumWithAtkRg,
+    TargetNumWithAtkRg = params.TargetNumWithAtkRg,
+    FromMeWithAtkRg = params.FromMeWithAtkRg,
+    FromMeWithToMe = params.FromMeWithToMe,
+    ToMeWithMyAtkRg = params.ToMeWithMyAtkRg,
+    AtkRgWithMyAtkRg = params.AtkRgWithMyAtkRg,
+    MaxHpWithMyAtkRg = params.MaxHpWithMyAtkRg,
+    HpWithMyAtkRg = params.HpWithMyAtkRg,
+    LostHpWithMyAtkRg = params.LostHpWithMyAtkRg,
+    AreaCardNumWithMyAtkRg = params.AreaCardNumWithMyAtkRg,
+    PossessCardNumWithMyAtkRg = params.PossessCardNumWithMyAtkRg,
+    HandcardNumWithMyAtkRg = params.HandcardNumWithMyAtkRg,
+    CardNumWithMyAtkRg = params.CardNumWithMyAtkRg,
+    TargetNumWithMyAtkRg = params.TargetNumWithMyAtkRg,
+  }
+  local activeParams = { ---@type AskToUseActiveSkillParams
+    skill_name = "choose_cards_to_move_and_players", --"ex__choose_skill",
+    prompt = params.prompt or "",
+    cancelable = params.cancelable,
+    extra_data = data,
+    no_indicate = params.no_indicate
+  }
+  local success, ret = self:askToUseActiveSkill(player, activeParams)
+  if ret then return ret.targets, ret.cards, success
+  elseif not params.cancelable then
+    local Xids, Hids = table.simpleClone(pcards), table.filter(player:getCardIds('h'), function(cid)
+      return (exp:match(Fk:getCardById(cid)) and not (params.will_throw and player:prohibitDiscard(cid))) end)
+    for _, id in ipairs(player:getCardIds('he')) do table.removeOne(Xids, id)
+    end
+    local MinEquipNum, Eids = math.max(0, minCardNum - #Xids - #Hids), table.filter(player:getCardIds('e'), function(id)
+        return table.contains(pcards, id) end)
+    local CaFilter = function(to_select, selected) --return table.random(params.targets, minTargetNum), table.random(pcards, minCardNum), false
+
+      local b, t = (#selected >= maxCardNum), Fk:getCardById(to_select)
+      for _, id in ipairs(selected) do
+        local L, c = Fk:getCardById(id):getNameLength() == Fk:getCardById(to_select):getNameLength(), Fk:getCardById(id)
+        local P, A, T, C, S, N = t.type == c.type, t.name == c.name, t.trueName == c.trueName, t.color == c.color, t.suit == c.suit, t:compareNumberWith(c)
+        b = (((params.equalColor == false) and C) or (params.equalColor and not C) or ((params.equalNum == false) and N) or (params.equalNum and not N) or b)
+        b = (((params.equalSuit == false) and S) or (params.equalSuit and not S) or ((params.equalType == false) and P) or (params.equalType and not P) or b)
+        b = (((params.equalName == false) and A) or (params.equalName and not A) or ((params.equalTrueName == false) and T) or (params.equalTrueName and not T) or b)
+        b = (((params.equalNameLength == false) and L) or (params.equalNameLength and not L) or b)
+      end
+      return not b
+    end
+    local PFilter = function(to_select, selected, s)
+
+      local v = params.ToMoveIds and table.filter(params.ToMoveIds, function(id) return table.contains(s, id) end) or s
+      local f, t, o = player:distanceTo(to_select, nil, nil, v), to_select:distanceTo(player, nil, nil, v), to_select:getAttackRange(v)
+      local d = (((not params.FromMeWithCardNum) or fk.compareNonNegativeNum(f, #s, params.FromMeWithCardNum)) and table.contains(params.targets, to_select.id))
+      d = (d and (((not params.FromMeWithCardNum) or fk.compareNonNegativeNum(f, #s, params.FromMeWithCardNum)) and table.contains(params.targets, to_select.id)))
+      d = (d and ((not params.ToMeWithCardNum) or fk.compareNonNegativeNum(t, #s, params.ToMeWithCardNum)) and (#selected < maxTargetNum))
+      d = (d and ((not params.MaxHpWithCardNum) or fk.compareNum(to_select.maxHp, #s, params.MaxHpWithCardNum)))
+      d = (d and ((not params.HpWithCardNum) or fk.compareNum(to_select.hp, #s, params.HpWithCardNum)))
+      d = (d and ((not params.LostHpWithCardNum) or fk.compareNum(to_select:getLostHp(), #s, params.LostHpWithCardNum)))
+      d = (d and ((not params.AreaCardNumWithCardNum) or fk.compareNum(#to_select:getCardIds('hej'), #s, params.AreaCardNumWithCardNum)))
+      d = (d and ((not params.HandcardNumWithCardNum) or fk.compareNum(to_select:getHandcardNum(), #s, params.HandcardNumWithCardNum)))
+      d = (d and ((not params.AtkRgWithCardNum) or fk.compareNum(o, #s, params.AtkRgWithCardNum)) and not (params.BlockPIdsByCIdstr and table.find(s, function(id)
+          return (params.BlockPIdsByCIdstr[tostring(id)] and table.contains(params.BlockPIdsByCIdstr[tostring(id)], to_select.id)) end)))
+      d = (d and (not (params.UnlockPIdsByCIdstr and table.find(Fk:getAllCardIds(), function(id)
+          return (params.UnlockPIdsByCIdstr[tostring(id)] and table.contains(params.UnlockPIdsByCIdstr[tostring(id)], to_select.id)) and not table.contains(s, id)
+        end))) and ((not params.PossessCardNumWithCardNum) or fk.compareNum(#to_select:getCardIds('he'), #s, params.PossessCardNumWithCardNum)))
+      for _, p in ipairs(selected) do
+        local T, F, G = p:distanceTo(player, nil, nil, v) == t, player:distanceTo(p, nil, nil, v) == f, (o == p:getAttackRange(v))
+        d = (d and ((params.equalToMe ~= false) or ((t > -1) and not T)) and (((t > -1) and T) or not params.equalToMe) and ((params.equalAtkRg ~= false) or not G))
+        d = (d and ((params.equalFromMe ~= false) or ((f > -1) and not F)) and (((f > -1) and F) or not params.equalFromMe) and (G or not params.equalAtkRg))
+      end
+      d = (d and ((f > -1) or ((params.equalToMe == nil) and (params.equalFromMe == nil))))
+      local l, y, e, ns = player:getAttackRange(v), player:inMyAttackRange(to_select, 0, v), to_select:inMyAttackRange(player, 0, v), Fk:cloneCard("slash")
+      d = (d and ((not params.maxDstToMe) or ((t > -1) and (t <= params.maxDstToMe))) and ((not params.maxDstFromMe) or ((f > -1) and (f <= params.maxDstFromMe))))
+      d = (d and ((not params.MaxHpWithAtkRg) or fk.compareNum(to_select.maxHp, o, params.MaxHpWithAtkRg)) and ((not params.AtkRgMin) or to_select:AtkRgMin(v)))
+      d = (d and ((not params.HpWithAtkRg) or fk.compareNum(to_select.hp, o, params.HpWithAtkRg)) and ((not params.minDstFromMe) or (f >= params.minDstFromMe)))
+      d = (d and ((not params.LostHpWithAtkRg) or fk.compareNum(to_select:getLostHp(), o, params.LostHpWithAtkRg)) and ((params.inMyAtkRg ~= false) or not y))
+      d = (d and ((not params.AreaCardNumWithAtkRg) or fk.compareNum(#to_select:getCardIds('hej'), o, params.AreaCardNumWithAtkRg)) and (y or not params.inMyAtkRg))
+      d, ns.fake_subcards = d and ((not params.PossessCardNumWithAtkRg) or fk.compareNum(#to_select:getCardIds('he'), o, params.PossessCardNumWithAtkRg)), v
+      local a = ((to_select ~= player) and not player:isProhibited(to_select, ns)) --注意不应对此普【杀】添加skillName
+      d = (d and ((not params.HandcardNumWithAtkRg) or fk.compareNum(to_select:getHandcardNum(), o, params.HandcardNumWithAtkRg)) and (a or not params.IMayNmSlash))
+      d = (d and ((not params.FromMeWithAtkRg) or fk.compareNonNegativeNum(f, o, params.FromMeWithAtkRg)) and ((not params.minAtkRg) or (o >= params.minAtkRg)))
+      d = (d and ((not params.FromMeWithToMe) or fk.compareNonNegativeNum(f, t, params.FromMeWithToMe)) and ((not params.AtkRgUnique) or to_select:AtkRgUnique(v)))
+      d = (d and ((not params.ToMeWithMyAtkRg) or fk.compareNonNegativeNum(t, l, params.ToMeWithMyAtkRg)) and ((not params.maxAtkRg) or (o <= params.maxAtkRg)))
+      d = (d and ((not params.AtkRgWithMyAtkRg) or fk.compareNum(o, l, params.AtkRgWithMyAtkRg)) and ((not params.minDstToMe) or (t >= params.minDstToMe)))
+      d = (d and ((not params.MaxHpWithMyAtkRg) or fk.compareNum(to_select.maxHp, l, params.MaxHpWithMyAtkRg)) and ((not params.AtkRgMax) or to_select:AtkRgMax(v)))
+      d = (d and ((not params.HpWithMyAtkRg) or fk.compareNum(to_select.hp, l, params.HpWithMyAtkRg)) and ((params.MeinAtkRg ~= false) or not e))
+      d = (d and ((not params.LostHpWithMyAtkRg) or fk.compareNum(to_select:getLostHp(), l, params.LostHpWithMyAtkRg)) and (e or not params.MeinAtkRg))
+      d = (d and ((not params.AreaCardNumWithMyAtkRg) or fk.compareNum(#to_select:getCardIds('hej'), l, params.AreaCardNumWithMyAtkRg)))
+      d = (d and ((not params.PossessCardNumWithMyAtkRg) or fk.compareNum(#to_select:getCardIds('he'), l, params.PossessCardNumWithMyAtkRg)))
+      d = (d and ((not params.HandcardNumWithMyAtkRg) or fk.compareNum(to_select:getHandcardNum(), l, params.HandcardNumWithMyAtkRg)))
+      return (d and ((not params.CardNumWithMyAtkRg) or fk.compareNonNegativeNum(#s, l, params.CardNumWithMyAtkRg)) and ((params.IMayNmSlash ~= false) or not a))
+    end
+    local Feasible = function(Ps, cids)
+  
+      local r, tb = (not params.TargetNumWithCardNum) or fk.compareNum(#Ps, #cids, params.TargetNumWithCardNum), table.simpleClone(Ps)
+      r = (((not params.targetIdSets) or table.find(params.targetIdSets, function(Tb) return table.isEqual(table.map(Ps, Util.IdMapper), Tb) end)) and r)
+      r = (r and ((not params.TargetNumWithMyAtkRg) or fk.compareNum(#Ps, player:getAttackRange(cids), params.TargetNumWithMyAtkRg)))
+      local v = params.ToMoveIds and table.filter(params.ToMoveIds, function(id) return table.contains(cids, id) end) or cids
+      for _, p in ipairs(Ps) do
+        table.removeOne(tb, p)
+        r = (r and ((not params.FromMeWithTargetNum) or fk.compareNonNegativeNum(player:distanceTo(p, nil, nil, v), #Ps, params.FromMeWithTargetNum)))
+        r = (r and ((not params.ToMeWithTargetNum) or fk.compareNonNegativeNum(p:distanceTo(player, nil, nil, v), #Ps, params.ToMeWithTargetNum)))
+        r = (r and ((not params.AtkRgWithTargetNum) or fk.compareNonNegativeNum(p:getAttackRange(v), #Ps, params.AtkRgWithTargetNum)) and PFilter(p, tb, cids))
+      end
+      return ((#cids >= minCardNum) and (#Ps >= minTargetNum) and ((#Ps == #cids) or not params.equal) and r)
+    end
+    for m = 0, (2^#Eids) - 1 do
+      local ids = {}
+      for i = 0, #Eids - 1 do
+        if (m | (1 << i)) > 0 then table.insert(ids, Eids[i + 1]) --bit32.band(m, bit32.lshift(1, i)) > 0
+        end
+      end
+      local tb, r = table.simpleClone(ids), true
+      for _, to_select in ipairs(ids) do
+        table.removeOne(tb, to_select)
+        r = (r and CaFilter(to_select, tb))
+      end
+      if r and (#ids >= MinEquipNum) then
+        local admitted1, indexes1, tail1 = table.clone(ids), {}, 0
+        for j = math.max(0, minCardNum - #ids - #Hids), math.min(maxCardNum - #ids, #Xids) do
+          while (#indexes1 < j) and ((#indexes1 ~= 1) or ((indexes1[1] + j - 2) < #Xids)) do
+            local ToDrop1 = true
+            if tail1 < #Xids then
+              for x = 1 + tail1, #Xids do
+                if CaFilter(Hids[x], admitted1) then
+                  ToDrop1 = false
+                  tail1 = x
+                  table.insert(indexes1, x)
+                  table.insert(admitted1, Hids[x])
+                  break
+                end
+              end
+            end
+            if #indexes1 < 1 then break
+            elseif ToDrop1 then
+              tail1 = indexes1[#indexes1]
+              table.remove(indexes1, #indexes1)
+              table.remove(admitted1, #admitted1)
+            end
+          end
+          if #indexes1 < j then break
+          end
+          for k = math.max(0, minCardNum - #ids - j), math.min(maxCardNum - #ids - j, #Hids) do
+            local admitted2, indexes2, tail2, indexes3, tail3 = table.simpleClone(admitted1), table.simpleClone(indexes1), tail1, {}, 0
+            while (#indexes2 ~= 1) or ((indexes2[1] + j - 2) < #Xids) do
+              local ToDrop2 = (#indexes2 < j)
+              if ToDrop2 and (tail2 < #Xids) then
+                for x = 1 + tail2, #Xids do
+                  if CaFilter(Hids[x], admitted1) then
+                    ToDrop2 = false
+                    tail2 = x
+                    table.insert(indexes2, x)
+                    table.insert(admitted2, Hids[x])
+                  end
+                end
+              end
+              if #indexes2 == j then
+                while (#indexes3 ~= 1) or ((indexes3[1] + k - 2) < #Hids) do
+                  ToDrop3 = (#indexes3 < k)
+                  if ToDrop3 and (tail3 < #Hids) then
+                    for h = 1 + tail3, #Hids do
+                      if CaFilter(Hids[h], admitted2) then
+                        ToDrop3 = false
+                        tail3 = h
+                        table.insert(indexes3, h)
+                        table.insert(admitted2, Hids[h])
+                        break
+                      end
+                    end
+                  end
+                  if #indexes3 == k then
+                    for n = 0, (2^#params.targets) - 1 do
+                      local tgts = {}
+                      for l = 0, #params.targets - 1 do
+                        if (n | (1 << l)) > 0 then table.insert(tgts, params.targets[l + 1]) --bit32.band(n, bit32.lshift(1, l)) > 0
+                        end
+                      end
+                      if Feasible(tgts, admitted2) then return tgts, admitted2, false
+                      end
+                    end
+                    ToDrop3 = true
+                  end
+                  if ToDrop3 and (#indexes3 < 1) then
+                    tail3 = 0
+                    break
+                  elseif ToDrop3 then
+                    tail3 = indexes3[#indexes3]
+                    table.remove(indexes3, #indexes3)
+                    table.remove(admitted2, #admitted2)
+                  end
+                end
+                if #indexes3 < k then
+                  if tail3 > 0 then
+                    tail3 = 0
+                    table.remove(indexes3, #indexes3)
+                    table.remove(admitted2, #admitted2)
+                  end
+                  ToDrop2 = true
+                end
+              end
+              if ToDrop2 and (#indexes2 < 1) then
+                tail2 = 0
+                break
+              elseif ToDrop2 then
+                tail2 = indexes2[#indexes2]
+                table.remove(indexes2, #indexes2)
+                table.remove(admitted2, #admitted2)
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+  return {}, {}, false
 end
 
 ---@class AskToYijiParams: AskToChoosePlayersParams
----@field targets? ServerPlayer[] @ 可分配的目标角色。**默认为所有存活角色**
----@field cards? integer[] @ 要分配的卡牌。**默认拥有的所有牌**
+---@field targets? ServerPlayer[] @ 可交给的目标角色，默认为所有存活角色
+---@field cards? integer[] @ 要分配的卡牌。默认拥有的所有牌
 ---@field expand_pile? string|integer[] @ 可选私人牌堆名称，或额外可选牌
 ---@field single_max? integer|table @ 限制每人能获得的最大牌数。输入整数或(以角色id为键以整数为值)的表
----@field cancelable? boolean @ 是否可取消。**默认不可**
----@field skip? boolean @ 是否跳过移动。**默认不跳过**
+---@field skip? boolean @ 是否跳过移动。默认不跳过
 ---@field moveMark? table|string @ 移动后自动赋予标记，格式：{标记名(支持-inarea后缀，移出值代表区域后清除), 值}
+---@field give? boolean @ 是否严格系交给（不能将角色拥有的牌交给其）。注：现有架构须避免撑爆移动端client，若在cards包含targets中多名角色拥有的卡牌id时填true容易出错
+---@field minCardAmountSum? integer @ 至少共“分配”的牌数
+---@field maxCardAmountSum? integer @ 至多共“分配”的牌数
+---@field CardAmountSumWithTargetNum? ">"|"==" @ "分配"牌总数与目标数比较
+---@field CardAmountSumWithMaxHp? "<"|">"|"<="|">="|"=="|"~=" @ "分配"牌总数与目标角色体力上限比较
+---@field CardAmountSumWithHp? "<"|">"|"<="|">="|"=="|"~=" @ "分配"牌总数与目标角色体力比较
+---@field CardAmountSumWithLostHp? "<"|">"|"<="|">="|"=="|"~=" @ "分配"牌总数与目标角色已损失的体力值比较
+---@field CardAmountSumWithAreaCardNum? "<"|">"|"<="|">="|"=="|"~=" @ "分配"牌总数与目标角色区域里的牌数比较
+---@field CardAmountSumWithPossessCardNum? "<"|">"|"<="|">="|"=="|"~=" @ "分配"牌总数与目标角色（拥有的）牌数比较
+---@field CardAmountSumWithHandcardNum? "<"|">"|"<="|">="|"=="|"~=" @ "分配"牌总数与目标角色手牌数比较
 
---- 询问将卡牌分配给任意角色。
----@param player ServerPlayer @ 要询问的玩家
+--- 询问将卡牌交给任意角色。双轨：继承自AskToChoosePlayersParams的min_num／max_num本应仍指目标数最小值／最大值，原写法似乎含义与新增可选参量min／maxCardAmountSum混淆
+---@param player ServerPlayer @ 要询问的角色
 ---@param params AskToYijiParams @ 各种变量
 ---@return table<integer, integer[]> @ 返回一个表，键为角色id，值为分配给其的牌id数组
 function Room:askToYiji(player, params)
@@ -1080,6 +1633,9 @@ function Room:askToYiji(player, params)
   self:sortByAction(targets)
   targets = table.map(targets, Util.IdMapper)
   local cards = params.cards or player:getCardIds("he")
+
+  cards = table.filter(cards, function(cid) return ((Fk:getCardById(cid):getMark('using') < 1) or not table.contains(player:getCardIds('e'), cid)) end)
+
   local _cards = table.simpleClone(cards)
   params.skill_name = params.skill_name or "distribution_select_skill"
   params.min_num = params.min_num or 0
@@ -1099,13 +1655,56 @@ function Room:askToYiji(player, params)
     end
   end
   local residue_sum = 0
-  local residue_num = type(single_max) == "number" and single_max or 9999
+  local residue_num = type(single_max) == "number" and single_max or #cards --or 9999
   for _, pid in ipairs(targets) do
     residueMap[toStr(pid)] = residueMap[toStr(pid)] or residue_num
     residue_sum = residue_sum + residueMap[toStr(pid)]
   end
-  minNum = math.min(minNum, #_cards, residue_sum)
+
+  local MaxByPIdStr, OId, tos, s, d, save, m = {}, nil, {}, 0, 0, nil, table.filter(cards, function(id)
+      return not table.find(targets, function(pid) return table.contains(self:getPlayerById(pid):getCardIds("he"), id) end) end)
+  for _, pid in ipairs(targets) do
+    local PossessNum = #table.filter(self:getPlayerById(pid):getCardIds("he"), function(id) return table.contains(cards, id) end)
+    MaxByPIdStr[tostring(pid)], OId = (type(single_max) == "table") and single_max[pid] or residue_num, (PossessNum > 0) and pid
+    MaxByPIdStr[tostring(pid)] = params.give and math.min(MaxByPIdStr[tostring(pid)], #cards - PossessNum) or MaxByPIdStr[tostring(pid)]
+    if MaxByPIdStr[tostring(pid)] < 1 then table.removeOne(targets, pid)
+    else s = (s + MaxByPIdStr[tostring(pid)])
+    end
+  end
+  params.minCardAmountSum, params.maxCardAmountSum = params.minCardAmountSum or minNum, params.maxCardAmountSum or s
+  local new, maxPNum, maxCaNum = true, params.max_num and math.min(params.max_num, #targets) or #targets, math.min(params.maxCardAmountSum, s, #cards)
+  if not params.targetIdSets then
+    new, params.targetIdSets = false, {}
+    for n = 0, (2^#targets) - 1 do
+      local tgtIds = {}
+      for l = 0, #targets - 1 do
+        if (n | (1 << l)) > 0 then table.insert(tgtIds, targets[l + 1]) --bit32.band(n, bit32.lshift(1, l)) > 0
+        end
+      end
+      table.insert(params.targetIdSets, tgtIds)
+    end
+  end
+  --params.targetIdSets = table.filter(params.targetIdSets, function(ids) return ((#ids >= minNum) and (#ids <= maxPNum)) end) FixMe：双轨制下暂不启用
+  params.targetIdSets = table.filter(params.targetIdSets, function(ids) return table.every(ids, function(i) return (MaxByPIdStr[tostring(i)] > 0) end) end)
+  if (maxCaNum < 1) or (maxCaNum < params.minCardAmountSum) or (#params.targetIdSets < 1) then return {}
+  end
+  local CardAmountSumSuitable = function(n, targetIds)
+    local b = params.CardAmountSumWithTargetNum and not fk.compareNum(n, #targetIds, params.CardAmountSumWithTargetNum) or false
+    for _, pid in ipairs(targetIds) do
+      local p = self:getPlayerById(pid)
+      b = params.CardAmountSumWithMaxHp and not fk.compareNum(n, p.maxHp, params.CardAmountSumWithMaxHp) or b
+      b = params.CardAmountSumWithHp and not fk.compareNum(n, p.hp, params.CardAmountSumWithHp) or b
+      b = params.CardAmountSumWithLostHp and not fk.compareNum(n, p:getLostHp(), params.CardAmountSumWithLostHp) or b
+      b = params.CardAmountSumWithAreaCardNum and not fk.compareNum(n, #p:getCardIds('hej'), params.CardAmountSumWithAreaCardNum) or b
+      b = params.CardAmountSumWithPossessCardNum and not fk.compareNum(n, #p:getCardIds('he'), params.CardAmountSumWithPossessCardNum) or b
+      b = params.CardAmountSumWithHandcardNum and not fk.compareNum(n, p:getHandcardNum(), params.CardAmountSumWithHandcardNum) or b
+    end
+    return ((n >= params.minCardAmountSum) and (n <= maxCaNum) and not b)
+  end
+
   maxNum = math.min(maxNum, #_cards, residue_sum)
+  minNum = math.min(minNum, #_cards, residue_sum)
+
   local data = {
     cards = _cards,
     max_num = maxNum,
@@ -1113,21 +1712,55 @@ function Room:askToYiji(player, params)
     residued_list = residueMap,
     expand_pile = expand_pile,
     skillName = skillName,
+    MaxByNonPossessNumStrByPIdStr = {},
   }
 
-  while params.cancelable or (maxNum > 0 and #_cards > 0) do
+  while maxNum > 0 and #_cards > 0 do
     data.max_num = maxNum
     local prompt = params.prompt or ("#AskForDistribution:::"..minNum..":"..maxNum)
     local activeParams = { ---@type AskToUseActiveSkillParams
       skill_name = "distribution_select_skill",
       prompt = prompt,
-      cancelable = params.cancelable or minNum == 0,
+      cancelable = (minNum == 0) or CardAmountSumSuitable(d, tos), --cancelable = minNum == 0,
       extra_data = data,
       no_indicate = true
     }
+
+    save = not new
+    
+    for _, id in ipairs(targets) do
+      data.MaxByNonPossessNumStrByPIdStr[tostring(id)] = {}
+      for i = 0, math.min(MaxByPIdStr[tostring(id)] - #list[id], #m) do
+        for _, PIds in ipairs(table.filter(params.targetIdSets, function(ids) return fk.isSubOf(table.connectIfNeed(tos, {id}), ids) end)) do  
+          local min, max, maxO = d, 0, (params.give and OId) and math.min(MaxByPIdStr[tostring(OId)], #m - ((OId == id) and 0 or i) + #list[OId]) or 1
+          for _, pid in ipairs(PIds) do
+            if pid == id then min = (min + i)
+            elseif not table.contains(tos, pid) then min = (min + 1)
+            end
+            if params.give and (OId == pid) then max = (max + maxO)
+            else max = (max + MaxByPIdStr[tostring(pid)])
+            end
+          end
+          min, max = math.max(min, params.minCardAmountSum), math.min(max, maxCaNum)
+          if (OId and table.contains(PIds, OId) and (maxO < 1)) or (min >= max) or ((i < 1) and ((min + 2) > max)) then break
+          end
+          for n = max, (i < 1) and (min + 1) or min, -1 do
+            if CardAmountSumSuitable(n, PIds) then
+              data.MaxByNonPossessNumStrByPIdStr[tostring(id)][tostring(i)] = math.min(n - min + i, MaxByPIdStr[tostring(id)] - #list[id])
+              save = save and save or {PIds, n, (params.give and OId) and math.min(n - min + i, MaxByPIdStr[tostring(OId)] - #list[OId], #m) or 0}
+              break
+            end
+          end
+        end
+      end
+    end
+
     local success, dat = self:askToUseActiveSkill(player, activeParams)
     if success and dat then
       local to = dat.targets[1].id
+
+      table.insertIfNeed(tos, to)
+
       local give_cards = dat.cards
       for _, id in ipairs(give_cards) do
         table.insert(list[to], id)
@@ -1135,6 +1768,9 @@ function Room:askToYiji(player, params)
         local p = self:getPlayerById(to)
         self:setCardMark(Fk:getCardById(id), "@DistributionTo",
           Fk:translate(p.general == "anjiang" and "seat#" .. tostring(p.seat) or p.general))
+
+        d = (d + 1)
+        table.removeOne(m, id)
       end
       minNum = math.max(0, minNum - #give_cards)
       maxNum = maxNum - #give_cards
@@ -1142,13 +1778,35 @@ function Room:askToYiji(player, params)
     else
       break
     end
-    params.cancelable = false
   end
 
   for _, id in ipairs(cards) do
     self:setCardMark(Fk:getCardById(id), "@DistributionTo", 0)
   end
-  if not params.cancelable then
+
+  if new and save and not CardAmountSumSuitable(d, tos) then
+    if params.give and OId and table.removeOne(save[1], OId) and (save[3] > 0) then
+      for i = 1, save[3] do
+        table.insert(list[OId], m[i])
+        table.removeOne(_cards,  m[i])
+        d = (d + 1)
+      end
+    end
+    for _, pid in ipairs(table.filter(save[1], function(pid) return not table.contains(tos, pid) end)) do
+      local id = table.remove(_cards, 1)
+      table.insert(list[pid], id)
+      d = (d + 1)
+    end
+    for _, pid in ipairs(save[1]) do
+      if d == save[2] then break
+      end
+      for j = math.min(save[2] - d, MaxByPIdStr[tostring(pid)] - #list[pid]), 1, -1 do
+        local id = table.remove(_cards, j)
+        table.insert(list[pid], id)
+        d = (d + 1)
+      end
+    end
+  else
     for _, pid in ipairs(targets) do
       if minNum == 0 or #_cards == 0 then break end
       local num = math.min(residueMap[toStr(pid)] or 0, minNum, #_cards)
@@ -1396,6 +2054,87 @@ function Room:askToChooseCards(player, params)
 
   local poxiParams = { ---@type AskToPoxiParams
     poxi_type = "AskForCardsChosen",
+    data = cards_data,
+    extra_data = data,
+    cancelable = params.cancelable
+  }
+
+  local ret = self:askToPoxi(player, poxiParams)
+  local new_ret = table.filter(ret, function(id) return id ~= -1 end)
+  local hidden_num = #ret - #new_ret
+  if hidden_num > 0 then
+    table.insertTable(new_ret,
+    self:tableRandomPick(target:getCardIds(Player.Hand), hidden_num))
+  end
+  return new_ret
+end
+
+---@class askToChoosePatternCardsParams: AskToChooseCardParams
+---@field min integer @ 最小选牌数
+---@field max integer @ 最大选牌数
+---@field cancelable? boolean @ 是否可取消，**默认不可**
+---@field pattern? string @ 同时针对可见牌与不可见牌的选牌规则
+
+---@param player ServerPlayer @ 要被询问的人
+---@param params AskToChooseCardsParams @ 各种变量
+---@return integer[] @ 选择的id数组
+function Room:askToChoosePatternCards(player, params)
+  local target, flag, reason, prompt = params.target, params.flag, params.skill_name, params.prompt
+  params.cancelable = not not params.cancelable
+  local min, max = params.min, params.max
+  if min == 1 and max == 1 and not params.cancelable and not params.pattern then
+    return { self:askToChooseCard(player, params) }
+  end
+
+  local cards
+  if type(flag) == "string" then
+    cards = target:getCardIds(flag)
+  else
+    cards = {}
+    for _, t in ipairs(flag.card_data) do
+      table.insertTable(cards, t[2])
+    end
+  end
+  if #cards <= min then return cards end
+
+  local data = {
+    to = target.id,
+    min = min,
+    max = max,
+    skillName = reason,
+    prompt = prompt,
+    pattern = params.pattern
+  }
+  local visible_data = {}
+  local cards_data = {}
+  if type(flag) == "string" then
+    local handcards = target:getCardIds(Player.Hand)
+    local equips = target:getCardIds(Player.Equip)
+    local judges = target:getCardIds(Player.Judge)
+    if string.find(flag, "h") and #handcards > 0 then
+      table.insert(cards_data, {"$Hand", handcards})
+      for _, id in ipairs(handcards) do
+        if not player:cardVisible(id) then
+          visible_data[tostring(id)] = false
+        end
+      end
+      if next(visible_data) == nil then visible_data = nil end
+      data.visible_data = visible_data
+    end
+    if string.find(flag, "e") and #equips > 0 then
+      table.insert(cards_data, {"$Equip", equips})
+    end
+    if string.find(flag, "j") and #judges > 0 then
+      table.insert(cards_data, {"$Judge", judges})
+    end
+  else
+    for _, t in ipairs(flag.card_data) do
+      table.insert(cards_data, t)
+    end
+  end
+
+  local poxiParams = { ---@type AskToPoxiParams
+    poxi_type = "AskForPatternCardsChosen",
     data = cards_data,
     extra_data = data,
     cancelable = params.cancelable
@@ -2880,7 +3619,7 @@ end
 ---@field exclude_ids? integer[] @ 本次不可移动的卡牌id
 ---@field skip? boolean @ 是否跳过移动。默认不跳过
 
---- 询问移动场上的一张牌。不可取消
+--- 询问“平移”场上的一张牌。不可取消
 ---@param player ServerPlayer @ 移动的操作者
 ---@param params AskToMoveCardInBoardParams @ 各种变量
 ---@return { card: Card, from: ServerPlayer, to: ServerPlayer }? @ 选择的卡牌、起点玩家id和终点玩家id列表
@@ -2902,14 +3641,14 @@ function Room:askToMoveCardInBoard(player, params)
   if not flag or flag == "e" then
     if not moveFrom or moveFrom == targetOne then
       for _, equipId in ipairs(targetOne:getCardIds(Player.Equip)) do
-        if not table.contains(excludeIds, equipId) and targetOne:canMoveCardInBoardTo(targetTwo, equipId) then
+        if not table.contains(excludeIds, equipId) and targetOne:canMoveCardInBoardTo(targetTwo, equipId, player) then --(targetTwo, equipId)
           table.insert(cards, equipId)
         end
       end
     end
     if not moveFrom or moveFrom == targetTwo then
       for _, equipId in ipairs(targetTwo:getCardIds(Player.Equip)) do
-        if not table.contains(excludeIds, equipId) and targetTwo:canMoveCardInBoardTo(targetOne, equipId) then
+        if not table.contains(excludeIds, equipId) and targetTwo:canMoveCardInBoardTo(targetOne, equipId, player) then --(targetOne, equipId)
           table.insert(cards, equipId)
         end
       end
@@ -2932,7 +3671,7 @@ function Room:askToMoveCardInBoard(player, params)
   if not flag or flag == "j" then
     if not moveFrom or moveFrom == targetOne then
       for _, trickId in ipairs(targetOne:getCardIds(Player.Judge)) do
-        if not table.contains(excludeIds, trickId) and targetOne:canMoveCardInBoardTo(targetTwo, trickId) then
+        if not table.contains(excludeIds, trickId) and targetOne:canMoveCardInBoardTo(targetTwo, trickId, player) then --(targetTwo, trickId)
           table.insert(cards, trickId)
           table.insert(cardsPosition, 0)
         end
@@ -2940,7 +3679,7 @@ function Room:askToMoveCardInBoard(player, params)
     end
     if not moveFrom or moveFrom == targetTwo then
       for _, trickId in ipairs(targetTwo:getCardIds(Player.Judge)) do
-        if not table.contains(excludeIds, trickId) and targetTwo:canMoveCardInBoardTo(targetOne, trickId) then
+        if not table.contains(excludeIds, trickId) and targetTwo:canMoveCardInBoardTo(targetOne, trickId, player) then --(targetOne, trickId)
           table.insert(cards, trickId)
           table.insert(cardsPosition, 1)
         end
@@ -3000,10 +3739,10 @@ end
 ---@field froms? ServerPlayer[] @ 移动来源角色列表
 ---@field tos? ServerPlayer[] @ 移动目标角色列表
 
---- 询问一名玩家选择两名角色，在这两名角色之间移动场上一张牌
+--- 询问一名玩家选择两名角色，在这两名角色之间“平移”场上一张牌
 ---@param player ServerPlayer @ 要做选择的玩家
 ---@param params AskToChooseToMoveCardInBoardParams @ 各种变量
----@return ServerPlayer[] @ 选择的两个玩家的列表，若未选择，返回空表
+---@return ServerPlayer[] @ 选择的两名角色的列表，若未选择，返回空表
 function Room:askToChooseToMoveCardInBoard(player, params)
   if params.flag then
     assert(table.contains({"e", "j", "ej", "je"}, params.flag))
@@ -3015,7 +3754,8 @@ function Room:askToChooseToMoveCardInBoard(player, params)
   params.tos = params.tos or self.alive_players
   params.prompt = params.prompt or ("#AskToChooseToMoveCardInBoard:::"..params.skill_name)
 
-  if #self:canMoveCardInBoard(params.flag, nil, params.exclude_ids) == 0 and not params.cancelable then return {} end
+  if #self:canMoveCardInBoard(params.flag, nil, params.exclude_ids, player) == 0 and not params.cancelable then return {}
+  end --(params.flag, nil, params.exclude_ids)
 
   local data = {
     flag = params.flag,
@@ -3039,7 +3779,7 @@ function Room:askToChooseToMoveCardInBoard(player, params)
     if params.cancelable then
       return {}
     else
-      return self:canMoveCardInBoard(params.flag, nil, params.exclude_ids)
+      return self:canMoveCardInBoard(params.flag, nil, params.exclude_ids, player) --(params.flag, nil, params.exclude_ids)
     end
   end
 end
@@ -3291,13 +4031,14 @@ function Room:getGameSummary()
   return summary
 end
 
---- 获取可以移动场上牌的第一对目标。用于判断场上是否可以移动的牌
+--- 获取可以“平移”场上牌的第一对目标。用于判断场上是否有可以被“平移”的牌
 ---@param flag? "e"|"j"|"ej" @ 判断移动的区域
 ---@param players? ServerPlayer[] @ 可被移动的玩家列表
 ---@param excludeIds? integer[] @ 不能移动的卡牌id
 ---@param targets? ServerPlayer[] @ 可移动至的玩家列表，默认为```players```
----@return ServerPlayer[] @ 第一对玩家列表，第一个是来源，第二个是目标 可能为空表
-function Room:canMoveCardInBoard(flag, players, excludeIds, targets)
+---@param executor? Player|number @ 执行者（不能操作自己装备区里“正用到”的牌）或其id，若由系统执行可填99，若填nil或不填则由“来源”执行
+---@return ServerPlayer[] @ 第一对玩家列表，第一个是“来源”，第二个是“目标” 可能为空表
+function Room:canMoveCardInBoard(flag, players, excludeIds, targets, executor) --(flag, players, excludeIds, targets)
   if flag then
     assert(table.contains({"e", "j", "ej", "je"}, flag))
   end
@@ -3308,7 +4049,7 @@ function Room:canMoveCardInBoard(flag, players, excludeIds, targets)
 
   for _, from in ipairs(players) do
     local to = table.find(targets, function(p)
-      return p ~= from and from:canMoveCardsInBoardTo(p, flag, excludeIds)
+      return p ~= from and from:canMoveCardsInBoardTo(p, flag, excludeIds, executor or from) --(p, flag, excludeIds)
     end)
     if to then
       return { from, to }
