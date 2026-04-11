@@ -356,7 +356,7 @@ function Card:addSubcard(card)
   updateColorAndNumber(self)
 end
 
---- 将一批子卡牌加入某张牌中
+--- 将一批子卡牌加入某张牌中（常用于将这批牌弃置/交给某个角色···）。
 ---@param cards integer[] | Card[] @ 要加入的子卡列表
 function Card:addSubcards(cards)
   for _, c in ipairs(cards) do
@@ -397,16 +397,6 @@ end
 --- 判断此牌能否符合一个卡牌规则。
 function Card:matchPattern(pattern)
   return Exppattern:Parse(pattern):match(self)
-end
-
---- 获取卡牌牌名字数
---- @param ol_rule? boolean @ OL服和谐【借刀杀人】
---- @return integer
-function Card:getNameLength(ol_rule)
-  if ol_rule and self.trueName == "collateral" then
-    return 2
-  end
-  return Fk:translate(self.trueName, "zh_CN"):len()
 end
 
 --- 获取卡牌花色并返回花色文字描述（如``spade``黑桃、``heart``红桃、``club``梅花、``diamond``方块）或者符号（如♠♥♣♦，带颜色）。
@@ -523,6 +513,15 @@ end
 ---@return string @ 完整点数（字符串）
 function Card:getSuitCompletedString(symbol)
   return Fk:translate(self:getSuitString(symbol)) .. getNumberStr(self.number)
+end
+
+--获取牌名汉字数
+---@param ignoreSpecies? boolean @ 忽略【杀】和【无懈可击】等牌的“种”前缀，默认忽略
+---@return integer @ 汉字数
+function Card:getNameLength(ignoreSpecies)
+  if ignoreSpecies ~= false then return Fk:translate(self.trueName, 'zh_CN'):len()
+  else return Fk:translate(self.name, 'zh_CN'):len()
+  end
 end
 
 --- 判断卡牌是否为普通锦囊牌
@@ -763,45 +762,29 @@ function Card:getTableMark(mark)
   return type(ret) == "table" and ret or {}
 end
 
---- 获得卡牌的技能
----@param player ClientPlayer | Player | ServerPlayer @ 需要判断的玩家
----@return table
-function Card:getSkill(player)
-  local ret = self.skill
-  local filters = Fk:currentRoom().status_skills[FilterSkill] or Util.DummyTable---@type FilterSkill[]
-  for _, filter in ipairs(filters) do
-    local skill_name = filter:cardSkillFilter(self, player)
-    if skill_name then
-      ret = Fk.skills[skill_name]
-    end
-  end
-  return ret
-end
-
 --- 获得使用此牌的固定目标，仅有不能自由选择目标的牌会有固定目标。即桃、无中、装备、AOE等
 ---@param player Player @ 使用者
 ---@param extra_data? UseExtraData @ 额外数据
 ---@return Player[]|nil @ 返回固定目标角色列表。若此牌可以选择目标，返回空值
 function Card:getFixedTargets(player, extra_data)
   local ret = extra_data and extra_data.fix_targets
-  local card_skill = self:getSkill(player)
   if ret then return table.map(ret, Util.Id2PlayerMapper) end
   local status_skills = Fk:currentRoom().status_skills[TargetModSkill] or Util.DummyTable ---@type TargetModSkill[]
   for _, skill in ipairs(status_skills) do
-    local targetIds = skill:getFixedTargets(player, card_skill, self, extra_data)
+    local targetIds = skill:getFixedTargets(player, self.skill, self, extra_data)
     if targetIds then
       return table.map(targetIds, Util.Id2PlayerMapper)
     end
   end
   -- 卡牌自身赋予的默认目标
-  ret = card_skill:fixTargets(player, self, extra_data)
+  ret = self.skill:fixTargets(player, self, extra_data)
   if ret then return ret end
   -- 以下为适用所有牌的默认值
-  if card_skill:getMinTargetNum(player) == 0 and not self.is_passive then
+  if self.skill:getMinTargetNum(player) == 0 and not self.is_passive then
     -- 此处仅作为默认值，若与默认选择规则不一致（如火烧连营）请修改cardSkill的fix_targets参数
     if self.multiple_targets then
       return table.filter(Fk:currentRoom().alive_players, function(p)
-        return card_skill:modTargetFilter(player, p, {}, self)
+        return self.skill:modTargetFilter(player, p, {}, self)
       end)
     else
       return { player }
@@ -819,11 +802,11 @@ end
 function Card:getAvailableTargets(player, extra_data)
   if not player:canUse(self, extra_data) or player:prohibitUse(self) then return {} end
   extra_data = extra_data or Util.DummyTable
-  local card_skill = self:getSkill(player)
   local room = Fk:currentRoom()
   -- 选定目标的优先逻辑：额外的锁定目标(求桃锁定濒死角色)>牌本身的锁定目标(南蛮无中装备)>所有角色
   local avail = (self:getFixedTargets(player, extra_data) or room.alive_players)
   local tos = table.simpleClone(avail)
+  --[[
   -- 过滤额外的目标限制，不需要了，下面会判
   for _, limit in ipairs({"exclusive_targets", "must_targets", "include_targets"}) do
     if type(extra_data[limit]) == "table" and #extra_data[limit] > 0 then
@@ -834,14 +817,14 @@ function Card:getAvailableTargets(player, extra_data)
   if #tos == 0 then return {} end
   tos = table.filter(tos, function(p)
     return not player:isProhibited(p, self) and
-        Util.CardTargetFilter(card_skill, player, p, {}, self.subcards, self, extra_data)
+        Util.CardTargetFilter(self.skill, player, p, {}, self.subcards, self, extra_data)
   end)
-  local n = card_skill:getMinTargetNum(player)
+  local n = self.skill:getMinTargetNum(player)
   if n > 1 then
     if n == 2 then
       for i = #tos, 1, -1 do
         if not table.find(room.alive_players, function(p)
-              return p ~= tos[i] and card_skill:targetFilter(player, p, { tos[i] }, {}, self, extra_data)
+              return p ~= tos[i] and self.skill:targetFilter(player, p, { tos[i] }, {}, self, extra_data)
             end) then
           table.remove(tos, i)
         end
@@ -849,7 +832,6 @@ function Card:getAvailableTargets(player, extra_data)
     else
       --最小目标过多则直接当作没有复杂规则，每个目标平权。eg.荆襄盛世
       if #tos >= n then
-        if RoomInstance then return RoomInstance:tableRandomPick(tos, n) end
         return table.random(tos, n)
       else
         return {}
@@ -869,22 +851,20 @@ end
 ---@return Player[] @ 目标角色表。返回空表表示无合法目标
 function Card:getDefaultTarget(player, extra_data)
   extra_data = extra_data or Util.DummyTable
-  local card_skill = self:getSkill(player)
   local tos = self:getAvailableTargets(player, extra_data)
   if #tos == 0 then return {} end
-  local n = card_skill:getMinTargetNum(player)
+  local n = self.skill:getMinTargetNum(player)
   if n == 0 then
     return tos
   elseif n == 2 then
     for i = #tos, 1, -1 do
       for _, p in ipairs(Fk:currentRoom().alive_players) do
-        if p ~= tos[i] and card_skill:targetFilter(player, p, { tos[i] }, {}, self, extra_data) then
+        if p ~= tos[i] and self.skill:targetFilter(player, p, { tos[i] }, {}, self, extra_data) then
           return { tos[i], p }
         end
       end
     end
   else
-    if RoomInstance then return RoomInstance:tableRandomPick(tos, n) end
     return table.random(tos, n)
   end
   return {}
@@ -908,9 +888,8 @@ function Card:setVSPattern(skillName, player, pattern)
         self:addSubcards(vs.subcards)
         return
       end
-      --一些只在出牌阶段使用的ViewAsSkill未定义skill.pattern，其默认值为""，需视作"."
-      --FIXME: 总感觉这块逻辑有问题……
-      local exp = Exppattern:Parse((skill.pattern == "") and "." or skill.pattern)
+      local exp = Exppattern:Parse(skill.pattern or ".")
+      local matchers = {}
       for _, m in ipairs(exp.matchers) do
         if (m.name == nil or table.contains(m.name, self.name)) and
             (m.trueName == nil or table.contains(m.trueName, self.trueName)) then
@@ -996,6 +975,7 @@ function Card:setVSPattern(skillName, player, pattern)
               m.number = e_numbers
             end
           end
+          table.insert(matchers, m)
         end
       end
       pattern = tostring(exp)
