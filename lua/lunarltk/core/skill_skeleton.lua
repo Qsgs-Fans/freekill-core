@@ -359,6 +359,8 @@ function SkillSkeleton:createProhibitSkill(_skill, idx, key, attr, spec)
   sk.prohibitResponse = spec.prohibit_response or sk.prohibitResponse
   sk.prohibitDiscard = spec.prohibit_discard or sk.prohibitDiscard
   sk.prohibitPindian = spec.prohibit_pindian or sk.prohibitPindian
+  sk.prohibitJudge = spec.prohibit_judge or sk.prohibitJudge
+  sk.prohibitPrey = spec.prohibit_prey or sk.prohibitPrey
 
   return sk
 end
@@ -540,7 +542,7 @@ function SkillSkeleton:createActiveSkill(_skill, idx, key, attr, spec)
   ---@param curSkill ViewAsSkill
   ---@param player Player
   skill.canUse = function(curSkill, player, card, extra_data)
-    if not curSkill:isEffectable(player) then return end
+    if not (curSkill.is_delay_effect or curSkill:isEffectable(player)) then return end --if not curSkill:isEffectable(player) then
     if attr.check_effect_limit then
       for scope, _ in pairs(curSkill.max_use_time) do
         if not curSkill:withinTimesLimit(player, scope) then
@@ -682,8 +684,8 @@ function SkillSkeleton:createViewAsSkill(_skill, idx, key, attr, spec)
 
   if type(spec.enabled_at_play) == "function" then
     skill.enabledAtPlay = function(curSkill, player)
-      return timeCheck(curSkill, player) and spec.enabled_at_play(curSkill, player) and curSkill:isEffectable(player)
-    end
+      return timeCheck(curSkill, player) and spec.enabled_at_play(curSkill, player) and (curSkill.is_delay_effect or curSkill:isEffectable(player))
+    end --and curSkill:isEffectable(player)
   else
     skill.enabledAtPlay = function(curSkill, player)
       return timeCheck(curSkill, player) and ViewAsSkill.enabledAtPlay(curSkill, player)
@@ -691,8 +693,8 @@ function SkillSkeleton:createViewAsSkill(_skill, idx, key, attr, spec)
   end
   if type(spec.enabled_at_response) == "function" then
     skill.enabledAtResponse = function(curSkill, player, cardResponsing)
-      return timeCheck(curSkill, player) and spec.enabled_at_response(curSkill, player, cardResponsing) and curSkill:isEffectable(player)
-    end
+      return timeCheck(curSkill, player) and spec.enabled_at_response(curSkill, player, cardResponsing) and (curSkill.is_delay_effect or curSkill:isEffectable(player))
+    end --and curSkill:isEffectable(player)
   else
     skill.enabledAtResponse = function(curSkill, player, cardResponsing)
       return timeCheck(curSkill, player) and ViewAsSkill.enabledAtResponse(curSkill, player, cardResponsing)
@@ -715,8 +717,8 @@ function SkillSkeleton:createViewAsSkill(_skill, idx, key, attr, spec)
 
   if type(spec.enabled_at_nullification) == "function" then
     skill.enabledAtNullification = function(curSkill, player, cardData)
-      return timeCheck(curSkill, player) and spec.enabled_at_nullification(curSkill, player, cardData) and curSkill:isEffectable(player)
-    end
+      return timeCheck(curSkill, player) and spec.enabled_at_nullification(curSkill, player, cardData) and (curSkill.is_delay_effect or curSkill:isEffectable(player))
+    end --and curSkill:isEffectable(player)
   else
     skill.enabledAtNullification = function(curSkill, player, cardData)
       return timeCheck(curSkill, player) and ViewAsSkill.enabledAtNullification(curSkill, player, cardData)
