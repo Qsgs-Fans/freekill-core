@@ -40,4 +40,17 @@ function ProhibitSkill:prohibitPindian(from, to)
   return false
 end
 
+---@param player Player
+---@return boolean
+function ProhibitSkill:prohibitJudge(player)
+  return false
+end
+
+---@param player Player
+---@param card Card
+---@return boolean
+function ProhibitSkill:prohibitPrey(player, card)
+  return false
+end
+
 return ProhibitSkill
