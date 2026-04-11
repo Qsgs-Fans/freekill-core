@@ -48,6 +48,10 @@ fk.CardRespondFinished = RespondCardEvent:subclass("fk.CardRespondFinished")
 ---@field public additionalEffectToPlayer? table<ServerPlayer, integer> @ 对某人的额外生效次数
 ---@field public noIndicate? boolean @ 隐藏指示线
 ---@field public attachedSkillAndUser? { user: integer, skillName: string, muteCard: boolean } @ 附加技能、使用者与卡牌静音，用于转化技
+---@field public skipDrop? boolean @ 是否不进入弃牌堆
+---@field public skiponAim? boolean @ 是否跳过“指定目标时”“成为目标时”“指定目标后”“成为目标后”
+---@field public skipPreCardEffect? boolean @ 是否跳过“对当前目标使用结算开始时”
+---@field public skipBeforeCardEffect? boolean @ 是否跳过“对当前目标生效前”
 
 --- 使用牌的数据
 ---@class UseCardData: UseCardDataSpec, TriggerData
@@ -675,6 +679,8 @@ fk.TargetConfirmed = AimEvent:subclass("fk.TargetConfirmed")
 ---@field public currentExtraData? UseExtraData | table @ 额外数据（仅当前目标，继承给对应生效事件）
 ---@field public currentResponsePattern? string @ 用于响应卡牌效果的pattern，如"jink"之于杀、"nullification"之于锦囊
 ---@field public offsetFunc? function @ 用于抵消卡牌效果的方式，如"使用一张闪"
+---@field public skipPreCardEffect? boolean @ 是否跳过“对当前目标使用结算开始时”
+---@field public skipBeforeCardEffect? boolean @ 是否跳过“对当前目标生效前”
 
 --- 卡牌效果的数据
 ---@class CardEffectData: CardEffectDataSpec, TriggerData
