@@ -535,6 +535,7 @@ Fk:loadTranslationTable{
   ["choose_cards_skill"] = "选牌",
   ["choose_players_skill"] = "选择角色",
   ["ex__choose_skill"] = "选择",
+  ["choose_cards_to_move_and_players"] = "选择",
   ["distribution_select_skill"] = "选择",
   ["choose_players_to_move_card_in_board"] = "选择角色",
   ["userealcard_skill"] = "选择",
