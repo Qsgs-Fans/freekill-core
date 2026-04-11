@@ -140,7 +140,7 @@ end
 ---@field public on_nullified? fun(self: CardSkill, room: Room, effect: CardEffectData): any @ (仅用于延时锦囊)被抵消时执行内容
 ---@field public offset_func? fun(self: CardSkill, room: Room, effect: CardEffectData): any @ 重新定义抵消方式
 ---@field public prompt? string|fun(self: CardSkill, player: Player, selected_cards: integer[], selected_targets: Player[], extra_data: any): string @ 提示信息
----@field public interaction? fun(self: CardSkill, player: Player, card: Card, extra_data: any): table? @ 选项框
+---@field public interaction? any
 ---@field public target_tip? fun(self: CardSkill, player: Player, to_select: Player, selected: Player[], selected_cards: integer[], card?: Card, selectable: boolean, extra_data: any): string|TargetTipDataSpec? @ 显示在目标武将牌脸上的提示
 
 ---@class ViewAsSkillSpec: UsableSkillSpec
@@ -176,6 +176,8 @@ end
 ---@field public prohibit_response? fun(self: ProhibitSkill, player: Player, card: Card): any
 ---@field public prohibit_discard? fun(self: ProhibitSkill, player: Player, card: Card): any
 ---@field public prohibit_pindian? fun(self: ProhibitSkill, from: Player, to: Player): any
+---@field public prohibit_judge? fun(self: ProhibitSkill, player: Player): any
+---@field public prohibit_prey? fun(self: ProhibitSkill, player: Player, card: Card): any
 
 ---@class AttackRangeSpec: StatusSkillSpec
 ---@field public correct_func? fun(self: AttackRangeSkill, from: Player, to: Player): number? @ 增加的攻击范围
@@ -205,8 +207,6 @@ end
 ---@field public view_as? fun(self: FilterSkill, player: Player, card: Card): Card?
 ---@field public equip_skill_filter? fun(self: FilterSkill, skill: Skill, player: Player): string?
 ---@field public handly_cards? fun(self: FilterSkill, player: Player): integer[]? @ 视为拥有可以如手牌般使用或打出的牌
----@field public card_skill_filter? fun(self: FilterSkill, card: Card, player: Player): string?
----@field public skill_filter? fun(self: FilterSkill, player: Player): string[]? @ 视为拥有的技能
 
 
 ---@class InvaliditySpec: StatusSkillSpec
@@ -309,7 +309,6 @@ end
 ---@field public winner_getter? fun(self: GameMode, victim: ServerPlayer): string @ 在死亡流程中用于判断是否结束游戏，并输出胜利者身份
 ---@field public surrender_func? fun(self: GameMode, playedTime: number): table
 ---@field public is_counted? fun(self: GameMode, room: Room): boolean @ 是否计入胜率统计
----@field public feasible? fun(self: GameMode, settings: any): boolean @ 是否允许创房间
 ---@field public get_adjusted? fun(self: GameMode, player: ServerPlayer): table @ 调整玩家初始属性
 ---@field public reward_punish? fun(self: GameMode, victim: ServerPlayer, killer?: ServerPlayer) @ 死亡奖惩
 ---@field public friend_enemy_judge? fun(self: GameMode, targetOne: ServerPlayer | Player, targetTwo: ServerPlayer | Player): boolean? @ 敌友判断
@@ -345,10 +344,6 @@ function fk.CreateGameMode(spec)
     assert(type(spec.is_counted) == "function")
     ret.countInFunc = spec.is_counted
   end
-  if spec.feasible then
-    assert(type(spec.feasible) == "function")
-    ret.feasible = spec.feasible
-  end
   if spec.get_adjusted then
     assert(type(spec.get_adjusted) == "function")
     ret.getAdjustedProperty = spec.get_adjusted
@@ -362,7 +357,7 @@ function fk.CreateGameMode(spec)
     ret.buildDrawPile = spec.build_draw_pile
   end
   if spec.friend_enemy_judge then
-    assert(type(spec.friend_enemy_judge) == "function")
+    assert(type(spec.winner_getter) == "function")
     ret.friendEnemyJudge = spec.friend_enemy_judge
   end
   return ret
@@ -405,3 +400,65 @@ end
 ---@field feasible fun(selected: string[], data: string[], extra_data: any): boolean?
 ---@field default_choice? fun(data: string[], extra_data: any): string[]
 ---@field prompt? string | fun(data: string[], extra_data: any): string
+
+--- 判断俩实数是否符合给定的序关系
+---@param former number @ 前者
+---@param latter number @ 后者
+---@param operator "<"|">"|"<="|">="|"=="|"~=" @ 序关系运算符
+---@return boolean|nil @ 返回比较结果，若输入值类型不符则返回nil
+function fk.compareNum(former, latter, operator)
+  if (type(former) ~= 'number') or (type(latter) ~= 'number') then return nil
+  elseif operator == ">" then return (former > latter)
+  elseif operator == "<" then return (former < latter)
+  elseif operator == "==" then return (former == latter)
+  elseif operator == ">=" then return (former >= latter)
+  elseif operator == "<=" then return (former <= latter)
+  elseif operator == "~=" then return (former ~=latter)
+  end
+  return nil
+end
+
+--- 判断俩非负实数是否符合给定的序关系
+---@param former number @ 前者
+---@param latter number @ 后者
+---@param operator "<"|">"|"<="|">="|"=="|"~=" @ 序关系运算符
+---@return boolean|nil @ 返回比较结果，若输入值类型不符则返回nil，反之若输入了负数则返回false
+function fk.compareNonNegativeNum(former, latter, operator)
+  if (type(former) ~= 'number') or (type(latter) ~= 'number') then return nil
+  elseif (former < 0) or (latter < 0) then return false
+  end
+  return fk.compareNum(former, latter, operator)
+end
+
+--- 获取某键值在给定表中出现次数
+---@param Value any @ 键值。若该键值是表，则比对的是引用（类似指针）而非内容
+---@param Table table
+---@return integer|nil @ 若参量类型不符则返回nil
+function fk.countValue(Value, Table)
+  if type(Table) ~= 'table' then return nil
+  end
+  local m = 0
+  for _, v in ipairs(Table) do
+    if v == Value then m = (m + 1)
+    end
+  end
+  return m
+end
+
+--- 判断作为集合的A是否系作为集合的B的（真）子集，或两者之并的元素在表B中出现次数是否均不小于（且有的大于）在表A中出现次数
+---@param A table @ 前表
+---@param B table @ 后表
+---@param EachValue? boolean @ 是否考量各键值在两表中出现次数；默认以集合视角归并同键值，即不考量
+---@param proper? boolean @ 是否要求某元素在集合A中未出现或在表B中出现的次数大于在表A中出现的次数；默认不要求
+---@return boolean|nil @ 若参量类型不符则返回nil。注：若某些键值是表，则比对的是引用（类似指针）而非内容
+function fk.isSubOf(A, B, EachValue, proper)
+  if (type(A) ~= 'table') or (type(B) ~= 'table') then return nil
+  end
+  local Values, ns, Prp = table.connectIfNeed(A, B), false, false
+  for _, v in ipairs(Values) do
+    local NumA, NumB = fk.countValue(v, A), fk.countValue(v, B)
+    ns = (ns or (EachValue and (NumB < NumA)) or (NumB < 1))
+    Prp = (Prp or (EachValue and (NumB > NumA)) or (NumA < 1))
+  end
+  return ((Prp or not proper) and not ns)
+end
