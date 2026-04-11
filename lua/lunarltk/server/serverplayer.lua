@@ -415,8 +415,10 @@ function ServerPlayer:setChainState(chained, data)
 end
 
 --- 复原武将牌（翻至正面、解除连环状态）
+---@return boolean @ 能否执行复原操作
 function ServerPlayer:reset()
-  if self.faceup and not self.chained then return end
+  if self.faceup and not self.chained then return false
+  end
   self.room:sendLog{
     type = "#ChainStateChange",
     from = self.id,
@@ -432,7 +434,18 @@ function ServerPlayer:reset()
       self.room:broadcastProperty(self, "faceup")
     end
   else
-    if self.chained then
+    if self.chained and not self.faceup then
+      self:setChainState(false)
+      if self.dead then
+        self.faceup = true
+        self.room:broadcastProperty(self, "faceup")
+      else
+        self:turnOver()
+      end
+    elseif self.chained and self.faceup then self:setChainState(false)
+    elseif not self.faceup then self:turnOver()
+    end
+    --[[if self.chained then
       self:setChainState(false)
     end
     if not self.faceup then
@@ -442,8 +455,9 @@ function ServerPlayer:reset()
       else
         self:turnOver()
       end
-    end
+    end]]--
   end
+  return true
 end
 
 --- 对若干名角色发起拼点。
