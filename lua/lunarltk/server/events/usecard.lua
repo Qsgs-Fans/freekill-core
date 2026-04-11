@@ -266,9 +266,12 @@ function UseCard:main()
   for _, event in ipairs({ fk.AfterCardUseDeclared, fk.AfterCardTargetDeclared, fk.CardUsing }) do
     if not useCardData.toCard and #useCardData.tos == 0 then
       break
+    elseif (#useCardData.tos == 0) and (event ~= fk.CardUsing) then goto continue --then continue
     end
-
-    logic:trigger(event, useCardData.from, useCardData)
+  --若此牌为【闪】、【金蝉脱壳】或【无懈可击】，发动／执行时机为声明使用牌后、选择目标后、指定目标时、成为目标时、指定目标后或成为目标后的技能／技能的效果均不能发动／执行。
+    if (not useCardData.card.skillName) or (Fk:translate(useCardData.card.skillName, "zh_CN") ~= '护驾') then
+      logic:trigger(event, useCardData.from, useCardData)
+    end --〖护驾〗的神秘附加牌面（所有角色于此【闪】的使用流程中不能发动任何技能且不能执行任何技能的延时类效果且此【闪】视为你未使用过）
     if event == fk.CardUsing then
       if not useCardData.toCard and #useCardData.tos == 0 then
         break
@@ -276,6 +279,7 @@ function UseCard:main()
 
       room:doCardUseEffect(useCardData)
     end
+    ::continue::
   end
 end
 
@@ -283,10 +287,12 @@ function UseCard:clear()
   local useCardData = self.data
   local room = self.room
 
-  room.logic:trigger(fk.CardUseFinished, useCardData.from, useCardData)
+  if (not useCardData.card.skillName) or (Fk:translate(useCardData.card.skillName, "zh_CN") ~= '护驾') then
+    room.logic:trigger(fk.CardUseFinished, useCardData.from, useCardData)
+  end --〖护驾〗的神秘附加牌面（所有角色于此【闪】的使用流程中不能发动任何技能且不能执行任何技能的延时类效果且此【闪】视为你未使用过）
 
   local leftRealCardIds = room:getSubcardsByRule(useCardData.card, { Card.Processing })
-  if #leftRealCardIds > 0 then
+  if (#leftRealCardIds > 0) and not useCardData.skipDrop then --if #leftRealCardIds > 0 then
     room:moveCards({
       ids = leftRealCardIds,
       toArea = Card.DiscardPile,
@@ -438,18 +444,19 @@ function CardEffect:main()
 
     effectCancellOutCheck(cardEffectData)
 
-    if event == fk.PreCardEffect then
-      logic:trigger(event, cardEffectData.from, cardEffectData)
-    else
-      logic:trigger(event, cardEffectData.to, cardEffectData)
-    end
+    if (not cardEffectData.card.skillName) or (Fk:translate(cardEffectData.card.skillName, "zh_CN") ~= '护驾') then
+      if (event == fk.PreCardEffect) and not cardEffectData.skipPreCardEffect then logic:trigger(event, cardEffectData.from, cardEffectData)
+      elseif (event ~= fk.PreCardEffect) and not (cardEffectData.skipBeforeCardEffect and (event == fk.BeforeCardEffect)) then
+        logic:trigger(event, cardEffectData.to, cardEffectData)
+      end
+    end --〖护驾〗的神秘附加牌面（所有角色于此【闪】的使用流程中不能发动任何技能且不能执行任何技能的延时类效果且此【闪】视为你未使用过）
 
     effectCancellOutCheck(cardEffectData)
 
     local skill = cardEffectData.skill or cardEffectData.card.skill --[[@as CardSkill]]
 
-    if event == fk.PreCardEffect then
-      skill:preEffect(room, cardEffectData)
+    if (event == fk.PreCardEffect) and not cardEffectData.skipPreCardEffect then --if event == fk.PreCardEffect then
+      skill:preEffect(room, cardEffectData) --FixMe：按规则集，应该在“对当前目标生效前”（fk.BeforeCardEffect）而非“对当前目标使用结算开始时”（fk.PreCardEffect）询问
     elseif event == fk.CardEffecting then
       if skill then
         local data = { ---@type SkillEffectDataSpec
@@ -475,7 +482,9 @@ function CardEffect:clear()
       room:setCardEmotion(cid, "judgebad")
     end
   end
-  self.room.logic:trigger(fk.CardEffectFinished, cardEffectData.to, cardEffectData)
+  if (not cardEffectData.card.skillName) or (Fk:translate(cardEffectData.card.skillName, "zh_CN") ~= '护驾') then
+    self.room.logic:trigger(fk.CardEffectFinished, cardEffectData.to, cardEffectData) --〖护驾〗的神秘附加牌面（见上）
+  end
 end
 
 
@@ -548,7 +557,9 @@ local onAim = function(room, useCardData, aimEventCollaborators)
 
       firstTarget = false
 
-      room.logic:trigger(stage, (stage == fk.TargetSpecifying or stage == fk.TargetSpecified) and aimStruct.from or aimStruct.to, aimStruct)
+      if not useCardData.skiponAim then
+        room.logic:trigger(stage, (stage == fk.TargetSpecifying or stage == fk.TargetSpecified) and aimStruct.from or aimStruct.to, aimStruct)
+      end
 
       aimStruct:removeDeadTargets()
 
@@ -712,6 +723,8 @@ function UseCardEventWrappers:doCardUseEffect(useCardData)
       cardsResponded = useCardData.cardsResponded,
       prohibitedCardNames = useCardData.prohibitedCardNames,
       extra_data = useCardData.extra_data,
+      skipPreCardEffect = useCardData.skipPreCardEffect,
+      skipBeforeCardEffect = useCardData.skipBeforeCardEffect,
     }
     self:doCardEffect(cardEffectData)
 
@@ -751,6 +764,8 @@ function UseCardEventWrappers:doCardUseEffect(useCardData)
           cardsResponded = useCardData.cardsResponded,
           prohibitedCardNames = useCardData.prohibitedCardNames,
           extra_data = useCardData.extra_data,
+          skipPreCardEffect = useCardData.skipPreCardEffect,
+          skipBeforeCardEffect = useCardData.skipBeforeCardEffect,
         }
 
         if aimEventCollaborators[to] then
