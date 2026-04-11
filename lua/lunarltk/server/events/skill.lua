@@ -247,7 +247,11 @@ function SkillEventWrappers:handleAddLoseSkills(player, skill_names, source_skil
       end
     else
       local sk = Fk.skills[skill]
-      if sk and not player:hasSkill(sk, true, true) then
+      local b = (player:getTag('SkillFirewallCNExclusions') and not table.contains(player:getTag('SkillFirewallCNExclusions'), Fk:translate(skill, "zh_CN")))
+      b = (b or (player:getTag('SkillFirewallExclusions') and not table.contains(player:getTag('SkillFirewallExclusions'), skill)))
+      b = (b or (player:getTag('SkillFirewallCN') and table.contains(player:getTag('SkillFirewallCN'), Fk:translate(skill, "zh_CN"))))
+      b = ((b or (player:getTag('SkillFirewall') and table.contains(player:getTag('SkillFirewall'), skill))) and sk and sk.visible)
+      if sk and (sk.attached_equip or skill:endsWith("&") or not b) and not player:hasSkill(sk, true, true) then --if sk and not player:hasSkill
         local got_skills = player:addSkill(sk, source_skill)
 
         for _, s in ipairs(got_skills) do
