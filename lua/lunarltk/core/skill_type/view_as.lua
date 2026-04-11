@@ -161,14 +161,14 @@ end
 --- 空闲时间点内是否可以使用转化技
 ---@param player Player @ 想发动技能的角色
 function ViewAsSkill:enabledAtPlay(player)
-  return self:isEffectable(player)
+  return (self.is_delay_effect or self:isEffectable(player)) --return self:isEffectable(player)
 end
 
 --- 需要响应时是否可以使用转化技
 ---@param player Player @ 想发动技能的角色
 ---@param cardResponsing? boolean @ 是否为打出事件
 function ViewAsSkill:enabledAtResponse(player, cardResponsing)
-  return self:isEffectable(player)
+  return (self.is_delay_effect or self:isEffectable(player)) --return self:isEffectable(player)
 end
 
 --- 使用转化技使用/打出牌前执行的操作，注意此时牌未被使用/打出
