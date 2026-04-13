@@ -22,9 +22,7 @@ skill:addEffect("cardskill", {
         params.prompt = "#AskForResponseMultiCard:::jink:"..i..":"..loopTimes
       end
       respond = room:askToResponse(effect.to, params)
-      if respond then
-        room:responseCard(respond)
-      else
+      if not respond then
         room:damage({
           from = effect.from,
           to = effect.to,
@@ -33,7 +31,8 @@ skill:addEffect("cardskill", {
           damageType = fk.NormalDamage,
           skillName = skill.name,
         })
-        break
+        break --(not respond.attachedSkillAndUser) or (Fk:translate(respond.attachedSkillAndUser.skillName, "zh_CN") ~= '护驾')
+      elseif (not respond.card.skillName) or (Fk:translate(respond.card.skillName, "zh_CN") ~= '护驾') then room:responseCard(respond)
       end
       if effect.to.dead then break end
     end

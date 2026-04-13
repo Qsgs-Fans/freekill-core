@@ -9,6 +9,11 @@ skill:addEffect(fk.CardEffectCancelledOut, {
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
+    local blades = table.filter(player:getEquipments(Card.SubtypeWeapon), function(id)
+        return ((player:getVirtualEquip(id) and player:getVirtualEquip(id).name or Fk:getCardById(id).name) == skill.attached_equip)
+      end)
+    for _, id in ipairs(blades) do Fk:getCardById(id):addMark('using')
+    end
     local params = { ---@type AskToUseCardParams
       skill_name = "slash",
       pattern = "slash",
@@ -22,6 +27,10 @@ skill:addEffect(fk.CardEffectCancelledOut, {
       }
     }
     local use = room:askToUseCard(player, params)
+    for _, id in ipairs(blades) do --这里按2017版规则集的精神来写，〖丈八蛇矛〗等同理
+      if Fk:getCardById(id):getMark('using') > 0 then Fk:getCardById(id):removeMark('using') --setMark('using', 0)
+      end
+    end
     if use then
       use.extraUse = true
       event:setCostData(self, {extra_data = use})

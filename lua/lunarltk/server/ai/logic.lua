@@ -500,15 +500,21 @@ function UseCard:exec()
   for _, event in ipairs({ fk.AfterCardUseDeclared, fk.AfterCardTargetDeclared, fk.CardUsing }) do
     if not useCardData.toCard and #useCardData.tos == 0 then
       break
+    elseif (#useCardData.tos == 0) and (event ~= fk.CardUsing) then goto continue --then continue     
     end
-
-    logic:trigger(event, useCardData.from, useCardData)
+  --若此牌为【闪】、【金蝉脱壳】或【无懈可击】，发动／执行时机为声明使用牌后、选择目标后、指定目标时、成为目标时、指定目标后或成为目标后的技能／技能的效果均不能发动／执行。
+    if (not useCardData.card.skillName) or (Fk:translate(useCardData.card.skillName, "zh_CN") ~= '护驾') then
+      logic:trigger(event, useCardData.from, useCardData)
+    end --〖护驾〗的神秘附加牌面（所有角色于此【闪】的使用流程中不能发动任何技能且不能执行任何技能的延时类效果且此【闪】视为你未使用过）
     if event == fk.CardUsing then
       logic:doCardUseEffect(useCardData)
     end
+    ::continue::
   end
 
-  logic:trigger(fk.CardUseFinished, useCardData.from, useCardData)
+  if (not useCardData.card.skillName) or (Fk:translate(useCardData.card.skillName, "zh_CN") ~= '护驾') then
+    logic:trigger(fk.CardUseFinished, useCardData.from, useCardData)
+  end --〖护驾〗的神秘附加牌面（所有角色于此【闪】的使用流程中不能发动任何技能且不能执行任何技能的延时类效果且此【闪】视为你未使用过）
   logic:moveCards{
     fromArea = Card.Processing,
     toArea = Card.DiscardPile,
@@ -576,11 +582,12 @@ function CardEffect:exec()
       return true
     end
 
-    if event == fk.PreCardEffect then
-      logic:trigger(event, cardEffectData.from, cardEffectData)
-    else
-      logic:trigger(event, cardEffectData.to, cardEffectData)
-    end
+    if (not cardEffectData.card.skillName) or (Fk:translate(cardEffectData.card.skillName, "zh_CN") ~= '护驾') then
+      if (event == fk.PreCardEffect) and not cardEffectData.skipPreCardEffect then logic:trigger(event, cardEffectData.from, cardEffectData)
+      elseif (event ~= fk.PreCardEffect) and not (cardEffectData.skipBeforeCardEffect and (event == fk.BeforeCardEffect)) then
+        logic:trigger(event, cardEffectData.to, cardEffectData)
+      end
+    end --〖护驾〗的神秘附加牌面（所有角色于此【闪】的使用流程中不能发动任何技能且不能执行任何技能的延时类效果且此【闪】视为你未使用过）
 
     if effectCancellOutCheck(cardEffectData) then
       return true

@@ -7,22 +7,29 @@ fankui:addEffect(fk.Damaged, {
   can_trigger = function(self, event, target, player, data)
     if not (target == player and player:hasSkill(fankui.name)) then return end
     if data.from and not data.from.dead then
-      if data.from == player then
+      --[[if data.from == player then
         return #player:getCardIds("e") > 0
       else
         return not data.from:isNude()
-      end
+      end]]--
+      return (#table.filter(data.from:getCardIds((data.from == player) and "e" or "he"), function(id)
+          return not (player:cardVisible(id) and player:prohibitPrey(id))
+        end) > 0)
     end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
     local flag = data.from == player and "e" or "he"
-    local card = room:askToChooseCard(player, {
+    --[[local card = room:askToChooseCard(player, {
       target = data.from,
       flag = flag,
       skill_name = fankui.name,
-    })
-    room:obtainCard(player, card, false, fk.ReasonPrey, player, fankui.name)
+    })]]--
+    local ptn = '.|.|.|.|.|.|' .. table.concat(table.filter(data.from:getCardIds(flag), function(id)
+        return not (player:cardVisible(id) and player:prohibitPrey(id))
+      end), ',')
+    local ids = room:askToChoosePatternCards(player, { target = data.from, flag = flag, skill_name = fankui.name, min = 1, max = 1, pattern = ptn })
+    room:obtainCard(player, ids, false, fk.ReasonPrey, player, fankui.name) --room:obtainCard(player, card, false, fk.ReasonPrey, player, fankui.name)
   end
 })
 

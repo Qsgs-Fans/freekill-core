@@ -2,10 +2,19 @@ local qingnang = fk.CreateSkill {
   name = "qingnang",
 }
 
+qingnang:addLoseEffect(function (self, player, is_death)
+  local hd = table.contains((player.deputyGeneral == "anjiang") and Fk.generals[player:getMark("__heg_deputy")]:getSkillNameList() or {}, self.name)
+  hd = (hd or table.contains((player.general == "anjiang") and Fk.generals[player:getMark("__heg_general")]:getSkillNameList() or {}, self.name))
+  if (player.phase == Player.Play) and not (is_death or hd) then player:setMark('qingnangUsdLst-phase', player:usedEffectTimes(self.name, Player.HistoryPhase))
+  end
+end)
+
 qingnang:addEffect("active", {
   anim_type = "support",
   prompt = "#qingnang-active",
-  max_phase_use_time = 1,
+  max_phase_use_time = function(self, player) --= 1,
+    return (1 + player:getMark('qingnangUsdLst-phase'))
+  end,
   card_filter = function(self, player, to_select, selected)
     return #selected == 0 and table.contains(player:getCardIds("h"), to_select) and not player:prohibitDiscard(to_select)
   end,

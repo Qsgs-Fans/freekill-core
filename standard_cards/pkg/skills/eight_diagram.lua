@@ -4,7 +4,32 @@ local skill = fk.CreateSkill {
 }
 
 ---@type AskForCardFunc
-local spec = function (self, event, target, player, data)
+local spec = function(self, event, target, player, data)
+  if not player.room:askToSkillInvoke(player, { skill_name = self.name }) then return false
+  end
+  local eight_diagrams = table.filter(player:getEquipments(Card.SubtypeArmor), function(id)
+      return ((player:getVirtualEquip(id) and player:getVirtualEquip(id).name or Fk:getCardById(id).name) == skill.attached_equip)
+    end)
+  for _, id in ipairs(eight_diagrams) do Fk:getCardById(id):addMark('using')
+  end
+
+  local room = player.room
+  local judgeData = {
+    who = player,
+    reason = skill.name,
+    pattern = ".|.|red",
+  }
+  room:judge(judgeData)
+
+  for _, id in ipairs(eight_diagrams) do
+    if Fk:getCardById(id):getMark('using') > 0 then Fk:getCardById(id):removeMark('using') --setMark('using', 0)
+    end
+  end
+   
+  event:setCostData(self, {extra_data = judgeData})
+  return true
+end
+--[[local spec = function (self, event, target, player, data)
     local room = player.room
     local judgeData = {
       who = player,
@@ -12,7 +37,6 @@ local spec = function (self, event, target, player, data)
       pattern = ".|.|red",
     }
     room:judge(judgeData)
-
     if judgeData:matchPattern() then
       local new_card = Fk:cloneCard('jink')
       new_card.skillName = "eight_diagram"
@@ -27,22 +51,45 @@ local spec = function (self, event, target, player, data)
 
       return true
     end
-  end
+  end]]--
 skill:addEffect(fk.AskForCardUse, {
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(skill.name) and
       Exppattern:Parse(data.pattern):matchExp("jink|0|nosuit|none") and
-      not player:prohibitUse(Fk:cloneCard("jink"))
+      player:canJudge() and not player:prohibitUse(Fk:cloneCard("jink")) --not player:prohibitUse(Fk:cloneCard("jink"))
   end,
-  on_use = spec,
+  on_cost = spec,
+  on_use = function(self, event, target, player, data)
+    if event:getCostData(self).extra_data:matchPattern() then
+      local new_card = Fk:cloneCard('jink')
+      new_card.skillName = "eight_diagram"
+      local result = {
+        from = player,
+        card = new_card,
+        tos = {},
+      }
+      data.result = result
+    end
+  end,
 })
 skill:addEffect(fk.AskForCardResponse, {
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(skill.name) and
       Exppattern:Parse(data.pattern):matchExp("jink|0|nosuit|none") and
-      not player:prohibitResponse(Fk:cloneCard("jink"))
+      player:canJudge() and not player:prohibitResponse(Fk:cloneCard("jink")) --not player:prohibitResponse(Fk:cloneCard("jink"))
   end,
-  on_use = spec,
+  on_cost = spec,
+  on_use = function(self, event, target, player, data)
+    if event:getCostData(self).extra_data:matchPattern() then
+      local new_card = Fk:cloneCard('jink')
+      new_card.skillName = "eight_diagram"
+      local result = {
+        from = player,
+        card = new_card,
+      }
+      data.result = result
+    end
+  end,
 })
 
 ---[[
@@ -95,6 +142,5 @@ skill:addAI(Fk.Ltk.AI.newInvokeStrategy{
     end) >= 0
   end,
 })
-
 
 return skill

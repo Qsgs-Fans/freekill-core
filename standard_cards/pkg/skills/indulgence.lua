@@ -11,14 +11,16 @@ skill:addEffect("cardskill", {
   target_num = 1,
   on_effect = function(self, room, effect)
     local to = effect.to
-    local judge = {
-      who = to,
-      reason = "indulgence",
-      pattern = ".|.|^heart",
-    }
-    room:judge(judge)
-    if judge:matchPattern() then
-      to:skip(Player.Play)
+    if to:canJudge() then
+      local judge = {
+        who = to,
+        reason = "indulgence",
+        pattern = ".|.|^heart",
+      }
+      room:judge(judge)
+      if judge:matchPattern() and to:isAlive() and (to.phase ~= Player.NotActive) then --if judge:matchPattern() then
+        to:skip(Player.Play)
+      end
     end
     self:onNullified(room, effect)
   end,

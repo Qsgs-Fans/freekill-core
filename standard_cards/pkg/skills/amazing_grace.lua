@@ -58,13 +58,18 @@ skill:addEffect("cardskill", {
   on_effect = function(self, room, effect)
     local to = effect.to
 
-    local chosen = room:askToAG(to, { id_list = effect.extra_data.AGFilled, cancelable = false, skill_name = self.name })
-    room:takeAG(to, chosen, room.players)
-    table.insert(effect.extra_data.AGResult, {effect.to.id, chosen})
-    room:moveCardTo(chosen, Card.PlayerHand, effect.to, fk.ReasonPrey, self.name, nil, true, effect.to)
-    effect.extra_data.AGFilled = table.filter(effect.extra_data.AGFilled, function(id)
-      return room:getCardArea(id) == Card.Processing
+    local ids = table.filter(effect.extra_data.AGFilled, function(id)
+      return not to:prohibitPrey(id)
     end)
+    if #ids > 0 then
+      local chosen = room:askToAG(to, { id_list = ids, cancelable = false, skill_name = self.name }) --id_list = effect.extra_data.AGFilled,
+      room:takeAG(to, chosen, room.players)
+      table.insert(effect.extra_data.AGResult, {effect.to.id, chosen})
+      room:moveCardTo(chosen, Card.PlayerHand, effect.to, fk.ReasonPrey, self.name, nil, true, effect.to)
+      effect.extra_data.AGFilled = table.filter(effect.extra_data.AGFilled, function(id)
+        return room:getCardArea(id) == Card.Processing
+      end)
+    end
   end,
 })
 

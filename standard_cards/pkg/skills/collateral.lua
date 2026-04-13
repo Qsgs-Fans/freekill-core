@@ -17,7 +17,9 @@ skill:addEffect("cardskill", {
     elseif #selected == 0 then
       return Util.CardTargetFilter(self, player, to_select, selected, _, card, extra_data)
     else
-      return selected[1]:inMyAttackRange(to_select, nil, table.connect(Card:getIdList(card), card.fake_subcards))
+      local slash, InAtkRg = Fk:cloneCard('slash'), selected[1]:inMyAttackRange(to_select, nil, table.connect(Card:getIdList(card), card.fake_subcards))
+      slash.fake_subcards = table.connect(Card:getIdList(card), card.fake_subcards)
+      return (InAtkRg and not selected[1]:isProhibited(to_select, slash))
     end
   end,
   target_num = 2,

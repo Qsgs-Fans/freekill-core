@@ -8,9 +8,7 @@ sk:addEffect("targetmod", {
     if player:hasSkill(sk.name) and card and card.trueName == "slash" and
       not player:isKongcheng() then
       local cards = card:isVirtual() and card.subcards or {card.id}
-      if #cards > 0 and table.every(player:getCardIds("h"), function(id)
-        return table.contains(cards, id)
-        end) then
+      if #cards > 0 and table.isEqual(player:getCardIds("h"), cards) then
         return 2
       end
     end

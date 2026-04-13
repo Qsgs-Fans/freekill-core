@@ -5,7 +5,7 @@ local luoshen = fk.CreateSkill{
 luoshen:addEffect(fk.EventPhaseStart, {
   anim_type = "drawcard",
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(luoshen.name) and player.phase == Player.Start
+    return ((target == player) and player:hasSkill(luoshen.name) and (player.phase == Player.Start) and player:canJudge())
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
@@ -16,7 +16,7 @@ luoshen:addEffect(fk.EventPhaseStart, {
         pattern = ".|.|black",
       }
       room:judge(judge)
-      if not judge:matchPattern() or player.dead or not room:askToSkillInvoke(player, { skill_name = luoshen.name }) then
+      if (not judge:matchPattern()) or (not player:canJudge()) or not room:askToSkillInvoke(player, { skill_name = luoshen.name }) then -- or player.dead or
         break
       end
     end

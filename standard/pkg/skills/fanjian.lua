@@ -2,10 +2,19 @@ local fanjian = fk.CreateSkill {
   name = "fanjian",
 }
 
+fanjian:addLoseEffect(function (self, player, is_death)
+  local hd = table.contains((player.deputyGeneral == "anjiang") and Fk.generals[player:getMark("__heg_deputy")]:getSkillNameList() or {}, self.name)
+  hd = (hd or table.contains((player.general == "anjiang") and Fk.generals[player:getMark("__heg_general")]:getSkillNameList() or {}, self.name))
+  if (player.phase == Player.Play) and not (is_death or hd) then player:setMark('fanjianUsdLst-phase', player:usedEffectTimes(self.name, Player.HistoryPhase))
+  end
+end)
+
 fanjian:addEffect("active", {
   anim_type = "offensive",
   prompt = "#fanjian-active",
-  max_phase_use_time = 1,
+  max_phase_use_time = function(self, player) --= 1,
+    return (1 + player:getMark('fanjianUsdLst-phase'))
+  end,
   card_filter = Util.FalseFunc,
   target_filter = function(self, player, to_select, selected)
     return #selected == 0 and to_select ~= player

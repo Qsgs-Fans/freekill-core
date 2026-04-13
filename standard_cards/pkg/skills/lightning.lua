@@ -8,28 +8,30 @@ skill:addEffect("cardskill", {
   can_use = Util.CanUseToSelf,
   on_effect = function(self, room, effect)
     local to = effect.to
-    local judge = {
-      who = to,
-      reason = "lightning",
-      pattern = ".|2~9|spade",
-    }
-    room:judge(judge)
-    if judge:matchPattern() then
-      room:damage{
-        to = to,
-        damage = 3,
-        card = effect.card,
-        damageType = Fk:getDamageNature(fk.ThunderDamage) and fk.ThunderDamage or fk.NormalDamage,
-        skillName = self.name,
+    if to:canJudge() then
+      local judge = {
+        who = to,
+        reason = "lightning",
+        pattern = ".|2~9|spade",
       }
+      room:judge(judge)
+      if judge:matchPattern() then
+        room:damage{
+          to = to,
+          damage = 3,
+          card = effect.card,
+          damageType = Fk:getDamageNature(fk.ThunderDamage) and fk.ThunderDamage or fk.NormalDamage,
+          skillName = self.name,
+        }
 
-      room:moveCards{
-        ids = room:getSubcardsByRule(effect.card, { Card.Processing }),
-        toArea = Card.DiscardPile,
-        moveReason = fk.ReasonUse,
-      }
-    else
-      self:onNullified(room, effect)
+        room:moveCards{
+          ids = room:getSubcardsByRule(effect.card, { Card.Processing }),
+          toArea = Card.DiscardPile,
+          moveReason = fk.ReasonUse,
+        }
+      else self:onNullified(room, effect)
+      end
+    else self:onNullified(room, effect)
     end
   end,
   on_nullified = function(self, room, effect)

@@ -16,7 +16,7 @@ skill:addEffect(fk.DamageCaused, {
     local to = data.to
     local ride_tab = {}
     for _, card in ipairs(to:getEquipCards()) do
-      if card.sub_type == Card.SubtypeDefensiveRide or card.sub_type == Card.SubtypeOffensiveRide then
+      if ((card.sub_type == Card.SubtypeDefensiveRide) or (card.sub_type == Card.SubtypeOffensiveRide)) and not player:prohibitDiscard(card) then
         table.insert(ride_tab, card:getEffectiveId())
       end
     end

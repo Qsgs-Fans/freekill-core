@@ -77,6 +77,116 @@ fkp.functions.getMark = function(player, mark, hidden)
   return player:getMark(mark)
 end
 
+--- 判断列表A与列表B是否作为有序多元组（均从下标1开始访问且不考察其它类型的索引）相等
+---@param A table @ 前表
+---@param B table @ 后表
+---@return boolean @ 若参量类型不符则返回false。注：若某些元是表，则比对的是引用（类似指针）而非内容
+function fkp.functions.isSequentiallyEqual(A, B)
+  if (type(A) ~= 'table') or (type(B) ~= 'table') or (#A ~= #B) then return false
+  elseif #A < 1 then return true
+  end
+  local e = true
+  for i = 1, #A do e = (e and (A[i] == B[i]))
+  end
+  return e
+end
+
+--- 获取与给定列表作为有序多元组（均从下标1开始访问且不考察其它类型的索引）相等的“首个”键值在表A中的索引
+---@param A table @ 前表
+---@param Tuple table @ 列表
+---@return any @ 返回“首个”符合要求的索引，未找到或参量类型不符则返回nil。注：若表A的某些键值的元或列表B的某些元是表，则比对的是引用（类似指针）而非内容
+function fkp.functions.keyOfTuple(A, Tuple)
+  if (type(A) ~= 'table') or (type(Tuple) ~= 'table') then return nil
+  end
+  for key, v in ipairs(A) do
+    if fkp.functions.isSequentiallyEqual(v, Tuple) then return key
+    end
+  end
+  return nil
+end
+
+--- 判断一组在胜负判断中视为未离场的角色是否连续相邻
+---@param players Player[] @ 待判断的角色table
+---@param ignoreRemoved? boolean @ 忽略被移除
+---@param ignoreRest? boolean @ 是否忽略休整
+---@return boolean|nil @ 若参量类型不符则返回nil
+function fkp.functions.continuouslyNear(players, ignoreRemoved, ignoreRest)
+  if type(players) ~= 'table' then return nil
+  end
+  local bottom1, b2, nm, ns  = false, false, not ignoreRemoved, not ignoreRest
+  for _, p in ipairs(players) do
+    b2 = b2 or (nm and p:isRemoved()) or (ns and (p.rest > 0)) or (bottom1 and not table.contains(players, p:getNextAlive(ignoreRemoved, 1, ignoreRest)))
+    bottom1 = (bottom1 or not table.contains(players, p:getNextAlive(ignoreRemoved, 1, ignoreRest)))
+  end
+  return ((#players < 2) or not b2)
+end
+
+-- 获取有伤害值基数的所有<…牌>的trueName（牌名对应的内部名）或name，常用于生成pattern，也可用于实现类似神杀的getSlashNames功能
+---@param card_type string @ 牌的类型：b 基本牌，t - 普通锦囊牌，d - 延时锦囊牌
+---@param true_name? boolean @ 是否仅获取牌名（即不区分【杀】等的具体种类）对应的内部名，默认不获取
+---@param is_derived? boolean @ 是否包括衍生牌，默认不包括
+---@param DisabledPacks? boolean @ 是否包括已禁用的扩展包的卡牌，默认不包括
+---@return string[] @ 返回{trueName或name}列表
+fkp.functions.getDamageCardNames = function(card_type, true_name, is_derived, DisabledPacks)
+  local names, normal_trick, delayed_trick  = {}, {}, {}
+  for _, ca in ipairs(Fk.cards) do
+    local b = ((DisabledPacks or not table.contains(Fk:currentRoom().disabled_packs, ca.package.name)) and (is_derived or not ca.is_derived))
+    if b and ca.damage_type and (ca.type == Card.TypeBasic) and card_type:find("b") then table.insertIfNeed(names, true_name and ca.trueName or ca.name)
+    elseif b and ca.damage_type and (ca.sub_type == Card.SubtypeDelayedTrick) then table.insertIfNeed(delayed_trick, true_name and ca.trueName or ca.name)
+    elseif b and ca.damage_type and (ca.type == Card.TypeTrick) then table.insertIfNeed(normal_trick, true_name and ca.trueName or ca.name)
+    end --and ca.is_damage_card then不会算闪电等；换言之，is_damage_card不是指“有伤害值基数”而是指“有伤害值基数且不为延时锦囊牌”
+  end
+  if card_type:find("t") then table.insertTable(names, normal_trick)
+  end
+  if card_type:find("d") then table.insertTable(names, delayed_trick)
+  end
+  return names
+end
+
+-- 获取牌名汉字数在给定集合内的所有<…牌>的trueName（牌名对应的内部名）或name，常用于生成pattern，也可实现包括已禁用的getBasicCardNames等功能（基本牌即牌名字数为1的牌）
+---@param lengthTuple table<integer> @ 牌名汉字数须在此范围内（通常不超过7，故可用数组表示）。注：新月没有规则集中的特殊坐骑牌子类别，此处直接判断牌名（六龙骖驾）
+---@param card_type string @ 牌的类型：b 基本牌，t - 普通锦囊牌，d - 延时锦囊牌，w - 武器牌，a - 防具牌，f - 防御坐骑牌，o - 进攻坐骑牌，l - 特殊坐骑牌，s - 宝物牌
+---@param ol_rule? boolean @ OL服和谐【借刀杀人】，默认不和谐
+---@param true_name? boolean @ 是否仅获取牌名（即不区分【杀】、【无懈可击】等的具体种类）对应的内部名，默认不获取。注：对牌名汉字数的判断恒ignoreSpecies，不受此值影响
+---@param is_derived? boolean @ 是否包括衍生牌，默认不包括
+---@param DisabledPacks? boolean @ 是否包括已禁用的扩展包的卡牌，默认不包括
+---@param PassiveCards? boolean @ 是否包括【闪】、【金蝉脱壳】及【无懈可击】等仅能以牌为使用目标的卡牌，默认包括
+---@return string[] @ 返回{trueName或name}列表
+fkp.functions.getCardNamesByTrueNameLength = function(lengthTuple, card_type, ol_rule, true_name, is_derived, DisabledPacks, PassiveCards)
+  local names, normal_trick, delayed_trick, weapon, armor, defensiveRide, offensiveRide, specialRide, treasure  = {}, {}, {}, {}, {}, {}, {}, {}, {}
+  for _, ca in ipairs(Fk.cards) do
+    local b = ((DisabledPacks or not table.contains(Fk:currentRoom().disabled_packs, ca.package.name)) and ((PassiveCards ~= false) or not ca.is_passive))
+    b = (b and (is_derived or not ca.is_derived) and table.contains(lengthTuple, ca:getNameLength(ol_rule)))
+    if b and (ca.type == Card.TypeBasic) and card_type:find("b") then table.insertIfNeed(names, true_name and ca.trueName or ca.name)
+    elseif b and (ca.sub_type == Card.SubtypeDelayedTrick) then table.insertIfNeed(delayed_trick, true_name and ca.trueName or ca.name)
+    elseif b and (ca.type == Card.TypeTrick) then table.insertIfNeed(normal_trick, true_name and ca.trueName or ca.name)
+    elseif b and (ca.sub_type == Card.SubtypeWeapon) then table.insertIfNeed(weapon, true_name and ca.trueName or ca.name)
+    elseif b and (ca.sub_type == Card.SubtypeArmor) then table.insertIfNeed(armor, true_name and ca.trueName or ca.name)
+    elseif b and (ca.name == "liulongcanjia") then table.insertIfNeed(specialRide, "liulongcanjia")
+    elseif b and (ca.sub_type == Card.SubtypeDefensiveRide) then table.insertIfNeed(defensiveRide, true_name and ca.trueName or ca.name)
+    elseif b and (ca.sub_type == Card.SubtypeOffensiveRide) then table.insertIfNeed(offensiveRide, true_name and ca.trueName or ca.name)
+    elseif b and (ca.sub_type == Card.SubtypeTreasure) then table.insertIfNeed(treasure, true_name and ca.trueName or ca.name)
+    end
+  end
+  if card_type:find("t") then table.insertTable(names, normal_trick)
+  end
+  if card_type:find("d") then table.insertTable(names, delayed_trick)
+  end
+  if card_type:find("w") then table.insertTable(names, weapon)
+  end
+  if card_type:find("a") then table.insertTable(names, armor)
+  end
+  if card_type:find("f") then table.insertTable(names, defensiveRide)
+  end
+  if card_type:find("o") then table.insertTable(names, offensiveRide)
+  end
+  if card_type:find("l") then table.insertTable(names, specialRide)
+  end
+  if card_type:find("s") then table.insertTable(names, treasure)
+  end
+  return names
+end
+
 fkp.functions.judge = function(player, reason, pattern, good, play_animation)
   local judge = {}
   judge.who = player

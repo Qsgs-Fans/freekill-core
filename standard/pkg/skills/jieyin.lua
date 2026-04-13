@@ -2,10 +2,19 @@ local jieyin = fk.CreateSkill {
   name = "jieyin",
 }
 
+jieyin:addLoseEffect(function (self, player, is_death)
+  local hd = table.contains((player.deputyGeneral == "anjiang") and Fk.generals[player:getMark("__heg_deputy")]:getSkillNameList() or {}, self.name)
+  hd = (hd or table.contains((player.general == "anjiang") and Fk.generals[player:getMark("__heg_general")]:getSkillNameList() or {}, self.name))
+  if (player.phase == Player.Play) and not (is_death or hd) then player:setMark('jieyinUsdLst-phase', player:usedEffectTimes(self.name, Player.HistoryPhase))
+  end
+end)
+
 jieyin:addEffect("active", {
   anim_type = "support",
   prompt = "#jieyin-active",
-  max_phase_use_time = 1,
+  max_phase_use_time = function(self, player) --= 1,
+    return (1 + player:getMark('jieyinUsdLst-phase'))
+  end,
   card_filter = function(self, player, to_select, selected)
     return #selected < 2 and table.contains(player:getCardIds("h"), to_select) and not player:prohibitDiscard(to_select)
   end,

@@ -10,15 +10,19 @@ skill:addEffect("cardskill", {
   end,
   target_filter = Util.CardTargetFilter,
   on_effect = function(self, room, effect)
-    if effect.from.dead or effect.to.dead or effect.to:isAllNude() then return end
+    local ptn = '.|.|.|.|.|.|' .. table.concat(table.filter(effect.to:getCardIds('hej'), function(id)
+        return not (effect.from:cardVisible(id) and effect.from:prohibitDiscard(id))
+      end), ',')
+    if effect.from.dead or effect.to.dead or (ptn == '.|.|.|.|.|.|') then return end --or effect.to:isAllNude()
     effect.extra_data = effect.extra_data or {}
     local cid = room:askToChooseCard(effect.from, {
       target = effect.to,
       flag = "hej",
       skill_name = skill.name,
     })
-    effect.extra_data.dismantlement_card = cid
-    room:throwCard({cid}, skill.name, effect.to, effect.from)
+    local ids = room:askToChoosePatternCards(effect.from, { target = effect.to, flag = "hej", skill_name = skill.name, min = 1, max = 1, pattern = ptn })
+    effect.extra_data.dismantlement_card = ids[1]
+    room:throwCard(ids, skill.name, effect.to, effect.from)
   end,
 })
 

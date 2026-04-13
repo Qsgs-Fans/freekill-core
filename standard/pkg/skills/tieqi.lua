@@ -5,7 +5,7 @@ local tieqi = fk.CreateSkill {
 tieqi:addEffect(fk.TargetSpecified, {
   anim_type = "offensive",
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(tieqi.name) and data.card.trueName == "slash"
+    return ((target == player) and player:hasSkill(tieqi.name) and (data.card.trueName == "slash") and player:canJudge())
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room

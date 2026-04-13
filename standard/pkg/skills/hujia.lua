@@ -26,12 +26,12 @@ local hujia_spec = {
         }
         local respond = room:askToResponse(p, params)
         if respond then
-          respond.skipDrop = true
+          --respond.skipDrop = true
           room:responseCard(respond)
 
           local new_card = Fk:cloneCard('jink')
           new_card.skillName = hujia.name
-          new_card:addSubcards(room:getSubcardsByRule(respond.card, { Card.Processing }))
+          --new_card:addSubcards(room:getSubcardsByRule(respond.card, { Card.Processing }))
           local result = {
             from = player,
             card = new_card,

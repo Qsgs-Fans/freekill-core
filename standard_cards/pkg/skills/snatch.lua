@@ -13,15 +13,19 @@ skill:addEffect("cardskill", {
   target_filter = Util.CardTargetFilter,
   target_num = 1,
   on_effect = function(self, room, effect)
-    if effect.from.dead or effect.to.dead or effect.to:isAllNude() then return end
+    local ptn = '.|.|.|.|.|.|' .. table.concat(table.filter(effect.to:getCardIds('hej'), function(id)
+        return not (effect.from:cardVisible(id) and effect.from:prohibitPrey(id))
+      end), ',')
+    if effect.from.dead or effect.to.dead or (ptn == '.|.|.|.|.|.|') then return end --or effect.to:isAllNude()
     effect.extra_data = effect.extra_data or {}
     local cid = room:askToChooseCard(effect.from, {
       target = effect.to,
       flag = "hej",
       skill_name = skill.name,
     })
-    effect.extra_data.snatch_card = cid
-    room:obtainCard(effect.from, cid, false, fk.ReasonPrey, effect.from, skill.name)
+    local ids = room:askToChoosePatternCards(effect.from, { target = effect.to, flag = "hej", skill_name = skill.name, min = 1, max = 1, pattern = ptn })
+    effect.extra_data.snatch_card = ids[1]
+    room:obtainCard(effect.from, ids, false, fk.ReasonPrey, effect.from, skill.name)
   end,
 })
 

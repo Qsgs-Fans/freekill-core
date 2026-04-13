@@ -2,10 +2,19 @@ local zhiheng = fk.CreateSkill {
   name = "zhiheng",
 }
 
+zhiheng:addLoseEffect(function (self, player, is_death)
+  local hd = table.contains((player.deputyGeneral == "anjiang") and Fk.generals[player:getMark("__heg_deputy")]:getSkillNameList() or {}, self.name)
+  hd = (hd or table.contains((player.general == "anjiang") and Fk.generals[player:getMark("__heg_general")]:getSkillNameList() or {}, self.name))
+  if (player.phase == Player.Play) and not (is_death or hd) then player:setMark('zhihengUsdLst-phase', player:usedEffectTimes(self.name, Player.HistoryPhase))
+  end
+end)
+
 zhiheng:addEffect("active", {
   anim_type = "drawcard",
   prompt = "#zhiheng-active",
-  max_phase_use_time = 1,
+  max_phase_use_time = function(self, player) --= 1,
+    return (1 + player:getMark('zhihengUsdLst-phase'))
+  end,
   target_num = 0,
   min_card_num = 1,
   card_filter = function(self, player, to_select)
