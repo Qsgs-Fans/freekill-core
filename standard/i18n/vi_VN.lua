@@ -504,6 +504,7 @@ Fk:loadTranslationTable({
   ["choose_cards_skill"] = "Chọn bài",
   ["choose_players_skill"] = "Chọn nhân vật",
   ["ex__choose_skill"] = "Lựa chọn",
+  ["choose_cards_to_move_and_players"] = "Lựa chọn",
   ["distribution_select_skill"] = "Phân chia",
   ["choose_players_to_move_card_in_board"] = "Chọn nhân vật",
 
@@ -514,6 +515,7 @@ Fk:loadTranslationTable({
   ["AskForDiscard"] = "Bỏ bài",
   ["AskForCardChosen"] = "Chọn lá bài",
   ["AskForCardsChosen"] = "Chọn lá bài",
+  ["AskForPatternCardsChosen"] = "Chọn lá bài",
   ["AskForPindian"] = "Đấu điểm",
 
   ["reveal_skill&"] = "Mở tướng",
