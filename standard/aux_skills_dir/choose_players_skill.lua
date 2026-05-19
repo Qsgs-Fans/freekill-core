@@ -8,9 +8,16 @@ choosePlayersSkill:addEffect('active', {
   end,
   target_filter = function(self, player, to_select, selected, cards)
     if self.pattern ~= "" and #cards == 0 then return end
-    if #selected < self.num then
-      return table.contains(self.targets, to_select.id)
-    end
+    --if #selected < self.num then
+      --return table.contains(self.targets, to_select.id)
+    --end
+    local d, pids = table.contains(self.targets, to_select.id) and (#selected < self.num), table.connect(table.map(selected, Util.IdMapper), {to_select.id})
+    return (d and ((not self.targetIdSets) or table.find(self.targetIdSets, function(tb) return fk.isSubOf(pids, tb) end)))
+  end,
+  feasible = function (self, player, selected, selected_cards, card)
+
+    local r = ((not self.targetIdSets) or table.find(self.targetIdSets, function(tb) return table.isEqual(table.map(selected, Util.IdMapper), tb) end))
+    return ((self.min_num <= #selected) and r)
   end,
   target_tip = function(self, player, to_select, selected, selected_cards, card, selectable, extra_data)
     if self.targetTipName then
@@ -24,7 +31,7 @@ choosePlayersSkill:addEffect('active', {
   max_target_num = function(self) return self.num end,
 })
 
-choosePlayersSkill:addAI(Fk.Ltk.AI.newActiveStrategy {
+choosePlayersSkill:addAI(Fk.Ltk.AI.newActiveStrategy { --摆了
   think = function(self, ai)
     local data = ai.data[4]
     local orig = Fk.skills[data.skillName] or choosePlayersSkill
@@ -42,7 +49,7 @@ choosePlayersSkill:addAI(Fk.Ltk.AI.newActiveStrategy {
   end,
 })
 
-choosePlayersSkill:addAI(Fk.Ltk.AI.newChoosePlayersStrategy {
+choosePlayersSkill:addAI(Fk.Ltk.AI.newChoosePlayersStrategy { --摆了
   choose_cards = function (self, ai)
     local data = ai.data[4] -- extra_data
     local available_cards = ai:getEnabledCards()
