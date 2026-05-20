@@ -18,8 +18,9 @@ return {
   require(prefix .. "reveal_prohibited"),
   require(prefix .. "reveal_skill"),
 
+  require(prefix .. "choose_cards_to_move_and_players"),
+
   require(prefix .. "game_rule"),
   fk.CreateSkill{ name = "fastchat_m" },
   fk.CreateSkill{ name = "fastchat_f" },
 }
-
