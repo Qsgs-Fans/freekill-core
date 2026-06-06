@@ -176,6 +176,8 @@ end
 ---@field public prohibit_response? fun(self: ProhibitSkill, player: Player, card: Card): any
 ---@field public prohibit_discard? fun(self: ProhibitSkill, player: Player, card: Card): any
 ---@field public prohibit_pindian? fun(self: ProhibitSkill, from: Player, to: Player): any
+---@field public prohibit_judge? fun(self: ProhibitSkill, player: Player): any
+---@field public prohibit_prey? fun(self: ProhibitSkill, player: Player, card: Card): any
 
 ---@class AttackRangeSpec: StatusSkillSpec
 ---@field public correct_func? fun(self: AttackRangeSkill, from: Player, to: Player): number? @ 增加的攻击范围
@@ -404,3 +406,65 @@ end
 ---@field feasible fun(selected: string[], data: string[], extra_data: any): boolean?
 ---@field default_choice? fun(data: string[], extra_data: any): string[]
 ---@field prompt? string | fun(data: string[], extra_data: any): string
+
+--- 判断俩实数是否符合给定的序关系
+---@param former number @ 前者
+---@param latter number @ 后者
+---@param operator "<"|">"|"<="|">="|"=="|"~=" @ 序关系运算符
+---@return boolean|nil @ 返回比较结果，若输入值类型不符则返回nil
+function fk.compareNum(former, latter, operator)
+  if (type(former) ~= 'number') or (type(latter) ~= 'number') then return nil
+  elseif operator == ">" then return (former > latter)
+  elseif operator == "<" then return (former < latter)
+  elseif operator == "==" then return (former == latter)
+  elseif operator == ">=" then return (former >= latter)
+  elseif operator == "<=" then return (former <= latter)
+  elseif operator == "~=" then return (former ~=latter)
+  end
+  return nil
+end
+
+--- 判断俩非负实数是否符合给定的序关系
+---@param former number @ 前者
+---@param latter number @ 后者
+---@param operator "<"|">"|"<="|">="|"=="|"~=" @ 序关系运算符
+---@return boolean|nil @ 返回比较结果，若输入值类型不符则返回nil，反之若输入了负数则返回false
+function fk.compareNonNegativeNum(former, latter, operator)
+  if (type(former) ~= 'number') or (type(latter) ~= 'number') then return nil
+  elseif (former < 0) or (latter < 0) then return false
+  end
+  return fk.compareNum(former, latter, operator)
+end
+
+--- 获取某键值在给定表中出现次数
+---@param Value any @ 键值。若该键值是表，则比对的是引用（类似指针）而非内容
+---@param Table table
+---@return integer|nil @ 若参量类型不符则返回nil
+function fk.countValue(Value, Table)
+  if type(Table) ~= 'table' then return nil
+  end
+  local m = 0
+  for _, v in ipairs(Table) do
+    if v == Value then m = (m + 1)
+    end
+  end
+  return m
+end
+
+--- 判断作为集合的A是否系作为集合的B的（真）子集，或两者之并的元素在表B中出现次数是否均不小于（且有的大于）在表A中出现次数
+---@param A table @ 前表
+---@param B table @ 后表
+---@param EachValue? boolean @ 是否考量各键值在两表中出现次数；默认以集合视角归并同键值，即不考量
+---@param proper? boolean @ 是否要求某元素在集合A中未出现或在表B中出现的次数大于在表A中出现的次数；默认不要求
+---@return boolean|nil @ 若参量类型不符则返回nil。注：若某些键值是表，则比对的是引用（类似指针）而非内容
+function fk.isSubOf(A, B, EachValue, proper)
+  if (type(A) ~= 'table') or (type(B) ~= 'table') then return nil
+  end
+  local Values, ns, Prp = table.connectIfNeed(A, B), false, false
+  for _, v in ipairs(Values) do
+    local NumA, NumB = fk.countValue(v, A), fk.countValue(v, B)
+    ns = (ns or (EachValue and (NumB < NumA)) or (NumB < 1))
+    Prp = (Prp or (EachValue and (NumB > NumA)) or (NumA < 1))
+  end
+  return ((Prp or not proper) and not ns)
+end
