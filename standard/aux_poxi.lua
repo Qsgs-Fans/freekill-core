@@ -29,10 +29,52 @@ Fk:addPoxiMethod{
   default_choice = function(data, extra_data)
     local ret = {}
     for _, pile in ipairs(data) do
-      local cards = pile[2]
+      local cards = table.filter(pile[2], function (id) --= pile[2]
+        local visible = ((not extra_data.visible_data) or (extra_data.visible_data[string.format("%i", id)] ~= false))
+        return ((not extra_data.pattern) or (visible and Exppattern:Parse(extra_data.pattern):match(Fk:getCardById(id))))
+      end)
       local lim = extra_data.min - #ret
       if #cards > lim then
-        table.insertTable(ret, RoomInstance:tableRandomPick(cards, lim))
+        table.insertTable(ret, table.random(cards, lim)) --(ret, RoomInstance:tableRandomPick(cards, lim))
+        break
+      end
+      table.insertTable(ret, cards)
+    end
+    return ret
+  end
+}
+
+Fk:addPoxiMethod{
+  name = "AskForPatternCardsChosen",
+  card_filter = function(to_select, selected, data, extra_data)
+    if #selected >= extra_data.max then return end
+    if extra_data.pattern then return Exppattern:Parse(extra_data.pattern):match(Fk:getCardById(to_select))
+    end
+    return true
+  end,
+  feasible = function(selected, data, extra_data)
+    return #selected >= extra_data.min and #selected <= extra_data.max
+  end,
+  prompt = function(data, extra_data)
+    if extra_data.prompt then
+      return extra_data.prompt
+    else
+      local ret = Fk:translate("#AskForChooseCards")
+      ret = ret:gsub("%%1", Fk:translate(extra_data.skillName or "AskForCardsChosen"))
+      ret = ret:gsub("%%2", math.floor(extra_data.min)) -- floor to avoid float number
+      ret = ret:gsub("%%3", math.floor(extra_data.max))
+      return ret .. ":" ..extra_data.to
+    end
+  end,
+  default_choice = function(data, extra_data)
+    local ret = {}
+    for _, pile in ipairs(data) do
+      local cards = table.filter(pile[2], function (id) --= pile[2]
+        return ((not extra_data.pattern) or Exppattern:Parse(extra_data.pattern):match(Fk:getCardById(id)))
+      end)
+      local lim = extra_data.min - #ret
+      if #cards > lim then
+        table.insertTable(ret, table.random(cards, lim)) --(ret, RoomInstance:tableRandomPick(cards, lim))
         break
       end
       table.insertTable(ret, cards)
