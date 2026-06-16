@@ -21,18 +21,17 @@ _skill:addEffect('active', {
       if not string.find(self.pattern or "", pile) then return false end
     end
 
-    local checkpoint = true
+    local checkpoint = not Self:prohibitDiscard(to_select) --true
     local card = Fk:getCardById(to_select)
 
-    local status_skills = Fk:currentRoom().status_skills[ProhibitSkill] or Util.DummyTable
+    --[[local status_skills = Fk:currentRoom().status_skills[ProhibitSkill] or Util.DummyTable
     for _, skill in ipairs(status_skills) do
       if skill:prohibitDiscard(Self, card) then
         return false
       end
-    end
+    end]]--
     if Fk.currentResponseReason == "phase_discard" then
-      ---@type MaxCardsSkill[]
-      status_skills = Fk:currentRoom().status_skills[MaxCardsSkill] or Util.DummyTable
+      local status_skills = Fk:currentRoom().status_skills[MaxCardsSkill] or Util.DummyTable ---@type MaxCardsSkill[]
       for _, sk in ipairs(status_skills) do
         if sk:excludeFrom(Self, card) then
           return false
