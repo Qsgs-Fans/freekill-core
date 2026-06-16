@@ -14,12 +14,17 @@ distributionSelectSkill:addEffect("active", {
   end,
   target_num = 1,
   target_filter = function(self, player, to_select, selected, selected_cards)
-    return #selected == 0 and table.contains(self.targets, to_select.id)
-    and #selected_cards <= (self.residued_list[string.format("%d", to_select.id)] or 0)
+
+    if (#selected > 0) or (#selected_cards < 1) or not table.contains(self.targets, to_select.id) then return false
+    end
+
+    local x = self.MaxByNonPossessNumStrByPIdStr[tostring(to_select.id)][tostring(#table.filter(selected_cards, function(id)
+        return not table.find(self.targets, function(pid) return table.contains(Fk:currentRoom():getPlayerById(pid):getCardIds("he"), id) end) end))]
+    return ((x and (#selected_cards <= x) or false) and (#selected_cards <= (self.residued_list[string.format("%d", to_select.id)] or 0)))
   end,
 })
 
-distributionSelectSkill:addAI(Fk.Ltk.AI.newActiveStrategy {
+distributionSelectSkill:addAI(Fk.Ltk.AI.newActiveStrategy { --摆了
   think = function(self, ai)
     local data = ai.data[4]
     local orig = Fk.skills[data.skillName] or distributionSelectSkill
@@ -40,12 +45,12 @@ distributionSelectSkill:addAI(Fk.Ltk.AI.newActiveStrategy {
   end,
 })
 
-distributionSelectSkill:addAI(Fk.Ltk.AI.newYijiStrategy {
+distributionSelectSkill:addAI(Fk.Ltk.AI.newYijiStrategy { --摆了
   choose_cards = function (self, ai)
     local data = ai.data[4] -- extra_data
     local available_cards = ai:getEnabledCards()
 
-    if ai.data[3] --[[ cancelable ]] or data.pattern == "" then return end
+    if ai.data[3] --[[ cancelable ]] or data.pattern == "" then return {}, 0 end
 
     return table.random(available_cards, data.max_num), 0
   end,
@@ -53,7 +58,7 @@ distributionSelectSkill:addAI(Fk.Ltk.AI.newYijiStrategy {
     local data = ai.data[4] -- extra_data
     local available_players = ai:getEnabledTargets()
 
-    if ai.data[3] --[[ cancelable ]] then return end
+    if ai.data[3] --[[ cancelable ]] then return {}, 0 end
 
     return table.random(available_players, 1), 0
   end
