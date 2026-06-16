@@ -218,6 +218,7 @@ Fk:loadTranslationTable({
   ["choose_cards_skill"] = "Choose card",
   ["choose_players_skill"] = "Choose players",
   ["ex__choose_skill"] = "Choose",
+  ["choose_cards_to_move_and_players"] = "Choose",
   ["distribution_select_skill"] = "Distribute",
   ["choose_players_to_move_card_in_board"] = "Choose players",
   ["userealcard_skill"] = "Use",
